@@ -1,0 +1,298 @@
+<style>
+#wfroot{font-family:'Anthropic Sans',sans-serif}
+#wfroot *{box-sizing:border-box}
+.wf-tabs{display:flex;gap:6px;flex-wrap:wrap;padding-bottom:12px;margin-bottom:14px;border-bottom:0.5px solid var(--color-border-tertiary)}
+.wf-tab{padding:6px 12px;border-radius:16px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--color-border-tertiary);background:var(--color-background-secondary);color:var(--color-text-secondary);white-space:nowrap;transition:all .15s;user-select:none;display:flex;align-items:center;gap:5px}
+.wf-tab .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.wf-tab.active{background:#D4572A;color:#fff;border-color:#D4572A}
+.wf-tab.active .dot{background:#fff!important}
+.wf-head{margin-bottom:16px}
+.wf-domain-badge{display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:3px 9px;border-radius:10px;margin-bottom:8px}
+.wf-title{font-size:19px;font-weight:700;color:var(--color-text-primary);margin-bottom:4px}
+.wf-sub{font-size:12px;color:var(--color-text-secondary);line-height:1.5;max-width:680px}
+.wf-flow{position:relative;padding-left:6px;margin-top:18px}
+.wf-step{display:flex;gap:12px;position:relative;padding-bottom:22px}
+.wf-step:last-child{padding-bottom:0}
+.wf-step::before{content:'';position:absolute;left:15px;top:32px;bottom:-4px;width:2px;background:var(--color-border-tertiary)}
+.wf-step:last-child::before{display:none}
+.wf-num{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;z-index:1}
+.wf-body{flex:1;padding-top:2px}
+.wf-action{font-size:13px;font-weight:600;color:var(--color-text-primary);margin-bottom:4px;display:flex;align-items:center;gap:6px}
+.wf-action .ic{font-size:13px}
+.wf-sys{font-size:12px;color:var(--color-text-secondary);line-height:1.5;background:var(--color-background-secondary);border-radius:8px;border:0.5px solid var(--color-border-tertiary);padding:8px 11px}
+.wf-branch{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+.wf-branch-row{display:flex;gap:8px;align-items:flex-start;background:var(--color-background-primary);border:0.5px dashed var(--color-border-secondary);border-radius:8px;padding:7px 10px}
+.wf-branch-lbl{font-size:10px;font-weight:700;padding:1px 7px;border-radius:8px;flex-shrink:0;color:#fff;margin-top:1px}
+.wf-branch-txt{font-size:11px;color:var(--color-text-secondary);line-height:1.45}
+.wf-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;margin-bottom:4px}
+.wf-meta-pill{font-size:10px;padding:3px 9px;border-radius:10px;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);color:var(--color-text-tertiary)}
+.wf-tables{font-family:var(--font-mono);font-size:9px;background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);padding:1px 6px;border-radius:6px;color:var(--color-text-tertiary)}
+</style>
+
+<div id="wfroot">
+  <div class="wf-tabs" id="wf-tabs"></div>
+  <div id="wf-content"></div>
+</div>
+
+<script>
+const WF_DOMAINS = {
+  cercle:   { label:'Cercle familial', color:'#2A7D4F' },
+  recettes: { label:'Recettes & contribution', color:'#D4572A' },
+  planif:   { label:'Planification & repas', color:'#F5A623' },
+  sondage:  { label:'Sondage & feedback', color:'#3B8BD4' },
+  courses:  { label:'Courses & garde-manger', color:'#8a6a58' },
+};
+
+const WORKFLOWS = [
+  {
+    id:'config-repas', domain:'planif', icon:'⚙️',
+    title:'Configuration des types de repas',
+    sub:"Avant toute planification, l'utilisateur définit quels repas il gère et selon quel mode (modèle semaine ou quotidien).",
+    tables:['USER_MEAL_CONFIG'],
+    steps:[
+      { action:"Ouvrir Paramètres › Repas (ou premier lancement)", icon:'📱', sys:"Afficher les 4 types de repas avec leur statut par défaut — Déjeuner obligatoire et actif, Petit-déjeuner/Goûter/Dîner activables." },
+      { action:"Activer ou désactiver un type de repas", icon:'🔘', sys:"Mettre à jour USER_MEAL_CONFIG.is_active ; recalculer en temps réel l'aperçu de la grille hebdomadaire et le nombre total de cases/semaine." },
+      { action:"Basculer un type entre « Modèle semaine » et « Quotidien »", icon:'🔁', sys:"Quotidien → Modèle : conserver la valeur du jour 1, la propager aux 7 jours, retirer les verrous. Modèle → Quotidien : dupliquer la valeur unique sur les 7 jours." },
+      { action:"Consulter l'aperçu de la grille", icon:'👀', sys:"Afficher la grille 7 jours × types actifs ; état vide explicite (« Activez au moins un type ») si aucun type n'est actif." },
+    ],
+  },
+  {
+    id:'generation-menu', domain:'planif', icon:'✨',
+    title:'Génération automatique du menu hebdomadaire',
+    sub:"Un clic génère la semaine complète selon la configuration active, avec variété contrôlée et restrictions respectées.",
+    tables:['MEAL_PLANS','MEAL_PLAN_ITEMS','RECIPES'],
+    steps:[
+      { action:"Ouvrir l'application", icon:'🏠', sys:"Écran d'accueil (idle) : résumé du nombre de repas/semaine et des types actifs, bouton « Générer ma semaine »." },
+      { action:"Cliquer « Générer ma semaine »", icon:'🪄', sys:"Lancer la sélection algorithmique par type de repas actif, avec barre de progression (Recettes → Variété → Restrictions → Saison)." },
+      { action:"Consulter le menu généré", icon:'📋', sys:"Afficher la grille de révision, sectionnée par type de repas avec son mode (Modèle/Quotidien) ; démarrer le chrono de session (cible 2 minutes)." },
+      { action:"Verrouiller un repas avant une éventuelle régénération", icon:'🔒', sys:"Exclure ce repas d'une future régénération automatique ; indicateur visuel distinct." },
+    ],
+  },
+  {
+    id:'edition-menu', domain:'planif', icon:'✏️',
+    title:'Édition et personnalisation du menu',
+    sub:"Depuis la grille de révision, chaque case est éditable : remplacement, déplacement, duplication ou suppression d'un repas.",
+    tables:['MEAL_PLAN_ITEMS','RECIPES'],
+    steps:[
+      { action:"Cliquer une case pour l'éditer", icon:'👆', sys:"Ouvrir le panneau d'options : repas déjà connus pour ce créneau (carnet + base accessible selon visibilité) + bouton « + Nouveau repas personnalisé… »." },
+      { action:"Choisir un repas existant dans la liste", icon:'✅', sys:"Remplacer la valeur de la case ; incrémenter le compteur de modifications si différent de l'original ; fermer le panneau." },
+      { action:"Glisser-déposer un repas vers un autre jour (mobile)", icon:'↔️', sys:"Déplacer l'association recipe_id/day_of_week ; conserver le verrouillage et les portions." },
+      { action:"Dupliquer un repas sur plusieurs jours", icon:'📑', sys:"Créer une entrée MEAL_PLAN_ITEMS par jour cible, en référence à la même recette." },
+      { action:"Ajuster le nombre de convives", icon:'🔢', sys:"Recalculer en temps réel les quantités correspondantes dans la liste de courses associée." },
+    ],
+  },
+  {
+    id:'nouveau-repas', domain:'planif', icon:'🍲',
+    title:"Création d'un repas pendant la planification",
+    sub:"Depuis la grille de révision, créer un repas personnalisé directement à l'emplacement édité, sans interrompre le flux.",
+    tables:['RECIPES','RECIPE_INGREDIENTS','RECIPE_STEPS','MEAL_PLAN_ITEMS'],
+    steps:[
+      { action:"Cliquer « + Nouveau repas personnalisé… » en bas des options d'une case", icon:'➕', sys:"Ouvrir le formulaire de création ; l'en-tête rappelle le contexte (jour + type de repas) où le repas sera assigné." },
+      { action:"Remplir nom (requis), description, temps, portions, difficulté, tags", icon:'📝', sys:"Validation bloquante uniquement sur le nom ; les autres champs ont des valeurs par défaut raisonnables." },
+      { action:"Ajouter les ingrédients (nom, quantité, unité) et les étapes numérotées", icon:'🧂', sys:"Lignes dynamiques ajoutables/supprimables ; aucune limite stricte de nombre." },
+      { action:"Cliquer « Enregistrer et assigner →»", icon:'💾', sys:"Créer la recette en visibilité Privée par défaut ; l'assigner immédiatement à la case d'origine ; retour à la grille de révision avec le compteur de modifications incrémenté." },
+    ],
+  },
+  {
+    id:'visibilite-recette', domain:'recettes', icon:'🔒',
+    title:"Ajout d'une recette et choix de confidentialité",
+    sub:"Chaque recette est créée Privée par défaut. L'auteur choisit explicitement de l'élargir au cercle ou à la communauté.",
+    tables:['RECIPES'],
+    steps:[
+      { action:"Carnet de recettes › « Ajouter une recette »", icon:'📖', sys:"Ouvrir le formulaire de création (identique à celui utilisé pendant la planification)." },
+      { action:"Choisir le niveau de visibilité", icon:'🎛️', sys:"Trois options présentées avec explication courte : Privée (par défaut, présélectionnée) · Cercle familial · Communautaire." },
+    ],
+    branches:[
+      { label:'PRIVÉE', color:'#5A4A43', text:"Enregistrement direct, aucune comparaison de doublon — la recette est invisible des autres utilisateurs, y compris dans la détection de similarité." },
+      { label:'CERCLE / COMMUNAUTAIRE', color:'#D4572A', text:"La détection de doublon (workflow suivant) se déclenche avant la sauvegarde définitive." },
+    ],
+  },
+  {
+    id:'doublon-recette', domain:'recettes', icon:'🔍',
+    title:'Détection de doublons et gestion des variantes',
+    sub:"Avant qu'une recette en visibilité Cercle/Communautaire soit enregistrée, son nom est comparé aux recettes existantes du même périmètre.",
+    tables:['RECIPES (name_fingerprint, parent_recipe_id, variant_label)'],
+    steps:[
+      { action:"Soumettre une recette dont le nom ressemble à une recette existante", icon:'⚠️', sys:"Calculer la similarité (trigrammes / Levenshtein) sur les noms normalisés du même périmètre ; si score ≥ seuil (~80%), suspendre la sauvegarde." },
+      { action:"Consulter la boîte de dialogue de recettes similaires", icon:'👥', sys:"Afficher chaque recette proche avec son auteur, sa photo miniature et son score de proximité." },
+    ],
+    branches:[
+      { label:"UTILISER L'EXISTANTE", color:'#2A7D4F', text:"Annule la création ; ajoute la recette trouvée aux favoris de l'utilisateur." },
+      { label:'CRÉER COMME VARIANTE', color:'#F5A623', text:"Saisie d'un libellé distinctif (ex. « sans piment ») ; parent_recipe_id renseigné ; nom affiché = « [nom parent] — [libellé] »." },
+      { label:'CRÉER INDÉPENDANTE', color:'#D4572A', text:"L'utilisateur confirme une recette réellement différente ; suffixe automatique uniquement si le nom est strictement identique." },
+    ],
+  },
+  {
+    id:'import-url', domain:'recettes', icon:'🔗',
+    title:"Import d'une recette via URL",
+    sub:"Alimente la base à partir d'un blog culinaire, avec relecture obligatoire avant validation.",
+    tables:['RECIPE_IMPORTS','RECIPES'],
+    steps:[
+      { action:"Carnet de recettes › « Importer depuis une URL »", icon:'🌐', sys:"Champ de saisie d'URL avec exemples de sites supportés." },
+      { action:"Coller l'URL et valider", icon:'📥', sys:"Récupérer la page, extraire titre/ingrédients/étapes/photo via un parseur dédié ; pré-remplir le formulaire de création." },
+      { action:"Relire et corriger les champs extraits", icon:'🧐', sys:"Tous les champs restent éditables — l'extraction automatique n'est jamais imposée telle quelle." },
+      { action:"Choisir la visibilité et enregistrer", icon:'💾', sys:"Même parcours que « Ajout d'une recette » ci-dessus ; source_url et raw_html_hash conservés dans RECIPE_IMPORTS pour audit." },
+    ],
+  },
+  {
+    id:'cercle-familial', domain:'cercle', icon:'👨‍👩‍👧',
+    title:'Création et adhésion à un cercle familial',
+    sub:"Brique structurelle portant les profils Planificatrice / Membre Famille et la visibilité « Cercle » des recettes.",
+    tables:['FAMILY_CIRCLES','FAMILY_CIRCLE_MEMBERS'],
+    steps:[
+      { action:"La Planificatrice crée un cercle (nom + génération d'un code court)", icon:'➕', sys:"Créer FAMILY_CIRCLES avec invite_code unique (ex. FAM-7K2X) ; la créatrice devient automatiquement role=planificatrice." },
+      { action:"Partager le code ou le lien d'invitation par WhatsApp", icon:'📤', sys:"Générer un lien direct intégrant le code, prêt à coller dans une conversation." },
+      { action:"Un Membre Famille saisit le code ou ouvre le lien", icon:'🔑', sys:"Vérifier la validité du code, créer une entrée FAMILY_CIRCLE_MEMBERS avec role=membre." },
+      { action:"Le membre accède aux contenus du cercle", icon:'🗂️', sys:"Donne accès aux recettes en visibilité Cercle, aux plans de menu partagés et active la réception des notifications du cercle." },
+    ],
+  },
+  {
+    id:'partage-lien', domain:'planif', icon:'📤',
+    title:'Partage du menu via lien unique',
+    sub:"Un seul lien suffit désormais pour tout le cercle, remplaçant les liens individuels du système de vote v2.",
+    tables:['MEAL_PLANS'],
+    steps:[
+      { action:"Cliquer « Partager sur WhatsApp » depuis l'écran de confirmation", icon:'✅', sys:"Générer un token aléatoire sécurisé (share_token) si non existant, durée de validité 7 jours renouvelable." },
+      { action:"Ouverture automatique de WhatsApp", icon:'💬', sys:"Message pré-rempli incluant le lien public et un résumé du menu de la semaine." },
+      { action:"Un destinataire ouvre le lien", icon:'📱', sys:"Page publique lisible sans compte, optimisée mobile, menant directement au sondage famille." },
+    ],
+  },
+  {
+    id:'sondage-reponse', domain:'sondage', icon:'😊',
+    title:'Réponse au sondage famille (répondant)',
+    sub:"Avis nuancé par repas — sans pression de vote binaire, sans compte obligatoire.",
+    tables:['SURVEY_RESPONSES','SURVEY_ANSWERS'],
+    steps:[
+      { action:"Ouvrir le lien reçu sur WhatsApp", icon:'🔗', sys:"Charger la page publique du sondage associée au menu de la semaine." },
+      { action:"Saisir son prénom (ou être reconnu si membre du cercle connecté)", icon:'🙋', sys:"Créer une SURVEY_RESPONSE — avec user_id si membre reconnu, sinon respondent_name seul." },
+      { action:"Réagir à chaque repas : 😊 J'aime / 😐 Bof / 😕 Non", icon:'👍', sys:"Enregistrer immédiatement la SURVEY_ANSWER correspondante (sauvegarde au fil de l'eau, pas seulement à l'envoi final)." },
+      { action:"Laisser un commentaire ou une suggestion (facultatif)", icon:'💭', sys:"Associer le texte libre à la réponse de ce repas précis." },
+      { action:"Cliquer « Envoyer mon avis »", icon:'📨', sys:"Marquer la réponse comme complète ; notifier la Planificatrice qu'un nouvel avis est arrivé." },
+    ],
+  },
+  {
+    id:'sondage-resultats', domain:'sondage', icon:'📊',
+    title:'Consultation des résultats du sondage (Planificatrice)',
+    sub:"Tableau de synthèse — la Planificatrice reste décisionnaire, le sondage l'éclaire.",
+    tables:['SURVEY_RESPONSES','SURVEY_ANSWERS'],
+    steps:[
+      { action:"Ouvrir l'onglet « Sondage » du plan de menu", icon:'📂', sys:"Charger les compteurs globaux (répondants, plats notés, suggestions) puis le détail par repas." },
+      { action:"Consulter un repas précis", icon:'🔬', sys:"Afficher la distribution des réactions en barres proportionnelles (😊/😐/😕) et les commentaires attribués au répondant." },
+      { action:"Décider pour la semaine suivante", icon:'🧭', sys:"Aucune action automatique : lien direct vers l'édition du prochain menu depuis un repas mal noté." },
+    ],
+  },
+  {
+    id:'notifications', domain:'sondage', icon:'🔔',
+    title:'Paramétrage et réception des notifications',
+    sub:"Rappels de planification et demandes de retour post-repas, réglables indépendamment par type de repas.",
+    tables:['NOTIFICATION_PREFS'],
+    steps:[
+      { action:"Ouvrir Paramètres › Notifications", icon:'⚙️', sys:"Lister les rappels par type de repas actif + la section Feedback post-repas, chacun avec un interrupteur." },
+      { action:"Activer/régler un rappel (heure, jours)", icon:'⏰', sys:"Mettre à jour NOTIFICATION_PREFS ; demander la permission navigateur si jamais accordée." },
+      { action:"Recevoir le rappel à l'heure prévue", icon:'📲', sys:"Notification push : « Votre déjeuner aujourd'hui — [nom du plat]. Bon appétit ! »" },
+      { action:"Recevoir la demande de feedback après le délai configuré", icon:'⭐', sys:"Notification avec 3 actions rapides (😊/😐/😕) ; un tap enregistre directement le retour sans ouvrir l'application." },
+    ],
+  },
+  {
+    id:'feedback-repas', domain:'sondage', icon:'💬',
+    title:'Feedback post-repas (onglet Avis)',
+    sub:"Distinct du sondage prévisionnel : porte sur le repas réellement vécu, jour par jour.",
+    tables:['MEAL_FEEDBACK','FEEDBACK_TEMPLATES'],
+    steps:[
+      { action:"Ouvrir l'onglet « Avis »", icon:'📑', sys:"Lister les repas de la semaine par statut : Noté (passé) / Aujourd'hui (actif) / À venir (grisé, non notable)." },
+      { action:"Choisir une note emoji sur le repas du jour", icon:'😋', sys:"Enregistrer le rating ; afficher la palette de messages prêts filtrée par catégorie de note." },
+      { action:"Sélectionner un message prêt, ou rédiger un message personnalisé", icon:'✍️', sys:"Associer template_id ou custom_message au MEAL_FEEDBACK ; afficher l'aperçu avant envoi." },
+      { action:"Valider", icon:'✅', sys:"Marquer le repas comme « Noté » ; le retour devient visible dans le récapitulatif hebdomadaire de la Planificatrice." },
+    ],
+  },
+  {
+    id:'liste-courses', domain:'courses', icon:'🛒',
+    title:'Liste de courses intelligente',
+    sub:"Générée automatiquement à partir du menu validé, consolidée et triée par rayon.",
+    tables:['SHOPPING_LISTS','SHOPPING_LIST_ITEMS'],
+    steps:[
+      { action:"Cliquer « Liste de courses » depuis l'écran de confirmation du menu", icon:'🧾', sys:"Agréger tous les ingrédients des repas planifiés, consolider les quantités identiques, déduire le garde-manger." },
+      { action:"Parcourir la liste triée par catégorie", icon:'📂', sys:"Regrouper par rayon : Féculents, Viandes & poissons, Légumes & fruits, Épices, Produits laitiers, Divers." },
+      { action:"Cocher les articles achetés au marché", icon:'☑️', sys:"Barrer visuellement l'article, sauvegarder en local (fonctionne hors connexion)." },
+      { action:"Ajouter un article oublié", icon:'➕', sys:"Champ de saisie rapide en bas de liste, ajouté sans catégorie obligatoire." },
+      { action:"Terminer les courses", icon:'🏁', sys:"Proposer la mise à jour du garde-manger avec les articles achetés." },
+    ],
+  },
+  {
+    id:'garde-manger', domain:'courses', icon:'🗄️',
+    title:'Gestion du garde-manger',
+    sub:"Inventaire personnel qui évite les achats redondants à chaque génération de liste.",
+    tables:['PANTRY_ITEMS'],
+    steps:[
+      { action:"Ajouter un ingrédient au garde-manger avec quantité estimée", icon:'➕', sys:"Créer/mettre à jour une entrée PANTRY_ITEMS pour l'utilisateur." },
+      { action:"Marquer rapidement « J'ai déjà cet article » depuis la liste de courses", icon:'👌', sys:"Retirer immédiatement l'article de la liste active et l'ajouter au garde-manger." },
+      { action:"Générer une nouvelle liste de courses la semaine suivante", icon:'🔄', sys:"Déduction automatique : les articles déjà au garde-manger sont exclus ou quantité réduite." },
+      { action:"Réinitialiser le garde-manger (optionnel)", icon:'🗑️', sys:"Vider l'inventaire en début de semaine si l'utilisateur le souhaite." },
+    ],
+  },
+  {
+    id:'offline', domain:'courses', icon:'📡',
+    title:'Mode hors connexion (PWA)',
+    sub:"Les contenus critiques restent consultables sans réseau ; la synchronisation reprend automatiquement.",
+    tables:['Service Worker / cache local'],
+    steps:[
+      { action:"Perdre la connexion internet", icon:'📵', sys:"Afficher un indicateur visuel clair de l'état de connectivité (bandeau discret)." },
+      { action:"Consulter le menu de la semaine et les réponses déjà saisies au sondage", icon:'📖', sys:"Servir le contenu depuis le cache Service Worker, sans erreur ni écran blanc." },
+      { action:"Cocher des articles de la liste de courses", icon:'☑️', sys:"Sauvegarde locale ; les cases cochées sont mises en file d'attente de synchronisation." },
+      { action:"Retrouver la connexion", icon:'🔌', sys:"Synchronisation automatique des changements en attente ; le sondage, le feedback et les notifications redeviennent disponibles." },
+    ],
+  },
+];
+
+function renderTabs(activeId){
+  const tabsEl = document.getElementById('wf-tabs');
+  tabsEl.innerHTML = WORKFLOWS.map(w => {
+    const d = WF_DOMAINS[w.domain];
+    return `<div class="wf-tab${w.id===activeId?' active':''}" onclick="selectWF('${w.id}')">
+      <span class="dot" style="background:${d.color}"></span>${w.icon} ${w.title}
+    </div>`;
+  }).join('');
+}
+
+function renderContent(id){
+  const w = WORKFLOWS.find(x=>x.id===id);
+  const d = WF_DOMAINS[w.domain];
+  const contentEl = document.getElementById('wf-content');
+
+  let stepsHtml = w.steps.map((st,i) => `
+    <div class="wf-step">
+      <div class="wf-num" style="background:${d.color}">${i+1}</div>
+      <div class="wf-body">
+        <div class="wf-action"><span class="ic">${st.icon}</span>${st.action}</div>
+        <div class="wf-sys">${st.sys}</div>
+      </div>
+    </div>`).join('');
+
+  let branchesHtml = '';
+  if (w.branches) {
+    branchesHtml = `<div class="wf-branch">${w.branches.map(b => `
+      <div class="wf-branch-row">
+        <span class="wf-branch-lbl" style="background:${b.color}">${b.label}</span>
+        <span class="wf-branch-txt">${b.text}</span>
+      </div>`).join('')}</div>`;
+  }
+
+  contentEl.innerHTML = `
+    <div class="wf-head">
+      <span class="wf-domain-badge" style="background:${d.color}22;color:${d.color}">${d.label}</span>
+      <div class="wf-title">${w.icon} ${w.title}</div>
+      <div class="wf-sub">${w.sub}</div>
+      <div class="wf-meta">${w.tables.map(t=>`<span class="wf-meta-pill"><span class="wf-tables">${t}</span></span>`).join('')}</div>
+    </div>
+    <div class="wf-flow">${stepsHtml}</div>
+    ${branchesHtml}
+  `;
+}
+
+function selectWF(id){
+  renderTabs(id);
+  renderContent(id);
+}
+
+selectWF(WORKFLOWS[0].id);
+</script>
