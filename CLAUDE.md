@@ -18,6 +18,23 @@ Exemple : `feat(MF-012): ajouter la politique RLS sur recipes`
 
 ---
 
+## Workflow Git — branche + Pull Request
+
+Plus aucun commit n'est poussé directement sur `main`. Pour chaque tâche logique :
+
+1. Créer une branche **à partir de la branche de la tâche précédente** (pas systématiquement depuis `main`), pour garder une chaîne logique entre tâches liées tant qu'elles n'ont pas été mergées : `git checkout -b <type>/<scope>-<slug>` depuis la branche en cours.
+   - `<type>` : `feat`, `fix` ou `chore`, aligné sur la convention de commit
+   - `<scope>` : ID de story (`MF-012`) si disponible, sinon `sprint0`/`sprintN`
+   - `<slug>` : description courte en kebab-case
+   - Exemples : `feat/sprint0-jour3-seed-data` → `feat/sprint0-jour3-connexion-supabase` (créée depuis la première, pas depuis `main`)
+   - Une fois une branche mergée sur `main` par la développeuse, la branche suivante peut repartir d'un `main` à jour (`git checkout main && git pull`) si la chaîne n'a plus de raison d'être maintenue
+2. Committer sur cette branche (convention habituelle `feat(ID-story): ...`)
+3. Pousser la branche : `git push -u origin <branche>`
+4. Ouvrir la Pull Request manuellement sur GitHub (lien de comparaison fourni à chaque push) — la PR d'une branche enfant cible sa branche parente tant que celle-ci n'est pas mergée, pour refléter la chaîne réelle
+5. Revue et merge effectués par la développeuse via l'interface GitHub — jamais de merge automatique
+
+---
+
 ## Garde-fou de périmètre — règle absolue
 
 Ce projet couvre le MVP défini dans la section 5 du CDC (`docs/MenuFamille_CDC_v3.docx`) :
