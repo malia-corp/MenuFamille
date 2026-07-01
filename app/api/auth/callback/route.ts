@@ -29,11 +29,15 @@ export async function GET(request: NextRequest) {
     .maybeSingle()
 
   if (!existing) {
-    await supabase.from('users').insert({
+    const { error: insertError } = await supabase.from('users').insert({
       id: user.id,
       email: user.email!,
       display_name: user.email!.split('@')[0],
     })
+
+    if (insertError) {
+      return NextResponse.redirect(new URL('/login?error=profile_creation_failed', origin))
+    }
 
     await supabase.from('user_meal_config').insert([
       { user_id: user.id, meal_type: 'dejeuner', is_active: true, mode: 'daily', display_order: 1, default_time: '12:00' },
