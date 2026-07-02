@@ -32,13 +32,22 @@ const MEAL_VISUAL: Record<string, { emoji: string; color: string; bg: string }> 
 export default function ConfigurePage() {
   const [configs, setConfigs] = useState<MealConfig[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [updating, setUpdating] = useState<string | null>(null)
 
   useEffect(() => {
     fetch('/api/users/me/meal-config')
-      .then((r) => r.json())
-      .then((data) => {
-        setConfigs(data)
+      .then(async (r) => {
+        const data = await r.json()
+        if (r.ok && Array.isArray(data)) {
+          setConfigs(data)
+        } else {
+          setError(data?.error ?? 'Erreur de chargement')
+        }
+        setLoading(false)
+      })
+      .catch(() => {
+        setError('Impossible de charger la configuration')
         setLoading(false)
       })
   }, [])
@@ -58,6 +67,21 @@ export default function ConfigurePage() {
   }
 
   const activeCount = configs.filter((c) => c.is_active).length
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 px-4">
+        <p className="text-sm text-red-600 font-quicksand text-center">{error}</p>
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          className="text-xs text-terracotta underline font-quicksand"
+        >
+          Réessayer
+        </button>
+      </div>
+    )
+  }
 
   if (loading) {
     return (
