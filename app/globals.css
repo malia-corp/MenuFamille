@@ -10,7 +10,7 @@
     --card-foreground: 20 14.3% 4.1%;
     --popover: 0 0% 100%;
     --popover-foreground: 20 14.3% 4.1%;
-    --primary: 15 74% 50%;        /* terracotta #D4572A */
+    --primary: 17 72% 40%;        /* terracotta #B0461C */
     --primary-foreground: 0 0% 100%;
     --secondary: 37 91% 55%;      /* african-gold #F5A623 */
     --secondary-foreground: 20 14.3% 4.1%;
@@ -22,8 +22,22 @@
     --destructive-foreground: 60 9.1% 97.8%;
     --border: 20 5.9% 90%;
     --input: 20 5.9% 90%;
-    --ring: 15 74% 50%;
+    --ring: 17 72% 40%;
     --radius: 0.75rem;
+    /* MenuFamille design tokens */
+    --mf-primary:        #B0461C;
+    --mf-primary-hover:  #C74E21;
+    --mf-border-warm:    #E8C99A;
+    --mf-bg-page:        #FDF6EE;
+    --mf-bg-card:        #FCEEE6;
+    --mf-bg-card-alt:    #FFF8F6;
+    --mf-text-primary:   #2C1810;
+    --mf-text-secondary: #5A4A43;
+    --mf-text-tertiary:  #8c7169;
+    --mf-green:          #2A7D4F;
+    --mf-green-bg:       #EAF5EE;
+    --mf-gold:           #F5A623;
+    --mf-gold-bg:        #FEF3E0;
   }
 
   .dark {

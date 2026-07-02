@@ -50,9 +50,13 @@ const config: Config = {
           foreground: 'hsl(var(--card-foreground))',
         },
         // MenuFamille brand palette
-        terracotta: '#D4572A',
+        terracotta: '#B0461C',
         'african-gold': '#F5A623',
         'market-green': '#2A7D4F',
+      },
+      fontFamily: {
+        dosis: ['var(--font-dosis)', 'sans-serif'],
+        quicksand: ['var(--font-quicksand)', 'sans-serif'],
       },
       borderRadius: {
         lg: 'var(--radius)',

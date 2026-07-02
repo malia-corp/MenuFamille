@@ -1,11 +1,17 @@
 import type { Metadata } from 'next'
-import { Poppins } from 'next/font/google'
+import { Dosis, Quicksand } from 'next/font/google'
 import './globals.css'
 
-const poppins = Poppins({
+const dosis = Dosis({
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  variable: '--font-poppins',
+  weight: ['600', '700'],
+  variable: '--font-dosis',
+})
+
+const quicksand = Quicksand({
+  subsets: ['latin'],
+  weight: ['400', '500', '600'],
+  variable: '--font-quicksand',
 })
 
 export const metadata: Metadata = {
@@ -22,7 +28,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr">
-      <body className={`${poppins.variable} font-sans antialiased`}>{children}</body>
+      <body className={`${dosis.variable} ${quicksand.variable} font-quicksand antialiased`}>
+        {children}
+      </body>
     </html>
   )
 }

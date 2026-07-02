@@ -9,18 +9,15 @@ export async function POST(request: NextRequest) {
   }
 
   const supabase = await createClient()
-  const origin = request.nextUrl.origin
 
   const { error } = await supabase.auth.signInWithOtp({
     email,
-    options: {
-      emailRedirectTo: `${origin}/api/auth/callback`,
-    },
+    options: { shouldCreateUser: true },
   })
 
   if (error) {
     return Response.json({ error: error.message }, { status: 400 })
   }
 
-  return Response.json({ message: 'Lien de connexion envoyé' })
+  return Response.json({ message: 'Code OTP envoyé' })
 }
