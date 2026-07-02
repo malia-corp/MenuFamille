@@ -25,7 +25,16 @@ export async function updateSession(request: NextRequest) {
 
   // Rafraîchit la session si besoin — nécessaire pour que les Server Components
   // disposent toujours d'un token d'accès valide.
-  await supabase.auth.getUser()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  const pathname = request.nextUrl.pathname
+  const isPublicPath =
+    pathname.startsWith('/login') ||
+    pathname.startsWith('/api/auth')
+
+  if (!user && !isPublicPath) {
+    return NextResponse.redirect(new URL('/login', request.url))
+  }
 
   return response
 }
