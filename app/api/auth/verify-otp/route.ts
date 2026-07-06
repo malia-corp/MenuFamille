@@ -3,7 +3,7 @@ import { createServiceClient } from '@/lib/supabase/service'
 import { NextRequest } from 'next/server'
 
 export async function POST(request: NextRequest) {
-  const { email, token } = await request.json()
+  const { email, token, authMode } = await request.json()
 
   if (!email || !token) {
     return Response.json({ error: 'Email et code requis' }, { status: 400 })
@@ -28,14 +28,14 @@ export async function POST(request: NextRequest) {
     .eq('id', user.id)
     .maybeSingle()
 
-  if (!existing) {
-    // INSERT via service role — contourne le problème JWT/RLS côté serveur
-    const service = createServiceClient()
+  const service = createServiceClient()
 
+  if (!existing) {
     const { error: insertError } = await service.from('users').insert({
       id: user.id,
       email: user.email!,
       display_name: user.email!.split('@')[0],
+      preferences: authMode ? { auth_mode: authMode } : {},
     })
 
     if (insertError) {
@@ -50,6 +50,12 @@ export async function POST(request: NextRequest) {
     ])
 
     return Response.json({ redirect: '/onboarding' })
+  }
+
+  if (authMode) {
+    await service.from('users')
+      .update({ preferences: { auth_mode: authMode } })
+      .eq('id', user.id)
   }
 
   return Response.json({ redirect: '/' })

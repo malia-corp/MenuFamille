@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/service'
 import { NextRequest } from 'next/server'
 
 export async function POST(request: NextRequest) {
@@ -9,7 +10,6 @@ export async function POST(request: NextRequest) {
   }
 
   const supabase = await createClient()
-
   const { origin } = request.nextUrl
 
   const { error } = await supabase.auth.signInWithOtp({
@@ -24,5 +24,16 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: error.message }, { status: 400 })
   }
 
-  return Response.json({ message: 'Code OTP envoyé' })
+  // Lire la préférence auth de l'utilisateur (null si nouveau compte)
+  const service = createServiceClient()
+  const { data: profile } = await service
+    .from('users')
+    .select('preferences')
+    .eq('email', email)
+    .maybeSingle()
+
+  const preferredMode =
+    (profile?.preferences as { auth_mode?: string } | null)?.auth_mode ?? null
+
+  return Response.json({ message: 'Email envoyé', preferredMode })
 }

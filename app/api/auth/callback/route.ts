@@ -39,12 +39,17 @@ export async function GET(request: NextRequest) {
         id: user.id,
         email: user.email!,
         display_name: user.email!.split('@')[0],
+        preferences: { auth_mode: 'link' },
       })
       await service.from('user_meal_config').insert(
         DEFAULT_MEAL_CONFIGS.map((c) => ({ ...c, user_id: user.id }))
       )
       return NextResponse.redirect(new URL('/onboarding', origin))
     }
+
+    await service.from('users')
+      .update({ preferences: { auth_mode: 'link' } })
+      .eq('id', user.id)
   }
 
   return NextResponse.redirect(new URL('/', origin))
