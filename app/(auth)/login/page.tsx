@@ -2,16 +2,18 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowRight, Globe, Mail, MailCheck, ShieldCheck, UtensilsCrossed } from 'lucide-react'
+import { ArrowRight, ExternalLink, Globe, Mail, MailCheck, ShieldCheck, UtensilsCrossed } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
 type State = 'idle' | 'sending' | 'otp' | 'verifying'
+type AuthMode = 'code' | 'link'
 
 export default function LoginPage() {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [state, setState] = useState<State>('idle')
+  const [authMode, setAuthMode] = useState<AuthMode>('code')
   const [digits, setDigits] = useState(['', '', '', '', '', ''])
   const [error, setError] = useState<string | null>(null)
   const [stubToast, setStubToast] = useState(false)
@@ -115,7 +117,7 @@ export default function LoginPage() {
     setTimeout(() => inputRefs.current[0]?.focus(), 50)
   }
 
-  // ── Écran OTP ──────────────────────────────────────────────────────────────
+  // ── Écran OTP / Lien ───────────────────────────────────────────────────────
   if (state === 'otp' || state === 'verifying') {
     return (
       <div className="space-y-6 text-center">
@@ -128,59 +130,112 @@ export default function LoginPage() {
             Vérifiez votre boîte mail
           </h1>
           <p className="text-sm text-[#5A4A43]">
-            Nous avons envoyé un code à 6 chiffres à{' '}
+            Email envoyé à{' '}
             <span className="font-semibold text-[#2C1810]">{email}</span>
           </p>
         </div>
 
-        <form onSubmit={handleOtpSubmit} className="space-y-5">
-          <div className="flex justify-center gap-2">
-            {digits.map((d, i) => (
-              <input
-                key={i}
-                ref={(el) => { inputRefs.current[i] = el }}
-                type="text"
-                inputMode="numeric"
-                maxLength={1}
-                aria-label={`Chiffre ${i + 1} du code`}
-                value={d}
-                onChange={(e) => handleDigitChange(i, e.target.value)}
-                onKeyDown={(e) => handleDigitKeyDown(i, e)}
-                disabled={state === 'verifying'}
-                className="w-10 h-12 text-center text-xl font-semibold border-2 border-[#E8C99A] rounded-lg bg-white focus:border-terracotta focus:outline-none disabled:opacity-50"
-              />
-            ))}
-          </div>
-
-          {error && <p className="text-sm text-red-600">{error}</p>}
-
-          <Button
-            type="submit"
-            className="w-full bg-terracotta hover:bg-[#C74E21] text-white font-quicksand"
-            disabled={state === 'verifying'}
+        {/* Sélecteur de mode */}
+        <div className="flex rounded-xl border border-[#E8C99A] overflow-hidden">
+          <button
+            type="button"
+            onClick={() => { setAuthMode('code'); setError(null) }}
+            className={`flex-1 py-2.5 text-sm font-quicksand font-medium transition-colors ${
+              authMode === 'code'
+                ? 'bg-terracotta text-white'
+                : 'bg-white text-[#5A4A43] hover:bg-[#FDF6EE]'
+            }`}
           >
-            <ShieldCheck className="mr-2 h-4 w-4" />
-            {state === 'verifying' ? 'Vérification…' : 'Valider le code'}
-          </Button>
-        </form>
-
-        <div className="text-sm text-[#8c7169]">
-          {countdown > 0 ? (
-            <span>Renvoyer le code dans {countdown}s</span>
-          ) : (
-            <button
-              type="button"
-              onClick={handleResend}
-              className="text-terracotta underline hover:no-underline"
-            >
-              Renvoyer le code
-            </button>
-          )}
+            Saisir le code
+          </button>
+          <button
+            type="button"
+            onClick={() => { setAuthMode('link'); setError(null) }}
+            className={`flex-1 py-2.5 text-sm font-quicksand font-medium transition-colors ${
+              authMode === 'link'
+                ? 'bg-terracotta text-white'
+                : 'bg-white text-[#5A4A43] hover:bg-[#FDF6EE]'
+            }`}
+          >
+            Utiliser le lien
+          </button>
         </div>
+
+        {authMode === 'code' ? (
+          <form onSubmit={handleOtpSubmit} className="space-y-5">
+            <div className="flex justify-center gap-2">
+              {digits.map((d, i) => (
+                <input
+                  key={i}
+                  ref={(el) => { inputRefs.current[i] = el }}
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={1}
+                  aria-label={`Chiffre ${i + 1} du code`}
+                  value={d}
+                  onChange={(e) => handleDigitChange(i, e.target.value)}
+                  onKeyDown={(e) => handleDigitKeyDown(i, e)}
+                  disabled={state === 'verifying'}
+                  className="w-10 h-12 text-center text-xl font-semibold border-2 border-[#E8C99A] rounded-lg bg-white focus:border-terracotta focus:outline-none disabled:opacity-50"
+                />
+              ))}
+            </div>
+
+            {error && <p className="text-sm text-red-600">{error}</p>}
+
+            <Button
+              type="submit"
+              className="w-full bg-terracotta hover:bg-[#C74E21] text-white font-quicksand"
+              disabled={state === 'verifying'}
+            >
+              <ShieldCheck className="mr-2 h-4 w-4" />
+              {state === 'verifying' ? 'Vérification…' : 'Valider le code'}
+            </Button>
+
+            <div className="text-sm text-[#8c7169]">
+              {countdown > 0 ? (
+                <span>Renvoyer dans {countdown}s</span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleResend}
+                  className="text-terracotta underline hover:no-underline"
+                >
+                  Renvoyer le code
+                </button>
+              )}
+            </div>
+          </form>
+        ) : (
+          <div className="space-y-4 py-2">
+            <div className="bg-[#FCEEE6] rounded-xl p-4 space-y-2">
+              <ExternalLink className="h-6 w-6 text-terracotta mx-auto" />
+              <p className="text-sm text-[#5A4A43] font-quicksand">
+                Cliquez sur le lien dans votre email pour vous connecter automatiquement.
+              </p>
+              <p className="text-xs text-[#8c7169] font-quicksand">
+                Le lien est valable 60 minutes.
+              </p>
+            </div>
+            <div className="text-sm text-[#8c7169]">
+              {countdown > 0 ? (
+                <span>Renvoyer dans {countdown}s</span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleResend}
+                  className="text-terracotta underline hover:no-underline"
+                >
+                  Renvoyer l&apos;email
+                </button>
+              )}
+            </div>
+          </div>
+        )}
 
         <button
           type="button"
-          onClick={() => { setState('idle'); setDigits(['', '', '', '', '', '']); setError(null) }}
+          onClick={() => { setState('idle'); setDigits(['', '', '', '', '', '']); setError(null); setAuthMode('code') }}
           className="text-xs text-[#8c7169] underline"
         >
           Utiliser une autre adresse

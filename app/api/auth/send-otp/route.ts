@@ -10,9 +10,14 @@ export async function POST(request: NextRequest) {
 
   const supabase = await createClient()
 
+  const { origin } = request.nextUrl
+
   const { error } = await supabase.auth.signInWithOtp({
     email,
-    options: { shouldCreateUser: true },
+    options: {
+      shouldCreateUser: true,
+      emailRedirectTo: `${origin}/api/auth/callback`,
+    },
   })
 
   if (error) {
