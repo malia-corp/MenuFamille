@@ -42,6 +42,7 @@ interface Step {
 interface Recipe {
   id: string
   user_id: string | null
+  is_owner: boolean
   name: string
   description: string | null
   prep_time_min: number | null
@@ -80,7 +81,6 @@ export default function RecipeDetailPage() {
   const [error,             setError]             = useState<string | null>(null)
   const [servings,          setServings]          = useState(1)
   const [toastVisible,      setToastVisible]      = useState(false)
-  const [currentUserId,     setCurrentUserId]     = useState<string | null>(null)
   const [showConfirmDelete, setShowConfirmDelete] = useState(false)
   const [deleting,          setDeleting]          = useState(false)
 
@@ -100,11 +100,6 @@ export default function RecipeDetailPage() {
         setError('Impossible de charger la recette')
         setLoading(false)
       })
-
-    fetch('/api/users/me')
-      .then(r => r.ok ? r.json() : null)
-      .then(data => { if (data?.id) setCurrentUserId(data.id) })
-      .catch(() => {})
   }, [id])
 
   async function toggleFavorite() {
@@ -153,7 +148,7 @@ export default function RecipeDetailPage() {
   }
 
   const totalMin = (recipe.prep_time_min ?? 0) + (recipe.cook_time_min ?? 0)
-  const isOwner  = currentUserId !== null && recipe.user_id === currentUserId
+  const isOwner  = recipe.is_owner
 
   return (
     <>

@@ -72,6 +72,7 @@ export async function GET(
     recipe_ingredients: ingredients,
     recipe_steps: steps,
     is_favorited: !!fav,
+    is_owner: recipe.user_id === user.id,
   })
 }
 
