@@ -28,7 +28,7 @@ export async function GET() {
     my_role: m.role,
   }))
 
-  return Response.json(circles)
+  return Response.json({ data: circles, viewer_id: user.id })
 }
 
 function makeInviteCode(displayName: string): string {

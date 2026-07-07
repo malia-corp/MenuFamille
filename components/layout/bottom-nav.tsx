@@ -2,13 +2,14 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { BookOpen, CalendarDays, Home, UserCircle } from 'lucide-react'
+import { BookOpen, CalendarDays, Home, Users, UserCircle } from 'lucide-react'
 
 const NAV_ITEMS = [
-  { href: '/', icon: Home, label: 'Accueil' },
-  { href: '/plan', icon: CalendarDays, label: 'Menu' },
-  { href: '/recipes', icon: BookOpen, label: 'Recettes' },
-  { href: '/profile', icon: UserCircle, label: 'Profil' },
+  { href: '/',        icon: Home,        label: 'Accueil'  },
+  { href: '/plan',    icon: CalendarDays, label: 'Menu'    },
+  { href: '/recipes', icon: BookOpen,    label: 'Recettes' },
+  { href: '/circle',  icon: Users,       label: 'Cercle'   },
+  { href: '/profile', icon: UserCircle,  label: 'Profil'   },
 ]
 
 export function BottomNav() {

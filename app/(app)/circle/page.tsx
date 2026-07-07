@@ -33,14 +33,13 @@ export default function CirclePage() {
   const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    Promise.all([
-      fetch('/api/circles').then((r) => r.json()),
-      fetch('/api/users/me').then((r) => r.json()),
-    ]).then(([circlesData, meData]) => {
-      setCircles(circlesData ?? [])
-      setCurrentUserId(meData?.id ?? null)
-      setLoading(false)
-    })
+    fetch('/api/circles')
+      .then((r) => r.json())
+      .then((res) => {
+        setCircles(res?.data ?? [])
+        setCurrentUserId(res?.viewer_id ?? null)
+        setLoading(false)
+      })
   }, [])
 
   // Fermer le menu contextuel au clic extérieur

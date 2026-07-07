@@ -94,7 +94,8 @@ export function RecipeForm({
   useEffect(() => {
     fetch('/api/categories').then(r => r.json()).then(d => { if (Array.isArray(d)) setCategories(d) }).catch(() => {})
     fetch('/api/circles').then(r => r.json()).then(d => {
-      if (Array.isArray(d)) setCircles(d.map((c: { id: string; name: string }) => ({ id: c.id, name: c.name })))
+      const list = Array.isArray(d?.data) ? d.data : []
+      setCircles(list.map((c: { id: string; name: string }) => ({ id: c.id, name: c.name })))
     }).catch(() => {})
   }, [])
 
