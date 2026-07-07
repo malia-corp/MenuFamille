@@ -11,7 +11,9 @@ import {
   HeartOff,
   Lightbulb,
   Minus,
+  Pencil,
   Plus,
+  Trash2,
   Users,
   Utensils,
 } from 'lucide-react'
@@ -39,6 +41,7 @@ interface Step {
 
 interface Recipe {
   id: string
+  user_id: string | null
   name: string
   description: string | null
   prep_time_min: number | null
@@ -72,11 +75,14 @@ export default function RecipeDetailPage() {
   const params = useParams()
   const id = params.id as string
 
-  const [recipe, setRecipe] = useState<Recipe | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [servings, setServings] = useState(1)
-  const [toastVisible, setToastVisible] = useState(false)
+  const [recipe,            setRecipe]            = useState<Recipe | null>(null)
+  const [loading,           setLoading]           = useState(true)
+  const [error,             setError]             = useState<string | null>(null)
+  const [servings,          setServings]          = useState(1)
+  const [toastVisible,      setToastVisible]      = useState(false)
+  const [currentUserId,     setCurrentUserId]     = useState<string | null>(null)
+  const [showConfirmDelete, setShowConfirmDelete] = useState(false)
+  const [deleting,          setDeleting]          = useState(false)
 
   useEffect(() => {
     fetch(`/api/recipes/${id}`)
@@ -94,7 +100,32 @@ export default function RecipeDetailPage() {
         setError('Impossible de charger la recette')
         setLoading(false)
       })
+
+    fetch('/api/users/me')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data?.id) setCurrentUserId(data.id) })
+      .catch(() => {})
   }, [id])
+
+  async function toggleFavorite() {
+    if (!recipe) return
+    const res = await fetch(`/api/recipes/${id}/favorite`, { method: 'POST' })
+    if (res.ok) {
+      const data = await res.json()
+      setRecipe(prev => prev ? { ...prev, is_favorited: data.is_favorited } : prev)
+    }
+  }
+
+  async function deleteRecipe() {
+    setDeleting(true)
+    const res = await fetch(`/api/recipes/${id}`, { method: 'DELETE' })
+    if (res.ok || res.status === 204) {
+      router.push('/recipes')
+    } else {
+      setDeleting(false)
+      setShowConfirmDelete(false)
+    }
+  }
 
   function showToast() {
     setToastVisible(true)
@@ -113,11 +144,8 @@ export default function RecipeDetailPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 px-4">
         <p className="text-sm text-red-600 font-quicksand text-center">{error ?? 'Recette introuvable'}</p>
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="text-xs text-[var(--mf-primary)] underline font-quicksand"
-        >
+        <button type="button" onClick={() => router.back()}
+          className="text-xs text-[var(--mf-primary)] underline font-quicksand">
           Retour
         </button>
       </div>
@@ -125,22 +153,34 @@ export default function RecipeDetailPage() {
   }
 
   const totalMin = (recipe.prep_time_min ?? 0) + (recipe.cook_time_min ?? 0)
+  const isOwner  = currentUserId !== null && recipe.user_id === currentUserId
 
   return (
     <>
       {/* Sous-header de navigation */}
       <div className="sticky top-14 z-30 bg-[var(--mf-bg-page)] border-b border-[var(--mf-border-warm)] px-4 h-10 flex items-center gap-2.5">
-        <button
-          type="button"
-          onClick={() => router.back()}
+        <button type="button" onClick={() => router.back()}
           className="p-1 -ml-1 text-[var(--mf-text-secondary)] hover:text-[var(--mf-primary)]"
-          aria-label="Retour"
-        >
+          aria-label="Retour">
           <ArrowLeft className="h-4 w-4" />
         </button>
-        <p className="font-dosis font-semibold text-sm text-[var(--mf-text-primary)] truncate">
+        <p className="font-dosis font-semibold text-sm text-[var(--mf-text-primary)] truncate flex-1">
           {recipe.name}
         </p>
+        {isOwner && (
+          <div className="flex items-center gap-1 flex-shrink-0">
+            <button type="button" onClick={() => router.push(`/recipes/${id}/edit`)}
+              className="p-1.5 text-[var(--mf-text-secondary)] hover:text-[var(--mf-primary)] transition-colors"
+              aria-label="Modifier">
+              <Pencil className="h-4 w-4" />
+            </button>
+            <button type="button" onClick={() => setShowConfirmDelete(true)}
+              className="p-1.5 text-[var(--mf-text-secondary)] hover:text-red-500 transition-colors"
+              aria-label="Supprimer">
+              <Trash2 className="h-4 w-4" />
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="max-w-sm mx-auto px-4 py-4 space-y-5 pb-8">
@@ -181,41 +221,36 @@ export default function RecipeDetailPage() {
               {recipe.categories.name}
             </div>
           )}
-          <div className="flex items-center gap-1.5 text-xs text-[var(--mf-text-secondary)] font-quicksand">
+          {/* Toggle favori interactif */}
+          <button
+            type="button"
+            onClick={toggleFavorite}
+            className="flex items-center gap-1.5 text-xs font-quicksand text-[var(--mf-text-secondary)] hover:text-[var(--mf-primary)] transition-colors"
+            aria-label={recipe.is_favorited ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+          >
             {recipe.is_favorited ? (
               <Heart className="h-3.5 w-3.5 fill-red-400 text-red-400" />
             ) : (
               <HeartOff className="h-3.5 w-3.5 text-[var(--mf-text-tertiary)]" />
             )}
             {recipe.is_favorited ? 'Favori' : 'Non favori'}
-          </div>
+          </button>
         </div>
 
         {/* Contrôle portions */}
         {recipe.recipe_ingredients.length > 0 && (
           <div className="flex items-center justify-between bg-[var(--mf-bg-card)] rounded-xl px-4 py-3">
-            <span className="text-sm font-quicksand font-medium text-[var(--mf-text-primary)]">
-              Portions
-            </span>
+            <span className="text-sm font-quicksand font-medium text-[var(--mf-text-primary)]">Portions</span>
             <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => setServings((s) => Math.max(1, s - 1))}
-                disabled={servings <= 1}
+              <button type="button" onClick={() => setServings((s) => Math.max(1, s - 1))} disabled={servings <= 1}
                 className="w-8 h-8 rounded-full flex items-center justify-center border border-[var(--mf-border-warm)] text-[var(--mf-text-secondary)] disabled:opacity-40 hover:border-[var(--mf-primary)] hover:text-[var(--mf-primary)] transition-colors"
-                aria-label="Réduire les portions"
-              >
+                aria-label="Réduire les portions">
                 <Minus className="h-3.5 w-3.5" />
               </button>
-              <span className="w-6 text-center font-dosis font-bold text-lg text-[var(--mf-text-primary)]">
-                {servings}
-              </span>
-              <button
-                type="button"
-                onClick={() => setServings((s) => s + 1)}
+              <span className="w-6 text-center font-dosis font-bold text-lg text-[var(--mf-text-primary)]">{servings}</span>
+              <button type="button" onClick={() => setServings((s) => s + 1)}
                 className="w-8 h-8 rounded-full flex items-center justify-center border border-[var(--mf-border-warm)] text-[var(--mf-text-secondary)] hover:border-[var(--mf-primary)] hover:text-[var(--mf-primary)] transition-colors"
-                aria-label="Augmenter les portions"
-              >
+                aria-label="Augmenter les portions">
                 <Plus className="h-3.5 w-3.5" />
               </button>
             </div>
@@ -225,22 +260,15 @@ export default function RecipeDetailPage() {
         {/* Ingrédients */}
         {recipe.recipe_ingredients.length > 0 && (
           <div className="space-y-2">
-            <h2 className="font-dosis font-semibold text-base text-[var(--mf-text-primary)]">
-              Ingrédients
-            </h2>
+            <h2 className="font-dosis font-semibold text-base text-[var(--mf-text-primary)]">Ingrédients</h2>
             <div className="space-y-1.5">
               {recipe.recipe_ingredients.map((ing) => (
-                <div
-                  key={ing.id}
-                  className="flex items-center gap-2 py-1.5 border-b border-[var(--mf-border-warm)]/40 last:border-0"
-                >
+                <div key={ing.id} className="flex items-center gap-2 py-1.5 border-b border-[var(--mf-border-warm)]/40 last:border-0">
                   <span className="w-16 text-right text-sm font-quicksand font-medium text-[var(--mf-primary)] flex-shrink-0">
                     {formatQty(ing.quantity, servings, recipe.servings)}
                     {ing.unit ? ` ${ing.unit}` : ''}
                   </span>
-                  <span className="text-sm font-quicksand text-[var(--mf-text-primary)]">
-                    {ing.name}
-                  </span>
+                  <span className="text-sm font-quicksand text-[var(--mf-text-primary)]">{ing.name}</span>
                 </div>
               ))}
             </div>
@@ -250,9 +278,7 @@ export default function RecipeDetailPage() {
         {/* Préparation */}
         {recipe.recipe_steps.length > 0 && (
           <div className="space-y-3">
-            <h2 className="font-dosis font-semibold text-base text-[var(--mf-text-primary)]">
-              Préparation
-            </h2>
+            <h2 className="font-dosis font-semibold text-base text-[var(--mf-text-primary)]">Préparation</h2>
             <div className="space-y-3">
               {recipe.recipe_steps.map((step) => (
                 <div key={step.id} className="flex gap-3">
@@ -273,27 +299,43 @@ export default function RecipeDetailPage() {
           <div className="bg-[var(--mf-gold-bg)] rounded-xl p-4 flex gap-3">
             <Lightbulb className="h-5 w-5 text-[var(--mf-gold)] flex-shrink-0 mt-0.5" />
             <div>
-              <p className="text-xs font-quicksand font-bold uppercase tracking-wider text-[var(--mf-gold)] mb-1">
-                Astuce
-              </p>
-              <p className="text-sm font-quicksand text-[var(--mf-text-secondary)] leading-relaxed">
-                {recipe.description}
-              </p>
+              <p className="text-xs font-quicksand font-bold uppercase tracking-wider text-[var(--mf-gold)] mb-1">Astuce</p>
+              <p className="text-sm font-quicksand text-[var(--mf-text-secondary)] leading-relaxed">{recipe.description}</p>
             </div>
           </div>
         )}
 
-        {/* Bouton stub "Ajouter à mon menu" */}
-        <button
-          type="button"
-          onClick={showToast}
-          className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-[var(--mf-primary)] text-white font-quicksand font-semibold text-sm hover:bg-[var(--mf-primary-hover)] transition-colors"
-        >
+        {/* Bouton "Ajouter à mon menu" */}
+        <button type="button" onClick={showToast}
+          className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-[var(--mf-primary)] text-white font-quicksand font-semibold text-sm hover:bg-[var(--mf-primary-hover)] transition-colors">
           <CalendarPlus className="h-4 w-4" />
           Ajouter à mon menu
         </button>
-
       </div>
+
+      {/* Dialog confirmation suppression */}
+      {showConfirmDelete && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 px-4 pb-6">
+          <div className="w-full max-w-sm bg-white rounded-2xl p-5 space-y-4 shadow-xl">
+            <p className="font-dosis font-bold text-base text-[var(--mf-text-primary)]">
+              Supprimer cette recette ?
+            </p>
+            <p className="text-sm font-quicksand text-[var(--mf-text-secondary)] leading-relaxed">
+              Cette action est irréversible. La recette sera définitivement supprimée.
+            </p>
+            <div className="flex gap-3">
+              <button type="button" onClick={() => setShowConfirmDelete(false)}
+                className="flex-1 py-3 rounded-xl border border-[var(--mf-border-warm)] text-sm font-quicksand font-medium text-[var(--mf-text-secondary)] hover:border-[var(--mf-primary)] transition-colors">
+                Annuler
+              </button>
+              <button type="button" onClick={deleteRecipe} disabled={deleting}
+                className="flex-1 py-3 rounded-xl bg-red-500 text-white text-sm font-quicksand font-semibold hover:bg-red-600 disabled:opacity-60 transition-colors">
+                {deleting ? 'Suppression…' : 'Supprimer'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Toast stub */}
       {toastVisible && (

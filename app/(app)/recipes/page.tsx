@@ -207,13 +207,25 @@ export default function RecipesPage() {
                 <span className="text-4xl select-none" aria-hidden="true">
                   {recipe.categories?.icon ?? '🍴'}
                 </span>
-                <span className="absolute top-2 right-2 p-1" aria-hidden="true">
+                <button
+                  type="button"
+                  onClick={async (e) => {
+                    e.stopPropagation()
+                    const res = await fetch(`/api/recipes/${recipe.id}/favorite`, { method: 'POST' })
+                    if (res.ok) {
+                      const data = await res.json()
+                      setRecipes(prev => prev.map(r => r.id === recipe.id ? { ...r, is_favorited: data.is_favorited } : r))
+                    }
+                  }}
+                  className="absolute top-2 right-2 p-1"
+                  aria-label={recipe.is_favorited ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+                >
                   {recipe.is_favorited ? (
                     <Heart className="h-4 w-4 fill-red-400 text-red-400" />
                   ) : (
                     <HeartOff className="h-4 w-4 text-white/60" />
                   )}
-                </span>
+                </button>
               </div>
 
               {/* Corps carte */}
