@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Heart, HeartOff, Search } from 'lucide-react'
+import { Heart, HeartOff, Plus, Search } from 'lucide-react'
 
 interface Category {
   id: string
@@ -89,6 +89,7 @@ export default function RecipesPage() {
   }, [scope, search, selectedCategory])
 
   return (
+    <>
     <div className="max-w-sm mx-auto px-4 py-4 space-y-4">
 
       {/* Recherche */}
@@ -231,5 +232,16 @@ export default function RecipesPage() {
         </div>
       )}
     </div>
+
+      {/* FAB — Ajouter une recette */}
+      <button
+        type="button"
+        onClick={() => router.push('/recipes/add')}
+        className="fixed bottom-20 right-4 w-12 h-12 rounded-full bg-[var(--mf-primary)] text-white flex items-center justify-center shadow-lg hover:bg-[var(--mf-primary-hover)] active:scale-95 transition-all z-40"
+        aria-label="Ajouter une recette"
+      >
+        <Plus className="h-5 w-5" />
+      </button>
+    </>
   )
 }
