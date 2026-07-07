@@ -68,7 +68,7 @@ export default function HomePage() {
           </div>
           <div>
             <p className="font-dosis font-semibold text-[#2C1810]">Menu de la semaine</p>
-            <p className="text-xs text-[#8c7169] font-quicksand">Bientôt disponible</p>
+            <p className="text-xs text-[#8c7169] font-quicksand">Planifier les repas de la semaine</p>
           </div>
         </button>
       </div>
