@@ -34,7 +34,13 @@ interface Plan {
 interface Recipe {
   id: string
   name: string
-  categories: { icon: string | null } | null
+  categories: { id: string; icon: string | null } | null
+}
+
+interface Category {
+  id: string
+  name: string
+  icon: string | null
 }
 
 // ─── Constantes ─────────────────────────────────────────────────────────────
@@ -88,11 +94,14 @@ export default function PlanPage() {
   const [error, setError]             = useState<string | null>(null)
 
   // Picker
-  const [picker, setPicker]           = useState<{ dayOfWeek: DayOfWeek; mealType: MealType } | null>(null)
-  const [recipes, setRecipes]         = useState<Recipe[]>([])
+  const [picker, setPicker]               = useState<{ dayOfWeek: DayOfWeek; mealType: MealType } | null>(null)
+  const [recipes, setRecipes]             = useState<Recipe[]>([])
   const [recipesLoaded, setRecipesLoaded] = useState(false)
   const [pickerSearch, setPickerSearch]   = useState('')
-  const [assigning, setAssigning]         = useState(false)
+  const [pickerCategory, setPickerCategory] = useState<string | null>(null)
+  const [assigning, setAssigning]           = useState(false)
+  const [categories, setCategories]         = useState<Category[]>([])
+  const [categoriesLoaded, setCategoriesLoaded] = useState(false)
 
   const scrollRef = useRef<HTMLDivElement>(null)
 
@@ -133,7 +142,16 @@ export default function PlanPage() {
         })
         .catch(() => setRecipesLoaded(true))
     }
-  }, [picker, recipesLoaded])
+    if (picker && !categoriesLoaded) {
+      fetch('/api/categories')
+        .then(r => r.json())
+        .then(data => {
+          if (Array.isArray(data)) setCategories(data)
+          setCategoriesLoaded(true)
+        })
+        .catch(() => setCategoriesLoaded(true))
+    }
+  }, [picker, recipesLoaded, categoriesLoaded])
 
   // ── Actions ───────────────────────────────────────────────────────────────
 
@@ -160,6 +178,7 @@ export default function PlanPage() {
       })
       setPicker(null)
       setPickerSearch('')
+      setPickerCategory(null)
     }
     setAssigning(false)
   }
@@ -184,9 +203,13 @@ export default function PlanPage() {
     )
   }
 
-  const filteredRecipes = recipes.filter(r =>
-    r.name.toLowerCase().includes(pickerSearch.toLowerCase())
-  )
+  const isPastWeek = weekStart < getMondayISO()
+
+  const filteredRecipes = recipes.filter(r => {
+    const matchSearch = r.name.toLowerCase().includes(pickerSearch.toLowerCase())
+    const matchCat = !pickerCategory || r.categories?.id === pickerCategory
+    return matchSearch && matchCat
+  })
 
   // ── Rendu ─────────────────────────────────────────────────────────────────
 
@@ -225,6 +248,15 @@ export default function PlanPage() {
           <Settings className="h-4 w-4" />
         </button>
       </div>
+
+      {/* Bannière lecture seule */}
+      {isPastWeek && !loading && !error && (
+        <div className="bg-[var(--mf-bg-card)] border-b border-[var(--mf-border-warm)] px-4 py-1.5 text-center">
+          <p className="text-[11px] font-quicksand text-[var(--mf-text-tertiary)]">
+            Semaine passée — lecture seule
+          </p>
+        </div>
+      )}
 
       {/* États de chargement / erreur */}
       {loading && (
@@ -302,6 +334,7 @@ export default function PlanPage() {
                         item={plan?.meal_plan_items.find(i => i.meal_type === config.meal_type) ?? null}
                         onAdd={() => setPicker({ dayOfWeek: 'lundi', mealType: config.meal_type })}
                         onRemove={removeItem}
+                        readOnly={isPastWeek}
                       />
                     </td>
                   ) : (
@@ -314,6 +347,7 @@ export default function PlanPage() {
                             item={item ?? null}
                             onAdd={() => setPicker({ dayOfWeek: day, mealType: config.meal_type })}
                             onRemove={removeItem}
+                            readOnly={isPastWeek}
                           />
                         </td>
                       )
@@ -338,7 +372,7 @@ export default function PlanPage() {
               </p>
               <button
                 type="button"
-                onClick={() => { setPicker(null); setPickerSearch('') }}
+                onClick={() => { setPicker(null); setPickerSearch(''); setPickerCategory(null) }}
                 className="p-1 text-[var(--mf-text-secondary)] hover:text-[var(--mf-primary)]"
                 aria-label="Fermer"
               >
@@ -360,6 +394,37 @@ export default function PlanPage() {
                 />
               </div>
             </div>
+
+            {/* Filtres catégorie */}
+            {categories.length > 0 && (
+              <div className="flex gap-1.5 overflow-x-auto px-4 py-2 border-b border-[var(--mf-border-warm)]">
+                <button
+                  type="button"
+                  onClick={() => setPickerCategory(null)}
+                  className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-quicksand font-medium transition-colors ${
+                    !pickerCategory
+                      ? 'bg-[var(--mf-primary)] text-white'
+                      : 'bg-white border border-[var(--mf-border-warm)] text-[var(--mf-text-secondary)]'
+                  }`}
+                >
+                  Tout
+                </button>
+                {categories.map(cat => (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => setPickerCategory(pickerCategory === cat.id ? null : cat.id)}
+                    className={`flex-shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-quicksand font-medium transition-colors ${
+                      pickerCategory === cat.id
+                        ? 'bg-[var(--mf-primary)] text-white'
+                        : 'bg-white border border-[var(--mf-border-warm)] text-[var(--mf-text-secondary)]'
+                    }`}
+                  >
+                    {cat.icon} {cat.name}
+                  </button>
+                ))}
+              </div>
+            )}
 
             {/* Liste recettes */}
             <div className="overflow-y-auto flex-1 px-4 py-2 space-y-1">
@@ -403,12 +468,19 @@ function DayCell({
   item,
   onAdd,
   onRemove,
+  readOnly,
 }: {
   item: PlanItem | null
   onAdd: () => void
   onRemove: (id: string) => void
+  readOnly: boolean
 }) {
   if (!item?.recipes) {
+    if (readOnly) {
+      return (
+        <div className="w-24 h-16 rounded-xl border border-dashed border-[var(--mf-border-warm)]/40 bg-[var(--mf-bg-card-alt)]/40" />
+      )
+    }
     return (
       <button
         type="button"
@@ -429,14 +501,16 @@ function DayCell({
         )}
         {item.recipes.name}
       </p>
-      <button
-        type="button"
-        onClick={() => onRemove(item.id)}
-        className="absolute top-1 right-1 w-4 h-4 rounded-full bg-white/80 flex items-center justify-center text-[var(--mf-text-tertiary)] hover:text-red-500 transition-colors"
-        aria-label="Retirer la recette"
-      >
-        <X className="h-2.5 w-2.5" />
-      </button>
+      {!readOnly && (
+        <button
+          type="button"
+          onClick={() => onRemove(item.id)}
+          className="absolute top-1 right-1 w-4 h-4 rounded-full bg-white/80 flex items-center justify-center text-[var(--mf-text-tertiary)] hover:text-red-500 transition-colors"
+          aria-label="Retirer la recette"
+        >
+          <X className="h-2.5 w-2.5" />
+        </button>
+      )}
     </div>
   )
 }
@@ -445,12 +519,19 @@ function TemplateCell({
   item,
   onAdd,
   onRemove,
+  readOnly,
 }: {
   item: PlanItem | null
   onAdd: () => void
   onRemove: (id: string) => void
+  readOnly: boolean
 }) {
   if (!item?.recipes) {
+    if (readOnly) {
+      return (
+        <div className="w-full h-12 rounded-xl border border-dashed border-[var(--mf-border-warm)]/40 bg-[var(--mf-bg-card-alt)]/40" />
+      )
+    }
     return (
       <button
         type="button"
@@ -471,14 +552,16 @@ function TemplateCell({
       <p className="text-xs font-quicksand font-medium text-[var(--mf-text-primary)] truncate flex-1">
         {item.recipes.name}
       </p>
-      <button
-        type="button"
-        onClick={() => onRemove(item.id)}
-        className="flex-shrink-0 w-5 h-5 rounded-full bg-white/80 flex items-center justify-center text-[var(--mf-text-tertiary)] hover:text-red-500 transition-colors"
-        aria-label="Retirer la recette"
-      >
-        <X className="h-3 w-3" />
-      </button>
+      {!readOnly && (
+        <button
+          type="button"
+          onClick={() => onRemove(item.id)}
+          className="flex-shrink-0 w-5 h-5 rounded-full bg-white/80 flex items-center justify-center text-[var(--mf-text-tertiary)] hover:text-red-500 transition-colors"
+          aria-label="Retirer la recette"
+        >
+          <X className="h-3 w-3" />
+        </button>
+      )}
     </div>
   )
 }
