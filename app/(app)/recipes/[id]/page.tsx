@@ -57,10 +57,43 @@ interface Recipe {
   recipe_steps: Step[]
 }
 
+interface MealConfigItem { meal_type: string; label: string }
+
 const DIFFICULTY_LABEL: Record<string, string> = {
   facile: 'Facile',
   moyen: 'Moyen',
   difficile: 'Difficile',
+}
+
+const DAY_OPTIONS = [
+  { val: 'lundi',    label: 'Lun' },
+  { val: 'mardi',    label: 'Mar' },
+  { val: 'mercredi', label: 'Mer' },
+  { val: 'jeudi',    label: 'Jeu' },
+  { val: 'vendredi', label: 'Ven' },
+  { val: 'samedi',   label: 'Sam' },
+  { val: 'dimanche', label: 'Dim' },
+]
+
+const MEAL_LABEL: Record<string, string> = {
+  petit_dejeuner: 'Petit-déj.',
+  dejeuner:       'Déjeuner',
+  gouter:         'Goûter',
+  diner:          'Dîner',
+}
+
+function getMondayISO(d: Date = new Date()): string {
+  const day = d.getDay()
+  const diff = day === 0 ? -6 : 1 - day
+  const mon = new Date(d)
+  mon.setDate(d.getDate() + diff)
+  return mon.toISOString().split('T')[0]
+}
+
+function nextMondayISO(): string {
+  const d = new Date()
+  d.setDate(d.getDate() + 7)
+  return getMondayISO(d)
 }
 
 function formatQty(qty: number | null, servings: number, originalServings: number): string {
@@ -80,9 +113,18 @@ export default function RecipeDetailPage() {
   const [loading,           setLoading]           = useState(true)
   const [error,             setError]             = useState<string | null>(null)
   const [servings,          setServings]          = useState(1)
-  const [toastVisible,      setToastVisible]      = useState(false)
   const [showConfirmDelete, setShowConfirmDelete] = useState(false)
   const [deleting,          setDeleting]          = useState(false)
+
+  // ── Ajouter à mon menu ────────────────────────────────────────
+  const [showAddMenu,  setShowAddMenu]  = useState(false)
+  const [addWeek,      setAddWeek]      = useState<'current' | 'next'>('current')
+  const [addDay,       setAddDay]       = useState('')
+  const [addMeal,      setAddMeal]      = useState('')
+  const [addingMenu,   setAddingMenu]   = useState(false)
+  const [addMenuDone,  setAddMenuDone]  = useState(false)
+  const [addMenuError, setAddMenuError] = useState<string | null>(null)
+  const [mealConfig,   setMealConfig]   = useState<MealConfigItem[] | null>(null)
 
   useEffect(() => {
     fetch(`/api/recipes/${id}`)
@@ -122,9 +164,50 @@ export default function RecipeDetailPage() {
     }
   }
 
-  function showToast() {
-    setToastVisible(true)
-    setTimeout(() => setToastVisible(false), 2000)
+  async function openAddMenu() {
+    setShowAddMenu(true)
+    setAddMenuDone(false)
+    setAddMenuError(null)
+    if (!mealConfig) {
+      const res = await fetch('/api/users/me/meal-config')
+      const data = await res.json()
+      const active: MealConfigItem[] = (Array.isArray(data) ? data : [])
+        .filter((c: { is_active?: boolean }) => c.is_active !== false)
+        .map((c: { meal_type: string; label?: string }) => ({
+          meal_type: c.meal_type,
+          label: c.label ?? MEAL_LABEL[c.meal_type] ?? c.meal_type,
+        }))
+      setMealConfig(active)
+      if (active.length > 0 && !addMeal) setAddMeal(active[0].meal_type)
+    }
+  }
+
+  async function confirmAddToMenu() {
+    if (!addDay || !addMeal) return
+    setAddingMenu(true)
+    setAddMenuError(null)
+    try {
+      const week = addWeek === 'current' ? getMondayISO() : nextMondayISO()
+      const planRes = await fetch(`/api/meal-plans?week=${week}`)
+      const plan = await planRes.json()
+      if (!planRes.ok || !plan.id) throw new Error('Plan introuvable')
+
+      const itemRes = await fetch(`/api/meal-plans/${plan.id}/items`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ day_of_week: addDay, meal_type: addMeal, recipe_id: id }),
+      })
+      if (!itemRes.ok) {
+        const d = await itemRes.json()
+        throw new Error(d.error ?? 'Erreur')
+      }
+      setAddMenuDone(true)
+      setTimeout(() => setShowAddMenu(false), 1500)
+    } catch (e) {
+      setAddMenuError(e instanceof Error ? e.message : 'Erreur')
+    } finally {
+      setAddingMenu(false)
+    }
   }
 
   if (loading) {
@@ -226,7 +309,6 @@ export default function RecipeDetailPage() {
               {recipe.categories.name}
             </div>
           )}
-          {/* Toggle favori interactif */}
           <button
             type="button"
             onClick={toggleFavorite}
@@ -311,7 +393,7 @@ export default function RecipeDetailPage() {
         )}
 
         {/* Bouton "Ajouter à mon menu" */}
-        <button type="button" onClick={showToast}
+        <button type="button" onClick={openAddMenu}
           className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-[var(--mf-primary)] text-white font-quicksand font-semibold text-sm hover:bg-[var(--mf-primary-hover)] transition-colors">
           <CalendarPlus className="h-4 w-4" />
           Ajouter à mon menu
@@ -342,10 +424,84 @@ export default function RecipeDetailPage() {
         </div>
       )}
 
-      {/* Toast stub */}
-      {toastVisible && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-xl bg-[var(--mf-text-primary)] text-white text-sm font-quicksand shadow-lg">
-          Disponible bientôt ✨
+      {/* Bottom sheet — Ajouter à mon menu */}
+      {showAddMenu && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 px-4 pb-6"
+          onClick={e => { if (e.target === e.currentTarget) setShowAddMenu(false) }}
+        >
+          <div className="w-full max-w-sm bg-white rounded-2xl p-5 space-y-4 shadow-xl">
+            <p className="font-dosis font-bold text-base text-[var(--mf-text-primary)]">
+              Ajouter à mon menu
+            </p>
+
+            {/* Semaine */}
+            <div className="space-y-1.5">
+              <p className="text-xs font-quicksand font-semibold text-[var(--mf-text-secondary)]">SEMAINE</p>
+              <div className="flex gap-2">
+                {([{ val: 'current', label: 'Cette semaine' }, { val: 'next', label: 'Semaine prochaine' }] as const).map(o => (
+                  <button key={o.val} type="button" onClick={() => setAddWeek(o.val)}
+                    className={`flex-1 py-2 rounded-xl text-xs font-quicksand font-medium border transition-colors ${
+                      addWeek === o.val
+                        ? 'bg-[var(--mf-primary)] text-white border-[var(--mf-primary)]'
+                        : 'border-[var(--mf-border-warm)] text-[var(--mf-text-secondary)]'
+                    }`}>{o.label}</button>
+                ))}
+              </div>
+            </div>
+
+            {/* Jour */}
+            <div className="space-y-1.5">
+              <p className="text-xs font-quicksand font-semibold text-[var(--mf-text-secondary)]">JOUR</p>
+              <div className="flex flex-wrap gap-1.5">
+                {DAY_OPTIONS.map(d => (
+                  <button key={d.val} type="button" onClick={() => setAddDay(d.val)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-quicksand font-medium border transition-colors ${
+                      addDay === d.val
+                        ? 'bg-[var(--mf-primary)] text-white border-[var(--mf-primary)]'
+                        : 'border-[var(--mf-border-warm)] text-[var(--mf-text-secondary)]'
+                    }`}>{d.label}</button>
+                ))}
+              </div>
+            </div>
+
+            {/* Repas */}
+            <div className="space-y-1.5">
+              <p className="text-xs font-quicksand font-semibold text-[var(--mf-text-secondary)]">REPAS</p>
+              <div className="flex flex-wrap gap-1.5">
+                {(mealConfig ?? []).map(m => (
+                  <button key={m.meal_type} type="button" onClick={() => setAddMeal(m.meal_type)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-quicksand font-medium border transition-colors ${
+                      addMeal === m.meal_type
+                        ? 'bg-[var(--mf-primary)] text-white border-[var(--mf-primary)]'
+                        : 'border-[var(--mf-border-warm)] text-[var(--mf-text-secondary)]'
+                    }`}>{m.label}</button>
+                ))}
+              </div>
+            </div>
+
+            {addMenuError && (
+              <p className="text-xs text-red-600 font-quicksand">{addMenuError}</p>
+            )}
+
+            {addMenuDone ? (
+              <p className="text-center text-sm font-quicksand font-semibold text-green-600">
+                ✓ Recette ajoutée au menu !
+              </p>
+            ) : (
+              <div className="flex gap-3">
+                <button type="button" onClick={() => setShowAddMenu(false)}
+                  className="flex-1 py-3 rounded-xl border border-[var(--mf-border-warm)] text-sm font-quicksand font-medium text-[var(--mf-text-secondary)] hover:border-[var(--mf-primary)] transition-colors">
+                  Annuler
+                </button>
+                <button type="button" onClick={confirmAddToMenu}
+                  disabled={!addDay || !addMeal || addingMenu}
+                  className="flex-1 py-3 rounded-xl bg-[var(--mf-primary)] text-white text-sm font-quicksand font-semibold hover:bg-[var(--mf-primary-hover)] disabled:opacity-60 transition-colors">
+                  {addingMenu ? 'Ajout…' : 'Confirmer'}
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </>

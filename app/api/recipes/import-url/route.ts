@@ -10,7 +10,7 @@ function parseDuration(iso: string): number {
 
 // ── Stratégie 1 : JSON-LD Schema.org Recipe ──────────────────
 function extractRecipeLD(html: string): Record<string, unknown> | null {
-  const blocks = [...html.matchAll(/<script[^>]+type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi)]
+  const blocks = Array.from(html.matchAll(/<script[^>]+type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi))
   for (const [, raw] of blocks) {
     try {
       const obj = JSON.parse(raw.trim())

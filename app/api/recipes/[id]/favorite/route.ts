@@ -29,7 +29,7 @@ export async function POST(
     const { data: membership } = await service
       .from('family_circle_members')
       .select('id')
-      .eq('circle_id', recipe.circle_id)
+      .eq('circle_id', recipe.circle_id!)
       .eq('user_id', user.id)
       .maybeSingle()
     if (!membership) return Response.json({ error: 'Accès refusé' }, { status: 403 })

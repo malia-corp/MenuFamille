@@ -863,6 +863,7 @@ export type Database = {
           email: string
           family_size: number
           id: string
+          preferences: Json | null
         }
         Insert: {
           created_at?: string
@@ -871,6 +872,7 @@ export type Database = {
           email: string
           family_size?: number
           id: string
+          preferences?: Json | null
         }
         Update: {
           created_at?: string
@@ -879,6 +881,7 @@ export type Database = {
           email?: string
           family_size?: number
           id?: string
+          preferences?: Json | null
         }
         Relationships: []
       }

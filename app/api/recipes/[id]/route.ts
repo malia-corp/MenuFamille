@@ -47,7 +47,7 @@ export async function GET(
     const { data: membership } = await service
       .from('family_circle_members')
       .select('id')
-      .eq('circle_id', recipe.circle_id)
+      .eq('circle_id', recipe.circle_id!)
       .eq('user_id', user.id)
       .maybeSingle()
     if (!membership) return Response.json({ error: 'Accès refusé' }, { status: 403 })
@@ -98,6 +98,7 @@ export async function PATCH(
   const {
     name, description, category_id, prep_time_min, cook_time_min,
     servings, difficulty, visibility, circle_id, ingredients, steps,
+    photo_url,
   } = body
 
   const updates: Record<string, unknown> = {}
@@ -122,9 +123,11 @@ export async function PATCH(
     updates.visibility = visibility
     updates.circle_id  = visibility === 'circle' ? (circle_id || null) : null
   }
+  if (photo_url !== undefined) updates.photo_url = photo_url ?? null
 
   if (Object.keys(updates).length > 0) {
-    const { error: updateErr } = await service.from('recipes').update(updates).eq('id', params.id)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error: updateErr } = await service.from('recipes').update(updates as any).eq('id', params.id)
     if (updateErr) return Response.json({ error: updateErr.message }, { status: 500 })
   }
 
