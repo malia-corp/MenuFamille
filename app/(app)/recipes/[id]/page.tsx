@@ -180,6 +180,16 @@ export default function RecipeDetailPage() {
 
       <div className="max-w-sm mx-auto px-4 py-4 space-y-5 pb-8">
 
+        {/* Photo */}
+        {recipe.photo_url && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={recipe.photo_url}
+            alt={recipe.name}
+            className="w-full h-48 object-cover rounded-xl"
+          />
+        )}
+
         {/* Badge catégorie + nom */}
         <div className="space-y-1.5">
           {recipe.categories && (

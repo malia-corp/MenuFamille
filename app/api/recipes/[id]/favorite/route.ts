@@ -44,10 +44,12 @@ export async function POST(
     .maybeSingle()
 
   if (existing) {
-    await service.from('recipe_favorites').delete().eq('id', existing.id)
+    const { error: delErr } = await service.from('recipe_favorites').delete().eq('id', existing.id)
+    if (delErr) return Response.json({ error: delErr.message }, { status: 500 })
     return Response.json({ is_favorited: false })
   }
 
-  await service.from('recipe_favorites').insert({ recipe_id: id, user_id: user.id })
+  const { error: insErr } = await service.from('recipe_favorites').insert({ recipe_id: id, user_id: user.id })
+  if (insErr) return Response.json({ error: insErr.message }, { status: 500 })
   return Response.json({ is_favorited: true })
 }

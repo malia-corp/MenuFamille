@@ -40,6 +40,9 @@ export async function POST(request: NextRequest) {
     parent_recipe_id,
     variant_label,
     force = false,
+    photo_url,
+    source_url,
+    raw_html_hash,
   } = body
 
   if (!name || typeof name !== 'string' || name.trim().length < 2) {
@@ -86,6 +89,7 @@ export async function POST(request: NextRequest) {
       servings: Math.max(1, Number(servings) || 4),
       difficulty: difficulty || null,
       visibility,
+      photo_url: (photo_url as string | undefined) || null,
     })
     .select('id')
     .single()
@@ -121,6 +125,15 @@ export async function POST(request: NextRequest) {
   if (validSteps.length > 0) {
     const { error: stepsErr } = await service.from('recipe_steps').insert(validSteps)
     if (stepsErr) return Response.json({ error: stepsErr.message }, { status: 500 })
+  }
+
+  if (source_url) {
+    await service.from('recipe_imports').insert({
+      recipe_id: recipe.id,
+      source_url,
+      parser_version: '1.0',
+      raw_html_hash: (raw_html_hash as string | undefined) ?? null,
+    })
   }
 
   return Response.json({ id: recipe.id }, { status: 201 })

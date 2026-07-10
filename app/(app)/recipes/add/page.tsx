@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Download, Link as LinkIcon } from 'lucide-react'
 import { RecipeForm, RecipeFormValues } from '../_recipe-form'
 
 type ConflictChoice = 'use' | 'variant' | 'independent'
@@ -18,6 +18,35 @@ export default function RecipeAddPage() {
   const [conflict, setConflict]       = useState<{ id: string; name: string } | null>(null)
   const [conflictChoice, setConflictChoice] = useState<ConflictChoice>('use')
   const [variantLabel, setVariantLabel]     = useState('')
+
+  // Import URL
+  const [importUrl,      setImportUrl]      = useState('')
+  const [importing,      setImporting]      = useState(false)
+  const [importError,    setImportError]    = useState<string | null>(null)
+  const [importDomain,   setImportDomain]   = useState<string | null>(null)
+  const [formKey,        setFormKey]        = useState(0)
+  const [importedValues, setImportedValues] = useState<Partial<RecipeFormValues>>({})
+
+  async function handleImport() {
+    setImporting(true)
+    setImportError(null)
+    try {
+      const res = await fetch('/api/recipes/import-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: importUrl }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setImportError(data.error ?? 'Erreur import'); return }
+      setImportedValues({ ...data.partial, source_url: data.source_url, raw_html_hash: data.raw_html_hash })
+      setImportDomain(new URL(importUrl).hostname.replace('www.', ''))
+      setFormKey(k => k + 1)
+    } catch {
+      setImportError('Erreur réseau')
+    } finally {
+      setImporting(false)
+    }
+  }
 
   async function callApi(values: RecipeFormValues, opts: { force?: boolean; parentId?: string; variantLabelVal?: string } = {}) {
     setError(null)
@@ -35,6 +64,9 @@ export default function RecipeAddPage() {
       circle_id:     values.visibility === 'circle' ? values.circleId : null,
       ingredients:   values.ingredients.filter(i => i.name.trim()),
       steps:         values.steps.filter(s => s.description.trim()),
+      photo_url:     values.photo_url ?? null,
+      source_url:    values.source_url ?? null,
+      raw_html_hash: values.raw_html_hash ?? null,
     }
     if (opts.force)    body.force            = true
     if (opts.parentId) {
@@ -66,6 +98,7 @@ export default function RecipeAddPage() {
   async function confirmConflict() {
     if (!conflict || !lastValues) return
     if (conflictChoice === 'use') {
+      await fetch(`/api/recipes/${conflict.id}/favorite`, { method: 'POST' })
       router.push(`/recipes/${conflict.id}`)
       return
     }
@@ -88,7 +121,42 @@ export default function RecipeAddPage() {
         <p className="font-dosis font-semibold text-sm text-[var(--mf-text-primary)]">Nouvelle recette</p>
       </div>
 
+      {/* Bloc import URL */}
+      <div className="max-w-sm mx-auto px-4 pt-4 space-y-2">
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--mf-text-tertiary)]" />
+            <input
+              type="url"
+              placeholder="Coller un lien de recette…"
+              value={importUrl}
+              onChange={e => { setImportUrl(e.target.value); setImportError(null) }}
+              className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[var(--mf-border-warm)] bg-[var(--mf-bg-card-alt)] text-sm font-quicksand text-[var(--mf-text-primary)] placeholder:text-[var(--mf-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--mf-primary)]/30"
+            />
+          </div>
+          <button
+            type="button"
+            onClick={handleImport}
+            disabled={!importUrl.trim() || importing}
+            className="bg-[var(--mf-primary)] text-white rounded-xl px-3 disabled:opacity-50 flex items-center hover:bg-[var(--mf-primary-hover)] transition-colors"
+            aria-label="Importer la recette"
+          >
+            {importing
+              ? <span className="text-xs font-quicksand">…</span>
+              : <Download className="h-4 w-4" />}
+          </button>
+        </div>
+        {importDomain && (
+          <p className="text-[11px] font-quicksand text-[var(--mf-text-tertiary)]">
+            Importée depuis {importDomain} — vérifiez et complétez si nécessaire
+          </p>
+        )}
+        {importError && <p className="text-xs text-red-600 font-quicksand">{importError}</p>}
+      </div>
+
       <RecipeForm
+        key={formKey}
+        defaultValues={importedValues}
         onSubmit={handleFormSubmit}
         loading={loading}
         apiError={error}

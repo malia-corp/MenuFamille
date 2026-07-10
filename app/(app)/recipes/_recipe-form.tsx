@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Globe, Lock, Minus, Plus, Trash2, Users } from 'lucide-react'
+import { Globe, ImagePlus, Lock, Minus, Plus, Trash2, Users, X } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
 
 // ── Types exportés ────────────────────────────────────────────
 export interface IngredientRow { _id: string; name: string; quantity: string; unit: string }
@@ -22,6 +23,9 @@ export interface RecipeFormValues {
   circleId: string
   ingredients: IngredientRow[]
   steps: StepRow[]
+  photo_url?: string
+  source_url?: string
+  raw_html_hash?: string
 }
 
 export interface RecipeFormProps {
@@ -78,8 +82,12 @@ export function RecipeForm({
   const [difficulty,  setDifficulty]  = useState<DifficultyVal | ''>(defaultValues?.difficulty ?? '')
   const [visibility,  setVisibility]  = useState<VisibilityVal>(defaultValues?.visibility ?? 'private')
   const [circleId,    setCircleId]    = useState(defaultValues?.circleId    ?? '')
-  const [nameError,   setNameError]   = useState<string | null>(null)
-  const [circleError, setCircleError] = useState<string | null>(null)
+  const [nameError,    setNameError]    = useState<string | null>(null)
+  const [circleError,  setCircleError]  = useState<string | null>(null)
+  const [photoFile,    setPhotoFile]    = useState<File | null>(null)
+  const [photoPreview, setPhotoPreview] = useState<string | null>(defaultValues?.photo_url ?? null)
+  const [photoError,   setPhotoError]   = useState<string | null>(null)
+  const [photoUploading, setPhotoUploading] = useState(false)
 
   const [ingredients, setIngredients] = useState<IngredientRow[]>(
     defaultValues?.ingredients ?? [{ _id: uid(), name: '', quantity: '', unit: '' }]
@@ -120,11 +128,73 @@ export function RecipeForm({
     setCircleError(null)
     if (!name.trim() || name.trim().length < 2) { setNameError('Minimum 2 caractères'); return }
     if (visibility === 'circle' && !circleId)   { setCircleError('Sélectionne un cercle familial'); return }
-    await onSubmit({ name, description, categoryId, prepTime, cookTime, servings, difficulty, visibility, circleId, ingredients, steps })
+
+    let resolvedPhotoUrl = defaultValues?.photo_url ?? undefined
+    if (photoFile) {
+      setPhotoUploading(true)
+      const supabase = createClient()
+      const ext = photoFile.name.split('.').pop()
+      const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+      const { data: upload, error: uploadErr } = await supabase.storage
+        .from('recipe-photos')
+        .upload(path, photoFile, { upsert: false })
+      setPhotoUploading(false)
+      if (uploadErr) { setPhotoError('Erreur upload photo'); return }
+      const { data: { publicUrl } } = supabase.storage.from('recipe-photos').getPublicUrl(upload.path)
+      resolvedPhotoUrl = publicUrl
+    } else if (photoPreview === null) {
+      resolvedPhotoUrl = undefined
+    }
+
+    await onSubmit({
+      name, description, categoryId, prepTime, cookTime, servings, difficulty, visibility, circleId,
+      ingredients, steps,
+      photo_url: resolvedPhotoUrl,
+      source_url: defaultValues?.source_url,
+      raw_html_hash: defaultValues?.raw_html_hash,
+    })
   }
 
   return (
     <div className="max-w-sm mx-auto px-4 py-4 space-y-6 pb-10">
+
+      {/* ── Photo ────────────────────────────────────── */}
+      <section className="space-y-2">
+        <h2 className={SECTION}>Photo</h2>
+
+        {photoPreview ? (
+          <div className="relative">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={photoPreview} alt="Aperçu" className="w-full h-40 object-cover rounded-xl" />
+            <button type="button"
+              onClick={() => { setPhotoFile(null); setPhotoPreview(null); setPhotoError(null) }}
+              className="absolute top-2 right-2 bg-white/80 rounded-full p-1 hover:bg-white transition-colors"
+              aria-label="Supprimer la photo">
+              <X className="h-4 w-4 text-[var(--mf-text-primary)]" />
+            </button>
+          </div>
+        ) : (
+          <label htmlFor="photo-upload" className="cursor-pointer block w-full">
+            <div className="flex flex-col items-center gap-2 py-6 rounded-xl border-2 border-dashed border-[var(--mf-border-warm)] bg-[var(--mf-bg-card-alt)] hover:border-[var(--mf-primary)] transition-colors">
+              <ImagePlus className="h-6 w-6 text-[var(--mf-text-tertiary)]" />
+              <p className="text-xs font-quicksand text-[var(--mf-text-tertiary)]">
+                Ajouter une photo JPG, PNG ou GIF (max 5 Mo)
+              </p>
+            </div>
+            <input id="photo-upload" type="file" accept="image/jpeg,image/png,image/gif"
+              className="hidden"
+              onChange={e => {
+                const file = e.target.files?.[0]
+                if (!file) return
+                if (file.size > 5 * 1024 * 1024) { setPhotoError('Fichier trop lourd (max 5 Mo)'); return }
+                setPhotoFile(file)
+                setPhotoPreview(URL.createObjectURL(file))
+                setPhotoError(null)
+              }} />
+          </label>
+        )}
+        {photoError && <p className="text-xs text-red-600 font-quicksand">{photoError}</p>}
+      </section>
 
       {/* ── Informations ─────────────────────────────── */}
       <section className="space-y-3">
@@ -317,9 +387,9 @@ export function RecipeForm({
 
       {/* ── Bouton principal ─────────────────────────── */}
       {!hideSubmit && (
-        <button type="button" onClick={handleSubmit} disabled={loading}
+        <button type="button" onClick={handleSubmit} disabled={loading || photoUploading}
           className="w-full py-3.5 rounded-xl bg-[var(--mf-primary)] text-white font-quicksand font-semibold text-sm hover:bg-[var(--mf-primary-hover)] disabled:opacity-60 transition-colors">
-          {loading ? 'En cours…' : submitLabel}
+          {photoUploading ? 'Upload photo…' : loading ? 'En cours…' : submitLabel}
         </button>
       )}
     </div>
