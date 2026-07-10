@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Download, Link as LinkIcon } from 'lucide-react'
-import { RecipeForm, RecipeFormValues } from '../_recipe-form'
+import { RecipeForm, RecipeFormValues, uid, IngredientRow, StepRow } from '../_recipe-form'
 
 type ConflictChoice = 'use' | 'variant' | 'independent'
 
@@ -20,16 +20,18 @@ export default function RecipeAddPage() {
   const [variantLabel, setVariantLabel]     = useState('')
 
   // Import URL
-  const [importUrl,      setImportUrl]      = useState('')
-  const [importing,      setImporting]      = useState(false)
-  const [importError,    setImportError]    = useState<string | null>(null)
-  const [importDomain,   setImportDomain]   = useState<string | null>(null)
+  const [importUrl,     setImportUrl]     = useState('')
+  const [importing,     setImporting]     = useState(false)
+  const [importError,   setImportError]   = useState<string | null>(null)
+  const [importWarning, setImportWarning] = useState<string | null>(null)
+  const [importDomain,  setImportDomain]  = useState<string | null>(null)
   const [formKey,        setFormKey]        = useState(0)
   const [importedValues, setImportedValues] = useState<Partial<RecipeFormValues>>({})
 
   async function handleImport() {
     setImporting(true)
     setImportError(null)
+    setImportWarning(null)
     try {
       const res = await fetch('/api/recipes/import-url', {
         method: 'POST',
@@ -38,9 +40,35 @@ export default function RecipeAddPage() {
       })
       const data = await res.json()
       if (!res.ok) { setImportError(data.error ?? 'Erreur import'); return }
-      setImportedValues({ ...data.partial, source_url: data.source_url, raw_html_hash: data.raw_html_hash })
+
+      // Mapper string[] → IngredientRow[] / StepRow[]
+      const rawIngredients = (data.partial.ingredients ?? []) as unknown[]
+      const rawSteps       = (data.partial.steps       ?? []) as unknown[]
+
+      const mappedIngredients: IngredientRow[] = rawIngredients.map((ing: unknown) => ({
+        _id:      uid(),
+        name:     typeof ing === 'string' ? ing : String(ing),
+        quantity: '',
+        unit:     '',
+      }))
+      const mappedSteps: StepRow[] = rawSteps.map((s: unknown) => ({
+        _id:         uid(),
+        description: typeof s === 'string' ? s : String(s),
+      }))
+
+      setImportedValues({
+        ...data.partial,
+        ingredients:   mappedIngredients.length ? mappedIngredients : undefined,
+        steps:         mappedSteps.length       ? mappedSteps       : undefined,
+        source_url:    data.source_url,
+        raw_html_hash: data.raw_html_hash,
+      })
       setImportDomain(new URL(importUrl).hostname.replace('www.', ''))
       setFormKey(k => k + 1)
+
+      if (!data.success) {
+        setImportWarning('Ingrédients non détectés — vérifiez et complétez manuellement')
+      }
     } catch {
       setImportError('Erreur réseau')
     } finally {
@@ -130,7 +158,7 @@ export default function RecipeAddPage() {
               type="url"
               placeholder="Coller un lien de recette…"
               value={importUrl}
-              onChange={e => { setImportUrl(e.target.value); setImportError(null) }}
+              onChange={e => { setImportUrl(e.target.value); setImportError(null); setImportWarning(null) }}
               className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[var(--mf-border-warm)] bg-[var(--mf-bg-card-alt)] text-sm font-quicksand text-[var(--mf-text-primary)] placeholder:text-[var(--mf-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--mf-primary)]/30"
             />
           </div>
@@ -142,13 +170,18 @@ export default function RecipeAddPage() {
             aria-label="Importer la recette"
           >
             {importing
-              ? <span className="text-xs font-quicksand">…</span>
+              ? <span className="text-xs font-quicksand px-1">…</span>
               : <Download className="h-4 w-4" />}
           </button>
         </div>
         {importDomain && (
           <p className="text-[11px] font-quicksand text-[var(--mf-text-tertiary)]">
             Importée depuis {importDomain} — vérifiez et complétez si nécessaire
+          </p>
+        )}
+        {importWarning && (
+          <p className="text-[11px] font-quicksand text-amber-700 bg-amber-50 px-2 py-1.5 rounded-lg">
+            ⚠ {importWarning}
           </p>
         )}
         {importError && <p className="text-xs text-red-600 font-quicksand">{importError}</p>}
