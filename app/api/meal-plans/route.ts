@@ -21,8 +21,8 @@ export async function GET(request: NextRequest) {
     .select(`
       id, week_start, status,
       meal_plan_items (
-        id, day_of_week, meal_type, applies_all_days, servings,
-        recipes ( id, name, categories ( icon ) )
+        id, day_of_week, meal_type, applies_all_days, servings, is_locked, sort_order,
+        recipes ( id, name, photo_url, prep_time_min, cook_time_min, categories ( icon ) )
       )
     `)
     .eq('user_id', user.id)
