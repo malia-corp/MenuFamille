@@ -87,7 +87,10 @@ function getMondayISO(d: Date = new Date()): string {
   const diff = day === 0 ? -6 : 1 - day
   const mon = new Date(d)
   mon.setDate(d.getDate() + diff)
-  return mon.toISOString().split('T')[0]
+  const y  = mon.getFullYear()
+  const m  = String(mon.getMonth() + 1).padStart(2, '0')
+  const dd = String(mon.getDate()).padStart(2, '0')
+  return `${y}-${m}-${dd}`
 }
 
 function nextMondayISO(): string {

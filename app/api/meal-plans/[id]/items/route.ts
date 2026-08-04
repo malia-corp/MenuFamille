@@ -18,10 +18,15 @@ export async function POST(
 
   if (!plan) return Response.json({ error: 'Plan introuvable ou accès refusé' }, { status: 404 })
 
-  const { day_of_week, meal_type, recipe_id, servings } = await request.json()
+  const { day_of_week, meal_type, recipe_id, servings, applies_all_days } = await request.json()
   if (!day_of_week || !meal_type) {
     return Response.json({ error: 'day_of_week et meal_type sont requis' }, { status: 400 })
   }
+
+  const ITEM_SELECT = `
+    id, day_of_week, meal_type, applies_all_days, servings, is_locked, sort_order,
+    recipes ( id, name, photo_url, prep_time_min, cook_time_min, categories ( icon ) )
+  `
 
   const { data: existing } = await supabase
     .from('meal_plan_items')
@@ -29,6 +34,7 @@ export async function POST(
     .eq('meal_plan_id', params.id)
     .eq('day_of_week', day_of_week)
     .eq('meal_type', meal_type)
+    .eq('applies_all_days', applies_all_days ?? false)
     .maybeSingle()
 
   if (existing) {
@@ -36,7 +42,7 @@ export async function POST(
       .from('meal_plan_items')
       .update({ recipe_id: recipe_id ?? null, servings: servings ?? 4 })
       .eq('id', existing.id)
-      .select('id, day_of_week, meal_type, applies_all_days, servings, recipes(id, name, categories(icon))')
+      .select(ITEM_SELECT)
       .single()
 
     if (error) return Response.json({ error: error.message }, { status: 500 })
@@ -46,13 +52,14 @@ export async function POST(
   const { data, error } = await supabase
     .from('meal_plan_items')
     .insert({
-      meal_plan_id: params.id,
+      meal_plan_id:    params.id,
       day_of_week,
       meal_type,
-      recipe_id: recipe_id ?? null,
-      servings: servings ?? 4,
+      applies_all_days: applies_all_days ?? false,
+      recipe_id:       recipe_id ?? null,
+      servings:        servings ?? 4,
     })
-    .select('id, day_of_week, meal_type, applies_all_days, servings, recipes(id, name, categories(icon))')
+    .select(ITEM_SELECT)
     .single()
 
   if (error) return Response.json({ error: error.message }, { status: 500 })

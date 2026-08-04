@@ -34,7 +34,9 @@ export interface RecipeFormProps {
   loading: boolean
   apiError: string | null
   submitLabel?: string
+  submitIcon?: React.ElementType
   hideSubmit?: boolean
+  hideVisibility?: boolean
   onNameChange?: () => void
   children?: React.ReactNode
 }
@@ -67,7 +69,9 @@ export function RecipeForm({
   loading,
   apiError,
   submitLabel = 'Créer la recette',
+  submitIcon: SubmitIcon,
   hideSubmit = false,
+  hideVisibility = false,
   onNameChange,
   children,
 }: RecipeFormProps) {
@@ -133,13 +137,14 @@ export function RecipeForm({
     if (photoFile) {
       setPhotoUploading(true)
       const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
       const ext = photoFile.name.split('.').pop()
-      const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+      const path = `${user!.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
       const { data: upload, error: uploadErr } = await supabase.storage
         .from('recipe-photos')
         .upload(path, photoFile, { upsert: false })
       setPhotoUploading(false)
-      if (uploadErr) { setPhotoError('Erreur upload photo'); return }
+      if (uploadErr) { setPhotoError(uploadErr.message ?? 'Erreur upload photo'); return }
       const { data: { publicUrl } } = supabase.storage.from('recipe-photos').getPublicUrl(upload.path)
       resolvedPhotoUrl = publicUrl
     } else if (photoPreview === null) {
@@ -276,51 +281,53 @@ export function RecipeForm({
       </section>
 
       {/* ── Visibilité ───────────────────────────────── */}
-      <section className="space-y-3">
-        <h2 className={SECTION}>Visibilité</h2>
+      {!hideVisibility && (
+        <section className="space-y-3">
+          <h2 className={SECTION}>Visibilité</h2>
 
-        <div className="space-y-2">
-          {VISIBILITY_OPTIONS.map(opt => {
-            const Icon = opt.Icon
-            const selected = visibility === opt.value
-            return (
-              <button key={opt.value} type="button" onClick={() => setVisibility(opt.value)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-colors ${
-                  selected ? 'border-[var(--mf-primary)] bg-[var(--mf-bg-card)]' : 'border-[var(--mf-border-warm)] bg-white'
-                }`}>
-                <Icon className={`h-5 w-5 flex-shrink-0 ${selected ? 'text-[var(--mf-primary)]' : 'text-[var(--mf-text-tertiary)]'}`} />
-                <div className="flex-1 min-w-0">
-                  <p className={`text-sm font-quicksand font-medium ${selected ? 'text-[var(--mf-primary)]' : 'text-[var(--mf-text-primary)]'}`}>{opt.label}</p>
-                  <p className="text-xs font-quicksand text-[var(--mf-text-tertiary)]">{opt.sub}</p>
-                </div>
-                <div className={`w-4 h-4 rounded-full border-2 flex-shrink-0 transition-colors ${
-                  selected ? 'border-[var(--mf-primary)] bg-[var(--mf-primary)]' : 'border-[var(--mf-border-warm)]'
-                }`} />
-              </button>
+          <div className="space-y-2">
+            {VISIBILITY_OPTIONS.map(opt => {
+              const Icon = opt.Icon
+              const selected = visibility === opt.value
+              return (
+                <button key={opt.value} type="button" onClick={() => setVisibility(opt.value)}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-colors ${
+                    selected ? 'border-[var(--mf-primary)] bg-[var(--mf-bg-card)]' : 'border-[var(--mf-border-warm)] bg-white'
+                  }`}>
+                  <Icon className={`h-5 w-5 flex-shrink-0 ${selected ? 'text-[var(--mf-primary)]' : 'text-[var(--mf-text-tertiary)]'}`} />
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-sm font-quicksand font-medium ${selected ? 'text-[var(--mf-primary)]' : 'text-[var(--mf-text-primary)]'}`}>{opt.label}</p>
+                    <p className="text-xs font-quicksand text-[var(--mf-text-tertiary)]">{opt.sub}</p>
+                  </div>
+                  <div className={`w-4 h-4 rounded-full border-2 flex-shrink-0 transition-colors ${
+                    selected ? 'border-[var(--mf-primary)] bg-[var(--mf-primary)]' : 'border-[var(--mf-border-warm)]'
+                  }`} />
+                </button>
+              )
+            })}
+          </div>
+
+          {visibility === 'circle' && (
+            circles.length === 0 ? (
+              <p className="text-xs font-quicksand text-[var(--mf-text-tertiary)] px-1">
+                Aucun cercle.{' '}
+                <span className="text-[var(--mf-primary)] underline cursor-pointer"
+                  onClick={() => router.push('/circle')}>
+                  Créer un cercle familial
+                </span>
+              </p>
+            ) : (
+              <div className="space-y-1">
+                <select value={circleId} onChange={e => { setCircleId(e.target.value); setCircleError(null) }} className={INPUT}>
+                  <option value="">Choisir un cercle *</option>
+                  {circles.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+                {circleError && <p className="text-xs text-red-500 font-quicksand px-1">{circleError}</p>}
+              </div>
             )
-          })}
-        </div>
-
-        {visibility === 'circle' && (
-          circles.length === 0 ? (
-            <p className="text-xs font-quicksand text-[var(--mf-text-tertiary)] px-1">
-              Aucun cercle.{' '}
-              <span className="text-[var(--mf-primary)] underline cursor-pointer"
-                onClick={() => router.push('/circle')}>
-                Créer un cercle familial
-              </span>
-            </p>
-          ) : (
-            <div className="space-y-1">
-              <select value={circleId} onChange={e => { setCircleId(e.target.value); setCircleError(null) }} className={INPUT}>
-                <option value="">Choisir un cercle *</option>
-                {circles.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
-              {circleError && <p className="text-xs text-red-500 font-quicksand px-1">{circleError}</p>}
-            </div>
-          )
-        )}
-      </section>
+          )}
+        </section>
+      )}
 
       {/* ── Ingrédients ──────────────────────────────── */}
       <section className="space-y-3">
@@ -389,7 +396,12 @@ export function RecipeForm({
       {!hideSubmit && (
         <button type="button" onClick={handleSubmit} disabled={loading || photoUploading}
           className="w-full py-3.5 rounded-xl bg-[var(--mf-primary)] text-white font-quicksand font-semibold text-sm hover:bg-[var(--mf-primary-hover)] disabled:opacity-60 transition-colors">
-          {photoUploading ? 'Upload photo…' : loading ? 'En cours…' : submitLabel}
+          {photoUploading ? 'Upload photo…' : loading ? 'En cours…' : SubmitIcon ? (
+            <span className="flex items-center justify-center gap-2">
+              <SubmitIcon className="h-4 w-4" />
+              {submitLabel}
+            </span>
+          ) : submitLabel}
         </button>
       )}
     </div>
