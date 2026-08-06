@@ -8,7 +8,10 @@ function getMondayISO(d: Date = new Date()): string {
   const diff = day === 0 ? -6 : 1 - day
   const monday = new Date(d)
   monday.setDate(d.getDate() + diff)
-  return monday.toISOString().split('T')[0]
+  const y  = monday.getFullYear()
+  const m  = String(monday.getMonth() + 1).padStart(2, '0')
+  const dd = String(monday.getDate()).padStart(2, '0')
+  return `${y}-${m}-${dd}`
 }
 
 function pickRandom(pool: string[], exclude: Set<string>): string | null {
@@ -75,13 +78,19 @@ export async function POST() {
   // 3. Sauvegarder les recipe_id des items verrouillés
   const { data: lockedItems } = await service
     .from('meal_plan_items')
-    .select('recipe_id')
+    .select('recipe_id, meal_type, day_of_week, applies_all_days')
     .eq('meal_plan_id', planId)
     .eq('is_locked', true)
 
   const lockedRecipeIds = (lockedItems ?? [])
     .map(i => i.recipe_id)
     .filter((id): id is string => id !== null)
+
+  const lockedSlots = new Set<string>(
+    (lockedItems ?? []).map(i =>
+      i.applies_all_days ? `${i.meal_type}|template` : `${i.meal_type}|${i.day_of_week}`
+    )
+  )
 
   // 4. Supprimer les items non verrouillés
   await service
@@ -133,34 +142,36 @@ export async function POST() {
 
   for (const config of configs) {
     if (config.mode === 'template') {
+      if (lockedSlots.has(`${config.meal_type}|template`)) continue
       const recipeId = pickRandom(recipePool, usedIds)
       if (recipeId) {
         usedIds.add(recipeId)
         itemsToInsert.push({
-          meal_plan_id:   planId,
-          meal_type:      config.meal_type,
-          day_of_week:    'lundi',
+          meal_plan_id:     planId,
+          meal_type:        config.meal_type,
+          day_of_week:      'lundi',
           applies_all_days: true,
-          recipe_id:      recipeId,
-          servings:       4,
-          is_locked:      false,
-          sort_order:     config.display_order,
+          recipe_id:        recipeId,
+          servings:         4,
+          is_locked:        false,
+          sort_order:       config.display_order,
         })
       }
     } else {
       for (const day of DAYS) {
+        if (lockedSlots.has(`${config.meal_type}|${day}`)) continue
         const recipeId = pickRandom(recipePool, usedIds)
         if (recipeId) {
           usedIds.add(recipeId)
           itemsToInsert.push({
-            meal_plan_id:   planId,
-            meal_type:      config.meal_type,
-            day_of_week:    day,
+            meal_plan_id:     planId,
+            meal_type:        config.meal_type,
+            day_of_week:      day,
             applies_all_days: false,
-            recipe_id:      recipeId,
-            servings:       4,
-            is_locked:      false,
-            sort_order:     config.display_order,
+            recipe_id:        recipeId,
+            servings:         4,
+            is_locked:        false,
+            sort_order:       config.display_order,
           })
         }
       }
