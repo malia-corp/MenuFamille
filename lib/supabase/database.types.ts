@@ -782,6 +782,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          ip_address: string | null
           meal_plan_id: string
           respondent_name: string
           user_id: string | null
@@ -789,6 +790,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          ip_address?: string | null
           meal_plan_id: string
           respondent_name: string
           user_id?: string | null
@@ -796,6 +798,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          ip_address?: string | null
           meal_plan_id?: string
           respondent_name?: string
           user_id?: string | null

@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import { Clock, Utensils } from 'lucide-react'
 import { createServiceClient } from '@/lib/supabase/service'
+import { SurveySection } from './_survey-section'
 import type { Metadata } from 'next'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -179,6 +180,21 @@ export default async function SharedMenuPage({ params }: { params: { token: stri
             Ce menu ne contient aucun repas planifié.
           </p>
         )}
+
+        {/* Séparateur */}
+        <hr className="border-[#EDE4D6]" />
+
+        {/* Section sondage */}
+        <SurveySection
+          token={params.token}
+          items={plan.meal_plan_items.map(i => ({
+            id:               i.id,
+            meal_type:        i.meal_type,
+            day_of_week:      i.day_of_week,
+            applies_all_days: i.applies_all_days,
+            recipe_name:      i.recipes?.name ?? null,
+          }))}
+        />
 
         {/* Footer CTA */}
         <div className="pt-4 border-t border-[#EDE4D6] text-center space-y-1">
