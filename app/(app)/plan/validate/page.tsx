@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import {
+  BarChart3,
   CheckCircle2,
   ChevronLeft,
   Clock,
@@ -136,8 +137,9 @@ function ValidateInner() {
   const [validating, setValidating] = useState(false)
   const [validated,  setValidated]  = useState(false)
   const [shareToken, setShareToken] = useState<string | null>(null)
-  const [sharing,    setSharing]    = useState(false)
-  const [copied,     setCopied]     = useState(false)
+  const [sharing,      setSharing]      = useState(false)
+  const [copied,       setCopied]       = useState(false)
+  const [surveyCount,  setSurveyCount]  = useState<number | null>(null)
 
   useEffect(() => {
     if (!week) { router.replace('/plan'); return }
@@ -162,7 +164,10 @@ function ValidateInner() {
       setConfigs(active)
 
       if (planData?.status === 'finalized' || planData?.status === 'shared') setValidated(true)
-      if (planData?.share_token) setShareToken(planData.share_token)
+      if (planData?.share_token) {
+        setShareToken(planData.share_token)
+        void fetchSurveyCount(planData.id)
+      }
     } catch {
       setApiError('Impossible de charger le planning')
     } finally {
@@ -184,6 +189,16 @@ function ValidateInner() {
     }
   }
 
+  async function fetchSurveyCount(planId: string) {
+    try {
+      const res = await fetch(`/api/meal-plans/${planId}/survey-results`)
+      if (res.ok) {
+        const d = await res.json() as { respondent_count: number }
+        setSurveyCount(d.respondent_count)
+      }
+    } catch { /* silent */ }
+  }
+
   async function share() {
     if (!plan || sharing) return
     setSharing(true)
@@ -192,6 +207,7 @@ function ValidateInner() {
       if (res.ok) {
         const data = await res.json() as { share_token: string }
         setShareToken(data.share_token)
+        void fetchSurveyCount(plan.id)
       }
     } catch { /* silent */ } finally {
       setSharing(false)
@@ -399,6 +415,18 @@ function ValidateInner() {
                   Ce lien est valable 30 jours.
                 </p>
               </div>
+            )}
+
+            {/* Bouton résultats sondage — visible dès qu'un répondant existe */}
+            {plan && surveyCount !== null && surveyCount > 0 && (
+              <button
+                type="button"
+                onClick={() => router.push(`/plan/${plan.id}/survey`)}
+                className="w-full border border-[#2A7D4F] text-[#2A7D4F] rounded-2xl py-3 font-dosis font-bold text-sm flex items-center justify-center gap-2 hover:bg-[#F0FAF5] transition-colors"
+              >
+                <BarChart3 className="h-4 w-4" />
+                Voir les résultats du sondage ({surveyCount})
+              </button>
             )}
           </>
         )}
