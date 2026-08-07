@@ -111,6 +111,7 @@ export function AppHeader({ title = 'MenuFamille', showBack = false }: AppHeader
                 { href: '/', icon: Home, label: 'Accueil' },
                 { href: '/plan', icon: CalendarDays, label: 'Menu de la semaine' },
                 { href: '/recipes', icon: BookOpen, label: 'Recettes' },
+                { href: '/notifications', icon: Bell, label: 'Notifications' },
                 { href: '/profile', icon: UserCircle, label: 'Mon profil' },
               ].map(({ href, icon: Icon, label }) => (
                 <button
