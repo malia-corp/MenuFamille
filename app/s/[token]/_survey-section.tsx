@@ -38,22 +38,36 @@ const STORAGE_KEY_DONE    = (token: string) => `mf_survey_done_${token}`
 
 export function SurveySection({ token, items }: { token: string; items: SurveyItem[] }) {
   const [name, setName]               = useState('')
+  const [isLoggedIn, setIsLoggedIn]   = useState(false)
   const [answers, setAnswers]         = useState<Record<string, AnswerState>>({})
   const [responseId, setResponseId]   = useState<string | null>(null)
   const [submitted, setSubmitted]     = useState(false)
   const [submitting, setSubmitting]   = useState(false)
   const [error, setError]             = useState<string | null>(null)
 
-  // Charger prénom + état depuis localStorage
+  // Charger prénom depuis le profil si connecté, sinon localStorage
   useEffect(() => {
-    const storedName = localStorage.getItem(STORAGE_KEY_NAME)
-    if (storedName) setName(storedName)
-
     const storedRespId = localStorage.getItem(STORAGE_KEY_RESP_ID(token))
     if (storedRespId) setResponseId(storedRespId)
 
     const done = localStorage.getItem(STORAGE_KEY_DONE(token))
     if (done === '1') setSubmitted(true)
+
+    fetch('/api/users/me')
+      .then(r => r.ok ? r.json() : null)
+      .then((data: { display_name?: string } | null) => {
+        if (data?.display_name) {
+          setName(data.display_name)
+          setIsLoggedIn(true)
+        } else {
+          const storedName = localStorage.getItem(STORAGE_KEY_NAME)
+          if (storedName) setName(storedName)
+        }
+      })
+      .catch(() => {
+        const storedName = localStorage.getItem(STORAGE_KEY_NAME)
+        if (storedName) setName(storedName)
+      })
   }, [token])
 
   const ratedCount = Object.values(answers).filter(a => a.reaction !== null).length
@@ -170,23 +184,30 @@ export function SurveySection({ token, items }: { token: string; items: SurveyIt
         </h2>
       </div>
 
-      {/* Champ prénom */}
-      <div className="bg-white border border-[#EDE4D6] rounded-xl px-3 py-2.5 flex items-center gap-2.5">
-        <UserCircle className="h-4 w-4 text-[#9A8F84] flex-shrink-0" />
-        <div className="flex-1">
-          <p className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[#9A8F84] mb-0.5">
-            Votre prénom
-          </p>
-          <input
-            type="text"
-            value={name}
-            onChange={e => setName(e.target.value)}
-            onBlur={() => name.trim() && localStorage.setItem(STORAGE_KEY_NAME, name.trim())}
-            placeholder="Comment vous appelez-vous ?"
-            className="w-full text-sm font-quicksand text-[#3D2C20] bg-transparent outline-none placeholder:text-[#C5B8AE]"
-          />
+      {/* Champ prénom — masqué si l'utilisateur est connecté */}
+      {isLoggedIn ? (
+        <div className="bg-white border border-[#EDE4D6] rounded-xl px-3 py-2.5 flex items-center gap-2.5">
+          <UserCircle className="h-4 w-4 text-[#2A7D4F] flex-shrink-0" />
+          <p className="text-sm font-quicksand text-[#3D2C20]">{name}</p>
         </div>
-      </div>
+      ) : (
+        <div className="bg-white border border-[#EDE4D6] rounded-xl px-3 py-2.5 flex items-center gap-2.5">
+          <UserCircle className="h-4 w-4 text-[#9A8F84] flex-shrink-0" />
+          <div className="flex-1">
+            <p className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[#9A8F84] mb-0.5">
+              Votre prénom
+            </p>
+            <input
+              type="text"
+              value={name}
+              onChange={e => setName(e.target.value)}
+              onBlur={() => name.trim() && localStorage.setItem(STORAGE_KEY_NAME, name.trim())}
+              placeholder="Comment vous appelez-vous ?"
+              className="w-full text-sm font-quicksand text-[#3D2C20] bg-transparent outline-none placeholder:text-[#C5B8AE]"
+            />
+          </div>
+        </div>
+      )}
 
       {/* Indicateur de progression */}
       {ratedCount > 0 && (

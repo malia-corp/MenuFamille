@@ -100,19 +100,26 @@ export default function FeedbackPage() {
   const [selectedTpl,   setSelectedTpl]   = useState<string | null>(null)
   const [customMsg,     setCustomMsg]     = useState('')
   const [writingCustom, setWritingCustom] = useState(false)
-  const [submitting,    setSubmitting]    = useState(false)
-  const [respondentName, setRespondentName] = useState('')
+  const [submitting,       setSubmitting]       = useState(false)
+  const [userDisplayName,  setUserDisplayName]  = useState('')
 
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      // Charger le plan de la semaine courante
-      const planRes = await fetch('/api/meal-plans')
+      const [planRes, meRes] = await Promise.all([
+        fetch('/api/meal-plans'),
+        fetch('/api/users/me'),
+      ])
+
+      if (meRes.ok) {
+        const me = await meRes.json() as { display_name?: string }
+        if (me.display_name) setUserDisplayName(me.display_name)
+      }
+
       const planData: MealPlan | null = planRes.ok ? await planRes.json() : null
       if (!planData?.id) { setPlan(null); setLoading(false); return }
       setPlan(planData)
 
-      // Charger les feedbacks existants
       const fbRes = await fetch(`/api/meal-plans/${planData.id}/feedback`)
       if (fbRes.ok) setFeedbacks(await fbRes.json())
     } finally {
@@ -140,7 +147,7 @@ export default function FeedbackPage() {
   }
 
   async function submitFeedback() {
-    if (!sheetItem || !sheetRating || !respondentName.trim()) return
+    if (!sheetItem || !sheetRating) return
     setSubmitting(true)
     try {
       const res = await fetch(`/api/meal-plan-items/${sheetItem.id}/feedback`, {
@@ -150,7 +157,6 @@ export default function FeedbackPage() {
           rating:          sheetRating,
           template_id:     writingCustom ? undefined : (selectedTpl ?? undefined),
           custom_message:  writingCustom ? customMsg.trim() : undefined,
-          respondent_name: respondentName.trim(),
         }),
       })
       if (res.ok) {
@@ -303,20 +309,6 @@ export default function FeedbackPage() {
               </button>
             </div>
 
-            {/* Champ prénom */}
-            <div className="bg-[#FDF6EE] border border-[#EDE4D6] rounded-xl px-3 py-2">
-              <p className="text-[9px] font-quicksand font-bold uppercase tracking-wider text-[#9A8F84] mb-0.5">
-                Votre prénom
-              </p>
-              <input
-                type="text"
-                value={respondentName}
-                onChange={e => setRespondentName(e.target.value)}
-                placeholder="Comment vous appelez-vous ?"
-                className="w-full text-sm font-quicksand text-[#3D2C20] bg-transparent outline-none placeholder:text-[#C5B8AE]"
-              />
-            </div>
-
             {/* Boutons réaction */}
             <div className="flex gap-2">
               {RATING_CONFIG.map(r => (
@@ -397,10 +389,10 @@ export default function FeedbackPage() {
             {/* Bouton valider */}
             <button
               onClick={submitFeedback}
-              disabled={!sheetRating || !respondentName.trim() || submitting}
+              disabled={!sheetRating || submitting}
               className={[
                 'w-full flex items-center justify-center gap-2 py-3 rounded-2xl font-dosis font-bold text-sm transition-all',
-                sheetRating && respondentName.trim()
+                sheetRating
                   ? 'bg-[#E87D3E] text-white'
                   : 'bg-[#EDE4D6] text-[#9A8F84] cursor-not-allowed',
               ].join(' ')}

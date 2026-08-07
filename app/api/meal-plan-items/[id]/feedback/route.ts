@@ -47,20 +47,30 @@ export async function POST(
   }
 
   const body = await request.json() as {
-    rating:          'excellent' | 'correct' | 'decevant'
-    template_id?:    string
-    custom_message?: string
-    respondent_name: string
+    rating:           'excellent' | 'correct' | 'decevant'
+    template_id?:     string
+    custom_message?:  string
+    respondent_name?: string
   }
 
-  const { rating, template_id, custom_message, respondent_name } = body
+  const { rating, template_id, custom_message } = body
+  let respondent_name = body.respondent_name?.trim() ?? ''
 
-  if (!rating || !respondent_name?.trim()) {
-    return Response.json({ error: 'rating et respondent_name sont requis' }, { status: 400 })
+  if (!rating) {
+    return Response.json({ error: 'rating est requis' }, { status: 400 })
   }
 
-  // Si l'utilisateur est connecté, on update son feedback existant s'il en a déjà un
+  // Si l'utilisateur est connecté, résoudre le nom depuis son profil si absent du body
   if (user?.id) {
+    if (!respondent_name) {
+      const { data: profile } = await service
+        .from('users')
+        .select('display_name')
+        .eq('id', user.id)
+        .maybeSingle()
+      respondent_name = profile?.display_name ?? ''
+    }
+
     const { data: existing } = await service
       .from('meal_feedback')
       .select('id')
@@ -80,12 +90,16 @@ export async function POST(
     }
   }
 
+  if (!respondent_name) {
+    return Response.json({ error: 'respondent_name est requis pour les réponses anonymes' }, { status: 400 })
+  }
+
   const { data, error } = await service
     .from('meal_feedback')
     .insert({
       meal_plan_item_id: params.id,
       user_id:           user?.id ?? null,
-      respondent_name:   respondent_name.trim(),
+      respondent_name,
       rating,
       template_id:       template_id ?? null,
       custom_message:    custom_message?.trim() || null,
