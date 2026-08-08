@@ -30,7 +30,9 @@ export async function updateSession(request: NextRequest) {
   const pathname = request.nextUrl.pathname
   const isPublicPath =
     pathname.startsWith('/login') ||
-    pathname.startsWith('/api/auth')
+    pathname.startsWith('/api/auth') ||
+    pathname.startsWith('/s/') ||
+    pathname.startsWith('/api/surveys')
 
   if (!user && !isPublicPath) {
     return NextResponse.redirect(new URL('/login', request.url))

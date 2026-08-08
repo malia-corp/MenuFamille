@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   ArrowLeft,
+  Bell,
   BookOpen,
   CalendarDays,
   Home,
@@ -21,7 +22,15 @@ interface AppHeaderProps {
 
 export function AppHeader({ title = 'MenuFamille', showBack = false }: AppHeaderProps) {
   const router = useRouter()
-  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [drawerOpen,   setDrawerOpen]   = useState(false)
+  const [surveyBadge,  setSurveyBadge]  = useState(0)
+
+  useEffect(() => {
+    fetch('/api/surveys/unread-count')
+      .then(r => r.ok ? r.json() : { count: 0 })
+      .then((d: { count: number }) => setSurveyBadge(d.count))
+      .catch(() => {})
+  }, [])
 
   async function handleLogout() {
     await fetch('/api/auth/logout', { method: 'POST' })
@@ -57,8 +66,20 @@ export function AppHeader({ title = 'MenuFamille', showBack = false }: AppHeader
             <span className="font-dosis font-bold text-[#2C1810]">{title}</span>
           </div>
 
-          {/* Espace symétrique */}
-          <div className="w-7" />
+          {/* Badge sondage */}
+          <button
+            type="button"
+            onClick={() => router.push('/plan')}
+            className="relative p-1 -mr-1 text-[#5A4A43]"
+            aria-label="Avis sondage"
+          >
+            <Bell className="h-5 w-5" />
+            {surveyBadge > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-[#E87D3E] text-white text-[9px] font-dosis font-bold flex items-center justify-center">
+                {surveyBadge > 9 ? '9+' : surveyBadge}
+              </span>
+            )}
+          </button>
         </div>
       </header>
 
@@ -90,6 +111,7 @@ export function AppHeader({ title = 'MenuFamille', showBack = false }: AppHeader
                 { href: '/', icon: Home, label: 'Accueil' },
                 { href: '/plan', icon: CalendarDays, label: 'Menu de la semaine' },
                 { href: '/recipes', icon: BookOpen, label: 'Recettes' },
+                { href: '/notifications', icon: Bell, label: 'Notifications' },
                 { href: '/profile', icon: UserCircle, label: 'Mon profil' },
               ].map(({ href, icon: Icon, label }) => (
                 <button

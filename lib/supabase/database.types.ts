@@ -337,6 +337,41 @@ export type Database = {
           },
         ]
       }
+      push_subscriptions: {
+        Row: {
+          id:         string
+          user_id:    string
+          endpoint:   string
+          p256dh:     string
+          auth:       string
+          created_at: string
+        }
+        Insert: {
+          id?:        string
+          user_id:    string
+          endpoint:   string
+          p256dh:     string
+          auth:       string
+          created_at?: string
+        }
+        Update: {
+          id?:        string
+          user_id?:   string
+          endpoint?:  string
+          p256dh?:    string
+          auth?:      string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pantry_categories: {
         Row: {
           icon: string | null
@@ -782,6 +817,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          ip_address: string | null
           meal_plan_id: string
           respondent_name: string
           user_id: string | null
@@ -789,6 +825,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          ip_address?: string | null
           meal_plan_id: string
           respondent_name: string
           user_id?: string | null
@@ -796,6 +833,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          ip_address?: string | null
           meal_plan_id?: string
           respondent_name?: string
           user_id?: string | null
