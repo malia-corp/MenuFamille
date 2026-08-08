@@ -337,6 +337,45 @@ export type Database = {
           },
         ]
       }
+      meal_compositions: {
+        Row: {
+          id:                string
+          meal_plan_item_id: string
+          recipe_id:         string
+          role:              string
+          sort_order:        number
+        }
+        Insert: {
+          id?:               string
+          meal_plan_item_id: string
+          recipe_id:         string
+          role:              string
+          sort_order?:       number
+        }
+        Update: {
+          id?:               string
+          meal_plan_item_id?: string
+          recipe_id?:        string
+          role?:             string
+          sort_order?:       number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meal_compositions_meal_plan_item_id_fkey"
+            columns: ["meal_plan_item_id"]
+            isOneToOne: false
+            referencedRelation: "meal_plan_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meal_compositions_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       push_subscriptions: {
         Row: {
           id:         string
@@ -606,6 +645,7 @@ export type Database = {
           slug: string
           source_url: string | null
           user_id: string | null
+          recipe_type: Database["public"]["Enums"]["recipe_type_enum"]
           variant_label: string | null
           visibility: Database["public"]["Enums"]["recipe_visibility_enum"]
         }
@@ -624,6 +664,7 @@ export type Database = {
           parent_recipe_id?: string | null
           photo_url?: string | null
           prep_time_min?: number | null
+          recipe_type?: Database["public"]["Enums"]["recipe_type_enum"]
           servings?: number
           slug: string
           source_url?: string | null
@@ -646,6 +687,7 @@ export type Database = {
           parent_recipe_id?: string | null
           photo_url?: string | null
           prep_time_min?: number | null
+          recipe_type?: Database["public"]["Enums"]["recipe_type_enum"]
           servings?: number
           slug?: string
           source_url?: string | null
@@ -951,6 +993,7 @@ export type Database = {
       meal_type_enum: "petit_dejeuner" | "dejeuner" | "gouter" | "diner"
       notification_channel_enum: "push" | "in_app"
       recipe_difficulty_enum: "facile" | "moyen" | "difficile"
+      recipe_type_enum: "plat_principal" | "accompagnement" | "boisson" | "sauce"
       recipe_visibility_enum: "private" | "circle" | "community"
       shopping_list_status_enum: "active" | "completed" | "archived"
       survey_reaction_enum: "aime" | "bof" | "naime_pas"
