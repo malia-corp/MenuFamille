@@ -36,8 +36,13 @@ export async function PUT(request: Request) {
 
   const { data, error } = await supabase
     .from('users')
-    .update(updates)
-    .eq('id', user.id)
+    .upsert({
+      id: user.id,
+      email: user.email!,
+      display_name: updates.display_name ?? user.email!.split('@')[0],
+      ...(updates.family_size !== undefined && { family_size: updates.family_size }),
+      ...(updates.dietary_prefs !== undefined && { dietary_prefs: updates.dietary_prefs }),
+    })
     .select()
     .single()
 

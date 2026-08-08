@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/service'
 
 export async function GET() {
   const supabase = await createClient()
@@ -27,11 +28,13 @@ export async function GET() {
     my_role: m.role,
   }))
 
-  return Response.json(circles)
+  return Response.json({ data: circles, viewer_id: user.id })
 }
 
-function generateInviteCode(): string {
-  return 'FAM-' + Math.random().toString(36).slice(2, 6).toUpperCase()
+function makeInviteCode(displayName: string): string {
+  const firstName = (displayName || 'FAM').split(' ')[0].toUpperCase().replace(/[^A-Z]/g, '') || 'FAM'
+  const digits = String(Math.floor(Math.random() * 90 + 10))
+  return `${firstName}-${digits}`
 }
 
 export async function POST(request: Request) {
@@ -45,10 +48,15 @@ export async function POST(request: Request) {
     return Response.json({ error: 'Le nom du cercle est requis' }, { status: 400 })
   }
 
+  const { data: creator } = await supabase
+    .from('users').select('display_name').eq('id', user.id).single()
+
+  const service = createServiceClient()
+
   let circle = null
   for (let attempt = 0; attempt < 3; attempt++) {
-    const invite_code = generateInviteCode()
-    const { data, error } = await supabase
+    const invite_code = makeInviteCode(creator?.display_name ?? '')
+    const { data, error } = await service
       .from('family_circles')
       .insert({ name: name.trim(), created_by: user.id, invite_code })
       .select()
@@ -67,7 +75,7 @@ export async function POST(request: Request) {
     return Response.json({ error: 'Impossible de générer un code unique, réessaie' }, { status: 500 })
   }
 
-  await supabase.from('family_circle_members').insert({
+  await service.from('family_circle_members').insert({
     circle_id: circle.id,
     user_id: user.id,
     role: 'planificatrice',
