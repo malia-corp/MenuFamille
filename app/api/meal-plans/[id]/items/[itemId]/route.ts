@@ -28,7 +28,8 @@ export async function PATCH(
     .eq('meal_plan_id', params.id)
     .select(`
       id, day_of_week, meal_type, applies_all_days, servings, is_locked, sort_order,
-      recipes ( id, name, photo_url, prep_time_min, cook_time_min, categories ( icon ) )
+      recipes ( id, name, photo_url, prep_time_min, cook_time_min, recipe_type, categories ( icon ) ),
+      meal_compositions ( id, role, sort_order, recipes ( id, name ) )
     `)
     .single()
 

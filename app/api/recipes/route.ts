@@ -89,6 +89,7 @@ export async function POST(request: NextRequest) {
       servings: Math.max(1, Number(servings) || 4),
       difficulty: difficulty || null,
       visibility,
+      recipe_type: ((body.recipe_type as string | undefined) || 'plat_principal') as 'plat_principal' | 'accompagnement' | 'boisson' | 'sauce',
       photo_url: (photo_url as string | undefined) || null,
     })
     .select('id')
@@ -165,9 +166,11 @@ export async function GET(request: NextRequest) {
     .eq('user_id', user.id)
   const favSet = new Set((favs ?? []).map((f) => f.recipe_id as string))
 
+  const recipe_type = searchParams.get('recipe_type') ?? ''
+
   let query = service
     .from('recipes')
-    .select('id, name, slug, description, prep_time_min, cook_time_min, servings, difficulty, photo_url, visibility, user_id, circle_id, categories(id, name, slug, icon, color)')
+    .select('id, name, slug, description, prep_time_min, cook_time_min, servings, difficulty, photo_url, visibility, user_id, circle_id, recipe_type, categories(id, name, slug, icon, color)')
 
   // Filtre de visibilité selon le scope
   if (scope === 'mes') {
@@ -187,6 +190,15 @@ export async function GET(request: NextRequest) {
 
   if (search) query = query.ilike('name', `%${search}%`)
   if (category_id) query = query.eq('category_id', category_id)
+  if (recipe_type) {
+    type RecipeTypeEnum = 'plat_principal' | 'accompagnement' | 'boisson' | 'sauce'
+    const types = recipe_type.split(',').map(t => t.trim()).filter(Boolean) as RecipeTypeEnum[]
+    if (types.length === 1) {
+      query = query.eq('recipe_type', types[0])
+    } else {
+      query = query.in('recipe_type', types)
+    }
+  }
 
   query = query.order('created_at', { ascending: false })
 
