@@ -20,8 +20,10 @@ import {
   Users,
   Utensils,
   Wand2,
+  Trash2,
   X,
 } from 'lucide-react'
+import { composedName } from '@/lib/utils/composed-name'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -46,15 +48,29 @@ interface PlanRecipe {
   categories:    { icon: string | null } | null
 }
 
+interface Composition {
+  id:         string
+  role:       'side' | 'drink'
+  sort_order: number
+  recipe_id:  string
+  recipes:    { id: string; name: string } | null
+}
+
 interface PlanItem {
-  id:               string
-  day_of_week:      DayOfWeek
-  meal_type:        MealType
-  applies_all_days: boolean
-  servings:         number
-  is_locked:        boolean
-  sort_order:       number
-  recipes:          PlanRecipe | null
+  id:                string
+  day_of_week:       DayOfWeek
+  meal_type:         MealType
+  applies_all_days:  boolean
+  servings:          number
+  is_locked:         boolean
+  sort_order:        number
+  recipes:           PlanRecipe | null
+  meal_compositions: Composition[]
+}
+
+interface SheetDetails {
+  recipe_type:       string | null
+  meal_compositions: Composition[]
 }
 
 interface Plan {
@@ -193,6 +209,12 @@ export default function PlanPage() {
   const [pickerCategory,          setPickerCategory]          = useState<string | null>(null)
   const pickerSearchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  // ── Composition bottom sheet ──────────────────────────────────────────────
+  const [sheetDetails,      setSheetDetails]      = useState<SheetDetails | null>(null)
+  const [compositionMode,   setCompositionMode]   = useState<'side' | 'drink' | null>(null)
+  const [addingComposition, setAddingComposition] = useState(false)
+  const [deletingCompId,    setDeletingCompId]    = useState<string | null>(null)
+
   // ── Chargement (se relance quand selectedWeek change) ────────────────────
 
   useEffect(() => { void loadPlan() }, [selectedWeek]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -277,14 +299,22 @@ export default function PlanPage() {
     return () => clearInterval(interval)
   }, [viewState])
 
+  // ── Chargement des détails du sheet (recipe_type + compositions) ─────────
+
+  useEffect(() => {
+    if (!editTarget?.itemId || !plan) { setSheetDetails(null); return }
+    void refreshSheetItem(editTarget.itemId, plan.id)
+  }, [editTarget?.itemId, plan?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+
   // ── Picker : chargement des recettes ─────────────────────────────────────
 
-  async function loadPickerRecipes(scope: Scope, categoryId: string | null, search: string) {
+  async function loadPickerRecipes(scope: Scope, categoryId: string | null, search: string, recipeType = 'plat_principal,sauce') {
     setPickerLoading(true)
     try {
       const params = new URLSearchParams({ scope })
-      if (categoryId) params.set('category_id', categoryId)
-      if (search.trim()) params.set('search', search.trim())
+      if (categoryId)     params.set('category_id', categoryId)
+      if (search.trim())  params.set('search', search.trim())
+      if (recipeType)     params.set('recipe_type', recipeType)
       const res  = await fetch(`/api/recipes?${params}`)
       const data = await res.json()
       setEditRecipes(Array.isArray(data) ? (data as PickerRecipe[]) : [])
@@ -293,6 +323,27 @@ export default function PlanPage() {
     } finally {
       setPickerLoading(false)
     }
+  }
+
+  async function refreshSheetItem(itemId: string, planId: string) {
+    try {
+      const res = await fetch(`/api/meal-plans/${planId}/items/${itemId}`)
+      if (!res.ok) return
+      const data = await res.json()
+      type R = { id: string; role: string; sort_order: number; recipe_id: string; recipes: { id: string; name: string } | null }
+      const comps: Composition[] = ((data.meal_compositions ?? []) as R[]).map(c => ({
+        id: c.id, role: c.role as 'side' | 'drink',
+        sort_order: c.sort_order, recipe_id: c.recipe_id, recipes: c.recipes ?? null,
+      }))
+      setSheetDetails({
+        recipe_type:       (data.recipes as { recipe_type?: string } | null)?.recipe_type ?? null,
+        meal_compositions: comps,
+      })
+      setPlan(prev => prev ? {
+        ...prev,
+        meal_plan_items: prev.meal_plan_items.map(i => i.id === itemId ? { ...i, meal_compositions: comps } : i),
+      } : prev)
+    } catch { /* silent */ }
   }
 
   // ── Edit bottom sheet — actions ───────────────────────────────────────────
@@ -319,35 +370,60 @@ export default function PlanPage() {
       } catch { /* silent */ }
     }
 
-    void loadPickerRecipes('all', null, '')
+    void loadPickerRecipes('all', null, '', 'plat_principal,sauce')
   }
 
   function closeEdit() {
     if (pickerSearchTimerRef.current) clearTimeout(pickerSearchTimerRef.current)
     setEditTarget(null)
     setEditSearch('')
+    setCompositionMode(null)
+    setSheetDetails(null)
   }
 
   function handleScopeChange(scope: Scope) {
     setPickerScope(scope)
-    void loadPickerRecipes(scope, pickerCategory, editSearch)
+    const rt = compositionMode === 'side' ? 'accompagnement' : compositionMode === 'drink' ? 'boisson' : 'plat_principal,sauce'
+    void loadPickerRecipes(scope, pickerCategory, editSearch, rt)
   }
 
   function handleCategoryChange(catId: string | null) {
     setPickerCategory(catId)
-    void loadPickerRecipes(pickerScope, catId, editSearch)
+    const rt = compositionMode === 'side' ? 'accompagnement' : compositionMode === 'drink' ? 'boisson' : 'plat_principal,sauce'
+    void loadPickerRecipes(pickerScope, catId, editSearch, rt)
   }
 
   function handlePickerSearch(value: string) {
     setEditSearch(value)
     if (pickerSearchTimerRef.current) clearTimeout(pickerSearchTimerRef.current)
     pickerSearchTimerRef.current = setTimeout(() => {
-      void loadPickerRecipes(pickerScope, pickerCategory, value)
+      const rt = compositionMode === 'side' ? 'accompagnement' : compositionMode === 'drink' ? 'boisson' : 'plat_principal,sauce'
+      void loadPickerRecipes(pickerScope, pickerCategory, value, rt)
     }, 300)
   }
 
   async function changeRecipe(recipe: PickerRecipe) {
     if (!plan || !editTarget || changingRecipe) return
+
+    if (compositionMode !== null) {
+      if (!editTarget.itemId || addingComposition) return
+      setAddingComposition(true)
+      try {
+        const res = await fetch(`/api/meal-plans/${plan.id}/items/${editTarget.itemId}/compositions`, {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ recipe_id: recipe.id, role: compositionMode }),
+        })
+        if (!res.ok) throw new Error()
+        await refreshSheetItem(editTarget.itemId, plan.id)
+        setCompositionMode(null)
+        void loadPickerRecipes('all', null, editSearch, 'plat_principal,sauce')
+      } catch { /* keep sheet open */ } finally {
+        setAddingComposition(false)
+      }
+      return
+    }
+
     setChangingRecipe(true)
     try {
       if (editTarget.itemId) {
@@ -387,6 +463,21 @@ export default function PlanPage() {
       /* keep sheet open */
     } finally {
       setChangingRecipe(false)
+    }
+  }
+
+  async function deleteComposition(compId: string) {
+    if (!plan || !editTarget?.itemId || deletingCompId) return
+    setDeletingCompId(compId)
+    try {
+      const res = await fetch(
+        `/api/meal-plans/${plan.id}/items/${editTarget.itemId}/compositions/${compId}`,
+        { method: 'DELETE' }
+      )
+      if (!res.ok) throw new Error()
+      await refreshSheetItem(editTarget.itemId, plan.id)
+    } catch { /* silent */ } finally {
+      setDeletingCompId(null)
     }
   }
 
@@ -720,14 +811,31 @@ export default function PlanPage() {
 
             {/* Header */}
             <div className="flex items-start justify-between px-4 pb-2 flex-shrink-0">
-              <div>
-                <p className="font-dosis font-bold text-base text-[var(--mf-text-primary)]">
-                  {editTarget.itemId ? 'Changer ce repas' : 'Choisir une recette'}
-                </p>
-                <p className="text-xs font-quicksand text-[var(--mf-text-secondary)] mt-0.5">
-                  {MEAL_EMOJI[editTarget.mealType]}&nbsp;
-                  {MEAL_LABEL[editTarget.mealType]} — {editTarget.dayLabel}
-                </p>
+              <div className="flex items-center gap-1">
+                {compositionMode !== null && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCompositionMode(null)
+                      void loadPickerRecipes('all', null, editSearch, 'plat_principal,sauce')
+                    }}
+                    className="p-1 -ml-1 mr-0.5 text-[var(--mf-text-secondary)] hover:text-[var(--mf-primary)] transition-colors"
+                    aria-label="Retour"
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </button>
+                )}
+                <div>
+                  <p className="font-dosis font-bold text-base text-[var(--mf-text-primary)]">
+                    {compositionMode === 'side'  ? 'Choisir un accompagnement'
+                     : compositionMode === 'drink' ? 'Choisir une boisson'
+                     : editTarget.itemId ? 'Changer ce repas' : 'Choisir une recette'}
+                  </p>
+                  <p className="text-xs font-quicksand text-[var(--mf-text-secondary)] mt-0.5">
+                    {MEAL_EMOJI[editTarget.mealType]}&nbsp;
+                    {MEAL_LABEL[editTarget.mealType]} — {editTarget.dayLabel}
+                  </p>
+                </div>
               </div>
               <button
                 type="button"
@@ -754,7 +862,8 @@ export default function PlanPage() {
               </div>
             </div>
 
-            {/* Pills scope */}
+            {/* Pills scope — masquées en mode composition */}
+            {compositionMode === null && (
             <div className="flex gap-1.5 px-4 pb-2 overflow-x-auto scrollbar-hide flex-shrink-0">
               {SCOPE_OPTIONS.map(opt => (
                 <button
@@ -771,9 +880,10 @@ export default function PlanPage() {
                 </button>
               ))}
             </div>
+            )}
 
-            {/* Pills catégorie */}
-            {pickerCategories.length > 0 && (
+            {/* Pills catégorie — masquées en mode composition */}
+            {pickerCategories.length > 0 && compositionMode === null && (
               <div className="flex gap-1.5 px-4 pb-2 overflow-x-auto scrollbar-hide flex-shrink-0">
                 <button
                   type="button"
@@ -820,7 +930,7 @@ export default function PlanPage() {
                   <button
                     key={recipe.id}
                     type="button"
-                    disabled={changingRecipe}
+                    disabled={changingRecipe || addingComposition}
                     onClick={() => { void changeRecipe(recipe) }}
                     className="w-full flex items-center gap-3 px-4 py-3 border-b border-[var(--mf-border-warm)]/40 last:border-0 hover:bg-[var(--mf-bg-card)] transition-colors disabled:opacity-50"
                   >
@@ -849,14 +959,85 @@ export default function PlanPage() {
                         {recipe.visibility === 'circle' ? 'Cercle' : 'Commun.'}
                       </span>
                     )}
-                    {changingRecipe && (
+                    {(changingRecipe || addingComposition) && (
                       <Loader2 className="h-4 w-4 text-[var(--mf-primary)] animate-spin flex-shrink-0" />
                     )}
                   </button>
                 ))
               )}
 
-              {/* Créer un repas personnalisé */}
+              {/* Section accompagnement — visible si sauce ET item existant ET pas en mode composition */}
+              {editTarget.itemId && sheetDetails?.recipe_type === 'sauce' && compositionMode === null && (
+                <div className="px-4 py-3 border-t border-[var(--mf-border-warm)]/60">
+                  <p className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--mf-text-secondary)] mb-2">
+                    Accompagnement
+                  </p>
+                  {sheetDetails.meal_compositions.filter(c => c.role === 'side').map(comp => (
+                    <div key={comp.id} className="flex items-center gap-2 py-1.5">
+                      <span className="flex-1 text-sm font-quicksand text-[var(--mf-text-primary)] truncate">
+                        {comp.recipes?.name ?? '?'}
+                      </span>
+                      <button
+                        type="button"
+                        disabled={!!deletingCompId}
+                        onClick={() => { void deleteComposition(comp.id) }}
+                        className="p-1 text-[var(--mf-text-tertiary)] hover:text-red-500 transition-colors disabled:opacity-40"
+                        aria-label="Supprimer l'accompagnement"
+                      >
+                        {deletingCompId === comp.id
+                          ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          : <Trash2 className="h-3.5 w-3.5" />}
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => { setCompositionMode('side'); void loadPickerRecipes('all', null, '', 'accompagnement') }}
+                    className="mt-1 flex items-center gap-1 text-xs font-quicksand text-[var(--mf-primary)] hover:underline"
+                  >
+                    <Plus className="h-3 w-3" />
+                    Ajouter un accompagnement
+                  </button>
+                </div>
+              )}
+
+              {/* Section boisson — visible si item existant ET détails chargés ET pas en mode composition */}
+              {editTarget.itemId && sheetDetails !== null && compositionMode === null && (
+                <div className="px-4 py-3 border-t border-[var(--mf-border-warm)]/60">
+                  <p className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--mf-text-secondary)] mb-2">
+                    Boisson
+                  </p>
+                  {sheetDetails.meal_compositions.filter(c => c.role === 'drink').map(comp => (
+                    <div key={comp.id} className="flex items-center gap-2 py-1.5">
+                      <span className="flex-1 text-sm font-quicksand text-[var(--mf-text-primary)] truncate">
+                        {comp.recipes?.name ?? '?'}
+                      </span>
+                      <button
+                        type="button"
+                        disabled={!!deletingCompId}
+                        onClick={() => { void deleteComposition(comp.id) }}
+                        className="p-1 text-[var(--mf-text-tertiary)] hover:text-red-500 transition-colors disabled:opacity-40"
+                        aria-label="Supprimer la boisson"
+                      >
+                        {deletingCompId === comp.id
+                          ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          : <Trash2 className="h-3.5 w-3.5" />}
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => { setCompositionMode('drink'); void loadPickerRecipes('all', null, '', 'boisson') }}
+                    className="mt-1 flex items-center gap-1 text-xs font-quicksand text-[var(--mf-primary)] hover:underline"
+                  >
+                    <Plus className="h-3 w-3" />
+                    Ajouter une boisson
+                  </button>
+                </div>
+              )}
+
+              {/* Créer un repas personnalisé — masqué en mode composition */}
+              {compositionMode === null && (
               <div className="px-4 py-3 pb-6">
                 <button
                   type="button"
@@ -881,6 +1062,7 @@ export default function PlanPage() {
                   </span>
                 </button>
               </div>
+              )}
             </div>
           </div>
         </>
@@ -957,7 +1139,7 @@ function TemplateCard({ item, locking, onEdit, onLock }: TemplateCardProps) {
       </div>
       <div className="flex-1 min-w-0">
         <p className="font-dosis font-semibold text-sm text-[var(--mf-text-primary)] truncate">
-          {recipe?.name ?? '—'}
+          {composedName(recipe?.name, item.meal_compositions)}
         </p>
         <p className="text-[11px] font-quicksand text-[var(--mf-text-tertiary)]">Toute la semaine</p>
         {recipe?.prep_time_min && (
@@ -1015,7 +1197,7 @@ function DailyCard({ dayLabel, item, locking, onEdit, onLock }: DailyCardProps) 
           ? <span className="text-xl">{recipe.categories.icon}</span>
           : <Utensils className="h-5 w-5 text-[var(--mf-text-tertiary)]" />}
         <p className="text-[11px] font-quicksand font-semibold text-[var(--mf-text-primary)] mt-1 line-clamp-2 leading-tight">
-          {recipe?.name ?? '—'}
+          {composedName(recipe?.name, item.meal_compositions)}
         </p>
         {recipe?.prep_time_min && (
           <div className="flex items-center gap-0.5 mt-1">

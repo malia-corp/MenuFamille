@@ -17,7 +17,7 @@ const PLAN_SELECT = `
   meal_plan_items (
     id, day_of_week, meal_type, applies_all_days, servings, is_locked, sort_order,
     recipes ( id, name, photo_url, prep_time_min, cook_time_min, categories ( icon ) ),
-    meal_compositions ( id, role, sort_order, recipe_id )
+    meal_compositions ( id, role, sort_order, recipe_id, recipes ( id, name ) )
   )
 `
 

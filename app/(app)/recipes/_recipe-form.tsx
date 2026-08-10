@@ -8,8 +8,9 @@ import { createClient } from '@/lib/supabase/client'
 // ── Types exportés ────────────────────────────────────────────
 export interface IngredientRow { _id: string; name: string; quantity: string; unit: string }
 export interface StepRow { _id: string; description: string }
-export type DifficultyVal = 'facile' | 'moyen' | 'difficile'
-export type VisibilityVal = 'private' | 'circle' | 'community'
+export type DifficultyVal  = 'facile' | 'moyen' | 'difficile'
+export type VisibilityVal  = 'private' | 'circle' | 'community'
+export type RecipeTypeVal  = 'plat_principal' | 'sauce' | 'accompagnement' | 'boisson'
 
 export interface RecipeFormValues {
   name: string
@@ -23,6 +24,7 @@ export interface RecipeFormValues {
   circleId: string
   ingredients: IngredientRow[]
   steps: StepRow[]
+  recipe_type: RecipeTypeVal
   photo_url?: string
   source_url?: string
   raw_html_hash?: string
@@ -44,6 +46,13 @@ export interface RecipeFormProps {
 // ── Internals ─────────────────────────────────────────────────
 interface Category { id: string; name: string; icon: string | null }
 interface Circle  { id: string; name: string }
+
+const RECIPE_TYPE_OPTIONS: { value: RecipeTypeVal; label: string }[] = [
+  { value: 'plat_principal',  label: 'Plat principal'  },
+  { value: 'sauce',           label: 'Sauce'           },
+  { value: 'accompagnement',  label: 'Accompagnement'  },
+  { value: 'boisson',         label: 'Boisson'         },
+]
 
 const VISIBILITY_OPTIONS: { value: VisibilityVal; label: string; sub: string; Icon: React.ElementType }[] = [
   { value: 'private',   label: 'Seulement moi',  sub: 'Visible uniquement par vous',          Icon: Lock  },
@@ -86,6 +95,7 @@ export function RecipeForm({
   const [difficulty,  setDifficulty]  = useState<DifficultyVal | ''>(defaultValues?.difficulty ?? '')
   const [visibility,  setVisibility]  = useState<VisibilityVal>(defaultValues?.visibility ?? 'private')
   const [circleId,    setCircleId]    = useState(defaultValues?.circleId    ?? '')
+  const [recipeType,  setRecipeType]  = useState<RecipeTypeVal>((defaultValues?.recipe_type as RecipeTypeVal | undefined) ?? 'plat_principal')
   const [nameError,    setNameError]    = useState<string | null>(null)
   const [circleError,  setCircleError]  = useState<string | null>(null)
   const [photoFile,    setPhotoFile]    = useState<File | null>(null)
@@ -153,7 +163,7 @@ export function RecipeForm({
 
     await onSubmit({
       name, description, categoryId, prepTime, cookTime, servings, difficulty, visibility, circleId,
-      ingredients, steps,
+      ingredients, steps, recipe_type: recipeType,
       photo_url: resolvedPhotoUrl,
       source_url: defaultValues?.source_url,
       raw_html_hash: defaultValues?.raw_html_hash,
@@ -210,6 +220,24 @@ export function RecipeForm({
             onChange={e => handleNameChange(e.target.value)}
             className={`${INPUT} ${nameError ? 'border-red-400' : ''}`} />
           {nameError && <p className="text-xs text-red-500 font-quicksand px-1">{nameError}</p>}
+        </div>
+
+        {/* Type de recette */}
+        <div className="flex flex-wrap gap-2">
+          {RECIPE_TYPE_OPTIONS.map(opt => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => setRecipeType(opt.value)}
+              className={`px-3 py-1.5 rounded-full text-xs font-quicksand font-medium transition-colors ${
+                recipeType === opt.value
+                  ? 'bg-[var(--mf-primary)] text-white'
+                  : 'border border-[var(--mf-border-warm)] bg-[var(--mf-bg-card-alt)] text-[var(--mf-text-secondary)]'
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
         </div>
 
         <textarea placeholder="Astuce ou description (optionnel)" value={description}

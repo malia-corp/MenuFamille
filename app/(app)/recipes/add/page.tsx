@@ -116,6 +116,7 @@ function RecipeAddInner() {
       circle_id:     values.visibility === 'circle' ? values.circleId : null,
       ingredients:   values.ingredients.filter(i => i.name.trim()),
       steps:         values.steps.filter(s => s.description.trim()),
+      recipe_type:   values.recipe_type,
       photo_url:     values.photo_url ?? null,
       source_url:    values.source_url ?? null,
       raw_html_hash: values.raw_html_hash ?? null,
