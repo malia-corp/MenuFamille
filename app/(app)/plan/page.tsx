@@ -383,13 +383,13 @@ export default function PlanPage() {
 
   function handleScopeChange(scope: Scope) {
     setPickerScope(scope)
-    const rt = compositionMode === 'side' ? 'accompagnement' : compositionMode === 'drink' ? 'boisson' : 'plat_principal,sauce'
+    const rt = compositionMode === 'side' ? '' : compositionMode === 'drink' ? 'boisson' : 'plat_principal,sauce'
     void loadPickerRecipes(scope, pickerCategory, editSearch, rt)
   }
 
   function handleCategoryChange(catId: string | null) {
     setPickerCategory(catId)
-    const rt = compositionMode === 'side' ? 'accompagnement' : compositionMode === 'drink' ? 'boisson' : 'plat_principal,sauce'
+    const rt = compositionMode === 'side' ? '' : compositionMode === 'drink' ? 'boisson' : 'plat_principal,sauce'
     void loadPickerRecipes(pickerScope, catId, editSearch, rt)
   }
 
@@ -397,7 +397,7 @@ export default function PlanPage() {
     setEditSearch(value)
     if (pickerSearchTimerRef.current) clearTimeout(pickerSearchTimerRef.current)
     pickerSearchTimerRef.current = setTimeout(() => {
-      const rt = compositionMode === 'side' ? 'accompagnement' : compositionMode === 'drink' ? 'boisson' : 'plat_principal,sauce'
+      const rt = compositionMode === 'side' ? '' : compositionMode === 'drink' ? 'boisson' : 'plat_principal,sauce'
       void loadPickerRecipes(pickerScope, pickerCategory, value, rt)
     }, 300)
   }
@@ -862,8 +862,7 @@ export default function PlanPage() {
               </div>
             </div>
 
-            {/* Pills scope — masquées en mode composition */}
-            {compositionMode === null && (
+            {/* Pills scope */}
             <div className="flex gap-1.5 px-4 pb-2 overflow-x-auto scrollbar-hide flex-shrink-0">
               {SCOPE_OPTIONS.map(opt => (
                 <button
@@ -880,10 +879,9 @@ export default function PlanPage() {
                 </button>
               ))}
             </div>
-            )}
 
-            {/* Pills catégorie — masquées en mode composition */}
-            {pickerCategories.length > 0 && compositionMode === null && (
+            {/* Pills catégorie */}
+            {pickerCategories.length > 0 && (
               <div className="flex gap-1.5 px-4 pb-2 overflow-x-auto scrollbar-hide flex-shrink-0">
                 <button
                   type="button"
@@ -967,7 +965,7 @@ export default function PlanPage() {
               )}
 
               {/* Section accompagnement — visible si sauce ET item existant ET pas en mode composition */}
-              {editTarget.itemId && sheetDetails?.recipe_type === 'sauce' && compositionMode === null && (
+              {editTarget.itemId && sheetDetails !== null && compositionMode === null && (
                 <div className="px-4 py-3 border-t border-[var(--mf-border-warm)]/60">
                   <p className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--mf-text-secondary)] mb-2">
                     Accompagnement
@@ -992,7 +990,7 @@ export default function PlanPage() {
                   ))}
                   <button
                     type="button"
-                    onClick={() => { setCompositionMode('side'); void loadPickerRecipes('all', null, '', 'accompagnement') }}
+                    onClick={() => { setCompositionMode('side'); void loadPickerRecipes(pickerScope, pickerCategory, editSearch, '') }}
                     className="mt-1 flex items-center gap-1 text-xs font-quicksand text-[var(--mf-primary)] hover:underline"
                   >
                     <Plus className="h-3 w-3" />
@@ -1051,6 +1049,8 @@ export default function PlanPage() {
                       day_label:   editTarget.dayLabel,
                     })
                     if (editTarget.itemId) params.set('item_id', editTarget.itemId)
+                    if (compositionMode === 'side')  params.set('recipe_type', 'accompagnement')
+                    if (compositionMode === 'drink') params.set('recipe_type', 'boisson')
                     closeEdit()
                     router.push(`/recipes/add?${params}`)
                   }}
