@@ -16,8 +16,8 @@ const PLAN_SELECT = `
   id, week_start, status, share_token,
   meal_plan_items (
     id, day_of_week, meal_type, applies_all_days, servings, is_locked, sort_order,
-    recipes ( id, name, photo_url, prep_time_min, cook_time_min, recipe_type, categories ( icon ) ),
-    meal_compositions ( id, role, sort_order, recipes ( id, name ) )
+    recipes ( id, name, photo_url, prep_time_min, cook_time_min, categories ( icon ) ),
+    meal_compositions ( id, role, sort_order, recipe_id )
   )
 `
 
@@ -28,25 +28,27 @@ export async function GET(request: NextRequest) {
 
   // Retourne le plan le plus récent (toutes semaines confondues), sans créer de plan vide
   if (request.nextUrl.searchParams.get('latest') === 'true') {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('meal_plans')
       .select(PLAN_SELECT)
       .eq('user_id', user.id)
       .order('week_start', { ascending: false })
       .limit(1)
       .maybeSingle()
+    if (error) return Response.json({ error: error.message }, { status: 500 })
     return Response.json(data)
   }
 
   const week = request.nextUrl.searchParams.get('week') ?? getMondayISO()
 
-  const { data: existing } = await supabase
+  const { data: existing, error: selectError } = await supabase
     .from('meal_plans')
     .select(PLAN_SELECT)
     .eq('user_id', user.id)
     .eq('week_start', week)
     .maybeSingle()
 
+  if (selectError) return Response.json({ error: selectError.message }, { status: 500 })
   if (existing) return Response.json(existing)
 
   const { data: created, error } = await supabase
