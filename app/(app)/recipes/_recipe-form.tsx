@@ -47,13 +47,6 @@ export interface RecipeFormProps {
 interface Category { id: string; name: string; icon: string | null }
 interface Circle  { id: string; name: string }
 
-const RECIPE_TYPE_OPTIONS: { value: RecipeTypeVal; label: string }[] = [
-  { value: 'plat_principal',  label: 'Plat principal'  },
-  { value: 'sauce',           label: 'Sauce'           },
-  { value: 'accompagnement',  label: 'Accompagnement'  },
-  { value: 'boisson',         label: 'Boisson'         },
-]
-
 const VISIBILITY_OPTIONS: { value: VisibilityVal; label: string; sub: string; Icon: React.ElementType }[] = [
   { value: 'private',   label: 'Seulement moi',  sub: 'Visible uniquement par vous',          Icon: Lock  },
   { value: 'circle',    label: 'Ma famille',      sub: 'Partagée avec votre cercle familial',  Icon: Users },
@@ -220,24 +213,6 @@ export function RecipeForm({
             onChange={e => handleNameChange(e.target.value)}
             className={`${INPUT} ${nameError ? 'border-red-400' : ''}`} />
           {nameError && <p className="text-xs text-red-500 font-quicksand px-1">{nameError}</p>}
-        </div>
-
-        {/* Type de recette */}
-        <div className="flex flex-wrap gap-2">
-          {RECIPE_TYPE_OPTIONS.map(opt => (
-            <button
-              key={opt.value}
-              type="button"
-              onClick={() => setRecipeType(opt.value)}
-              className={`px-3 py-1.5 rounded-full text-xs font-quicksand font-medium transition-colors ${
-                recipeType === opt.value
-                  ? 'bg-[var(--mf-primary)] text-white'
-                  : 'border border-[var(--mf-border-warm)] bg-[var(--mf-bg-card-alt)] text-[var(--mf-text-secondary)]'
-              }`}
-            >
-              {opt.label}
-            </button>
-          ))}
         </div>
 
         <textarea placeholder="Astuce ou description (optionnel)" value={description}
