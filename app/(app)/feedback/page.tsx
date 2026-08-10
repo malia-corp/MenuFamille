@@ -6,6 +6,7 @@ import {
 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { fr } from 'date-fns/locale'
+import { composedName } from '@/lib/utils/composed-name'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -13,12 +14,19 @@ type Rating   = 'excellent' | 'correct' | 'decevant'
 type MealType = 'petit_dejeuner' | 'dejeuner' | 'gouter' | 'diner'
 type Status   = 'past' | 'today' | 'future'
 
+interface Composition {
+  role:       'side' | 'drink'
+  sort_order: number
+  recipes:    { name: string } | null
+}
+
 interface MealPlanItem {
-  id:               string
-  meal_type:        MealType
-  day_of_week:      string
-  applies_all_days: boolean
-  recipes:          { name: string } | null
+  id:                string
+  meal_type:         MealType
+  day_of_week:       string
+  applies_all_days:  boolean
+  recipes:           { name: string } | null
+  meal_compositions: Composition[]
 }
 
 interface MealPlan {
@@ -240,7 +248,7 @@ export default function FeedbackPage() {
                       {!item.applies_all_days && ` · ${item.day_of_week.charAt(0).toUpperCase() + item.day_of_week.slice(1)}`}
                     </p>
                     <p className="font-dosis font-semibold text-sm text-[#3D2C20] truncate">
-                      {item.recipes?.name ?? 'Repas non défini'}
+                      {composedName(item.recipes?.name, item.meal_compositions)}
                     </p>
                   </div>
                 </div>
@@ -301,7 +309,7 @@ export default function FeedbackPage() {
                   {MEAL_LABEL[sheetItem.meal_type]}
                 </p>
                 <p className="font-dosis font-bold text-base text-[#3D2C20]">
-                  Comment était {sheetItem.recipes?.name ?? 'ce repas'} ?
+                  Comment était {sheetItem.recipes ? composedName(sheetItem.recipes.name, sheetItem.meal_compositions) : 'ce repas'} ?
                 </p>
               </div>
               <button onClick={() => setSheetItem(null)} className="p-1 -mr-1 text-[#9A8F84]">

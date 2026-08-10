@@ -12,6 +12,7 @@ import {
   Share2,
   Utensils,
 } from 'lucide-react'
+import { composedName } from '@/lib/utils/composed-name'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -31,12 +32,19 @@ interface PlanRecipe {
   categories:    { icon: string | null } | null
 }
 
+interface Composition {
+  role:       'side' | 'drink'
+  sort_order: number
+  recipes:    { name: string } | null
+}
+
 interface PlanItem {
-  id:               string
-  day_of_week:      DayOfWeek
-  meal_type:        MealType
-  applies_all_days: boolean
-  recipes:          PlanRecipe | null
+  id:                string
+  day_of_week:       DayOfWeek
+  meal_type:         MealType
+  applies_all_days:  boolean
+  recipes:           PlanRecipe | null
+  meal_compositions: Composition[]
 }
 
 interface Plan {
@@ -85,9 +93,10 @@ function formatWeekRange(weekStart: string): string {
 
 // ─── Sous-composant : ligne recette ──────────────────────────────────────────
 
-function RecipeRow({ recipe, label }: {
-  recipe: PlanRecipe | null
-  label:  string
+function RecipeRow({ recipe, label, displayName }: {
+  recipe:       PlanRecipe | null
+  label:        string
+  displayName?: string
 }) {
   return (
     <div className="flex items-center gap-3 px-3 py-2.5 border-b border-[var(--mf-border-warm)]/30 last:border-0">
@@ -101,7 +110,7 @@ function RecipeRow({ recipe, label }: {
           </span>
           <div className="flex-1 min-w-0">
             <p className="text-xs font-quicksand font-medium text-[var(--mf-text-primary)] truncate">
-              {recipe.name}
+              {displayName ?? recipe.name}
             </p>
             {recipe.prep_time_min && (
               <div className="flex items-center gap-0.5 mt-0.5">
@@ -324,13 +333,24 @@ function ValidateInner() {
               </div>
 
               {config.mode === 'template' ? (
-                <RecipeRow recipe={templateItem?.recipes ?? null} label="Toute la semaine" />
+                <RecipeRow
+                  recipe={templateItem?.recipes ?? null}
+                  label="Toute la semaine"
+                  displayName={templateItem ? composedName(templateItem.recipes?.name, templateItem.meal_compositions) : undefined}
+                />
               ) : (
                 DAY_OPTIONS.map(d => {
                   const item = plan.meal_plan_items.find(
                     i => i.meal_type === config.meal_type && i.day_of_week === d.val && !i.applies_all_days
                   ) ?? null
-                  return <RecipeRow key={d.val} recipe={item?.recipes ?? null} label={d.full} />
+                  return (
+                    <RecipeRow
+                      key={d.val}
+                      recipe={item?.recipes ?? null}
+                      label={d.full}
+                      displayName={item ? composedName(item.recipes?.name, item.meal_compositions) : undefined}
+                    />
+                  )
                 })
               )}
             </div>
