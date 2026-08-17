@@ -149,10 +149,12 @@ export async function POST() {
   const usedDrinkIds = new Set<string>()
 
   // 6. Générer les items + planifier les compositions
+  type DayOfWeek = typeof DAYS[number]
+  type MealType  = 'petit_dejeuner' | 'dejeuner' | 'gouter' | 'diner'
   type ItemRow = {
     meal_plan_id:     string
-    meal_type:        string
-    day_of_week:      string
+    meal_type:        MealType
+    day_of_week:      DayOfWeek
     applies_all_days: boolean
     recipe_id:        string
     servings:         number
@@ -201,7 +203,7 @@ export async function POST() {
         usedIds.add(recipeId)
         itemsToInsert.push({
           meal_plan_id:     planId,
-          meal_type:        config.meal_type,
+          meal_type:        config.meal_type as MealType,
           day_of_week:      'lundi',
           applies_all_days: true,
           recipe_id:        recipeId,
@@ -220,7 +222,7 @@ export async function POST() {
           usedIds.add(recipeId)
           itemsToInsert.push({
             meal_plan_id:     planId,
-            meal_type:        config.meal_type,
+            meal_type:        config.meal_type as MealType,
             day_of_week:      day,
             applies_all_days: false,
             recipe_id:        recipeId,
@@ -237,7 +239,7 @@ export async function POST() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: insertedItems, error: insertErr } = await service
       .from('meal_plan_items')
-      .insert(itemsToInsert as any)
+      .insert(itemsToInsert)
       .select('id, recipe_id, meal_type')
 
     if (insertErr) return Response.json({ error: insertErr.message }, { status: 500 })
