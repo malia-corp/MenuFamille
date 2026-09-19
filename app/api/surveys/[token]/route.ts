@@ -1,4 +1,5 @@
 import { createServiceClient } from '@/lib/supabase/service'
+import { composedName } from '@/lib/utils/composed-name'
 
 export async function GET(
   _: Request,
@@ -12,7 +13,8 @@ export async function GET(
       id, week_start,
       meal_plan_items (
         id, meal_type, day_of_week, applies_all_days,
-        recipes ( name )
+        recipes ( name ),
+        meal_compositions ( role, sort_order, recipes ( name ) )
       )
     `)
     .eq('share_token', params.token)
@@ -23,12 +25,14 @@ export async function GET(
     return Response.json({ error: 'Sondage introuvable ou expiré' }, { status: 404 })
   }
 
+  type RawComposition = { role: string; sort_order: number; recipes: { name: string } | null }
   type RawItem = {
     id: string
     meal_type: string
     day_of_week: string
     applies_all_days: boolean
     recipes: { name: string } | null
+    meal_compositions: RawComposition[]
   }
 
   const items = (plan.meal_plan_items as unknown as RawItem[]).map(i => ({
@@ -36,7 +40,7 @@ export async function GET(
     meal_type:        i.meal_type,
     day_of_week:      i.day_of_week,
     applies_all_days: i.applies_all_days,
-    recipe_name:      i.recipes?.name ?? null,
+    recipe_name:      composedName(i.recipes?.name, i.meal_compositions),
   }))
 
   return Response.json({ plan_id: plan.id, week_start: plan.week_start, items })

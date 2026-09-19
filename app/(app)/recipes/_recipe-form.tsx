@@ -8,8 +8,9 @@ import { createClient } from '@/lib/supabase/client'
 // ── Types exportés ────────────────────────────────────────────
 export interface IngredientRow { _id: string; name: string; quantity: string; unit: string }
 export interface StepRow { _id: string; description: string }
-export type DifficultyVal = 'facile' | 'moyen' | 'difficile'
-export type VisibilityVal = 'private' | 'circle' | 'community'
+export type DifficultyVal  = 'facile' | 'moyen' | 'difficile'
+export type VisibilityVal  = 'private' | 'circle' | 'community'
+export type RecipeTypeVal  = 'plat_principal' | 'sauce' | 'accompagnement' | 'boisson'
 
 export interface RecipeFormValues {
   name: string
@@ -23,6 +24,7 @@ export interface RecipeFormValues {
   circleId: string
   ingredients: IngredientRow[]
   steps: StepRow[]
+  recipe_type: RecipeTypeVal
   photo_url?: string
   source_url?: string
   raw_html_hash?: string
@@ -86,6 +88,7 @@ export function RecipeForm({
   const [difficulty,  setDifficulty]  = useState<DifficultyVal | ''>(defaultValues?.difficulty ?? '')
   const [visibility,  setVisibility]  = useState<VisibilityVal>(defaultValues?.visibility ?? 'private')
   const [circleId,    setCircleId]    = useState(defaultValues?.circleId    ?? '')
+  const recipeType = (defaultValues?.recipe_type as RecipeTypeVal | undefined) ?? 'plat_principal'
   const [nameError,    setNameError]    = useState<string | null>(null)
   const [circleError,  setCircleError]  = useState<string | null>(null)
   const [photoFile,    setPhotoFile]    = useState<File | null>(null)
@@ -153,7 +156,7 @@ export function RecipeForm({
 
     await onSubmit({
       name, description, categoryId, prepTime, cookTime, servings, difficulty, visibility, circleId,
-      ingredients, steps,
+      ingredients, steps, recipe_type: recipeType,
       photo_url: resolvedPhotoUrl,
       source_url: defaultValues?.source_url,
       raw_html_hash: defaultValues?.raw_html_hash,

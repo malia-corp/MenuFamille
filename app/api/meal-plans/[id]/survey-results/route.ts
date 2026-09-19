@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest } from 'next/server'
+import { composedName } from '@/lib/utils/composed-name'
 
 export async function GET(
   _: NextRequest,
@@ -33,7 +34,7 @@ export async function GET(
   // Récupérer les items du plan pour le contexte
   const { data: items } = await supabase
     .from('meal_plan_items')
-    .select('id, meal_type, day_of_week, applies_all_days, recipes ( name )')
+    .select('id, meal_type, day_of_week, applies_all_days, recipes ( name ), meal_compositions ( role, sort_order, recipes ( name ) )')
     .eq('meal_plan_id', params.id)
 
   const itemList = items ?? []
@@ -49,7 +50,7 @@ export async function GET(
   }
 
   let commentCount = 0
-  let ratedItemIds = new Set<string>()
+  const ratedItemIds = new Set<string>()
 
   for (const resp of responseList) {
     type RawAnswer = { meal_plan_item_id: string; reaction: Reaction; comment: string | null }
@@ -74,12 +75,16 @@ export async function GET(
   const itemResults = itemList.map(item => {
     const agg = byItem.get(item.id) ?? { aime: 0, bof: 0, naime_pas: 0, comments: [] }
     type RawRecipe = { name: string } | null
+    type RawComp = { role: string; sort_order: number; recipes: { name: string } | null }
     return {
       id:               item.id,
       meal_type:        item.meal_type,
       day_of_week:      item.day_of_week,
       applies_all_days: item.applies_all_days,
-      recipe_name:      (item.recipes as unknown as RawRecipe)?.name ?? null,
+      recipe_name:      composedName(
+        (item.recipes as unknown as RawRecipe)?.name,
+        item.meal_compositions as unknown as RawComp[]
+      ),
       aime:             agg.aime,
       bof:              agg.bof,
       naime_pas:        agg.naime_pas,

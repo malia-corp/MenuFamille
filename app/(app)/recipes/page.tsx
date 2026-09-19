@@ -23,6 +23,7 @@ interface Recipe {
   photo_url: string | null
   visibility: string
   is_favorited: boolean
+  recipe_type?: string
   categories: Category | null
 }
 
@@ -42,6 +43,7 @@ export default function RecipesPage() {
   const [error, setError] = useState<string | null>(null)
   const [scope, setScope] = useState<Scope>('all')
   const [search, setSearch] = useState('')
+  const [recipeType, setRecipeType] = useState('')
   const [categories, setCategories] = useState<Category[]>([])
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -60,6 +62,7 @@ export default function RecipesPage() {
       const params = new URLSearchParams({ scope })
       if (search) params.set('search', search)
       if (selectedCategory) params.set('category_id', selectedCategory)
+      if (recipeType) params.set('recipe_type', recipeType)
 
       setLoading(true)
       fetch(`/api/recipes?${params}`)
@@ -86,7 +89,7 @@ export default function RecipesPage() {
     }
 
     return () => { if (searchTimer.current) clearTimeout(searchTimer.current) }
-  }, [scope, search, selectedCategory])
+  }, [scope, search, selectedCategory, recipeType])
 
   return (
     <>
@@ -118,6 +121,30 @@ export default function RecipesPage() {
             }`}
           >
             {s.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Filtres type de recette */}
+      <div className="flex gap-2 overflow-x-auto pb-0.5">
+        {[
+          { value: '',               label: 'Tout'           },
+          { value: 'plat_principal', label: 'Plat principal' },
+          { value: 'sauce',          label: 'Sauce'          },
+          { value: 'accompagnement', label: 'Accompagnement' },
+          { value: 'boisson',        label: 'Boisson'        },
+        ].map(t => (
+          <button
+            key={t.value}
+            type="button"
+            onClick={() => setRecipeType(t.value)}
+            className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-quicksand font-medium transition-colors ${
+              recipeType === t.value
+                ? 'bg-[var(--mf-primary)] text-white'
+                : 'bg-white border border-[var(--mf-border-warm)] text-[var(--mf-text-secondary)]'
+            }`}
+          >
+            {t.label}
           </button>
         ))}
       </div>
@@ -207,6 +234,16 @@ export default function RecipesPage() {
                 <span className="text-4xl select-none" aria-hidden="true">
                   {recipe.categories?.icon ?? '🍴'}
                 </span>
+                {recipe.recipe_type && recipe.recipe_type !== 'plat_principal' && (
+                  <span className={`absolute top-1 left-1 text-[10px] font-quicksand font-bold px-1.5 py-0.5 rounded-full ${
+                    recipe.recipe_type === 'sauce'          ? 'bg-orange-100 text-orange-700' :
+                    recipe.recipe_type === 'accompagnement' ? 'bg-green-100 text-green-700'   :
+                    recipe.recipe_type === 'boisson'        ? 'bg-blue-100 text-blue-700'     :
+                    ''
+                  }`}>
+                    {recipe.recipe_type === 'sauce' ? 'Sauce' : recipe.recipe_type === 'accompagnement' ? 'Acc.' : 'Bois.'}
+                  </span>
+                )}
                 <button
                   type="button"
                   onClick={async (e) => {

@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { Clock, Utensils } from 'lucide-react'
 import { createServiceClient } from '@/lib/supabase/service'
 import { SurveySection } from './_survey-section'
+import { composedName } from '@/lib/utils/composed-name'
 import type { Metadata } from 'next'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -15,12 +16,19 @@ interface PublicRecipe {
   categories:    { icon: string | null } | null
 }
 
+interface PublicComposition {
+  role:       string
+  sort_order: number
+  recipes:    { name: string } | null
+}
+
 interface PublicItem {
-  id:               string
-  day_of_week:      DayOfWeek
-  meal_type:        MealType
-  applies_all_days: boolean
-  recipes:          PublicRecipe | null
+  id:                string
+  day_of_week:       DayOfWeek
+  meal_type:         MealType
+  applies_all_days:  boolean
+  recipes:           PublicRecipe | null
+  meal_compositions: PublicComposition[]
 }
 
 interface PublicPlan {
@@ -98,7 +106,8 @@ export default async function SharedMenuPage({ params }: { params: { token: stri
       id, week_start,
       meal_plan_items (
         id, day_of_week, meal_type, applies_all_days,
-        recipes ( name, prep_time_min, categories ( icon ) )
+        recipes ( name, prep_time_min, categories ( icon ) ),
+        meal_compositions ( role, sort_order, recipes ( name ) )
       )
     `)
     .eq('share_token', params.token)
@@ -161,12 +170,21 @@ export default async function SharedMenuPage({ params }: { params: { token: stri
 
               <div className="bg-white border border-[#EDE4D6] rounded-xl overflow-hidden">
                 {isTemplate ? (
-                  <SharedRecipeRow recipe={templateItem!.recipes} label="Toute la semaine" />
+                  <SharedRecipeRow
+                    recipe={templateItem!.recipes}
+                    label="Toute la semaine"
+                    displayName={composedName(templateItem!.recipes?.name, templateItem!.meal_compositions)}
+                  />
                 ) : (
                   DAY_OPTIONS.map(d => {
                     const item = dailyItems.find(i => i.day_of_week === d.val) ?? null
                     return (
-                      <SharedRecipeRow key={d.val} recipe={item?.recipes ?? null} label={d.full} />
+                      <SharedRecipeRow
+                        key={d.val}
+                        recipe={item?.recipes ?? null}
+                        label={d.full}
+                        displayName={item ? composedName(item.recipes?.name, item.meal_compositions) : undefined}
+                      />
                     )
                   })
                 )}
@@ -192,7 +210,7 @@ export default async function SharedMenuPage({ params }: { params: { token: stri
             meal_type:        i.meal_type,
             day_of_week:      i.day_of_week,
             applies_all_days: i.applies_all_days,
-            recipe_name:      i.recipes?.name ?? null,
+            recipe_name:      i.recipes ? composedName(i.recipes.name, i.meal_compositions) : null,
           }))}
         />
 
@@ -212,9 +230,11 @@ export default async function SharedMenuPage({ params }: { params: { token: stri
 function SharedRecipeRow({
   recipe,
   label,
+  displayName,
 }: {
-  recipe: PublicRecipe | null
-  label:  string
+  recipe:       PublicRecipe | null
+  label:        string
+  displayName?: string
 }) {
   return (
     <div className="flex items-center gap-3 px-3 py-2.5 border-b border-[#EDE4D6]/50 last:border-0">
@@ -228,7 +248,7 @@ function SharedRecipeRow({
           </span>
           <div className="flex-1 min-w-0">
             <p className="text-xs font-quicksand font-medium text-[#3D2C20] truncate">
-              {recipe.name}
+              {displayName ?? recipe.name}
             </p>
             {recipe.prep_time_min && (
               <div className="flex items-center gap-0.5 mt-0.5">

@@ -92,14 +92,14 @@ export async function POST() {
     )
   )
 
-  // 4. Supprimer les items non verrouillés
+  // 4. Supprimer les items non verrouillés (cascade supprime aussi leurs compositions)
   await service
     .from('meal_plan_items')
     .delete()
     .eq('meal_plan_id', planId)
     .eq('is_locked', false)
 
-  // 5. Récupérer les recettes accessibles
+  // 5. Récupérer les recettes accessibles avec leur type
   const { data: circles } = await service
     .from('family_circle_members')
     .select('circle_id')
@@ -113,7 +113,7 @@ export async function POST() {
 
   const { data: accessibleRecipes } = await service
     .from('recipes')
-    .select('id')
+    .select('id, recipe_type')
     .or(orFilter)
 
   if (!accessibleRecipes?.length) {
@@ -123,32 +123,87 @@ export async function POST() {
     )
   }
 
-  const recipePool = accessibleRecipes.map(r => r.id)
-  const usedIds = new Set<string>(lockedRecipeIds)
+  // Répartir par type
+  const recipeTypeMap = new Map<string, string>()
+  const mainPool: string[] = []    // plat_principal | sauce
+  const sidePool: string[] = []    // accompagnement
+  const drinkPool: string[] = []   // boisson
 
-  // 6. Générer les items
+  for (const r of accessibleRecipes) {
+    const t = r.recipe_type ?? 'plat_principal'
+    recipeTypeMap.set(r.id, t)
+    if (t === 'plat_principal' || t === 'sauce') mainPool.push(r.id)
+    else if (t === 'accompagnement') sidePool.push(r.id)
+    else if (t === 'boisson') drinkPool.push(r.id)
+  }
+
+  if (mainPool.length === 0) {
+    return Response.json(
+      { error: 'Aucun plat principal disponible. Ajoutez des recettes de type "Plat principal" ou "Sauce".' },
+      { status: 422 }
+    )
+  }
+
+  const usedIds      = new Set<string>(lockedRecipeIds)
+  const usedSideIds  = new Set<string>()
+  const usedDrinkIds = new Set<string>()
+
+  // 6. Générer les items + planifier les compositions
+  type DayOfWeek = typeof DAYS[number]
+  type MealType  = 'petit_dejeuner' | 'dejeuner' | 'gouter' | 'diner'
   type ItemRow = {
-    meal_plan_id: string
-    meal_type: string
-    day_of_week: string
+    meal_plan_id:     string
+    meal_type:        MealType
+    day_of_week:      DayOfWeek
     applies_all_days: boolean
+    recipe_id:        string
+    servings:         number
+    is_locked:        boolean
+    sort_order:       number
+  }
+
+  type CompositionPlan = {
+    item_idx:  number
+    role:      'side' | 'drink'
     recipe_id: string
-    servings: number
-    is_locked: boolean
     sort_order: number
   }
 
   const itemsToInsert: ItemRow[] = []
+  const compositionPlans: CompositionPlan[] = []
+  const mealsDrink = new Set(['dejeuner', 'diner'])
+
+  function planCompositions(itemIdx: number, mainRecipeId: string, mealType: string) {
+    const rt = recipeTypeMap.get(mainRecipeId) ?? 'plat_principal'
+
+    if (rt === 'sauce' && sidePool.length > 0) {
+      const sideId = pickRandom(sidePool, usedSideIds)
+      if (sideId) {
+        usedSideIds.add(sideId)
+        compositionPlans.push({ item_idx: itemIdx, role: 'side', recipe_id: sideId, sort_order: 0 })
+      }
+    }
+
+    if (mealsDrink.has(mealType) && drinkPool.length > 0 && Math.random() < 0.6) {
+      const drinkId = pickRandom(drinkPool, usedDrinkIds)
+      if (drinkId) {
+        usedDrinkIds.add(drinkId)
+        compositionPlans.push({ item_idx: itemIdx, role: 'drink', recipe_id: drinkId, sort_order: 1 })
+      }
+    }
+  }
 
   for (const config of configs) {
     if (config.mode === 'template') {
       if (lockedSlots.has(`${config.meal_type}|template`)) continue
-      const recipeId = pickRandom(recipePool, usedIds)
+      const recipeId = pickRandom(mainPool, usedIds)
       if (recipeId) {
+        const idx = itemsToInsert.length
+        planCompositions(idx, recipeId, config.meal_type)
         usedIds.add(recipeId)
         itemsToInsert.push({
           meal_plan_id:     planId,
-          meal_type:        config.meal_type,
+          meal_type:        config.meal_type as MealType,
           day_of_week:      'lundi',
           applies_all_days: true,
           recipe_id:        recipeId,
@@ -160,12 +215,14 @@ export async function POST() {
     } else {
       for (const day of DAYS) {
         if (lockedSlots.has(`${config.meal_type}|${day}`)) continue
-        const recipeId = pickRandom(recipePool, usedIds)
+        const recipeId = pickRandom(mainPool, usedIds)
         if (recipeId) {
+          const idx = itemsToInsert.length
+          planCompositions(idx, recipeId, config.meal_type)
           usedIds.add(recipeId)
           itemsToInsert.push({
             meal_plan_id:     planId,
-            meal_type:        config.meal_type,
+            meal_type:        config.meal_type as MealType,
             day_of_week:      day,
             applies_all_days: false,
             recipe_id:        recipeId,
@@ -180,8 +237,27 @@ export async function POST() {
 
   if (itemsToInsert.length > 0) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error: insertErr } = await service.from('meal_plan_items').insert(itemsToInsert as any)
+    const { data: insertedItems, error: insertErr } = await service
+      .from('meal_plan_items')
+      .insert(itemsToInsert)
+      .select('id, recipe_id, meal_type')
+
     if (insertErr) return Response.json({ error: insertErr.message }, { status: 500 })
+
+    if (insertedItems && compositionPlans.length > 0) {
+      const compositionsToInsert = compositionPlans
+        .map(cp => {
+          const item = insertedItems[cp.item_idx]
+          if (!item) return null
+          return { meal_plan_item_id: item.id, recipe_id: cp.recipe_id, role: cp.role, sort_order: cp.sort_order }
+        })
+        .filter((c) => c !== null)
+
+      if (compositionsToInsert.length > 0) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await service.from('meal_compositions').insert(compositionsToInsert as any)
+      }
+    }
   }
 
   return Response.json({ plan_id: planId, generated: itemsToInsert.length })
