@@ -109,20 +109,11 @@ export default function FeedbackPage() {
   const [customMsg,     setCustomMsg]     = useState('')
   const [writingCustom, setWritingCustom] = useState(false)
   const [submitting,       setSubmitting]       = useState(false)
-  const [userDisplayName,  setUserDisplayName]  = useState('')
 
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const [planRes, meRes] = await Promise.all([
-        fetch('/api/meal-plans'),
-        fetch('/api/users/me'),
-      ])
-
-      if (meRes.ok) {
-        const me = await meRes.json() as { display_name?: string }
-        if (me.display_name) setUserDisplayName(me.display_name)
-      }
+      const planRes = await fetch('/api/meal-plans')
 
       const planData: MealPlan | null = planRes.ok ? await planRes.json() : null
       if (!planData?.id) { setPlan(null); setLoading(false); return }

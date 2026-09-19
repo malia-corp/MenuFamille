@@ -50,7 +50,7 @@ export async function GET(
   }
 
   let commentCount = 0
-  let ratedItemIds = new Set<string>()
+  const ratedItemIds = new Set<string>()
 
   for (const resp of responseList) {
     type RawAnswer = { meal_plan_item_id: string; reaction: Reaction; comment: string | null }

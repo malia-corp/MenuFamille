@@ -11,7 +11,6 @@ import { fr } from 'date-fns/locale'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Reaction = 'aime' | 'bof' | 'naime_pas'
 
 interface Comment {
   respondent_name: string
@@ -194,9 +193,9 @@ export default function SurveyResultsPage() {
                     </div>
                   ) : (
                     <div className="space-y-1.5">
-                      <DistributionBar emoji="😊" count={item.aime}      total={total} color="#2A7D4F" bg="#F0FAF5" />
-                      <DistributionBar emoji="😐" count={item.bof}       total={total} color="#F5A623" bg="#FDF8EC" />
-                      <DistributionBar emoji="😕" count={item.naime_pas} total={total} color="#C0392B" bg="#FCEBEB" />
+                      <DistributionBar emoji="😊" count={item.aime}      total={total} color="#2A7D4F" />
+                      <DistributionBar emoji="😐" count={item.bof}       total={total} color="#F5A623" />
+                      <DistributionBar emoji="😕" count={item.naime_pas} total={total} color="#C0392B" />
                     </div>
                   )}
 
@@ -244,9 +243,9 @@ function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string
 }
 
 function DistributionBar({
-  emoji, count, total, color, bg,
+  emoji, count, total, color,
 }: {
-  emoji: string; count: number; total: number; color: string; bg: string
+  emoji: string; count: number; total: number; color: string
 }) {
   const pct = total > 0 ? Math.round((count / total) * 100) : 0
   return (

@@ -88,7 +88,7 @@ export function RecipeForm({
   const [difficulty,  setDifficulty]  = useState<DifficultyVal | ''>(defaultValues?.difficulty ?? '')
   const [visibility,  setVisibility]  = useState<VisibilityVal>(defaultValues?.visibility ?? 'private')
   const [circleId,    setCircleId]    = useState(defaultValues?.circleId    ?? '')
-  const [recipeType,  setRecipeType]  = useState<RecipeTypeVal>((defaultValues?.recipe_type as RecipeTypeVal | undefined) ?? 'plat_principal')
+  const recipeType = (defaultValues?.recipe_type as RecipeTypeVal | undefined) ?? 'plat_principal'
   const [nameError,    setNameError]    = useState<string | null>(null)
   const [circleError,  setCircleError]  = useState<string | null>(null)
   const [photoFile,    setPhotoFile]    = useState<File | null>(null)
