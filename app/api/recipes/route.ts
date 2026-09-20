@@ -200,7 +200,7 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  query = query.order('created_at', { ascending: false })
+  query = query.order('created_at', { ascending: false }).limit(100)
 
   const { data, error } = await query
   if (error) return Response.json({ error: error.message }, { status: 500 })

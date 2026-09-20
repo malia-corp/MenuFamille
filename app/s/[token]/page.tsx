@@ -103,7 +103,7 @@ export default async function SharedMenuPage({ params }: { params: { token: stri
   const { data } = await supabase
     .from('meal_plans')
     .select(`
-      id, week_start,
+      id, week_start, token_expires_at,
       meal_plan_items (
         id, day_of_week, meal_type, applies_all_days,
         recipes ( name, prep_time_min, categories ( icon ) ),
@@ -111,10 +111,13 @@ export default async function SharedMenuPage({ params }: { params: { token: stri
       )
     `)
     .eq('share_token', params.token)
-    .gt('token_expires_at', new Date().toISOString())
     .maybeSingle()
 
   if (!data) notFound()
+
+  if (data.token_expires_at && new Date(data.token_expires_at) <= new Date()) {
+    return <ExpiredLinkPage />
+  }
 
   const plan = data as unknown as PublicPlan
 
@@ -221,6 +224,26 @@ export default async function SharedMenuPage({ params }: { params: { token: stri
           </p>
         </div>
       </main>
+    </div>
+  )
+}
+
+// ─── Lien expiré ──────────────────────────────────────────────────────────────
+
+function ExpiredLinkPage() {
+  return (
+    <div className="min-h-screen bg-[#FDF6EE] flex items-center justify-center px-6">
+      <div className="text-center space-y-3 max-w-xs">
+        <div className="w-12 h-12 rounded-full bg-[#FDF0DC] flex items-center justify-center mx-auto">
+          <Clock className="h-6 w-6 text-[var(--mf-gold-text)]" />
+        </div>
+        <h1 className="font-dosis font-bold text-lg text-[#3D2C20]">
+          Ce lien a expiré
+        </h1>
+        <p className="text-sm font-quicksand text-[var(--mf-text-tertiary)]">
+          Demandez à la personne qui a partagé ce menu de vous envoyer un nouveau lien.
+        </p>
+      </div>
     </div>
   )
 }
