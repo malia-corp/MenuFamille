@@ -854,6 +854,7 @@ export default function PlanPage() {
                 <input
                   type="search"
                   placeholder="Chercher une recette…"
+                  aria-label="Chercher une recette"
                   value={editSearch}
                   onChange={e => handlePickerSearch(e.target.value)}
                   className="flex-1 bg-transparent text-sm font-quicksand text-[var(--mf-text-primary)] placeholder:text-[var(--mf-text-tertiary)] outline-none"

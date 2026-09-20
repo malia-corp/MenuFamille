@@ -203,6 +203,7 @@ export function SurveySection({ token, items }: { token: string; items: SurveyIt
               onChange={e => setName(e.target.value)}
               onBlur={() => name.trim() && localStorage.setItem(STORAGE_KEY_NAME, name.trim())}
               placeholder="Comment vous appelez-vous ?"
+              aria-label="Votre prénom"
               className="w-full text-sm font-quicksand text-[#3D2C20] bg-transparent outline-none placeholder:text-[#C5B8AE]"
             />
           </div>
