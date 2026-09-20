@@ -245,6 +245,7 @@ export function SurveySection({ token, items }: { token: string; items: SurveyIt
                   key={r.value}
                   onClick={() => name.trim() ? selectReaction(item.id, r.value) : null}
                   disabled={!name.trim()}
+                  aria-label={r.label}
                   style={
                     selected === r.value
                       ? { backgroundColor: r.bg, borderColor: r.border }

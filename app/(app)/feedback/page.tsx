@@ -314,6 +314,7 @@ export default function FeedbackPage() {
                 <button
                   key={r.value}
                   onClick={() => selectRating(r.value)}
+                  aria-label={r.label}
                   style={sheetRating === r.value ? { backgroundColor: r.bg, borderColor: r.border } : {}}
                   className={[
                     'flex-1 flex flex-col items-center gap-1 py-2.5 rounded-xl border text-xs font-quicksand font-medium transition-all',
