@@ -215,6 +215,7 @@ function RecipeAddInner() {
               <input
                 type="url"
                 placeholder="Coller un lien de recette…"
+                aria-label="Lien de la recette à importer"
                 value={importUrl}
                 onChange={e => { setImportUrl(e.target.value); setImportError(null); setImportWarning(null) }}
                 className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[var(--mf-border-warm)] bg-[var(--mf-bg-card-alt)] text-sm font-quicksand text-[var(--mf-text-primary)] placeholder:text-[var(--mf-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--mf-primary)]/30"
@@ -293,6 +294,7 @@ function RecipeAddInner() {
 
             {conflictChoice === 'variant' && (
               <input type="text" placeholder="Nom de votre variante (ex : version légère)"
+                aria-label="Nom de votre variante"
                 value={variantLabel} onChange={e => setVariantLabel(e.target.value)}
                 className={INPUT} />
             )}
