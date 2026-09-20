@@ -45,3 +45,6 @@ supabase/functions/.env
 # editors
 .idea/
 .vscode/settings.json
+
+# notes locales hors périmètre repo
+fix-otp.md
