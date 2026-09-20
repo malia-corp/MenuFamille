@@ -22,11 +22,18 @@ function pickRandom(pool: string[], exclude: Set<string>): string | null {
 }
 
 export async function POST() {
+  const totalStart = performance.now()
+  const lap = (label: string, from: number) => {
+    console.log(`[generate] ${label}: ${(performance.now() - from).toFixed(1)}ms`)
+    return performance.now()
+  }
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return Response.json({ error: 'Non authentifié' }, { status: 401 })
 
   const service = createServiceClient()
+  let mark = performance.now()
 
   // 1. Configs actives
   const { data: configs } = await service
@@ -35,6 +42,7 @@ export async function POST() {
     .eq('user_id', user.id)
     .eq('is_active', true)
     .order('display_order')
+  mark = lap('1-configs', mark)
 
   if (!configs?.length) {
     return Response.json(
@@ -74,6 +82,7 @@ export async function POST() {
     if (e || !newPlan) return Response.json({ error: 'Erreur création plan' }, { status: 500 })
     planId = newPlan.id
   }
+  mark = lap('2-existingPlan+insert', mark)
 
   // 3. Sauvegarder les recipe_id des items verrouillés
   const { data: lockedItems } = await service
@@ -81,6 +90,7 @@ export async function POST() {
     .select('recipe_id, meal_type, day_of_week, applies_all_days')
     .eq('meal_plan_id', planId)
     .eq('is_locked', true)
+  mark = lap('3-lockedItems', mark)
 
   const lockedRecipeIds = (lockedItems ?? [])
     .map(i => i.recipe_id)
@@ -98,6 +108,7 @@ export async function POST() {
     .delete()
     .eq('meal_plan_id', planId)
     .eq('is_locked', false)
+  mark = lap('4-delete', mark)
 
   // 5. Récupérer les recettes accessibles avec leur type
   const { data: circles } = await service
@@ -115,6 +126,7 @@ export async function POST() {
     .from('recipes')
     .select('id, recipe_type')
     .or(orFilter)
+  mark = lap('5-circles+accessibleRecipes', mark)
 
   if (!accessibleRecipes?.length) {
     return Response.json(
@@ -234,6 +246,7 @@ export async function POST() {
       }
     }
   }
+  mark = lap('6-buildItemsInMemory', mark)
 
   if (itemsToInsert.length > 0) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -259,6 +272,8 @@ export async function POST() {
       }
     }
   }
+  lap('7-insertItems+compositions', mark)
+  lap('TOTAL', totalStart)
 
   return Response.json({ plan_id: planId, generated: itemsToInsert.length })
 }

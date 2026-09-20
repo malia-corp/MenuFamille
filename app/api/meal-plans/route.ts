@@ -22,6 +22,7 @@ const PLAN_SELECT = `
 `
 
 export async function GET(request: NextRequest) {
+  const start = performance.now()
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return Response.json({ error: 'Non authentifié' }, { status: 401 })
@@ -35,6 +36,7 @@ export async function GET(request: NextRequest) {
       .order('week_start', { ascending: false })
       .limit(1)
       .maybeSingle()
+    console.log(`[meal-plans:GET latest] ${(performance.now() - start).toFixed(1)}ms`)
     if (error) return Response.json({ error: error.message }, { status: 500 })
     return Response.json(data)
   }
@@ -49,7 +51,10 @@ export async function GET(request: NextRequest) {
     .maybeSingle()
 
   if (selectError) return Response.json({ error: selectError.message }, { status: 500 })
-  if (existing) return Response.json(existing)
+  if (existing) {
+    console.log(`[meal-plans:GET existing] ${(performance.now() - start).toFixed(1)}ms`)
+    return Response.json(existing)
+  }
 
   const { data: created, error } = await supabase
     .from('meal_plans')
@@ -59,5 +64,6 @@ export async function GET(request: NextRequest) {
 
   if (error) return Response.json({ error: error.message }, { status: 500 })
 
+  console.log(`[meal-plans:GET created] ${(performance.now() - start).toFixed(1)}ms`)
   return Response.json({ ...created, meal_plan_items: [] })
 }
