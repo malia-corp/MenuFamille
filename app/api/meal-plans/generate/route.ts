@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
+import { NextRequest } from 'next/server'
 
 const DAYS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'] as const
 
@@ -21,7 +22,7 @@ function pickRandom(pool: string[], exclude: Set<string>): string | null {
   return source[Math.floor(Math.random() * source.length)]
 }
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   const totalStart = performance.now()
   const lap = (label: string, from: number) => {
     console.log(`[generate] ${label}: ${(performance.now() - from).toFixed(1)}ms`)
@@ -51,8 +52,14 @@ export async function POST() {
     )
   }
 
-  // 2. Récupérer ou créer le plan de la semaine courante
-  const weekStart = getMondayISO()
+  // 2. Récupérer ou créer le plan de la semaine demandée par le client
+  //    (celle qu'il a sous les yeux, pas forcément "aujourd'hui" côté serveur —
+  //    sans ça, générer en ayant navigué sur une autre semaine crée le plan
+  //    pour la mauvaise semaine et l'interface ne montre jamais rien)
+  const requestedWeek = request.nextUrl.searchParams.get('week')
+  const weekStart = requestedWeek && /^\d{4}-\d{2}-\d{2}$/.test(requestedWeek)
+    ? requestedWeek
+    : getMondayISO()
 
   const { data: existingPlan } = await service
     .from('meal_plans')

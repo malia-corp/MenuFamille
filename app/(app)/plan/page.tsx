@@ -259,7 +259,7 @@ export default function PlanPage() {
     const ticker = setInterval(() => setGenStep(s => Math.min(s + 1, 3)), 450)
 
     try {
-      const res = await fetch('/api/meal-plans/generate', { method: 'POST' })
+      const res = await fetch(`/api/meal-plans/generate?week=${selectedWeek}`, { method: 'POST' })
       if (!res.ok) {
         const d = await res.json()
         throw new Error(d.error ?? 'Erreur lors de la génération')
