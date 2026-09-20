@@ -161,10 +161,10 @@ export function SurveySection({ token, items }: { token: string; items: SurveyIt
       <section className="bg-white border border-[#EDE4D6] rounded-2xl p-5 text-center space-y-2">
         <CheckCircle className="h-8 w-8 text-[#2A7D4F] mx-auto" />
         <p className="font-dosis font-semibold text-base text-[#3D2C20]">Avis envoyé !</p>
-        <p className="text-xs font-quicksand text-[#9A8F84]">Merci pour votre retour.</p>
+        <p className="text-xs font-quicksand text-[var(--mf-text-tertiary)]">Merci pour votre retour.</p>
         <button
           onClick={handleModify}
-          className="text-xs font-quicksand text-[#E87D3E] underline mt-1"
+          className="text-xs font-quicksand text-[var(--mf-primary)] underline mt-1"
         >
           Modifier mes réponses
         </button>
@@ -176,7 +176,7 @@ export function SurveySection({ token, items }: { token: string; items: SurveyIt
     <section className="space-y-4">
       {/* Titre section */}
       <div>
-        <p className="text-[11px] font-quicksand font-bold uppercase tracking-wider text-[#9A8F84] mb-0.5">
+        <p className="text-[11px] font-quicksand font-bold uppercase tracking-wider text-[var(--mf-text-tertiary)] mb-0.5">
           Votre avis
         </p>
         <h2 className="font-dosis font-bold text-lg text-[#3D2C20]">
@@ -192,9 +192,9 @@ export function SurveySection({ token, items }: { token: string; items: SurveyIt
         </div>
       ) : (
         <div className="bg-white border border-[#EDE4D6] rounded-xl px-3 py-2.5 flex items-center gap-2.5">
-          <UserCircle className="h-4 w-4 text-[#9A8F84] flex-shrink-0" />
+          <UserCircle className="h-4 w-4 text-[var(--mf-text-tertiary)] flex-shrink-0" />
           <div className="flex-1">
-            <p className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[#9A8F84] mb-0.5">
+            <p className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--mf-text-tertiary)] mb-0.5">
               Votre prénom
             </p>
             <input
@@ -211,7 +211,7 @@ export function SurveySection({ token, items }: { token: string; items: SurveyIt
 
       {/* Indicateur de progression */}
       {ratedCount > 0 && (
-        <p className="text-xs font-quicksand font-medium text-[#9A8F84] text-right">
+        <p className="text-xs font-quicksand font-medium text-[var(--mf-text-tertiary)] text-right">
           {ratedCount} / {items.length} repas notés
         </p>
       )}
@@ -229,7 +229,7 @@ export function SurveySection({ token, items }: { token: string; items: SurveyIt
           >
             {/* Nom du repas */}
             <div>
-              <p className="text-[10px] font-quicksand font-semibold uppercase tracking-wider text-[#9A8F84]">
+              <p className="text-[10px] font-quicksand font-semibold uppercase tracking-wider text-[var(--mf-text-tertiary)]">
                 {MEAL_LABEL[item.meal_type] ?? item.meal_type}
                 {item.applies_all_days ? ' · Toute la semaine' : ` · ${item.day_of_week.charAt(0).toUpperCase() + item.day_of_week.slice(1)}`}
               </p>
@@ -254,7 +254,7 @@ export function SurveySection({ token, items }: { token: string; items: SurveyIt
                     'flex-1 flex flex-col items-center gap-0.5 py-2 rounded-lg border text-xs font-quicksand font-medium transition-all',
                     selected === r.value
                       ? 'border-2'
-                      : 'border-[#EDE4D6] text-[#9A8F84] disabled:opacity-40',
+                      : 'border-[#EDE4D6] text-[var(--mf-text-tertiary)] disabled:opacity-40',
                     !name.trim() ? 'cursor-not-allowed' : 'cursor-pointer',
                   ].join(' ')}
                 >
@@ -269,7 +269,7 @@ export function SurveySection({ token, items }: { token: string; items: SurveyIt
             {/* Champ commentaire (apparaît après sélection) */}
             {hasReaction && (
               <div className="flex items-start gap-2 animate-in fade-in duration-200">
-                <MessageSquare className="h-3.5 w-3.5 text-[#9A8F84] mt-2 flex-shrink-0" />
+                <MessageSquare className="h-3.5 w-3.5 text-[var(--mf-text-tertiary)] mt-2 flex-shrink-0" />
                 <textarea
                   value={answer.comment}
                   onChange={e => updateComment(item.id, e.target.value)}
@@ -296,8 +296,8 @@ export function SurveySection({ token, items }: { token: string; items: SurveyIt
         className={[
           'w-full flex items-center justify-center gap-2 py-3 rounded-xl font-dosis font-bold text-sm transition-all',
           ratedCount > 0 && name.trim()
-            ? 'bg-[#E87D3E] text-white'
-            : 'bg-[#EDE4D6] text-[#9A8F84] cursor-not-allowed',
+            ? 'bg-[var(--mf-primary)] text-white'
+            : 'bg-[#EDE4D6] text-[var(--mf-text-tertiary)] cursor-not-allowed',
         ].join(' ')}
       >
         <Send className="h-4 w-4" />

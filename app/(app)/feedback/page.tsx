@@ -72,7 +72,7 @@ const MEAL_EMOJI: Record<MealType, string> = {
 
 const RATING_CONFIG: { value: Rating; emoji: string; label: string; bg: string; border: string; textColor: string }[] = [
   { value: 'excellent', emoji: '😊', label: 'Excellent',   bg: '#F0FAF5', border: '#2A7D4F', textColor: '#2A7D4F' },
-  { value: 'correct',   emoji: '😐', label: 'Correct',     bg: '#FDF8EC', border: '#F5A623', textColor: '#C9820A' },
+  { value: 'correct',   emoji: '😐', label: 'Correct',     bg: '#FDF8EC', border: '#F5A623', textColor: 'var(--mf-gold-text)' },
   { value: 'decevant',  emoji: '😕', label: 'Décevant',    bg: '#FCEBEB', border: '#C0392B', textColor: '#C0392B' },
 ]
 
@@ -181,7 +181,7 @@ export default function FeedbackPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="h-5 w-5 border-2 border-[#E87D3E] border-t-transparent rounded-full animate-spin" />
+        <div className="h-5 w-5 border-2 border-[var(--mf-primary)] border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
@@ -189,9 +189,9 @@ export default function FeedbackPage() {
   if (!plan) {
     return (
       <div className="px-4 py-10 text-center">
-        <Star className="h-8 w-8 text-[#9A8F84] mx-auto mb-2" />
+        <Star className="h-8 w-8 text-[var(--mf-text-tertiary)] mx-auto mb-2" />
         <p className="font-dosis font-semibold text-base text-[#3D2C20]">Aucun menu cette semaine</p>
-        <p className="text-xs font-quicksand text-[#9A8F84] mt-1">Générez un menu pour pouvoir noter vos repas.</p>
+        <p className="text-xs font-quicksand text-[var(--mf-text-tertiary)] mt-1">Générez un menu pour pouvoir noter vos repas.</p>
       </div>
     )
   }
@@ -201,7 +201,7 @@ export default function FeedbackPage() {
       <div className="max-w-lg mx-auto px-4 py-5 space-y-3">
         {/* Titre */}
         <div className="mb-1">
-          <p className="text-[11px] font-quicksand font-bold uppercase tracking-wider text-[#9A8F84]">
+          <p className="text-[11px] font-quicksand font-bold uppercase tracking-wider text-[var(--mf-text-tertiary)]">
             Avis post-repas
           </p>
           <h1 className="font-dosis font-bold text-xl text-[#3D2C20]">
@@ -220,7 +220,7 @@ export default function FeedbackPage() {
               className={[
                 'border rounded-2xl p-3.5 transition-all',
                 isToday
-                  ? 'bg-[#FEF5F0] border-[#E87D3E]/30'
+                  ? 'bg-[#FEF5F0] border-[var(--mf-primary)]/30'
                   : 'bg-white border-[#EDE4D6]',
                 status === 'future' ? 'opacity-60' : '',
               ].join(' ')}
@@ -230,11 +230,11 @@ export default function FeedbackPage() {
                   <span className="text-xl flex-shrink-0">{MEAL_EMOJI[item.meal_type]}</span>
                   <div className="flex-1 min-w-0">
                     {isToday && (
-                      <p className="text-[9px] font-quicksand font-bold uppercase tracking-wider text-[#E87D3E] mb-0.5">
+                      <p className="text-[9px] font-quicksand font-bold uppercase tracking-wider text-[var(--mf-primary)] mb-0.5">
                         Aujourd&apos;hui
                       </p>
                     )}
-                    <p className="text-[10px] font-quicksand font-semibold text-[#9A8F84]">
+                    <p className="text-[10px] font-quicksand font-semibold text-[var(--mf-text-tertiary)]">
                       {MEAL_LABEL[item.meal_type]}
                       {!item.applies_all_days && ` · ${item.day_of_week.charAt(0).toUpperCase() + item.day_of_week.slice(1)}`}
                     </p>
@@ -247,8 +247,8 @@ export default function FeedbackPage() {
                 {/* État côté droit */}
                 {status === 'future' ? (
                   <div className="flex items-center gap-1 flex-shrink-0">
-                    <Clock className="h-3.5 w-3.5 text-[#9A8F84]" />
-                    <span className="text-[10px] font-quicksand text-[#9A8F84]">À venir</span>
+                    <Clock className="h-3.5 w-3.5 text-[var(--mf-text-tertiary)]" />
+                    <span className="text-[10px] font-quicksand text-[var(--mf-text-tertiary)]">À venir</span>
                   </div>
                 ) : feedback ? (
                   <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -258,7 +258,7 @@ export default function FeedbackPage() {
                 ) : (
                   <button
                     onClick={() => openSheet(item)}
-                    className="flex-shrink-0 flex items-center gap-1.5 bg-[#E87D3E] text-white text-[11px] font-quicksand font-semibold px-3 py-1.5 rounded-xl"
+                    className="flex-shrink-0 flex items-center gap-1.5 bg-[var(--mf-primary)] text-white text-[11px] font-quicksand font-semibold px-3 py-1.5 rounded-xl"
                   >
                     <Star className="h-3.5 w-3.5" />
                     Noter
@@ -274,7 +274,7 @@ export default function FeedbackPage() {
                       &ldquo;{feedback.message}&rdquo;
                     </p>
                   )}
-                  <p className="text-[10px] font-quicksand text-[#9A8F84] mt-0.5">
+                  <p className="text-[10px] font-quicksand text-[var(--mf-text-tertiary)] mt-0.5">
                     {feedback.respondent_name} ·{' '}
                     {formatDistanceToNow(new Date(feedback.created_at), { addSuffix: true, locale: fr })}
                   </p>
@@ -296,14 +296,14 @@ export default function FeedbackPage() {
             {/* Header sheet */}
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-[10px] font-quicksand font-semibold uppercase tracking-wider text-[#9A8F84]">
+                <p className="text-[10px] font-quicksand font-semibold uppercase tracking-wider text-[var(--mf-text-tertiary)]">
                   {MEAL_LABEL[sheetItem.meal_type]}
                 </p>
                 <p className="font-dosis font-bold text-base text-[#3D2C20]">
                   Comment était {sheetItem.recipes ? composedName(sheetItem.recipes.name, sheetItem.meal_compositions) : 'ce repas'} ?
                 </p>
               </div>
-              <button onClick={() => setSheetItem(null)} className="p-1 -mr-1 text-[#9A8F84]">
+              <button onClick={() => setSheetItem(null)} className="p-1 -mr-1 text-[var(--mf-text-tertiary)]">
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -317,7 +317,7 @@ export default function FeedbackPage() {
                   style={sheetRating === r.value ? { backgroundColor: r.bg, borderColor: r.border } : {}}
                   className={[
                     'flex-1 flex flex-col items-center gap-1 py-2.5 rounded-xl border text-xs font-quicksand font-medium transition-all',
-                    sheetRating === r.value ? 'border-2' : 'border-[#EDE4D6] text-[#9A8F84]',
+                    sheetRating === r.value ? 'border-2' : 'border-[#EDE4D6] text-[var(--mf-text-tertiary)]',
                   ].join(' ')}
                 >
                   <span className="text-xl">{r.emoji}</span>
@@ -329,7 +329,7 @@ export default function FeedbackPage() {
             {/* Messages prêts */}
             {sheetRating && (
               <div>
-                <p className="text-[10px] font-quicksand font-semibold uppercase tracking-wider text-[#9A8F84] mb-2">
+                <p className="text-[10px] font-quicksand font-semibold uppercase tracking-wider text-[var(--mf-text-tertiary)] mb-2">
                   Choisissez un message
                 </p>
                 <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
@@ -340,7 +340,7 @@ export default function FeedbackPage() {
                       className={[
                         'flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-quicksand font-medium border transition-all whitespace-nowrap',
                         selectedTpl === t.id && !writingCustom
-                          ? 'bg-[#E87D3E] text-white border-[#E87D3E]'
+                          ? 'bg-[var(--mf-primary)] text-white border-[var(--mf-primary)]'
                           : 'bg-white text-[#5A4A43] border-[#EDE4D6]',
                       ].join(' ')}
                     >
@@ -354,8 +354,8 @@ export default function FeedbackPage() {
                     className={[
                       'flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-quicksand font-medium border border-dashed transition-all whitespace-nowrap',
                       writingCustom
-                        ? 'bg-[#FDF0DC] text-[#C9820A] border-[#C9820A]'
-                        : 'text-[#9A8F84] border-[#9A8F84]',
+                        ? 'bg-[#FDF0DC] text-[var(--mf-gold-text)] border-[var(--mf-gold-text)]'
+                        : 'text-[var(--mf-text-tertiary)] border-[var(--mf-text-tertiary)]',
                     ].join(' ')}
                   >
                     <PenLine className="h-3 w-3" />
@@ -392,8 +392,8 @@ export default function FeedbackPage() {
               className={[
                 'w-full flex items-center justify-center gap-2 py-3 rounded-2xl font-dosis font-bold text-sm transition-all',
                 sheetRating
-                  ? 'bg-[#E87D3E] text-white'
-                  : 'bg-[#EDE4D6] text-[#9A8F84] cursor-not-allowed',
+                  ? 'bg-[var(--mf-primary)] text-white'
+                  : 'bg-[#EDE4D6] text-[var(--mf-text-tertiary)] cursor-not-allowed',
               ].join(' ')}
             >
               <Send className="h-4 w-4" />

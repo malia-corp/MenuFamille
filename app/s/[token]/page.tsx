@@ -133,13 +133,13 @@ export default async function SharedMenuPage({ params }: { params: { token: stri
       {/* Header minimal */}
       <header className="bg-white border-b border-[#EDE4D6] px-4 py-3 flex items-center gap-2">
         <span className="text-xl">🥘</span>
-        <span className="font-dosis font-bold text-base text-[#E87D3E]">MenuFamille</span>
+        <span className="font-dosis font-bold text-base text-[var(--mf-primary)]">MenuFamille</span>
       </header>
 
       <main className="max-w-lg mx-auto px-4 py-6 space-y-6">
         {/* Titre semaine */}
         <div>
-          <p className="text-[11px] font-quicksand font-bold uppercase tracking-wider text-[#9A8F84] mb-0.5">
+          <p className="text-[11px] font-quicksand font-bold uppercase tracking-wider text-[var(--mf-text-tertiary)] mb-0.5">
             Menu partagé
           </p>
           <h1 className="font-dosis font-bold text-xl text-[#3D2C20]">
@@ -162,7 +162,7 @@ export default async function SharedMenuPage({ params }: { params: { token: stri
                   {MEAL_LABEL[mealType]}
                 </h2>
                 {isTemplate && (
-                  <span className="text-[10px] font-quicksand font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-[#FDF0DC] text-[#C9820A]">
+                  <span className="text-[10px] font-quicksand font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-[#FDF0DC] text-[var(--mf-gold-text)]">
                     Modèle semaine
                   </span>
                 )}
@@ -194,7 +194,7 @@ export default async function SharedMenuPage({ params }: { params: { token: stri
         })}
 
         {activeMealTypes.length === 0 && (
-          <p className="text-sm font-quicksand text-[#9A8F84] text-center py-8">
+          <p className="text-sm font-quicksand text-[var(--mf-text-tertiary)] text-center py-8">
             Ce menu ne contient aucun repas planifié.
           </p>
         )}
@@ -216,7 +216,7 @@ export default async function SharedMenuPage({ params }: { params: { token: stri
 
         {/* Footer CTA */}
         <div className="pt-4 border-t border-[#EDE4D6] text-center space-y-1">
-          <p className="text-xs font-quicksand text-[#9A8F84]">
+          <p className="text-xs font-quicksand text-[var(--mf-text-tertiary)]">
             Planifiez vos menus familiaux avec MenuFamille
           </p>
         </div>
@@ -238,7 +238,7 @@ function SharedRecipeRow({
 }) {
   return (
     <div className="flex items-center gap-3 px-3 py-2.5 border-b border-[#EDE4D6]/50 last:border-0">
-      <p className="w-20 text-[10px] font-quicksand font-semibold text-[#9A8F84] flex-shrink-0">
+      <p className="w-20 text-[10px] font-quicksand font-semibold text-[var(--mf-text-tertiary)] flex-shrink-0">
         {label}
       </p>
       {recipe ? (
@@ -252,7 +252,7 @@ function SharedRecipeRow({
             </p>
             {recipe.prep_time_min && (
               <div className="flex items-center gap-0.5 mt-0.5">
-                <Clock className="h-2.5 w-2.5 text-[#9A8F84]" />
+                <Clock className="h-2.5 w-2.5 text-[var(--mf-text-tertiary)]" />
                 <span className="text-[10px] font-quicksand text-[#6B5D54]">
                   {recipe.prep_time_min} min
                 </span>
@@ -262,8 +262,8 @@ function SharedRecipeRow({
         </>
       ) : (
         <div className="flex items-center gap-2 flex-1">
-          <Utensils className="h-3.5 w-3.5 text-[#9A8F84] flex-shrink-0" />
-          <p className="text-xs font-quicksand text-[#9A8F84] italic">Non planifié</p>
+          <Utensils className="h-3.5 w-3.5 text-[var(--mf-text-tertiary)] flex-shrink-0" />
+          <p className="text-xs font-quicksand text-[var(--mf-text-tertiary)] italic">Non planifié</p>
         </div>
       )}
     </div>

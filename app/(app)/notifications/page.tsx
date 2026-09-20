@@ -187,7 +187,7 @@ export default function NotificationsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="h-5 w-5 border-2 border-[#E87D3E] border-t-transparent rounded-full animate-spin" />
+        <div className="h-5 w-5 border-2 border-[var(--mf-primary)] border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
@@ -209,7 +209,7 @@ export default function NotificationsPage() {
 
         {/* Section rappels */}
         <div>
-          <p className="text-[11px] font-quicksand font-bold uppercase tracking-wider text-[#9A8F84] mb-3">
+          <p className="text-[11px] font-quicksand font-bold uppercase tracking-wider text-[var(--mf-text-tertiary)] mb-3">
             Rappels de repas
           </p>
           <div className="space-y-3">
@@ -232,7 +232,7 @@ export default function NotificationsPage() {
                       onClick={() => handleReminderToggle(cfg.meal_type, !pref.reminder_enabled)}
                       className={[
                         'relative w-10 h-6 rounded-full transition-colors',
-                        pref.reminder_enabled ? 'bg-[#E87D3E]' : 'bg-[#D9CFC5]',
+                        pref.reminder_enabled ? 'bg-[var(--mf-primary)]' : 'bg-[#D9CFC5]',
                       ].join(' ')}
                       aria-label={pref.reminder_enabled ? 'Désactiver' : 'Activer'}
                     >
@@ -248,7 +248,7 @@ export default function NotificationsPage() {
                     <div className="space-y-3 pt-1 border-t border-[#EDE4D6]">
                       {/* Heure */}
                       <div>
-                        <p className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[#9A8F84] mb-1">
+                        <p className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--mf-text-tertiary)] mb-1">
                           Heure du rappel
                         </p>
                         <input
@@ -261,7 +261,7 @@ export default function NotificationsPage() {
 
                       {/* Jours */}
                       <div>
-                        <p className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[#9A8F84] mb-1.5">
+                        <p className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--mf-text-tertiary)] mb-1.5">
                           Jours
                         </p>
                         <div className="flex gap-1.5">
@@ -275,8 +275,8 @@ export default function NotificationsPage() {
                                 className={[
                                   'w-8 h-8 rounded-full text-xs font-quicksand font-semibold transition-all',
                                   active
-                                    ? 'bg-[#E87D3E] text-white'
-                                    : 'bg-[#FDF6EE] text-[#9A8F84] border border-[#EDE4D6]',
+                                    ? 'bg-[var(--mf-primary)] text-white'
+                                    : 'bg-[#FDF6EE] text-[var(--mf-text-tertiary)] border border-[#EDE4D6]',
                                 ].join(' ')}
                               >
                                 {d.label}
@@ -295,7 +295,7 @@ export default function NotificationsPage() {
 
         {/* Section feedback */}
         <div>
-          <p className="text-[11px] font-quicksand font-bold uppercase tracking-wider text-[#9A8F84] mb-3">
+          <p className="text-[11px] font-quicksand font-bold uppercase tracking-wider text-[var(--mf-text-tertiary)] mb-3">
             Demandes d&apos;avis post-repas
           </p>
           <div className="space-y-3">
@@ -317,7 +317,7 @@ export default function NotificationsPage() {
                       onClick={() => updatePref(cfg.meal_type, { feedback_enabled: !pref.feedback_enabled })}
                       className={[
                         'relative w-10 h-6 rounded-full transition-colors',
-                        pref.feedback_enabled ? 'bg-[#E87D3E]' : 'bg-[#D9CFC5]',
+                        pref.feedback_enabled ? 'bg-[var(--mf-primary)]' : 'bg-[#D9CFC5]',
                       ].join(' ')}
                       aria-label={pref.feedback_enabled ? 'Désactiver' : 'Activer'}
                     >
@@ -330,7 +330,7 @@ export default function NotificationsPage() {
 
                   {pref.feedback_enabled && (
                     <div className="space-y-2 pt-1 border-t border-[#EDE4D6]">
-                      <p className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[#9A8F84]">
+                      <p className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--mf-text-tertiary)]">
                         Délai après le repas
                       </p>
                       <div className="flex gap-2 flex-wrap">
@@ -342,7 +342,7 @@ export default function NotificationsPage() {
                             className={[
                               'px-3 py-1.5 rounded-full text-xs font-quicksand font-medium border transition-all',
                               pref.feedback_delay_min === d.value
-                                ? 'bg-[#E87D3E] text-white border-[#E87D3E]'
+                                ? 'bg-[var(--mf-primary)] text-white border-[var(--mf-primary)]'
                                 : 'bg-white text-[#5A4A43] border-[#EDE4D6]',
                             ].join(' ')}
                           >
@@ -360,7 +360,7 @@ export default function NotificationsPage() {
 
         {/* Note iOS */}
         <div className="flex items-start gap-2.5 bg-[#FDF0DC] border border-[#F5C97A] rounded-xl p-3">
-          <Info className="h-4 w-4 text-[#C9820A] flex-shrink-0 mt-0.5" />
+          <Info className="h-4 w-4 text-[var(--mf-gold-text)] flex-shrink-0 mt-0.5" />
           <p className="text-xs font-quicksand text-[#7A5C00]">
             Sur iPhone, ajoutez MenuFamille à votre écran d&apos;accueil (Partager → Sur l&apos;écran d&apos;accueil) pour recevoir les notifications push.
           </p>
@@ -377,7 +377,7 @@ export default function NotificationsPage() {
             'w-full max-w-lg mx-auto flex items-center justify-center gap-2 py-3 rounded-2xl font-dosis font-bold text-sm transition-all',
             saved
               ? 'bg-[#2A7D4F] text-white'
-              : 'bg-[#E87D3E] text-white',
+              : 'bg-[var(--mf-primary)] text-white',
             saving ? 'opacity-60' : '',
           ].join(' ')}
         >
