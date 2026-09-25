@@ -86,3 +86,30 @@ $$;
 
 revoke all on function recipe_association_suggestions(uuid, text, integer) from public;
 grant execute on function recipe_association_suggestions(uuid, text, integer) to authenticated;
+
+-- ----------------------------------------------------------------------------
+-- Upsert reutilisable (generation automatique + formulaire recette)
+-- ----------------------------------------------------------------------------
+-- security invoker (par defaut) : la policy recipe_associations_owner_only
+-- s'applique normalement, donc p_user_id ne peut jamais etre falsifie par un
+-- appelant authentifie (WITH CHECK rejette si p_user_id <> auth.uid()).
+-- Appele via le client service role depuis le generateur (RLS contournee au
+-- niveau du role de connexion, pas de la fonction), et via le client session
+-- utilisateur depuis l'API recettes.
+create or replace function upsert_recipe_association(
+  p_recipe_id            uuid,
+  p_associated_recipe_id uuid,
+  p_role                 text,
+  p_user_id              uuid,
+  p_source               text
+)
+returns void
+language sql
+as $$
+  insert into recipe_associations (recipe_id, associated_recipe_id, role, user_id, source)
+  values (p_recipe_id, p_associated_recipe_id, p_role, p_user_id, p_source)
+  on conflict (recipe_id, associated_recipe_id, role, user_id)
+  do update set frequency = recipe_associations.frequency + 1, last_used_at = now();
+$$;
+
+grant execute on function upsert_recipe_association(uuid, uuid, text, uuid, text) to authenticated, service_role;
