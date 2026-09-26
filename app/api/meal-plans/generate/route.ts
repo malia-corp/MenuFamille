@@ -166,15 +166,10 @@ export async function POST(request: NextRequest) {
   // personnelle (x2) et communautaire, calculé ici en JS avec le vrai user.id
   // du côté serveur — pas via recipe_association_suggestions() qui repose sur
   // auth.uid(), non résolu quand on appelle en service role.
-  // `as any` : recipe_associations n'existe pas encore dans database.types.ts
-  // (à régénérer via `supabase gen types typescript --linked` une fois la
-  // migration 20260925000016_p appliquée) — retirer ce cast à ce moment-là.
-  type AssocRow = { recipe_id: string; associated_recipe_id: string; role: 'side' | 'drink'; frequency: number; user_id: string }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: assocRows } = await (service as any)
+  const { data: assocRows } = await service
     .from('recipe_associations')
     .select('recipe_id, associated_recipe_id, role, frequency, user_id')
-    .in('recipe_id', mainPool) as { data: AssocRow[] | null }
+    .in('recipe_id', mainPool)
   mark = lap('5b-recipeAssociations', mark)
 
   const sideScoresByMain  = new Map<string, Map<string, number>>()
@@ -212,11 +207,10 @@ export async function POST(request: NextRequest) {
   }
 
   type CompositionPlan = {
-    item_idx:       number
-    role:           'side' | 'drink'
-    recipe_id:      string
-    main_recipe_id: string
-    sort_order:     number
+    item_idx:   number
+    role:       'side' | 'drink'
+    recipe_id:  string
+    sort_order: number
   }
 
   const itemsToInsert: ItemRow[] = []
@@ -233,7 +227,7 @@ export async function POST(request: NextRequest) {
       const sideId = pickRandom(sideCandidates, usedSideIds)
       if (sideId) {
         usedSideIds.add(sideId)
-        compositionPlans.push({ item_idx: itemIdx, role: 'side', recipe_id: sideId, main_recipe_id: mainRecipeId, sort_order: 0 })
+        compositionPlans.push({ item_idx: itemIdx, role: 'side', recipe_id: sideId, sort_order: 0 })
       }
     }
 
@@ -246,7 +240,7 @@ export async function POST(request: NextRequest) {
         const drinkId = pickRandom(pool, usedDrinkIds)
         if (drinkId) {
           usedDrinkIds.add(drinkId)
-          compositionPlans.push({ item_idx: itemIdx, role: 'drink', recipe_id: drinkId, main_recipe_id: mainRecipeId, sort_order: 1 })
+          compositionPlans.push({ item_idx: itemIdx, role: 'drink', recipe_id: drinkId, sort_order: 1 })
         }
       }
     }
@@ -317,28 +311,14 @@ export async function POST(request: NextRequest) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await service.from('meal_compositions').insert(compositionsToInsert as any)
       }
-      mark = lap('7-insertItems+compositions', mark)
-
-      // Apprentissage automatique — best-effort, ne bloque jamais la réponse.
-      // Chaque paire main/accompagnement ou main/boisson effectivement
-      // retenue renforce le score pour les prochaines générations.
-      // `as any` : upsert_recipe_association n'existe pas encore dans
-      // database.types.ts — retirer une fois les types régénérés.
-      await Promise.all(
-        compositionPlans.map(cp =>
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (service as any).rpc('upsert_recipe_association', {
-            p_recipe_id: cp.main_recipe_id,
-            p_associated_recipe_id: cp.recipe_id,
-            p_role: cp.role,
-            p_user_id: user.id,
-            p_source: 'planning',
-          })
-        )
-      ).catch(() => { /* apprentissage best-effort, ne bloque pas la génération */ })
-      lap('8-learnAssociations', mark)
+      // Apprentissage : volontairement pas ici. Un plan peut être régénéré
+      // plusieurs fois avant validation — apprendre à chaque génération
+      // compterait des paires jamais confirmées par l'utilisatrice. Voir
+      // app/api/meal-plans/[id]/validate/route.ts, qui apprend depuis
+      // l'état final au moment de la validation du menu.
     }
   }
+  lap('7-insertItems+compositions', mark)
   lap('TOTAL', totalStart)
 
   return Response.json({ plan_id: planId, generated: itemsToInsert.length })
