@@ -69,8 +69,14 @@ interface PlanItem {
 }
 
 interface SheetDetails {
-  recipe_type:       string | null
+  mainRecipeId:      string | null
   meal_compositions: Composition[]
+}
+
+interface SuggestedRecipe {
+  id:       string
+  name:     string
+  category: { icon: string | null } | null
 }
 
 interface Plan {
@@ -213,6 +219,8 @@ export default function PlanPage() {
   const [sheetDetails,      setSheetDetails]      = useState<SheetDetails | null>(null)
   const [compositionMode,   setCompositionMode]   = useState<'side' | 'drink' | null>(null)
   const [addingComposition, setAddingComposition] = useState(false)
+  const [suggestedRecipes,  setSuggestedRecipes]  = useState<SuggestedRecipe[]>([])
+  const [boissonCategoryId, setBoissonCategoryId]  = useState<string | null>(null)
   const [deletingCompId,    setDeletingCompId]    = useState<string | null>(null)
 
   // ── Chargement (se relance quand selectedWeek change) ────────────────────
@@ -299,7 +307,7 @@ export default function PlanPage() {
     return () => clearInterval(interval)
   }, [viewState])
 
-  // ── Chargement des détails du sheet (recipe_type + compositions) ─────────
+  // ── Chargement des détails du sheet (plat principal + compositions) ─────
 
   useEffect(() => {
     if (!editTarget?.itemId || !plan) { setSheetDetails(null); return }
@@ -307,14 +315,23 @@ export default function PlanPage() {
   }, [editTarget?.itemId, plan?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Picker : chargement des recettes ─────────────────────────────────────
-
-  async function loadPickerRecipes(scope: Scope, categoryId: string | null, search: string, recipeType = 'plat_principal,sauce') {
+  // mode 'main'  : tout sauf les boissons (recipe_type est supprimé — n'importe
+  //                quelle recette non-boisson peut être un plat principal)
+  // mode 'side'  : aucune restriction, comme avant (l'accompagnement n'est pas
+  //                une catégorie, c'est une relation apprise — voir suggestions)
+  // mode 'drink' : uniquement la catégorie boisson
+  async function loadPickerRecipes(
+    scope: Scope, categoryId: string | null, search: string,
+    mode: 'main' | 'side' | 'drink', boissonIdOverride?: string | null,
+  ) {
     setPickerLoading(true)
     try {
       const params = new URLSearchParams({ scope })
       if (categoryId)     params.set('category_id', categoryId)
       if (search.trim())  params.set('search', search.trim())
-      if (recipeType)     params.set('recipe_type', recipeType)
+      const boissonId = boissonIdOverride !== undefined ? boissonIdOverride : boissonCategoryId
+      if (mode === 'drink' && boissonId) params.set('category_id', boissonId)
+      if (mode === 'main'  && boissonId) params.set('exclude_category_id', boissonId)
       const res  = await fetch(`/api/recipes?${params}`)
       const data = await res.json()
       setEditRecipes(Array.isArray(data) ? (data as PickerRecipe[]) : [])
@@ -322,6 +339,16 @@ export default function PlanPage() {
       setEditRecipes([])
     } finally {
       setPickerLoading(false)
+    }
+  }
+
+  async function loadSuggestions(mainRecipeId: string, role: 'side' | 'drink') {
+    try {
+      const res = await fetch(`/api/recipes/${mainRecipeId}/suggestions?role=${role}`)
+      const data = await res.json()
+      setSuggestedRecipes(Array.isArray(data) ? data : [])
+    } catch {
+      setSuggestedRecipes([])
     }
   }
 
@@ -336,7 +363,7 @@ export default function PlanPage() {
         sort_order: c.sort_order, recipe_id: c.recipe_id, recipes: c.recipes ?? null,
       }))
       setSheetDetails({
-        recipe_type:       (data.recipes as { recipe_type?: string } | null)?.recipe_type ?? null,
+        mainRecipeId:      (data.recipes as { id?: string } | null)?.id ?? null,
         meal_compositions: comps,
       })
       setPlan(prev => prev ? {
@@ -361,16 +388,20 @@ export default function PlanPage() {
     setPickerScope('all')
     setPickerCategory(null)
 
+    let boissonId = boissonCategoryId
     if (!pickerCategoriesLoaded) {
       try {
         const res  = await fetch('/api/categories')
         const data = await res.json()
-        setPickerCategories(Array.isArray(data) ? (data as Category[]) : [])
+        const cats = Array.isArray(data) ? (data as Category[]) : []
+        setPickerCategories(cats)
         setPickerCategoriesLoaded(true)
+        boissonId = cats.find(c => c.slug === 'boisson')?.id ?? null
+        setBoissonCategoryId(boissonId)
       } catch { /* silent */ }
     }
 
-    void loadPickerRecipes('all', null, '', 'plat_principal,sauce')
+    void loadPickerRecipes('all', null, '', 'main', boissonId)
   }
 
   function closeEdit() {
@@ -379,30 +410,32 @@ export default function PlanPage() {
     setEditSearch('')
     setCompositionMode(null)
     setSheetDetails(null)
+    setSuggestedRecipes([])
+  }
+
+  function pickerModeFor(mode: 'side' | 'drink' | null): 'main' | 'side' | 'drink' {
+    return mode ?? 'main'
   }
 
   function handleScopeChange(scope: Scope) {
     setPickerScope(scope)
-    const rt = compositionMode === 'side' ? '' : compositionMode === 'drink' ? 'boisson' : 'plat_principal,sauce'
-    void loadPickerRecipes(scope, pickerCategory, editSearch, rt)
+    void loadPickerRecipes(scope, pickerCategory, editSearch, pickerModeFor(compositionMode))
   }
 
   function handleCategoryChange(catId: string | null) {
     setPickerCategory(catId)
-    const rt = compositionMode === 'side' ? '' : compositionMode === 'drink' ? 'boisson' : 'plat_principal,sauce'
-    void loadPickerRecipes(pickerScope, catId, editSearch, rt)
+    void loadPickerRecipes(pickerScope, catId, editSearch, pickerModeFor(compositionMode))
   }
 
   function handlePickerSearch(value: string) {
     setEditSearch(value)
     if (pickerSearchTimerRef.current) clearTimeout(pickerSearchTimerRef.current)
     pickerSearchTimerRef.current = setTimeout(() => {
-      const rt = compositionMode === 'side' ? '' : compositionMode === 'drink' ? 'boisson' : 'plat_principal,sauce'
-      void loadPickerRecipes(pickerScope, pickerCategory, value, rt)
+      void loadPickerRecipes(pickerScope, pickerCategory, value, pickerModeFor(compositionMode))
     }, 300)
   }
 
-  async function changeRecipe(recipe: PickerRecipe) {
+  async function changeRecipe(recipe: { id: string }) {
     if (!plan || !editTarget || changingRecipe) return
 
     if (compositionMode !== null) {
@@ -417,7 +450,8 @@ export default function PlanPage() {
         if (!res.ok) throw new Error()
         await refreshSheetItem(editTarget.itemId, plan.id)
         setCompositionMode(null)
-        void loadPickerRecipes('all', null, editSearch, 'plat_principal,sauce')
+        setSuggestedRecipes([])
+        void loadPickerRecipes('all', null, editSearch, 'main')
       } catch { /* keep sheet open */ } finally {
         setAddingComposition(false)
       }
@@ -817,7 +851,8 @@ export default function PlanPage() {
                     type="button"
                     onClick={() => {
                       setCompositionMode(null)
-                      void loadPickerRecipes('all', null, editSearch, 'plat_principal,sauce')
+                      setSuggestedRecipes([])
+                      void loadPickerRecipes('all', null, editSearch, 'main')
                     }}
                     className="p-1 -ml-1 mr-0.5 text-[var(--mf-text-secondary)] hover:text-[var(--mf-primary)] transition-colors"
                     aria-label="Retour"
@@ -914,6 +949,25 @@ export default function PlanPage() {
 
             <div className="border-t border-[var(--mf-border-warm)] flex-shrink-0" />
 
+            {/* Suggestions personnalisées — uniquement en mode accompagnement/boisson */}
+            {compositionMode !== null && suggestedRecipes.length > 0 && (
+              <div className="px-4 py-3 flex-shrink-0 border-b border-[var(--mf-border-warm)]/60">
+                <p className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--mf-text-secondary)] mb-2">
+                  Suggéré pour vous
+                </p>
+                <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                  {suggestedRecipes.map(s => (
+                    <button key={s.id} type="button" onClick={() => { void changeRecipe(s) }}
+                      disabled={changingRecipe || addingComposition}
+                      className="flex-shrink-0 flex items-center gap-1.5 bg-[var(--mf-bg-card)] border border-[var(--mf-border-warm)] rounded-full px-3 py-1.5 text-xs font-quicksand font-medium text-[var(--mf-text-primary)] disabled:opacity-50">
+                      <span>{s.category?.icon ?? '🍴'}</span>
+                      {s.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Liste de recettes */}
             <div className="overflow-y-auto flex-1">
               {pickerLoading ? (
@@ -991,7 +1045,11 @@ export default function PlanPage() {
                   ))}
                   <button
                     type="button"
-                    onClick={() => { setCompositionMode('side'); void loadPickerRecipes(pickerScope, pickerCategory, editSearch, '') }}
+                    onClick={() => {
+                      setCompositionMode('side')
+                      void loadPickerRecipes(pickerScope, pickerCategory, editSearch, 'side')
+                      if (sheetDetails.mainRecipeId) void loadSuggestions(sheetDetails.mainRecipeId, 'side')
+                    }}
                     className="mt-1 flex items-center gap-1 text-xs font-quicksand text-[var(--mf-primary)] hover:underline"
                   >
                     <Plus className="h-3 w-3" />
@@ -1026,7 +1084,11 @@ export default function PlanPage() {
                   ))}
                   <button
                     type="button"
-                    onClick={() => { setCompositionMode('drink'); void loadPickerRecipes('all', null, '', 'boisson') }}
+                    onClick={() => {
+                      setCompositionMode('drink')
+                      void loadPickerRecipes('all', null, '', 'drink')
+                      if (sheetDetails.mainRecipeId) void loadSuggestions(sheetDetails.mainRecipeId, 'drink')
+                    }}
                     className="mt-1 flex items-center gap-1 text-xs font-quicksand text-[var(--mf-primary)] hover:underline"
                   >
                     <Plus className="h-3 w-3" />
@@ -1050,8 +1112,6 @@ export default function PlanPage() {
                       day_label:   editTarget.dayLabel,
                     })
                     if (editTarget.itemId) params.set('item_id', editTarget.itemId)
-                    if (compositionMode === 'side')  params.set('recipe_type', 'accompagnement')
-                    if (compositionMode === 'drink') params.set('recipe_type', 'boisson')
                     closeEdit()
                     router.push(`/recipes/add?${params}`)
                   }}

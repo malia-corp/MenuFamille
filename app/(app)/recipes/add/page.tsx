@@ -3,7 +3,7 @@
 import { Suspense, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ArrowLeft, BookmarkPlus, Download, Link as LinkIcon, Loader2 } from 'lucide-react'
-import { RecipeForm, RecipeFormValues, RecipeTypeVal, uid, IngredientRow, StepRow } from '../_recipe-form'
+import { RecipeForm, RecipeFormValues, uid, IngredientRow, StepRow } from '../_recipe-form'
 
 type ConflictChoice = 'use' | 'variant' | 'independent'
 
@@ -27,7 +27,6 @@ function RecipeAddInner() {
   const dayOfWeek  = searchParams.get('day_of_week')
   const appliesAll     = searchParams.get('applies_all') === 'true'
   const dayLabel       = searchParams.get('day_label')
-  const recipeTypeParam = searchParams.get('recipe_type') as RecipeTypeVal | null
   const isPlanCtx      = !!planId
 
   const planHeader = isPlanCtx && mealType
@@ -117,7 +116,8 @@ function RecipeAddInner() {
       circle_id:     values.visibility === 'circle' ? values.circleId : null,
       ingredients:   values.ingredients.filter(i => i.name.trim()),
       steps:         values.steps.filter(s => s.description.trim()),
-      recipe_type:   values.recipe_type,
+      suggested_sides:  values.suggestedSides,
+      suggested_drinks: values.suggestedDrinks,
       photo_url:     values.photo_url ?? null,
       source_url:    values.source_url ?? null,
       raw_html_hash: values.raw_html_hash ?? null,
@@ -249,7 +249,7 @@ function RecipeAddInner() {
 
       <RecipeForm
         key={formKey}
-        defaultValues={isPlanCtx ? { ...importedValues, visibility: 'private', recipe_type: recipeTypeParam ?? 'plat_principal' } : importedValues}
+        defaultValues={isPlanCtx ? { ...importedValues, visibility: 'private' } : importedValues}
         onSubmit={handleFormSubmit}
         loading={loading}
         apiError={error}

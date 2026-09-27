@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
+import { upsertSuggestedAssociations } from '@/lib/utils/recipe-associations'
 import { NextRequest } from 'next/server'
 
 const DIACRITICS_RE = /[̀-ͯ]/g
@@ -98,7 +99,7 @@ export async function PATCH(
   const {
     name, description, category_id, prep_time_min, cook_time_min,
     servings, difficulty, visibility, circle_id, ingredients, steps,
-    photo_url, recipe_type,
+    photo_url, suggested_sides, suggested_drinks,
   } = body
 
   const updates: Record<string, unknown> = {}
@@ -124,7 +125,6 @@ export async function PATCH(
     updates.circle_id  = visibility === 'circle' ? (circle_id || null) : null
   }
   if (photo_url !== undefined) updates.photo_url = photo_url ?? null
-  if (recipe_type !== undefined) updates.recipe_type = recipe_type
 
   if (Object.keys(updates).length > 0) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -148,6 +148,10 @@ export async function PATCH(
       .filter(s => s.description?.trim())
       .map((s, idx) => ({ recipe_id: params.id, step_number: idx + 1, description: s.description!.trim(), duration_min: s.duration_min ? Number(s.duration_min) : null }))
     if (rows.length > 0) await service.from('recipe_steps').insert(rows)
+  }
+
+  if (suggested_sides !== undefined || suggested_drinks !== undefined) {
+    await upsertSuggestedAssociations(service, params.id, user.id, suggested_sides, suggested_drinks)
   }
 
   return Response.json({ id: params.id })
