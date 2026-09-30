@@ -46,13 +46,11 @@ function containsAllergen(haystack: string, allergenValue: string): boolean {
   return singularize(h).includes(singularize(a))
 }
 
-// Pour un pool de recettes candidates, quels allergenes stricts matchent —
-// soit un ingredient de la recette, soit le nom de la recette elle-meme
-// (beaucoup de plats/boissons sont nommes directement d'apres leur
-// ingredient principal, ex. "Jus de gingembre" : compter uniquement sur
-// recipe_ingredients raterait ce cas si la liste d'ingredients est
-// incomplete ou absente). Deux requetes en parallele sur tout le pool,
-// jamais une par recette.
+// Pour un pool de recettes candidates, quels allergenes stricts matchent
+// au moins un ingredient de chacune — uniquement recipe_ingredients,
+// jamais le nom de la recette (trop imprecis : risque de faux positifs/
+// negatifs sur un simple intitule). Un seul SELECT sur tout le pool,
+// jamais une requete par recette.
 export async function findAllergenMatches(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   client: SupabaseClient<Database> | any,
@@ -62,28 +60,21 @@ export async function findAllergenMatches(
   const matches = new Map<string, StrictAllergen[]>()
   if (recipeIds.length === 0 || allergens.length === 0) return matches
 
-  const [{ data: ingredients }, { data: recipes }] = await Promise.all([
-    client.from('recipe_ingredients').select('recipe_id, name').in('recipe_id', recipeIds),
-    client.from('recipes').select('id, name').in('id', recipeIds),
-  ])
+  const { data: ingredients } = await client
+    .from('recipe_ingredients')
+    .select('recipe_id, name')
+    .in('recipe_id', recipeIds)
 
-  function record(recipeId: string, text: string) {
+  for (const ing of (ingredients ?? []) as { recipe_id: string; name: string }[]) {
     for (const allergen of allergens) {
-      if (containsAllergen(text, allergen.value)) {
-        const existing = matches.get(recipeId) ?? []
+      if (containsAllergen(ing.name, allergen.value)) {
+        const existing = matches.get(ing.recipe_id) ?? []
         if (!existing.some(a => a.userId === allergen.userId && a.value === allergen.value)) {
           existing.push(allergen)
         }
-        matches.set(recipeId, existing)
+        matches.set(ing.recipe_id, existing)
       }
     }
-  }
-
-  for (const ing of (ingredients ?? []) as { recipe_id: string; name: string }[]) {
-    record(ing.recipe_id, ing.name)
-  }
-  for (const r of (recipes ?? []) as { id: string; name: string }[]) {
-    record(r.id, r.name)
   }
 
   return matches
