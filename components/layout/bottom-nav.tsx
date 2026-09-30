@@ -2,31 +2,28 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { BookOpen, CalendarDays, Home, Users, UserCircle } from 'lucide-react'
+import { navItemsForRole, isNavItemActive, type Role } from './nav-items'
 
-const NAV_ITEMS = [
-  { href: '/',        icon: Home,        label: 'Accueil'  },
-  { href: '/plan',    icon: CalendarDays, label: 'Menu'    },
-  { href: '/recipes', icon: BookOpen,    label: 'Recettes' },
-  { href: '/circle',  icon: Users,       label: 'Cercle'   },
-  { href: '/profile', icon: UserCircle,  label: 'Profil'   },
-]
-
-export function BottomNav() {
+export function BottomNav({ role }: { role: Role }) {
   const pathname = usePathname()
+  const items = navItemsForRole(role)
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-[#FDF6EE] border-t border-[#E8C99A] h-16 flex items-center">
-      <div className="w-full max-w-sm mx-auto flex items-center justify-around px-2">
-        {NAV_ITEMS.map(({ href, icon: Icon, label }) => {
-          const isActive = href === '/' ? pathname === '/' : pathname.startsWith(href)
+    <nav
+      className="lg:hidden fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-fit rounded-full px-4 py-2 backdrop-blur-md"
+      style={{ background: 'var(--kkb-teal)' }}
+    >
+      <div className="flex items-center gap-1">
+        {items.map(({ href, icon: Icon, label }) => {
+          const isActive = isNavItemActive(pathname, href)
           return (
             <Link
               key={href}
               href={href}
-              className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg transition-colors ${
-                isActive ? 'text-terracotta' : 'text-[#8c7169] hover:text-[#5A4A43]'
+              className={`flex flex-col items-center justify-center gap-0.5 rounded-full px-3.5 py-1.5 text-white transition-all duration-200 ${
+                isActive ? 'opacity-100' : 'opacity-65'
               }`}
+              style={isActive ? { background: 'var(--kkb-coral)' } : undefined}
             >
               <Icon className="h-5 w-5" />
               <span className="text-[10px] font-quicksand font-medium">{label}</span>

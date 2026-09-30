@@ -198,7 +198,8 @@ export default function PlanPage() {
   const [modCount,     setModCount]     = useState(0)
   const [sessionTime,  setSessionTime]  = useState(0)
   const [selectedWeek, setSelectedWeek] = useState(getMondayISO())
-  const sessionStartRef = useRef<number | null>(null)
+  const sessionStartRef  = useRef<number | null>(null)
+  const autoGenTriggered = useRef(false)
 
   // ── Edit bottom sheet ─────────────────────────────────────────────────────
   const [editTarget,              setEditTarget]              = useState<EditTarget | null>(null)
@@ -294,6 +295,25 @@ export default function PlanPage() {
       setViewState('review')
     }
   }
+
+  // ── Déclenchement depuis le FAB (composant global de layout) ─────────────
+  // Depuis une autre route : navigation vers /plan?generate=1, consommé ici.
+  // Depuis /plan : événement direct, pas de state/contexte partagé.
+
+  useEffect(() => {
+    if (autoGenTriggered.current || viewState !== 'review') return
+    if (typeof window === 'undefined') return
+    if (new URLSearchParams(window.location.search).get('generate') !== '1') return
+    autoGenTriggered.current = true
+    router.replace('/plan')
+    void generateMenu()
+  }, [viewState]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    function onGenerateEvent() { void generateMenu() }
+    window.addEventListener('kkb:generate-week', onGenerateEvent)
+    return () => window.removeEventListener('kkb:generate-week', onGenerateEvent)
+  }) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Chrono de session ─────────────────────────────────────────────────────
 
