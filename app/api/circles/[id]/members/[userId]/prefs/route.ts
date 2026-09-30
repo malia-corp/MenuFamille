@@ -36,8 +36,7 @@ export async function GET(
   const access = await checkAccess(supabase, params.id, params.userId, user.id)
   if (!access.ok) return Response.json({ error: access.error }, { status: access.status })
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from('member_dietary_prefs')
     .select('id, pref_type, value, severity, created_at')
     .eq('user_id', params.userId)
@@ -70,8 +69,7 @@ export async function POST(
     return Response.json({ error: 'severity (strict ou light) est requis pour une allergie' }, { status: 400 })
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from('member_dietary_prefs')
     .upsert(
       {

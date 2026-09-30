@@ -332,6 +332,41 @@ export type Database = {
           },
         ]
       }
+      member_dietary_prefs: {
+        Row: {
+          created_at: string
+          id: string
+          pref_type: Database["public"]["Enums"]["pref_type_enum"]
+          severity: Database["public"]["Enums"]["severity_enum"] | null
+          user_id: string
+          value: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          pref_type: Database["public"]["Enums"]["pref_type_enum"]
+          severity?: Database["public"]["Enums"]["severity_enum"] | null
+          user_id: string
+          value: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          pref_type?: Database["public"]["Enums"]["pref_type_enum"]
+          severity?: Database["public"]["Enums"]["severity_enum"] | null
+          user_id?: string
+          value?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "member_dietary_prefs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notification_prefs: {
         Row: {
           channel: Database["public"]["Enums"]["notification_channel_enum"]
@@ -1061,8 +1096,10 @@ export type Database = {
       meal_plan_status_enum: "draft" | "shared" | "finalized"
       meal_type_enum: "petit_dejeuner" | "dejeuner" | "gouter" | "diner"
       notification_channel_enum: "push" | "in_app"
+      pref_type_enum: "allergy" | "dislike" | "preference" | "favorite"
       recipe_difficulty_enum: "facile" | "moyen" | "difficile"
       recipe_visibility_enum: "private" | "circle" | "community"
+      severity_enum: "strict" | "light"
       shopping_list_status_enum: "active" | "completed" | "archived"
       survey_reaction_enum: "aime" | "bof" | "naime_pas"
     }
@@ -1207,8 +1244,10 @@ export const Constants = {
       meal_plan_status_enum: ["draft", "shared", "finalized"],
       meal_type_enum: ["petit_dejeuner", "dejeuner", "gouter", "diner"],
       notification_channel_enum: ["push", "in_app"],
+      pref_type_enum: ["allergy", "dislike", "preference", "favorite"],
       recipe_difficulty_enum: ["facile", "moyen", "difficile"],
       recipe_visibility_enum: ["private", "circle", "community"],
+      severity_enum: ["strict", "light"],
       shopping_list_status_enum: ["active", "completed", "archived"],
       survey_reaction_enum: ["aime", "bof", "naime_pas"],
     },
