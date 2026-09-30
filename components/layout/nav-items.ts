@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
-import { Home, CalendarDays, BookOpen, Users, UserCircle, MessageSquare } from 'lucide-react'
+import { Home, CalendarDays, BookOpen, Users, MessageSquare } from 'lucide-react'
 
 export type Role = 'planificatrice' | 'membre' | null
 
@@ -14,9 +14,11 @@ const HEAD: NavItem[] = [
   { href: '/plan', icon: CalendarDays, label: 'Menu'    },
 ]
 
+// "Profil" n'est plus un item de nav : accessible via le menu deroulant de
+// l'avatar (UserMenu). Cet emplacement (fin de liste) est reserve a
+// Garde-manger, qui remplacera "Profil" ici plus tard.
 const TAIL: NavItem[] = [
-  { href: '/circle',  icon: Users,      label: 'Cercle' },
-  { href: '/profile', icon: UserCircle, label: 'Profil' },
+  { href: '/circle', icon: Users, label: 'Cercle' },
 ]
 
 // Planificatrice : Recettes. Membre : Avis (retours post-repas).

@@ -26,8 +26,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <>
-      <Sidebar role={role} />
-      <MobileHeader role={role} displayName={displayName} />
+      <Sidebar role={role} displayName={displayName} />
+      <MobileHeader displayName={displayName} />
       <main className="lg:ml-60 pt-14 pb-24 lg:pt-8 lg:pb-8 min-h-screen bg-[var(--kkb-bg)]">
         {children}
       </main>
