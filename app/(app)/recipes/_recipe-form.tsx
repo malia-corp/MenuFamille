@@ -209,17 +209,17 @@ export function RecipeForm({
         <h2 className={SECTION}>Informations</h2>
 
         <div className="space-y-1">
-          <input type="text" placeholder="Nom de la recette *" value={name}
+          <input type="text" placeholder="Nom de la recette *" aria-label="Nom de la recette" value={name}
             onChange={e => handleNameChange(e.target.value)}
             className={`${INPUT} ${nameError ? 'border-red-400' : ''}`} />
           {nameError && <p className="text-xs text-red-500 font-quicksand px-1">{nameError}</p>}
         </div>
 
-        <textarea placeholder="Astuce ou description (optionnel)" value={description}
+        <textarea placeholder="Astuce ou description (optionnel)" aria-label="Astuce ou description" value={description}
           onChange={e => setDescription(e.target.value)} rows={2}
           className={`${INPUT} resize-none`} />
 
-        <select value={categoryId} onChange={e => setCategoryId(e.target.value)} className={INPUT}>
+        <select value={categoryId} onChange={e => setCategoryId(e.target.value)} aria-label="Catégorie" className={INPUT}>
           <option value="">Catégorie (optionnel)</option>
           {categories.map(cat => (
             <option key={cat.id} value={cat.id}>{cat.icon} {cat.name}</option>
@@ -233,17 +233,17 @@ export function RecipeForm({
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="text-xs font-quicksand text-[var(--mf-text-tertiary)] mb-1 block">Préparation</label>
+            <label htmlFor="recipe-prep-time" className="text-xs font-quicksand text-[var(--mf-text-tertiary)] mb-1 block">Préparation</label>
             <div className="flex items-center gap-1.5">
-              <input type="number" min="0" placeholder="0" value={prepTime}
+              <input id="recipe-prep-time" type="number" min="0" placeholder="0" value={prepTime}
                 onChange={e => setPrepTime(e.target.value)} className={`${INPUT} flex-1`} />
               <span className="text-xs font-quicksand text-[var(--mf-text-tertiary)]">min</span>
             </div>
           </div>
           <div>
-            <label className="text-xs font-quicksand text-[var(--mf-text-tertiary)] mb-1 block">Cuisson</label>
+            <label htmlFor="recipe-cook-time" className="text-xs font-quicksand text-[var(--mf-text-tertiary)] mb-1 block">Cuisson</label>
             <div className="flex items-center gap-1.5">
-              <input type="number" min="0" placeholder="0" value={cookTime}
+              <input id="recipe-cook-time" type="number" min="0" placeholder="0" value={cookTime}
                 onChange={e => setCookTime(e.target.value)} className={`${INPUT} flex-1`} />
               <span className="text-xs font-quicksand text-[var(--mf-text-tertiary)]">min</span>
             </div>
@@ -254,11 +254,13 @@ export function RecipeForm({
           <label className="text-xs font-quicksand text-[var(--mf-text-tertiary)] mb-2 block">Nombre de portions *</label>
           <div className="flex items-center gap-4">
             <button type="button" onClick={() => setServings(s => Math.max(1, s - 1))} disabled={servings <= 1}
+              aria-label="Diminuer le nombre de portions"
               className="w-8 h-8 rounded-full flex items-center justify-center border border-[var(--mf-border-warm)] text-[var(--mf-text-secondary)] disabled:opacity-40 hover:border-[var(--mf-primary)] hover:text-[var(--mf-primary)] transition-colors">
               <Minus className="h-3.5 w-3.5" />
             </button>
             <span className="w-6 text-center font-dosis font-bold text-lg text-[var(--mf-text-primary)]">{servings}</span>
             <button type="button" onClick={() => setServings(s => s + 1)}
+              aria-label="Augmenter le nombre de portions"
               className="w-8 h-8 rounded-full flex items-center justify-center border border-[var(--mf-border-warm)] text-[var(--mf-text-secondary)] hover:border-[var(--mf-primary)] hover:text-[var(--mf-primary)] transition-colors">
               <Plus className="h-3.5 w-3.5" />
             </button>
@@ -321,7 +323,7 @@ export function RecipeForm({
               </p>
             ) : (
               <div className="space-y-1">
-                <select value={circleId} onChange={e => { setCircleId(e.target.value); setCircleError(null) }} className={INPUT}>
+                <select value={circleId} onChange={e => { setCircleId(e.target.value); setCircleError(null) }} aria-label="Cercle familial" className={INPUT}>
                   <option value="">Choisir un cercle *</option>
                   {circles.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
@@ -339,13 +341,13 @@ export function RecipeForm({
         <div className="space-y-2">
           {ingredients.map((ing, idx) => (
             <div key={ing._id} className="flex items-center gap-1.5">
-              <input type="number" min="0" placeholder="Qté" value={ing.quantity}
+              <input type="number" min="0" placeholder="Qté" aria-label={`Quantité de l'ingrédient ${idx + 1}`} value={ing.quantity}
                 onChange={e => updateIngredient(ing._id, 'quantity', e.target.value)}
                 className={`${SMALL} w-14 text-center`} />
-              <input type="text" placeholder="Unité" value={ing.unit}
+              <input type="text" placeholder="Unité" aria-label={`Unité de l'ingrédient ${idx + 1}`} value={ing.unit}
                 onChange={e => updateIngredient(ing._id, 'unit', e.target.value)}
                 className={`${SMALL} w-16`} />
-              <input type="text" placeholder={`Ingrédient ${idx + 1}`} value={ing.name}
+              <input type="text" placeholder={`Ingrédient ${idx + 1}`} aria-label={`Nom de l'ingrédient ${idx + 1}`} value={ing.name}
                 onChange={e => updateIngredient(ing._id, 'name', e.target.value)}
                 className={`${SMALL} flex-1 min-w-0`} />
               <button type="button" onClick={() => removeIngredient(ing._id)} disabled={ingredients.length === 1}
@@ -373,7 +375,7 @@ export function RecipeForm({
               <div className="flex-shrink-0 w-6 h-6 mt-2.5 rounded-full bg-[var(--mf-primary)] flex items-center justify-center">
                 <span className="text-xs font-dosis font-bold text-white">{idx + 1}</span>
               </div>
-              <textarea placeholder={`Étape ${idx + 1}…`} value={step.description}
+              <textarea placeholder={`Étape ${idx + 1}…`} aria-label={`Description de l'étape ${idx + 1}`} value={step.description}
                 onChange={e => updateStep(step._id, e.target.value)} rows={2}
                 className="flex-1 px-3 py-2 rounded-xl border border-[var(--mf-border-warm)] bg-[var(--mf-bg-card-alt)] text-sm font-quicksand text-[var(--mf-text-primary)] placeholder:text-[var(--mf-text-tertiary)] focus:outline-none focus:border-[var(--mf-primary)] resize-none" />
               <button type="button" onClick={() => removeStep(step._id)} disabled={steps.length === 1}

@@ -259,7 +259,7 @@ export default function PlanPage() {
     const ticker = setInterval(() => setGenStep(s => Math.min(s + 1, 3)), 450)
 
     try {
-      const res = await fetch('/api/meal-plans/generate', { method: 'POST' })
+      const res = await fetch(`/api/meal-plans/generate?week=${selectedWeek}`, { method: 'POST' })
       if (!res.ok) {
         const d = await res.json()
         throw new Error(d.error ?? 'Erreur lors de la génération')
@@ -854,6 +854,7 @@ export default function PlanPage() {
                 <input
                   type="search"
                   placeholder="Chercher une recette…"
+                  aria-label="Chercher une recette"
                   value={editSearch}
                   onChange={e => handlePickerSearch(e.target.value)}
                   className="flex-1 bg-transparent text-sm font-quicksand text-[var(--mf-text-primary)] placeholder:text-[var(--mf-text-tertiary)] outline-none"

@@ -101,6 +101,7 @@ export default function RecipesPage() {
         <input
           type="search"
           placeholder="Chercher une recette…"
+          aria-label="Chercher une recette"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[var(--mf-border-warm)] bg-[var(--mf-bg-card-alt)] text-sm font-quicksand text-[var(--mf-text-primary)] placeholder:text-[var(--mf-text-tertiary)] focus:outline-none focus:border-[var(--mf-primary)]"

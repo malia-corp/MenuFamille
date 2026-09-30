@@ -84,7 +84,7 @@ export default function SurveyResultsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-[#FDF6EE]">
-        <div className="h-5 w-5 border-2 border-[#E87D3E] border-t-transparent rounded-full animate-spin" />
+        <div className="h-5 w-5 border-2 border-[var(--mf-primary)] border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
@@ -92,7 +92,7 @@ export default function SurveyResultsPage() {
   if (!data) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-[#FDF6EE]">
-        <p className="text-sm font-quicksand text-[#9A8F84]">Résultats introuvables.</p>
+        <p className="text-sm font-quicksand text-[var(--mf-text-tertiary)]">Résultats introuvables.</p>
       </div>
     )
   }
@@ -109,7 +109,7 @@ export default function SurveyResultsPage() {
         <button onClick={() => router.back()} className="p-1 -ml-1">
           <ArrowLeft className="h-5 w-5 text-[#3D2C20]" />
         </button>
-        <BarChart3 className="h-5 w-5 text-[#E87D3E]" />
+        <BarChart3 className="h-5 w-5 text-[var(--mf-primary)]" />
         <span className="font-dosis font-bold text-base text-[#3D2C20]">Résultats du sondage</span>
       </header>
 
@@ -118,18 +118,18 @@ export default function SurveyResultsPage() {
         {/* Cas : 0 répondant */}
         {data.respondent_count === 0 ? (
           <div className="bg-white border border-[#EDE4D6] rounded-2xl p-6 text-center space-y-3">
-            <MailOpen className="h-8 w-8 text-[#9A8F84] mx-auto" />
+            <MailOpen className="h-8 w-8 text-[var(--mf-text-tertiary)] mx-auto" />
             <p className="font-dosis font-semibold text-base text-[#3D2C20]">
               En attente des avis
             </p>
-            <p className="text-xs font-quicksand text-[#9A8F84]">
+            <p className="text-xs font-quicksand text-[var(--mf-text-tertiary)]">
               Partagez le lien avec votre famille pour recueillir leurs réactions.
             </p>
             {data.share_token && (
               <div className="flex gap-2 mt-2">
                 <button
                   onClick={copyShareLink}
-                  className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#FDF0DC] text-[#C9820A] text-sm font-quicksand font-semibold"
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#FDF0DC] text-[var(--mf-gold-text)] text-sm font-quicksand font-semibold"
                 >
                   <Copy className="h-4 w-4" />
                   {copied ? 'Copié !' : 'Copier le lien'}
@@ -166,7 +166,7 @@ export default function SurveyResultsPage() {
                     <div className="flex items-center gap-2">
                       <span className="text-xl">{MEAL_EMOJI[item.meal_type] ?? '🍴'}</span>
                       <div>
-                        <p className="text-[10px] font-quicksand font-semibold uppercase tracking-wider text-[#9A8F84]">
+                        <p className="text-[10px] font-quicksand font-semibold uppercase tracking-wider text-[var(--mf-text-tertiary)]">
                           {MEAL_LABEL[item.meal_type] ?? item.meal_type}
                         </p>
                         <p className="font-dosis font-semibold text-sm text-[#3D2C20]">
@@ -177,7 +177,7 @@ export default function SurveyResultsPage() {
                     {majority && (
                       <button
                         onClick={() => router.push('/plan')}
-                        className="flex items-center gap-1 text-[10px] font-quicksand font-semibold text-[#E87D3E] px-2 py-1 rounded-lg border border-[#E87D3E]/30 flex-shrink-0"
+                        className="flex items-center gap-1 text-[10px] font-quicksand font-semibold text-[var(--mf-primary)] px-2 py-1 rounded-lg border border-[var(--mf-primary)]/30 flex-shrink-0"
                       >
                         <Pencil className="h-3 w-3" />
                         Modifier
@@ -187,7 +187,7 @@ export default function SurveyResultsPage() {
 
                   {/* Barres de distribution */}
                   {total === 0 ? (
-                    <div className="flex items-center gap-2 text-xs font-quicksand text-[#9A8F84]">
+                    <div className="flex items-center gap-2 text-xs font-quicksand text-[var(--mf-text-tertiary)]">
                       <Inbox className="h-3.5 w-3.5" />
                       Aucun avis pour ce repas
                     </div>
@@ -205,12 +205,12 @@ export default function SurveyResultsPage() {
                       {item.comments.map((c, i) => (
                         <div key={i} className="flex items-start gap-2">
                           <div className="h-6 w-6 rounded-full bg-[#FDF0DC] flex items-center justify-center flex-shrink-0">
-                            <span className="text-[10px] font-dosis font-bold text-[#C9820A]">
+                            <span className="text-[10px] font-dosis font-bold text-[var(--mf-gold-text)]">
                               {c.respondent_name.charAt(0).toUpperCase()}
                             </span>
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-[10px] font-quicksand font-semibold text-[#9A8F84]">
+                            <p className="text-[10px] font-quicksand font-semibold text-[var(--mf-text-tertiary)]">
                               {c.respondent_name} ·{' '}
                               {formatDistanceToNow(new Date(c.created_at), { addSuffix: true, locale: fr })}
                             </p>
@@ -235,9 +235,9 @@ export default function SurveyResultsPage() {
 function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: number }) {
   return (
     <div className="bg-white border border-[#EDE4D6] rounded-xl p-3 text-center space-y-1">
-      <div className="flex justify-center text-[#E87D3E]">{icon}</div>
+      <div className="flex justify-center text-[var(--mf-primary)]">{icon}</div>
       <p className="font-dosis font-bold text-lg text-[#3D2C20]">{value}</p>
-      <p className="text-[9px] font-quicksand font-bold uppercase tracking-wider text-[#9A8F84]">{label}</p>
+      <p className="text-[9px] font-quicksand font-bold uppercase tracking-wider text-[var(--mf-text-tertiary)]">{label}</p>
     </div>
   )
 }
@@ -258,7 +258,7 @@ function DistributionBar({
         />
       </div>
       <span className="text-[10px] font-quicksand font-semibold w-8 text-right flex-shrink-0"
-        style={{ color: pct > 0 ? color : '#9A8F84' }}>
+        style={{ color: pct > 0 ? color : 'var(--mf-text-tertiary)' }}>
         {pct > 0 ? `${pct}%` : '—'}
       </span>
     </div>
