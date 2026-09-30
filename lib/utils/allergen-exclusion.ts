@@ -31,9 +31,26 @@ export async function loadStrictAllergens(
   }))
 }
 
+// Retire un "s" final de chaque mot — tolérance minimale au pluriel français.
+// "croupions de dinde" et "croupion de dinde" ne partagent aucune sous-chaîne
+// continue à cause du "s" au milieu de la phrase ; une fois chaque mot mis au
+// singulier, les deux deviennent identiques.
+function singularize(s: string): string {
+  return s.split(/\s+/).map(w => w.replace(/s$/i, '')).join(' ')
+}
+
+function containsAllergen(haystack: string, allergenValue: string): boolean {
+  const h = haystack.toLowerCase()
+  const a = allergenValue.toLowerCase()
+  if (h.includes(a)) return true
+  return singularize(h).includes(singularize(a))
+}
+
 // Pour un pool de recettes candidates, quels allergenes stricts matchent
-// (sous-chaine, insensible a la casse) au moins un ingredient de chacune —
-// un seul SELECT sur tout le pool, jamais une requete par recette.
+// au moins un ingredient de chacune — uniquement recipe_ingredients,
+// jamais le nom de la recette (trop imprecis : risque de faux positifs/
+// negatifs sur un simple intitule). Un seul SELECT sur tout le pool,
+// jamais une requete par recette.
 export async function findAllergenMatches(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   client: SupabaseClient<Database> | any,
@@ -49,9 +66,8 @@ export async function findAllergenMatches(
     .in('recipe_id', recipeIds)
 
   for (const ing of (ingredients ?? []) as { recipe_id: string; name: string }[]) {
-    const nameLower = ing.name.toLowerCase()
     for (const allergen of allergens) {
-      if (nameLower.includes(allergen.value.toLowerCase())) {
+      if (containsAllergen(ing.name, allergen.value)) {
         const existing = matches.get(ing.recipe_id) ?? []
         if (!existing.some(a => a.userId === allergen.userId && a.value === allergen.value)) {
           existing.push(allergen)
