@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { loadStrictAllergens, findAllergenMatches } from '@/lib/utils/allergen-exclusion'
 import { NextRequest } from 'next/server'
 
 function getMondayISO(d: Date = new Date()): string {
@@ -21,6 +22,59 @@ const PLAN_SELECT = `
   )
 `
 
+type RawPlanItem = {
+  recipes: { id: string } | null
+  meal_compositions: { recipes: { id: string } | null }[] | null
+}
+
+// Ajoute allergy_warnings a chaque item — non bloquant, purement informatif
+// pour le badge de synthese sur /plan/validate. Meme helper que le
+// generateur (lib/utils/allergen-exclusion.ts), jamais duplique.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function withAllergyWarnings(supabase: any, userId: string, plan: any) {
+  const items = (plan?.meal_plan_items ?? []) as RawPlanItem[]
+  if (!plan || items.length === 0) return plan
+
+  const { data: circles } = await supabase.from('family_circle_members').select('circle_id').eq('user_id', userId)
+  const circleIds = (circles ?? []).map((c: { circle_id: string }) => c.circle_id)
+
+  let memberUserIds = [userId]
+  if (circleIds.length > 0) {
+    const { data: circleMembers } = await supabase.from('family_circle_members').select('user_id').in('circle_id', circleIds)
+    memberUserIds = Array.from(new Set([userId, ...(circleMembers ?? []).map((m: { user_id: string }) => m.user_id)]))
+  }
+
+  const strictAllergens = await loadStrictAllergens(supabase, memberUserIds)
+  if (strictAllergens.length === 0) {
+    return { ...plan, meal_plan_items: items.map(i => ({ ...i, allergy_warnings: [] })) }
+  }
+
+  const allRecipeIds = new Set<string>()
+  for (const item of items) {
+    if (item.recipes?.id) allRecipeIds.add(item.recipes.id)
+    for (const c of item.meal_compositions ?? []) if (c.recipes?.id) allRecipeIds.add(c.recipes.id)
+  }
+  const matches = await findAllergenMatches(supabase, Array.from(allRecipeIds), strictAllergens)
+
+  const itemsWithWarnings = items.map(item => {
+    const ids = [item.recipes?.id, ...(item.meal_compositions ?? []).map(c => c.recipes?.id)].filter((id): id is string => !!id)
+    const seen = new Set<string>()
+    const warnings: { member_display_name: string; allergen: string }[] = []
+    for (const id of ids) {
+      for (const a of matches.get(id) ?? []) {
+        const key = `${a.displayName}|${a.value}`
+        if (!seen.has(key)) {
+          seen.add(key)
+          warnings.push({ member_display_name: a.displayName, allergen: a.value })
+        }
+      }
+    }
+    return { ...item, allergy_warnings: warnings }
+  })
+
+  return { ...plan, meal_plan_items: itemsWithWarnings }
+}
+
 export async function GET(request: NextRequest) {
   const start = performance.now()
   const supabase = await createClient()
@@ -38,7 +92,7 @@ export async function GET(request: NextRequest) {
       .maybeSingle()
     console.log(`[meal-plans:GET latest] ${(performance.now() - start).toFixed(1)}ms`)
     if (error) return Response.json({ error: error.message }, { status: 500 })
-    return Response.json(data)
+    return Response.json(await withAllergyWarnings(supabase, user.id, data))
   }
 
   const week = request.nextUrl.searchParams.get('week') ?? getMondayISO()
@@ -53,7 +107,7 @@ export async function GET(request: NextRequest) {
   if (selectError) return Response.json({ error: selectError.message }, { status: 500 })
   if (existing) {
     console.log(`[meal-plans:GET existing] ${(performance.now() - start).toFixed(1)}ms`)
-    return Response.json(existing)
+    return Response.json(await withAllergyWarnings(supabase, user.id, existing))
   }
 
   const { data: created, error } = await supabase

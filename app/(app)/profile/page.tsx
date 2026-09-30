@@ -24,9 +24,17 @@ interface UserProfile {
   dietary_prefs: Record<string, unknown>
 }
 
+interface DietaryPref {
+  id:       string
+  pref_type: 'allergy' | 'dislike' | 'preference' | 'favorite'
+  value:     string
+  severity:  'strict' | 'light' | null
+}
+
 export default function ProfilePage() {
   const router = useRouter()
   const [profile, setProfile] = useState<UserProfile | null>(null)
+  const [dietaryPrefs, setDietaryPrefs] = useState<DietaryPref[]>([])
   const [loading, setLoading] = useState(true)
   const [editMode, setEditMode] = useState(false)
   const [editName, setEditName] = useState('')
@@ -40,6 +48,10 @@ export default function ProfilePage() {
         setProfile(data)
         setLoading(false)
       })
+    fetch('/api/users/me/dietary-prefs')
+      .then((r) => r.json())
+      .then((res) => setDietaryPrefs(Array.isArray(res?.data) ? res.data : []))
+      .catch(() => {})
   }, [])
 
   useEffect(() => {
@@ -83,9 +95,7 @@ export default function ProfilePage() {
   }
 
   const initial = (profile?.display_name || '?')[0].toUpperCase()
-  const allergies: string[] = Array.isArray(profile?.dietary_prefs?.allergies)
-    ? (profile.dietary_prefs.allergies as string[])
-    : []
+  const allergies = dietaryPrefs.filter(p => p.pref_type === 'allergy')
   const cuisines: string[] = Array.isArray(profile?.dietary_prefs?.cuisines)
     ? (profile.dietary_prefs.cuisines as string[])
     : []
@@ -196,9 +206,16 @@ export default function ProfilePage() {
                   <p className="text-xs text-[#8c7169] font-medium">Allergies</p>
                   <div className="flex flex-wrap gap-1.5">
                     {allergies.map((a) => (
-                      <Badge key={a} className="text-xs bg-[#FEF3E0] text-[#B07A12] border-[#E8C99A]">
+                      <Badge
+                        key={a.id}
+                        className={`text-xs ${
+                          a.severity === 'strict'
+                            ? 'bg-red-50 text-red-700 border-red-200'
+                            : 'bg-orange-50 text-orange-700 border-orange-200'
+                        }`}
+                      >
                         <AlertTriangle className="h-3 w-3 mr-1" />
-                        {a}
+                        {a.value}
                       </Badge>
                     ))}
                   </div>

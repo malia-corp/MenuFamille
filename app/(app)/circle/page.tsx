@@ -2,16 +2,44 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Copy, Key, LogOut, MoreVertical, Plus, Share2, Users } from 'lucide-react'
+import { AlertTriangle, Check, Copy, Heart, Key, LogOut, MoreVertical, Plus, Share2, ThumbsDown, Users, X } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 
 const AVATAR_COLORS = ['#B0461C', '#1B6035', '#B07A12', '#3A2E28', '#5A4A43']
+
+type PrefType = 'allergy' | 'dislike' | 'preference' | 'favorite'
+type Severity = 'strict' | 'light'
+
+interface Pref {
+  id:        string
+  pref_type: PrefType
+  value:     string
+  severity:  Severity | null
+}
+
+const PREF_TYPE_OPTIONS: { value: PrefType; label: string }[] = [
+  { value: 'allergy',    label: 'Allergie'    },
+  { value: 'dislike',    label: 'N\'aime pas' },
+  { value: 'preference', label: 'Préfère'     },
+  { value: 'favorite',   label: 'Coup de cœur' },
+]
+
+function prefChipStyle(pref: Pref): { className: string; Icon: React.ElementType | null } {
+  if (pref.pref_type === 'allergy') {
+    return pref.severity === 'strict'
+      ? { className: 'bg-red-50 text-red-700 border-red-200', Icon: AlertTriangle }
+      : { className: 'bg-orange-50 text-orange-700 border-orange-200', Icon: AlertTriangle }
+  }
+  if (pref.pref_type === 'dislike')  return { className: 'bg-gray-100 text-gray-600 border-gray-200', Icon: ThumbsDown }
+  if (pref.pref_type === 'favorite') return { className: 'bg-emerald-50 text-emerald-700 border-emerald-200', Icon: Heart }
+  return { className: 'bg-[var(--mf-bg-page)] text-[var(--mf-text-secondary)] border-[var(--mf-border-warm)]', Icon: null }
+}
 
 interface Member {
   id: string
   role: string
   joined_at: string
-  users: { id: string; display_name: string; email: string }
+  users: { id: string; display_name: string; email: string; member_dietary_prefs: Pref[] }
 }
 
 interface Circle {
@@ -31,6 +59,14 @@ export default function CirclePage() {
   const [copied, setCopied] = useState(false)
   const [openMenu, setOpenMenu] = useState<string | null>(null)
   const menuRef = useRef<HTMLDivElement>(null)
+
+  // ── Préférences alimentaires ─────────────────────────────────────────────
+  const [sheetTarget, setSheetTarget] = useState<{ circleId: string; userId: string; displayName: string } | null>(null)
+  const [prefValue,    setPrefValue]    = useState('')
+  const [prefType,     setPrefType]     = useState<PrefType>('allergy')
+  const [prefSeverity, setPrefSeverity] = useState<Severity>('strict')
+  const [savingPref,   setSavingPref]   = useState(false)
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
 
   useEffect(() => {
     fetch('/api/circles')
@@ -85,6 +121,87 @@ export default function CirclePage() {
     const res = await fetch(`/api/circles/${circleId}/members/${currentUserId}`, { method: 'DELETE' })
     if (res.ok) {
       setCircles((prev) => prev.filter((c) => c.id !== circleId))
+    }
+  }
+
+  function openPrefSheet(circleId: string, userId: string, displayName: string) {
+    setSheetTarget({ circleId, userId, displayName })
+    setPrefValue('')
+    setPrefType('allergy')
+    setPrefSeverity('strict')
+  }
+
+  function closePrefSheet() {
+    setSheetTarget(null)
+  }
+
+  async function savePref() {
+    if (!sheetTarget || !prefValue.trim() || savingPref) return
+    setSavingPref(true)
+    try {
+      const res = await fetch(`/api/circles/${sheetTarget.circleId}/members/${sheetTarget.userId}/prefs`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({
+          pref_type: prefType,
+          value:     prefValue.trim(),
+          severity:  prefType === 'allergy' ? prefSeverity : undefined,
+        }),
+      })
+      if (!res.ok) return
+      const saved: Pref = await res.json()
+      setCircles((prev) =>
+        prev.map((c) =>
+          c.id === sheetTarget.circleId
+            ? {
+                ...c,
+                family_circle_members: c.family_circle_members.map((m) =>
+                  m.users.id === sheetTarget.userId
+                    ? {
+                        ...m,
+                        users: {
+                          ...m.users,
+                          member_dietary_prefs: [
+                            ...m.users.member_dietary_prefs.filter((p) => p.id !== saved.id),
+                            saved,
+                          ],
+                        },
+                      }
+                    : m
+                ),
+              }
+            : c
+        )
+      )
+      closePrefSheet()
+    } finally {
+      setSavingPref(false)
+    }
+  }
+
+  async function deletePref(circleId: string, userId: string, prefId: string) {
+    if (confirmDeleteId !== prefId) {
+      setConfirmDeleteId(prefId)
+      setTimeout(() => setConfirmDeleteId((cur) => (cur === prefId ? null : cur)), 3000)
+      return
+    }
+    setConfirmDeleteId(null)
+    const res = await fetch(`/api/circles/${circleId}/members/${userId}/prefs/${prefId}`, { method: 'DELETE' })
+    if (res.ok) {
+      setCircles((prev) =>
+        prev.map((c) =>
+          c.id === circleId
+            ? {
+                ...c,
+                family_circle_members: c.family_circle_members.map((m) =>
+                  m.users.id === userId
+                    ? { ...m, users: { ...m.users, member_dietary_prefs: m.users.member_dietary_prefs.filter((p) => p.id !== prefId) } }
+                    : m
+                ),
+              }
+            : c
+        )
+      )
     }
   }
 
@@ -176,6 +293,8 @@ export default function CirclePage() {
             const avatarColor = AVATAR_COLORS[index % AVATAR_COLORS.length]
             const isCurrentUser = u.id === currentUserId
             const canRemove = isPlanificatrice && !isCurrentUser
+            const canManagePrefs = isCurrentUser || isPlanificatrice
+            const prefs = u.member_dietary_prefs ?? []
 
             return (
               <div
@@ -206,6 +325,38 @@ export default function CirclePage() {
                   >
                     {member.role}
                   </Badge>
+
+                  {/* Préférences alimentaires */}
+                  <div className="flex flex-wrap items-center gap-1 mt-1.5">
+                    {prefs.map((pref) => {
+                      const { className, Icon } = prefChipStyle(pref)
+                      const confirming = confirmDeleteId === pref.id
+                      return (
+                        <button
+                          key={pref.id}
+                          type="button"
+                          disabled={!canManagePrefs}
+                          onClick={() => canManagePrefs && void deletePref(circle.id, u.id, pref.id)}
+                          className={`inline-flex items-center gap-1 text-[10px] font-quicksand font-medium px-1.5 py-0.5 rounded-full border ${
+                            confirming ? 'bg-red-100 text-red-700 border-red-300' : className
+                          } ${canManagePrefs ? '' : 'cursor-default'}`}
+                        >
+                          {confirming ? <X className="h-2.5 w-2.5" /> : Icon && <Icon className="h-2.5 w-2.5" />}
+                          {confirming ? 'Supprimer ?' : pref.value}
+                        </button>
+                      )
+                    })}
+                    {canManagePrefs && (
+                      <button
+                        type="button"
+                        onClick={() => openPrefSheet(circle.id, u.id, u.display_name || u.email)}
+                        className="inline-flex items-center gap-1 text-[10px] font-quicksand font-medium px-1.5 py-0.5 rounded-full border border-dashed border-[var(--mf-primary)]/40 text-[var(--mf-primary)]"
+                      >
+                        <Plus className="h-2.5 w-2.5" />
+                        Ajouter
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 {/* Menu contextuel */}
@@ -260,6 +411,87 @@ export default function CirclePage() {
           </button>
         )}
       </div>
+
+      {/* Feuille : ajouter une préférence alimentaire */}
+      {sheetTarget && (
+        <>
+          <div className="fixed inset-0 bg-black/40 z-40" onClick={closePrefSheet} />
+          <div className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-3xl p-5 space-y-4 max-h-[85vh] overflow-y-auto">
+            <div className="flex items-start justify-between">
+              <p className="font-dosis font-bold text-base text-[#2C1810]">
+                Préférence de {sheetTarget.displayName}
+              </p>
+              <button type="button" onClick={closePrefSheet} className="p-1 -mr-1 text-[#8c7169]" aria-label="Fermer">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <input
+              type="text"
+              placeholder="Ingrédient ou plat…"
+              aria-label="Ingrédient ou plat"
+              value={prefValue}
+              onChange={(e) => setPrefValue(e.target.value)}
+              autoFocus
+              className="w-full px-3 py-2.5 rounded-xl border border-[#E8C99A] bg-[#FDF6EE] text-sm font-quicksand text-[#2C1810] placeholder:text-[#9A8F84] outline-none focus:border-terracotta"
+            />
+
+            <div className="flex gap-2">
+              {PREF_TYPE_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setPrefType(opt.value)}
+                  className={`flex-1 py-2 rounded-xl text-xs font-quicksand font-medium border transition-colors ${
+                    prefType === opt.value
+                      ? 'bg-terracotta text-white border-terracotta'
+                      : 'bg-white border-[#E8C99A] text-[#5A4A43]'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+
+            {prefType === 'allergy' && (
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setPrefSeverity('strict')}
+                  className={`flex-1 py-2 rounded-xl text-xs font-quicksand font-medium border transition-colors ${
+                    prefSeverity === 'strict'
+                      ? 'bg-red-50 text-red-700 border-red-300'
+                      : 'bg-white border-[#E8C99A] text-[#5A4A43]'
+                  }`}
+                >
+                  Sévère (exclure des repas)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPrefSeverity('light')}
+                  className={`flex-1 py-2 rounded-xl text-xs font-quicksand font-medium border transition-colors ${
+                    prefSeverity === 'light'
+                      ? 'bg-orange-50 text-orange-700 border-orange-300'
+                      : 'bg-white border-[#E8C99A] text-[#5A4A43]'
+                  }`}
+                >
+                  Légère (éviter)
+                </button>
+              </div>
+            )}
+
+            <button
+              type="button"
+              onClick={() => void savePref()}
+              disabled={!prefValue.trim() || savingPref}
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl font-dosis font-bold text-sm bg-terracotta text-white disabled:opacity-50 transition-opacity"
+            >
+              <Check className="h-4 w-4" />
+              {savingPref ? 'Enregistrement…' : 'Enregistrer'}
+            </button>
+          </div>
+        </>
+      )}
     </div>
   )
 }

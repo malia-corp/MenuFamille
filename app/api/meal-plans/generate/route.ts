@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
+import { loadStrictAllergens, findAllergenMatches } from '@/lib/utils/allergen-exclusion'
 import { NextRequest } from 'next/server'
 
 const DAYS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'] as const
@@ -188,6 +189,50 @@ export async function POST(request: NextRequest) {
     return Array.from(scores.entries()).sort((a, b) => b[1] - a[1]).slice(0, limit).map(([id]) => id)
   }
 
+  // 5c. Allergènes stricts des membres du/des cercle(s) du planificateur.
+  // Simplification documentée : meal_plans.circle_id n'est jamais renseigné
+  // aujourd'hui (pas de notion de "cercle actif"), donc on agrège tous les
+  // cercles de l'utilisateur qui génère plutôt qu'un cercle précis — correct
+  // dans le cas courant (un seul cercle), sur-inclusif si plusieurs.
+  let memberUserIds = [user.id]
+  if (circleIds.length > 0) {
+    const { data: circleMembers } = await service
+      .from('family_circle_members')
+      .select('user_id')
+      .in('circle_id', circleIds)
+    memberUserIds = Array.from(new Set([user.id, ...(circleMembers ?? []).map(m => m.user_id)]))
+  }
+  const strictAllergens = await loadStrictAllergens(service, memberUserIds)
+
+  const candidateIds = Array.from(new Set([
+    ...mainPool,
+    ...drinkPool,
+    ...(assocRows ?? []).map(r => r.associated_recipe_id),
+  ]))
+  const allergenMatches = strictAllergens.length > 0
+    ? await findAllergenMatches(service, candidateIds, strictAllergens)
+    : new Map<string, never[]>()
+  const excludedIds = new Set(allergenMatches.keys())
+
+  // Retire les recettes contenant un allergène strict connu. Pour un pool
+  // obligatoire (plat principal, boisson globale) : si l'exclusion le vide
+  // complètement, on sélectionne quand même (log + repli) plutôt que de ne
+  // pas remplir le créneau — la Planificatrice décidera via le badge de
+  // synthèse. Pour un pool optionnel (accompagnement/boisson suggérés — ne
+  // pas en avoir est déjà un état normal), pas de repli : on n'attache
+  // simplement rien plutôt que de proposer un candidat allergène.
+  function safePool(pool: string[], label: string, fallbackIfEmpty = true): string[] {
+    if (excludedIds.size === 0) return pool
+    const filtered = pool.filter(id => !excludedIds.has(id))
+    if (filtered.length === 0 && pool.length > 0 && fallbackIfEmpty) {
+      console.warn(`[generate] exclusion allergènes a vidé ${label} (${pool.length} candidats) — repli sans filtre`)
+      return pool
+    }
+    return filtered
+  }
+  const safeDrinkPool = safePool(drinkPool, 'drinkPool')
+  mark = lap('5c-allergenExclusion', mark)
+
   const usedIds      = new Set<string>(lockedRecipeIds)
   const usedSideIds  = new Set<string>()
   const usedDrinkIds = new Set<string>()
@@ -222,7 +267,7 @@ export async function POST(request: NextRequest) {
     // plat précis — pas de repli sur une pioche générique. Un plat neuf sans
     // historique reste seul ce jour-là plutôt que de recevoir une suggestion
     // sans signal ; ça se corrige dès la première association réelle.
-    const sideCandidates = topCandidates(sideScoresByMain.get(mainRecipeId))
+    const sideCandidates = safePool(topCandidates(sideScoresByMain.get(mainRecipeId)), 'sideCandidates', false)
     if (sideCandidates.length > 0) {
       const sideId = pickRandom(sideCandidates, usedSideIds)
       if (sideId) {
@@ -234,8 +279,8 @@ export async function POST(request: NextRequest) {
     if (mealsDrink.has(mealType) && Math.random() < 0.6) {
       // Boisson : personnalisée si on a du signal pour ce plat, sinon repli
       // sur la pioche aléatoire par catégorie (comportement historique).
-      const drinkCandidates = topCandidates(drinkScoresByMain.get(mainRecipeId))
-      const pool = drinkCandidates.length > 0 ? drinkCandidates : drinkPool
+      const drinkCandidates = safePool(topCandidates(drinkScoresByMain.get(mainRecipeId)), 'drinkCandidates', false)
+      const pool = drinkCandidates.length > 0 ? drinkCandidates : safeDrinkPool
       if (pool.length > 0) {
         const drinkId = pickRandom(pool, usedDrinkIds)
         if (drinkId) {
@@ -246,10 +291,12 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  const safeMainPool = safePool(mainPool, 'mainPool')
+
   for (const config of configs) {
     if (config.mode === 'template') {
       if (lockedSlots.has(`${config.meal_type}|template`)) continue
-      const recipeId = pickRandom(mainPool, usedIds)
+      const recipeId = pickRandom(safeMainPool, usedIds)
       if (recipeId) {
         const idx = itemsToInsert.length
         planCompositions(idx, recipeId, config.meal_type)
@@ -268,7 +315,7 @@ export async function POST(request: NextRequest) {
     } else {
       for (const day of DAYS) {
         if (lockedSlots.has(`${config.meal_type}|${day}`)) continue
-        const recipeId = pickRandom(mainPool, usedIds)
+        const recipeId = pickRandom(safeMainPool, usedIds)
         if (recipeId) {
           const idx = itemsToInsert.length
           planCompositions(idx, recipeId, config.meal_type)
