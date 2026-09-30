@@ -24,10 +24,10 @@ export function FAB() {
     <button
       type="button"
       onClick={handleClick}
-      className="fixed z-[45] bottom-[88px] left-1/2 -translate-x-1/2 lg:left-[calc(50%+120px)] flex items-center gap-2 rounded-full px-7 py-3.5 text-white bg-[var(--kkb-coral)] shadow-[var(--kkb-shadow-fab)] transition-transform hover:scale-[1.03] active:scale-[0.97]"
+      className="fixed z-[45] bottom-[88px] left-1/2 -translate-x-1/2 lg:left-[calc(50%+120px)] flex items-center gap-1.5 rounded-full px-4 py-2 text-white bg-[var(--kkb-coral)] shadow-[var(--kkb-shadow-fab)] transition-transform hover:scale-[1.03] active:scale-[0.97] whitespace-nowrap"
     >
-      <Zap className="h-[18px] w-[18px]" />
-      <span className="font-quicksand font-bold text-[15px]">Générer ma semaine</span>
+      <Zap className="h-4 w-4 shrink-0" />
+      <span className="font-quicksand font-semibold text-[13px]">Générer ma semaine</span>
     </button>
   )
 }
