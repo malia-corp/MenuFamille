@@ -149,11 +149,16 @@ function ValidateInner() {
   const [sharing,      setSharing]      = useState(false)
   const [copied,       setCopied]       = useState(false)
   const [surveyCount,  setSurveyCount]  = useState<number | null>(null)
+  const [canNativeShare, setCanNativeShare] = useState(false)
 
   useEffect(() => {
     if (!week) { router.replace('/plan'); return }
     void load()
   }, [week]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    setCanNativeShare(typeof navigator !== 'undefined' && typeof navigator.share === 'function')
+  }, [])
 
   async function load() {
     setLoading(true)
@@ -230,6 +235,19 @@ function ValidateInner() {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch { /* silent */ }
+  }
+
+  async function shareNative() {
+    if (!shareToken) return
+    try {
+      await navigator.share({
+        title: 'Menu de la semaine — MenuFamille',
+        text:  'Donne ton avis sur notre menu de la semaine !',
+        url:   `${window.location.origin}/s/${shareToken}`,
+      })
+    } catch {
+      /* utilisateur a annulé la feuille de partage — rien à faire */
+    }
   }
 
   if (loading) {
@@ -414,18 +432,32 @@ function ValidateInner() {
                 {sharing ? 'Génération du lien…' : 'Partager ce menu'}
               </button>
             ) : (
-              <div className="bg-[var(--mf-bg-card)] border border-[var(--mf-border-warm)] rounded-2xl px-4 py-3 space-y-2">
+              <div className="bg-[var(--mf-bg-card)] border border-[var(--mf-border-warm)] rounded-2xl px-4 py-3 space-y-2.5">
                 <p className="text-[11px] font-quicksand font-semibold text-[var(--mf-text-secondary)] uppercase tracking-wider">
                   Lien de partage
                 </p>
+                <p className="text-xs font-quicksand text-[var(--mf-text-primary)] truncate">
+                  {shareUrl}
+                </p>
                 <div className="flex items-center gap-2">
-                  <p className="flex-1 text-xs font-quicksand text-[var(--mf-text-primary)] truncate">
-                    {shareUrl}
-                  </p>
+                  {canNativeShare && (
+                    <button
+                      type="button"
+                      onClick={() => { void shareNative() }}
+                      className="flex-1 flex items-center justify-center gap-1.5 bg-[var(--mf-primary)] text-white rounded-lg px-3 py-2 text-[11px] font-quicksand font-semibold hover:opacity-80 transition-opacity"
+                    >
+                      <Share2 className="h-3 w-3" />
+                      Partager
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={() => { void copyLink() }}
-                    className="flex-shrink-0 flex items-center gap-1.5 bg-[var(--mf-primary)] text-white rounded-lg px-3 py-1.5 text-[11px] font-quicksand font-semibold hover:opacity-80 transition-opacity"
+                    className={`flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-[11px] font-quicksand font-semibold transition-colors ${
+                      canNativeShare
+                        ? 'flex-shrink-0 border border-[var(--mf-border-warm)] text-[var(--mf-text-secondary)] hover:border-[var(--mf-primary)] hover:text-[var(--mf-primary)]'
+                        : 'flex-1 bg-[var(--mf-primary)] text-white hover:opacity-80'
+                    }`}
                   >
                     <Copy className="h-3 w-3" />
                     {copied ? 'Copié !' : 'Copier'}
