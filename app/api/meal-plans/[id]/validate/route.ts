@@ -21,5 +21,44 @@ export async function POST(_: Request, { params }: { params: { id: string } }) {
 
   if (error) return Response.json({ error: error.message }, { status: 500 })
 
+  // Apprentissage : uniquement à la validation, pas à chaque génération —
+  // un plan peut être régénéré plusieurs fois avant d'être confirmé, seul
+  // l'état final validé doit renforcer les suggestions futures. Best-effort
+  // (une erreur ici ne doit jamais faire échouer la validation elle-même),
+  // mais on l'attend avant de répondre pour garantir qu'elle s'exécute.
+  await learnFromValidatedPlan(supabase, params.id, user.id)
+
   return Response.json({ status: 'finalized' })
+}
+
+async function learnFromValidatedPlan(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  planId: string,
+  userId: string
+) {
+  try {
+    const { data: items } = await supabase
+      .from('meal_plan_items')
+      .select('recipe_id, meal_compositions(recipe_id, role)')
+      .eq('meal_plan_id', planId)
+
+    const calls: PromiseLike<unknown>[] = []
+    for (const item of items ?? []) {
+      if (!item.recipe_id) continue
+      for (const comp of item.meal_compositions ?? []) {
+        calls.push(
+          supabase.rpc('upsert_recipe_association', {
+            p_recipe_id: item.recipe_id,
+            p_associated_recipe_id: comp.recipe_id,
+            p_role: comp.role,
+            p_user_id: userId,
+            p_source: 'planning',
+          })
+        )
+      }
+    }
+    await Promise.all(calls)
+  } catch {
+    /* apprentissage best-effort, ne doit jamais faire échouer la validation */
+  }
 }

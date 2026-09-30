@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Globe, ImagePlus, Lock, Minus, Plus, Trash2, Users, X } from 'lucide-react'
+import { ChevronDown, Globe, ImagePlus, Lock, Minus, Plus, Search, Trash2, Users, X } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
 // ── Types exportés ────────────────────────────────────────────
@@ -10,7 +10,6 @@ export interface IngredientRow { _id: string; name: string; quantity: string; un
 export interface StepRow { _id: string; description: string }
 export type DifficultyVal  = 'facile' | 'moyen' | 'difficile'
 export type VisibilityVal  = 'private' | 'circle' | 'community'
-export type RecipeTypeVal  = 'plat_principal' | 'sauce' | 'accompagnement' | 'boisson'
 
 export interface RecipeFormValues {
   name: string
@@ -24,7 +23,8 @@ export interface RecipeFormValues {
   circleId: string
   ingredients: IngredientRow[]
   steps: StepRow[]
-  recipe_type: RecipeTypeVal
+  suggestedSides: string[]
+  suggestedDrinks: string[]
   photo_url?: string
   source_url?: string
   raw_html_hash?: string
@@ -44,8 +44,23 @@ export interface RecipeFormProps {
 }
 
 // ── Internals ─────────────────────────────────────────────────
-interface Category { id: string; name: string; icon: string | null }
+interface Category { id: string; name: string; icon: string | null; slug: string }
 interface Circle  { id: string; name: string }
+interface AssocItem { id: string; name: string }
+interface PickerRecipe { id: string; name: string; categories: { icon: string | null } | null }
+type AssocScope = 'all' | 'mes' | 'famille' | 'communaute'
+
+// Une recette de catégorie boisson ou bouillie n'a pas d'accompagnement au
+// sens culinaire — pas de section à afficher dans ces cas.
+const NO_ASSOCIATIONS_SLUGS = new Set(['boisson', 'bouillie-cereales'])
+
+// Mêmes filtres que le picker de planification (/plan) — cohérence d'UX.
+const ASSOC_SCOPE_OPTIONS: { val: AssocScope; label: string }[] = [
+  { val: 'all',        label: 'Tout'         },
+  { val: 'mes',        label: 'Mes recettes' },
+  { val: 'famille',    label: 'Famille'      },
+  { val: 'communaute',  label: 'Communauté'   },
+]
 
 const VISIBILITY_OPTIONS: { value: VisibilityVal; label: string; sub: string; Icon: React.ElementType }[] = [
   { value: 'private',   label: 'Seulement moi',  sub: 'Visible uniquement par vous',          Icon: Lock  },
@@ -88,7 +103,6 @@ export function RecipeForm({
   const [difficulty,  setDifficulty]  = useState<DifficultyVal | ''>(defaultValues?.difficulty ?? '')
   const [visibility,  setVisibility]  = useState<VisibilityVal>(defaultValues?.visibility ?? 'private')
   const [circleId,    setCircleId]    = useState(defaultValues?.circleId    ?? '')
-  const recipeType = (defaultValues?.recipe_type as RecipeTypeVal | undefined) ?? 'plat_principal'
   const [nameError,    setNameError]    = useState<string | null>(null)
   const [circleError,  setCircleError]  = useState<string | null>(null)
   const [photoFile,    setPhotoFile]    = useState<File | null>(null)
@@ -106,6 +120,21 @@ export function RecipeForm({
   const [categories, setCategories] = useState<Category[]>([])
   const [circles,    setCircles]    = useState<Circle[]>([])
 
+  // ── Accompagnements & boissons suggérés (associations manuelles) ────────
+  const [assocOpen,   setAssocOpen]   = useState(false)
+  const [sideItems,   setSideItems]   = useState<AssocItem[]>([])
+  const [drinkItems,  setDrinkItems]  = useState<AssocItem[]>([])
+  const [assocPicker, setAssocPicker] = useState<'side' | 'drink' | null>(null)
+  const [assocSearch, setAssocSearch] = useState('')
+  const [assocScope,    setAssocScope]    = useState<AssocScope>('all')
+  const [assocCategory, setAssocCategory] = useState<string | null>(null)
+  const [assocResults, setAssocResults] = useState<PickerRecipe[]>([])
+  const [assocLoading, setAssocLoading] = useState(false)
+  const assocSearchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const selectedCategorySlug = categories.find(c => c.id === categoryId)?.slug
+  const hideAssociations = !!selectedCategorySlug && NO_ASSOCIATIONS_SLUGS.has(selectedCategorySlug)
+
   useEffect(() => {
     fetch('/api/categories').then(r => r.json()).then(d => { if (Array.isArray(d)) setCategories(d) }).catch(() => {})
     fetch('/api/circles').then(r => r.json()).then(d => {
@@ -118,6 +147,60 @@ export function RecipeForm({
     setName(v)
     setNameError(null)
     onNameChange?.()
+  }
+
+  function openAssocPicker(mode: 'side' | 'drink') {
+    setAssocPicker(mode)
+    setAssocSearch('')
+    setAssocScope('all')
+    setAssocCategory(null)
+    void searchAssocRecipes('all', null, '')
+  }
+
+  async function searchAssocRecipes(scope: AssocScope, categoryId: string | null, query: string) {
+    setAssocLoading(true)
+    try {
+      const params = new URLSearchParams({ scope })
+      if (categoryId)    params.set('category_id', categoryId)
+      if (query.trim())  params.set('search', query.trim())
+      const res = await fetch(`/api/recipes?${params}`)
+      const data = await res.json()
+      setAssocResults(Array.isArray(data) ? data : [])
+    } catch {
+      setAssocResults([])
+    } finally {
+      setAssocLoading(false)
+    }
+  }
+
+  function handleAssocSearch(value: string) {
+    setAssocSearch(value)
+    if (assocSearchTimerRef.current) clearTimeout(assocSearchTimerRef.current)
+    assocSearchTimerRef.current = setTimeout(() => void searchAssocRecipes(assocScope, assocCategory, value), 300)
+  }
+
+  function handleAssocScopeChange(scope: AssocScope) {
+    setAssocScope(scope)
+    void searchAssocRecipes(scope, assocCategory, assocSearch)
+  }
+
+  function handleAssocCategoryChange(catId: string | null) {
+    setAssocCategory(catId)
+    void searchAssocRecipes(assocScope, catId, assocSearch)
+  }
+
+  function toggleAssocItem(recipe: PickerRecipe) {
+    const setItems = assocPicker === 'side' ? setSideItems : setDrinkItems
+    setItems(prev =>
+      prev.some(i => i.id === recipe.id)
+        ? prev.filter(i => i.id !== recipe.id)
+        : [...prev, { id: recipe.id, name: recipe.name }]
+    )
+  }
+
+  function removeAssocItem(mode: 'side' | 'drink', id: string) {
+    const setItems = mode === 'side' ? setSideItems : setDrinkItems
+    setItems(prev => prev.filter(i => i.id !== id))
   }
 
   function addIngredient()  { setIngredients(p => [...p, { _id: uid(), name: '', quantity: '', unit: '' }]) }
@@ -156,7 +239,9 @@ export function RecipeForm({
 
     await onSubmit({
       name, description, categoryId, prepTime, cookTime, servings, difficulty, visibility, circleId,
-      ingredients, steps, recipe_type: recipeType,
+      ingredients, steps,
+      suggestedSides:  sideItems.map(i => i.id),
+      suggestedDrinks: drinkItems.map(i => i.id),
       photo_url: resolvedPhotoUrl,
       source_url: defaultValues?.source_url,
       raw_html_hash: defaultValues?.raw_html_hash,
@@ -392,6 +477,171 @@ export function RecipeForm({
           <Plus className="h-4 w-4" /> Ajouter une étape
         </button>
       </section>
+
+      {/* ── Accompagnements & boissons suggérés ────────── */}
+      {!hideAssociations && (
+        <section className="space-y-3">
+          <button type="button" onClick={() => setAssocOpen(o => !o)}
+            className="w-full flex items-center justify-between">
+            <span className={SECTION}>Accompagnements & boissons suggérés</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs font-quicksand text-[var(--mf-text-tertiary)]">optionnel</span>
+              <ChevronDown className={`h-4 w-4 text-[var(--mf-text-tertiary)] transition-transform ${assocOpen ? 'rotate-180' : ''}`} />
+            </div>
+          </button>
+
+          {assocOpen && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <p className="text-xs font-quicksand font-semibold text-[var(--mf-text-secondary)]">Accompagnements</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {sideItems.map(item => (
+                    <span key={item.id}
+                      className="flex items-center gap-1 bg-[var(--mf-bg-card)] border border-[var(--mf-border-warm)] rounded-full px-2.5 py-1 text-xs font-quicksand text-[var(--mf-text-primary)]">
+                      {item.name}
+                      <button type="button" onClick={() => removeAssocItem('side', item.id)} aria-label={`Retirer ${item.name}`}>
+                        <X className="h-3 w-3 text-[var(--mf-text-tertiary)] hover:text-red-500" />
+                      </button>
+                    </span>
+                  ))}
+                  <button type="button" onClick={() => openAssocPicker('side')}
+                    className="flex items-center gap-1 border border-dashed border-[var(--mf-primary)]/40 rounded-full px-2.5 py-1 text-xs font-quicksand text-[var(--mf-primary)]">
+                    <Plus className="h-3 w-3" /> Ajouter
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-xs font-quicksand font-semibold text-[var(--mf-text-secondary)]">Boissons</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {drinkItems.map(item => (
+                    <span key={item.id}
+                      className="flex items-center gap-1 bg-[var(--mf-bg-card)] border border-[var(--mf-border-warm)] rounded-full px-2.5 py-1 text-xs font-quicksand text-[var(--mf-text-primary)]">
+                      {item.name}
+                      <button type="button" onClick={() => removeAssocItem('drink', item.id)} aria-label={`Retirer ${item.name}`}>
+                        <X className="h-3 w-3 text-[var(--mf-text-tertiary)] hover:text-red-500" />
+                      </button>
+                    </span>
+                  ))}
+                  <button type="button" onClick={() => openAssocPicker('drink')}
+                    className="flex items-center gap-1 border border-dashed border-[var(--mf-primary)]/40 rounded-full px-2.5 py-1 text-xs font-quicksand text-[var(--mf-primary)]">
+                    <Plus className="h-3 w-3" /> Ajouter
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* ── Feuille de sélection accompagnement/boisson ── */}
+      {assocPicker && (
+        <>
+          <div className="fixed inset-0 z-40 bg-black/30" onClick={() => setAssocPicker(null)} aria-hidden="true" />
+          <div className="fixed bottom-0 left-0 right-0 z-50 bg-[var(--mf-bg-page)] rounded-t-2xl shadow-xl flex flex-col max-h-[75vh]">
+            <div className="flex justify-center pt-2.5 pb-1 flex-shrink-0">
+              <div className="w-10 h-1 rounded-full bg-[var(--mf-border-warm)]" />
+            </div>
+            <div className="flex items-center justify-between px-4 pb-2 flex-shrink-0">
+              <p className="font-dosis font-bold text-base text-[var(--mf-text-primary)]">
+                {assocPicker === 'side' ? 'Choisir un accompagnement' : 'Choisir une boisson'}
+              </p>
+              <button type="button" onClick={() => setAssocPicker(null)} className="p-1.5 -mr-1 text-[var(--mf-text-tertiary)]" aria-label="Fermer">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="px-4 pb-2 flex-shrink-0">
+              <div className="flex items-center gap-2 bg-[var(--mf-bg-card)] border border-[var(--mf-border-warm)] rounded-xl px-3 py-2">
+                <Search className="h-4 w-4 text-[var(--mf-text-tertiary)] flex-shrink-0" />
+                <input type="search" placeholder="Chercher une recette…" aria-label="Chercher une recette" value={assocSearch}
+                  onChange={e => handleAssocSearch(e.target.value)}
+                  className="flex-1 bg-transparent text-sm font-quicksand text-[var(--mf-text-primary)] placeholder:text-[var(--mf-text-tertiary)] outline-none"
+                  autoFocus />
+              </div>
+            </div>
+
+            {/* Pills scope */}
+            <div className="flex gap-1.5 px-4 pb-2 overflow-x-auto scrollbar-hide flex-shrink-0">
+              {ASSOC_SCOPE_OPTIONS.map(opt => (
+                <button
+                  key={opt.val}
+                  type="button"
+                  onClick={() => handleAssocScopeChange(opt.val)}
+                  className={`flex-shrink-0 px-3 py-1 rounded-full text-[11px] font-quicksand font-bold transition-colors ${
+                    assocScope === opt.val
+                      ? 'bg-[var(--mf-primary)] text-white'
+                      : 'bg-[var(--mf-bg-card)] text-[var(--mf-text-secondary)] border border-[var(--mf-border-warm)]'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Pills catégorie */}
+            {categories.length > 0 && (
+              <div className="flex gap-1.5 px-4 pb-2 overflow-x-auto scrollbar-hide flex-shrink-0">
+                <button
+                  type="button"
+                  onClick={() => handleAssocCategoryChange(null)}
+                  className={`flex-shrink-0 px-3 py-1 rounded-full text-[11px] font-quicksand font-bold transition-colors ${
+                    assocCategory === null
+                      ? 'bg-[var(--mf-primary)] text-white'
+                      : 'bg-[var(--mf-bg-card)] text-[var(--mf-text-secondary)] border border-[var(--mf-border-warm)]'
+                  }`}
+                >
+                  Tous
+                </button>
+                {categories.map(cat => (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => handleAssocCategoryChange(cat.id)}
+                    className={`flex-shrink-0 px-3 py-1 rounded-full text-[11px] font-quicksand font-bold transition-colors ${
+                      assocCategory === cat.id
+                        ? 'bg-[var(--mf-primary)] text-white'
+                        : 'bg-[var(--mf-bg-card)] text-[var(--mf-text-secondary)] border border-[var(--mf-border-warm)]'
+                    }`}
+                  >
+                    {cat.icon} {cat.name}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <div className="border-t border-[var(--mf-border-warm)] flex-shrink-0" />
+            <div className="overflow-y-auto flex-1">
+              {assocLoading ? (
+                <div className="flex justify-center py-8">
+                  <span className="text-xs font-quicksand text-[var(--mf-text-tertiary)]">Chargement…</span>
+                </div>
+              ) : assocResults.length === 0 ? (
+                <p className="text-sm font-quicksand text-[var(--mf-text-tertiary)] text-center py-8">Aucune recette trouvée</p>
+              ) : (
+                assocResults.map(recipe => {
+                  const selected = (assocPicker === 'side' ? sideItems : drinkItems).some(i => i.id === recipe.id)
+                  return (
+                    <button key={recipe.id} type="button" onClick={() => toggleAssocItem(recipe)}
+                      className="w-full flex items-center gap-3 px-4 py-3 border-b border-[var(--mf-border-warm)]/40 last:border-0 hover:bg-[var(--mf-bg-card)] transition-colors">
+                      <span className="text-xl flex-shrink-0">{recipe.categories?.icon ?? '🍴'}</span>
+                      <span className="flex-1 min-w-0 text-left text-sm font-quicksand font-medium text-[var(--mf-text-primary)] truncate">
+                        {recipe.name}
+                      </span>
+                      {selected && <X className="h-4 w-4 text-[var(--mf-primary)] flex-shrink-0" />}
+                    </button>
+                  )
+                })
+              )}
+            </div>
+            <div className="p-3 flex-shrink-0">
+              <button type="button" onClick={() => setAssocPicker(null)}
+                className="w-full py-2.5 rounded-xl bg-[var(--mf-primary)] text-white font-quicksand font-semibold text-sm">
+                Terminé
+              </button>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* ── Erreur API + contenu injecté ─────────────── */}
       {apiError && <p className="text-sm text-red-600 font-quicksand px-1">{apiError}</p>}

@@ -17,7 +17,6 @@ interface ApiRecipe {
   visibility: string
   circle_id: string | null
   photo_url: string | null
-  recipe_type?: string
   recipe_ingredients: { id: string; name: string; quantity: number | null; unit: string | null; sort_order: number }[]
   recipe_steps: { id: string; step_number: number; description: string }[]
 }
@@ -60,7 +59,6 @@ export default function RecipeEditPage() {
           difficulty:  (data.difficulty ?? '') as RecipeFormValues['difficulty'],
           visibility:   data.visibility as RecipeFormValues['visibility'],
           circleId:     data.circle_id ?? '',
-          recipe_type:  (data.recipe_type as RecipeFormValues['recipe_type'] | undefined) ?? 'plat_principal',
           photo_url:    data.photo_url ?? undefined,
           ingredients: ingredients.length > 0 ? ingredients : [{ _id: uid(), name: '', quantity: '', unit: '' }],
           steps:       steps.length > 0 ? steps : [{ _id: uid(), description: '' }],
@@ -86,8 +84,9 @@ export default function RecipeEditPage() {
       circle_id:     values.visibility === 'circle' ? values.circleId : null,
       ingredients:   values.ingredients.filter(i => i.name.trim()),
       steps:         values.steps.filter(s => s.description.trim()),
-      recipe_type:   values.recipe_type,
       photo_url:     values.photo_url ?? null,
+      suggested_sides:  values.suggestedSides,
+      suggested_drinks: values.suggestedDrinks,
     }
 
     const res  = await fetch(`/api/recipes/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })

@@ -131,7 +131,7 @@ export async function POST(request: NextRequest) {
 
   const { data: accessibleRecipes } = await service
     .from('recipes')
-    .select('id, recipe_type')
+    .select('id, categories(slug)')
     .or(orFilter)
   mark = lap('5-circles+accessibleRecipes', mark)
 
@@ -142,25 +142,50 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  // Répartir par type
-  const recipeTypeMap = new Map<string, string>()
-  const mainPool: string[] = []    // plat_principal | sauce
-  const sidePool: string[] = []    // accompagnement
-  const drinkPool: string[] = []   // boisson
+  // Répartir par catégorie : une boisson ne peut pas être un plat principal,
+  // tout le reste peut l'être (recipe_type est supprimé — l'accompagnement
+  // n'est plus une propriété de la recette mais une relation apprise,
+  // voir recipe_associations ci-dessous)
+  const mainPool: string[]  = []
+  const drinkPool: string[] = []
 
   for (const r of accessibleRecipes) {
-    const t = r.recipe_type ?? 'plat_principal'
-    recipeTypeMap.set(r.id, t)
-    if (t === 'plat_principal' || t === 'sauce') mainPool.push(r.id)
-    else if (t === 'accompagnement') sidePool.push(r.id)
-    else if (t === 'boisson') drinkPool.push(r.id)
+    if (r.categories?.slug === 'boisson') drinkPool.push(r.id)
+    else mainPool.push(r.id)
   }
 
   if (mainPool.length === 0) {
     return Response.json(
-      { error: 'Aucun plat principal disponible. Ajoutez des recettes de type "Plat principal" ou "Sauce".' },
+      { error: 'Aucun plat principal disponible. Ajoutez des recettes à votre carnet d\'abord.' },
       { status: 422 }
     )
+  }
+
+  // Associations apprises (side/drink) pour les plats du mainPool — une seule
+  // requête groupée plutôt qu'une par plat choisi. Le score combine fréquence
+  // personnelle (x2) et communautaire, calculé ici en JS avec le vrai user.id
+  // du côté serveur — pas via recipe_association_suggestions() qui repose sur
+  // auth.uid(), non résolu quand on appelle en service role.
+  const { data: assocRows } = await service
+    .from('recipe_associations')
+    .select('recipe_id, associated_recipe_id, role, frequency, user_id')
+    .in('recipe_id', mainPool)
+  mark = lap('5b-recipeAssociations', mark)
+
+  const sideScoresByMain  = new Map<string, Map<string, number>>()
+  const drinkScoresByMain = new Map<string, Map<string, number>>()
+
+  for (const row of assocRows ?? []) {
+    const byMain = row.role === 'side' ? sideScoresByMain : drinkScoresByMain
+    if (!byMain.has(row.recipe_id)) byMain.set(row.recipe_id, new Map())
+    const scores = byMain.get(row.recipe_id)!
+    const weight = row.user_id === user.id ? row.frequency * 2 : row.frequency
+    scores.set(row.associated_recipe_id, (scores.get(row.associated_recipe_id) ?? 0) + weight)
+  }
+
+  function topCandidates(scores: Map<string, number> | undefined, limit = 5): string[] {
+    if (!scores?.size) return []
+    return Array.from(scores.entries()).sort((a, b) => b[1] - a[1]).slice(0, limit).map(([id]) => id)
   }
 
   const usedIds      = new Set<string>(lockedRecipeIds)
@@ -182,9 +207,9 @@ export async function POST(request: NextRequest) {
   }
 
   type CompositionPlan = {
-    item_idx:  number
-    role:      'side' | 'drink'
-    recipe_id: string
+    item_idx:   number
+    role:       'side' | 'drink'
+    recipe_id:  string
     sort_order: number
   }
 
@@ -193,21 +218,30 @@ export async function POST(request: NextRequest) {
   const mealsDrink = new Set(['dejeuner', 'diner'])
 
   function planCompositions(itemIdx: number, mainRecipeId: string, mealType: string) {
-    const rt = recipeTypeMap.get(mainRecipeId) ?? 'plat_principal'
-
-    if (rt === 'sauce' && sidePool.length > 0) {
-      const sideId = pickRandom(sidePool, usedSideIds)
+    // Accompagnement : uniquement si des associations existent déjà pour ce
+    // plat précis — pas de repli sur une pioche générique. Un plat neuf sans
+    // historique reste seul ce jour-là plutôt que de recevoir une suggestion
+    // sans signal ; ça se corrige dès la première association réelle.
+    const sideCandidates = topCandidates(sideScoresByMain.get(mainRecipeId))
+    if (sideCandidates.length > 0) {
+      const sideId = pickRandom(sideCandidates, usedSideIds)
       if (sideId) {
         usedSideIds.add(sideId)
         compositionPlans.push({ item_idx: itemIdx, role: 'side', recipe_id: sideId, sort_order: 0 })
       }
     }
 
-    if (mealsDrink.has(mealType) && drinkPool.length > 0 && Math.random() < 0.6) {
-      const drinkId = pickRandom(drinkPool, usedDrinkIds)
-      if (drinkId) {
-        usedDrinkIds.add(drinkId)
-        compositionPlans.push({ item_idx: itemIdx, role: 'drink', recipe_id: drinkId, sort_order: 1 })
+    if (mealsDrink.has(mealType) && Math.random() < 0.6) {
+      // Boisson : personnalisée si on a du signal pour ce plat, sinon repli
+      // sur la pioche aléatoire par catégorie (comportement historique).
+      const drinkCandidates = topCandidates(drinkScoresByMain.get(mainRecipeId))
+      const pool = drinkCandidates.length > 0 ? drinkCandidates : drinkPool
+      if (pool.length > 0) {
+        const drinkId = pickRandom(pool, usedDrinkIds)
+        if (drinkId) {
+          usedDrinkIds.add(drinkId)
+          compositionPlans.push({ item_idx: itemIdx, role: 'drink', recipe_id: drinkId, sort_order: 1 })
+        }
       }
     }
   }
@@ -277,6 +311,11 @@ export async function POST(request: NextRequest) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await service.from('meal_compositions').insert(compositionsToInsert as any)
       }
+      // Apprentissage : volontairement pas ici. Un plan peut être régénéré
+      // plusieurs fois avant validation — apprendre à chaque génération
+      // compterait des paires jamais confirmées par l'utilisatrice. Voir
+      // app/api/meal-plans/[id]/validate/route.ts, qui apprend depuis
+      // l'état final au moment de la validation du menu.
     }
   }
   lap('7-insertItems+compositions', mark)
