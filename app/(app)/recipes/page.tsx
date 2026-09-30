@@ -94,14 +94,14 @@ export default function RecipesPage() {
 
       {/* Recherche */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--mf-text-tertiary)]" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--kkb-text-tertiary)]" />
         <input
           type="search"
           placeholder="Chercher une recette…"
           aria-label="Chercher une recette"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[var(--mf-border-warm)] bg-[var(--mf-bg-card-alt)] text-sm font-quicksand text-[var(--mf-text-primary)] placeholder:text-[var(--mf-text-tertiary)] focus:outline-none focus:border-[var(--mf-primary)]"
+          className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[var(--kkb-border)] bg-[var(--kkb-surface)] text-sm font-quicksand text-[var(--kkb-text-primary)] placeholder:text-[var(--kkb-text-tertiary)] focus:outline-none focus:border-[var(--kkb-coral)]"
         />
       </div>
 
@@ -114,8 +114,8 @@ export default function RecipesPage() {
             onClick={() => setScope(s.value)}
             className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-quicksand font-medium transition-colors ${
               scope === s.value
-                ? 'bg-[var(--mf-primary)] text-white'
-                : 'bg-white border border-[var(--mf-border-warm)] text-[var(--mf-text-secondary)]'
+                ? 'bg-[var(--kkb-coral)] text-white'
+                : 'bg-white border border-[var(--kkb-border)] text-[var(--kkb-text-secondary)]'
             }`}
           >
             {s.label}
@@ -131,8 +131,8 @@ export default function RecipesPage() {
             onClick={() => setSelectedCategory(null)}
             className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-quicksand font-medium transition-colors ${
               !selectedCategory
-                ? 'bg-[var(--mf-text-primary)] text-white'
-                : 'bg-white border border-[var(--mf-border-warm)] text-[var(--mf-text-secondary)]'
+                ? 'bg-[var(--kkb-text-primary)] text-white'
+                : 'bg-white border border-[var(--kkb-border)] text-[var(--kkb-text-secondary)]'
             }`}
           >
             Tous types
@@ -144,8 +144,8 @@ export default function RecipesPage() {
               onClick={() => setSelectedCategory(selectedCategory === cat.id ? null : cat.id)}
               className={`flex-shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-quicksand font-medium transition-colors ${
                 selectedCategory === cat.id
-                  ? 'bg-[var(--mf-text-primary)] text-white'
-                  : 'bg-white border border-[var(--mf-border-warm)] text-[var(--mf-text-secondary)]'
+                  ? 'bg-[var(--kkb-text-primary)] text-white'
+                  : 'bg-white border border-[var(--kkb-border)] text-[var(--kkb-text-secondary)]'
               }`}
             >
               {cat.icon} {cat.name}
@@ -156,11 +156,11 @@ export default function RecipesPage() {
 
       {/* Titre + compteur */}
       <div className="flex items-baseline justify-between">
-        <h1 className="font-dosis font-bold text-xl text-[var(--mf-text-primary)]">
+        <h1 className="font-dosis font-bold text-xl text-[var(--kkb-text-primary)]">
           Livre de recettes
         </h1>
         {!loading && (
-          <span className="text-xs text-[var(--mf-text-tertiary)] font-quicksand">
+          <span className="text-xs text-[var(--kkb-text-tertiary)] font-quicksand">
             {recipes.length} recette{recipes.length !== 1 ? 's' : ''}
           </span>
         )}
@@ -172,7 +172,7 @@ export default function RecipesPage() {
           <button
             type="button"
             onClick={() => { setError(null); setSearch('') }}
-            className="text-xs text-[var(--mf-primary)] underline font-quicksand"
+            className="text-xs text-[var(--kkb-coral)] underline font-quicksand"
           >
             Réessayer
           </button>
@@ -181,13 +181,13 @@ export default function RecipesPage() {
 
       {loading && (
         <div className="flex justify-center py-12">
-          <p className="text-sm text-[var(--mf-text-tertiary)] font-quicksand">Chargement…</p>
+          <p className="text-sm text-[var(--kkb-text-tertiary)] font-quicksand">Chargement…</p>
         </div>
       )}
 
       {!loading && !error && recipes.length === 0 && (
         <div className="text-center py-12">
-          <p className="text-sm text-[var(--mf-text-tertiary)] font-quicksand">
+          <p className="text-sm text-[var(--kkb-text-tertiary)] font-quicksand">
             Aucune recette trouvée.
           </p>
         </div>
@@ -201,10 +201,10 @@ export default function RecipesPage() {
               key={recipe.id}
               type="button"
               onClick={() => router.push(`/recipes/${recipe.id}`)}
-              className="text-left rounded-xl overflow-hidden border border-[var(--mf-border-warm)] bg-white shadow-sm active:scale-95 transition-transform"
+              className="text-left rounded-xl overflow-hidden border border-[var(--kkb-border)] bg-white shadow-sm active:scale-95 transition-transform"
             >
               {/* En-tête avec emoji catégorie */}
-              <div className="relative h-24 flex items-center justify-center bg-[linear-gradient(135deg,_var(--mf-primary),_var(--mf-primary-hover))]">
+              <div className="relative h-24 flex items-center justify-center bg-[linear-gradient(135deg,_var(--kkb-coral),_var(--kkb-coral-hover))]">
                 <span className="text-4xl select-none" aria-hidden="true">
                   {recipe.categories?.icon ?? '🍴'}
                 </span>
@@ -231,11 +231,11 @@ export default function RecipesPage() {
 
               {/* Corps carte */}
               <div className="p-2.5 space-y-1">
-                <p className="font-dosis font-semibold text-sm text-[var(--mf-text-primary)] line-clamp-2 leading-tight">
+                <p className="font-dosis font-semibold text-sm text-[var(--kkb-text-primary)] line-clamp-2 leading-tight">
                   {recipe.name}
                 </p>
                 {recipe.categories && (
-                  <span className="inline-block text-[10px] font-quicksand font-medium px-1.5 py-0.5 rounded-full bg-[var(--mf-bg-card)] text-[var(--mf-text-secondary)]">
+                  <span className="inline-block text-[10px] font-quicksand font-medium px-1.5 py-0.5 rounded-full bg-[var(--kkb-coral-light)] text-[var(--kkb-text-secondary)]">
                     {recipe.categories.name}
                   </span>
                 )}
@@ -250,7 +250,7 @@ export default function RecipesPage() {
       <button
         type="button"
         onClick={() => router.push('/recipes/add')}
-        className="fixed bottom-20 right-4 w-12 h-12 rounded-full bg-[var(--mf-primary)] text-white flex items-center justify-center shadow-lg hover:bg-[var(--mf-primary-hover)] active:scale-95 transition-all z-40"
+        className="fixed bottom-20 right-4 w-12 h-12 rounded-full bg-[var(--kkb-coral)] text-white flex items-center justify-center shadow-lg hover:bg-[var(--kkb-coral-hover)] active:scale-95 transition-all z-40"
         aria-label="Ajouter une recette"
       >
         <Plus className="h-5 w-5" />

@@ -100,7 +100,7 @@ export default function RecipeEditPage() {
   if (initialLoading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <p className="text-sm text-[var(--mf-text-tertiary)] font-quicksand">Chargement…</p>
+        <p className="text-sm text-[var(--kkb-text-tertiary)] font-quicksand">Chargement…</p>
       </div>
     )
   }
@@ -110,7 +110,7 @@ export default function RecipeEditPage() {
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 px-4">
         <p className="text-sm text-red-600 font-quicksand text-center">{initError}</p>
         <button type="button" onClick={() => router.back()}
-          className="text-xs text-[var(--mf-primary)] underline font-quicksand">
+          className="text-xs text-[var(--kkb-coral)] underline font-quicksand">
           Retour
         </button>
       </div>
@@ -120,12 +120,12 @@ export default function RecipeEditPage() {
   return (
     <>
       {/* Sub-header */}
-      <div className="sticky top-14 z-30 bg-[var(--mf-bg-page)] border-b border-[var(--mf-border-warm)] px-4 h-10 flex items-center gap-2.5">
+      <div className="sticky top-14 z-30 bg-[var(--kkb-bg)] border-b border-[var(--kkb-border)] px-4 h-10 flex items-center gap-2.5">
         <button type="button" onClick={() => router.back()}
-          className="p-1 -ml-1 text-[var(--mf-text-secondary)] hover:text-[var(--mf-primary)]" aria-label="Retour">
+          className="p-1 -ml-1 text-[var(--kkb-text-secondary)] hover:text-[var(--kkb-coral)]" aria-label="Retour">
           <ArrowLeft className="h-4 w-4" />
         </button>
-        <p className="font-dosis font-semibold text-sm text-[var(--mf-text-primary)]">Modifier la recette</p>
+        <p className="font-dosis font-semibold text-sm text-[var(--kkb-text-primary)]">Modifier la recette</p>
       </div>
 
       <RecipeForm

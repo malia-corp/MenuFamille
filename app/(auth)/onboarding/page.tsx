@@ -47,7 +47,7 @@ export default function OnboardingPage() {
 
         <div className="space-y-3">
           <Button
-            className="w-full bg-terracotta hover:bg-terracotta/90 text-white"
+            className="w-full bg-[var(--kkb-coral)] hover:bg-[var(--kkb-coral-hover)]/90 text-white"
             onClick={() => router.push('/circle/create')}
           >
             <Users className="mr-2 h-4 w-4" />
@@ -56,7 +56,7 @@ export default function OnboardingPage() {
 
           <Button
             variant="outline"
-            className="w-full border-terracotta text-terracotta hover:bg-terracotta/5"
+            className="w-full border-[var(--kkb-coral)] text-[var(--kkb-coral)] hover:bg-[var(--kkb-coral-hover)]/5"
             onClick={() => router.push('/circle/join')}
           >
             <Key className="mr-2 h-4 w-4" />
@@ -80,7 +80,7 @@ export default function OnboardingPage() {
     <div className="space-y-6">
       <div className="text-center space-y-2">
         <div className="flex justify-center">
-          <User className="h-10 w-10 text-terracotta" />
+          <User className="h-10 w-10 text-[var(--kkb-coral)]" />
         </div>
         <h1 className="text-xl font-bold text-gray-900">Crée ton profil</h1>
         <p className="text-sm text-gray-500">Quelques infos pour personnaliser tes menus</p>
@@ -120,7 +120,7 @@ export default function OnboardingPage() {
 
         <Button
           type="submit"
-          className="w-full bg-terracotta hover:bg-terracotta/90 text-white"
+          className="w-full bg-[var(--kkb-coral)] hover:bg-[var(--kkb-coral-hover)]/90 text-white"
           disabled={saving}
         >
           {saving ? 'Enregistrement…' : 'Continuer'}

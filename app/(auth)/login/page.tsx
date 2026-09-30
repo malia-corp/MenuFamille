@@ -124,28 +124,28 @@ export default function LoginPage() {
     return (
       <div className="space-y-6 text-center">
         <div className="flex justify-center">
-          <MailCheck className="h-12 w-12 text-terracotta" />
+          <MailCheck className="h-12 w-12 text-[var(--kkb-coral)]" />
         </div>
 
         <div className="space-y-1">
-          <h1 className="font-dosis font-bold text-2xl text-[#2C1810]">
+          <h1 className="font-dosis font-bold text-2xl text-[var(--kkb-text-primary)]">
             Vérifiez votre boîte mail
           </h1>
-          <p className="text-sm text-[#5A4A43]">
+          <p className="text-sm text-[var(--kkb-text-secondary)]">
             Email envoyé à{' '}
-            <span className="font-semibold text-[#2C1810]">{email}</span>
+            <span className="font-semibold text-[var(--kkb-text-primary)]">{email}</span>
           </p>
         </div>
 
         {/* Sélecteur de mode */}
-        <div className="flex rounded-xl border border-[#E8C99A] overflow-hidden">
+        <div className="flex rounded-xl border border-[var(--kkb-border)] overflow-hidden">
           <button
             type="button"
             onClick={() => { setAuthMode('code'); setError(null) }}
             className={`flex-1 py-2.5 text-sm font-quicksand font-medium transition-colors ${
               authMode === 'code'
-                ? 'bg-terracotta text-white'
-                : 'bg-white text-[#5A4A43] hover:bg-[#FDF6EE]'
+                ? 'bg-[var(--kkb-coral)] text-white'
+                : 'bg-white text-[var(--kkb-text-secondary)] hover:bg-[var(--kkb-bg)]'
             }`}
           >
             Saisir le code
@@ -155,8 +155,8 @@ export default function LoginPage() {
             onClick={() => { setAuthMode('link'); setError(null) }}
             className={`flex-1 py-2.5 text-sm font-quicksand font-medium transition-colors ${
               authMode === 'link'
-                ? 'bg-terracotta text-white'
-                : 'bg-white text-[#5A4A43] hover:bg-[#FDF6EE]'
+                ? 'bg-[var(--kkb-coral)] text-white'
+                : 'bg-white text-[var(--kkb-text-secondary)] hover:bg-[var(--kkb-bg)]'
             }`}
           >
             Utiliser le lien
@@ -178,7 +178,7 @@ export default function LoginPage() {
                   onChange={(e) => handleDigitChange(i, e.target.value)}
                   onKeyDown={(e) => handleDigitKeyDown(i, e)}
                   disabled={state === 'verifying'}
-                  className="w-10 h-12 text-center text-xl font-semibold border-2 border-[#E8C99A] rounded-lg bg-white focus:border-terracotta focus:outline-none disabled:opacity-50"
+                  className="w-10 h-12 text-center text-xl font-semibold border-2 border-[var(--kkb-border)] rounded-lg bg-white focus:border-[var(--kkb-coral-hover)] focus:outline-none disabled:opacity-50"
                 />
               ))}
             </div>
@@ -187,21 +187,21 @@ export default function LoginPage() {
 
             <Button
               type="submit"
-              className="w-full bg-terracotta hover:bg-[#C74E21] text-white font-quicksand"
+              className="w-full bg-[var(--kkb-coral)] hover:bg-[var(--kkb-coral-hover)] text-white font-quicksand"
               disabled={state === 'verifying'}
             >
               <ShieldCheck className="mr-2 h-4 w-4" />
               {state === 'verifying' ? 'Vérification…' : 'Valider le code'}
             </Button>
 
-            <div className="text-sm text-[#8c7169]">
+            <div className="text-sm text-[var(--kkb-text-tertiary)]">
               {countdown > 0 ? (
                 <span>Renvoyer dans {countdown}s</span>
               ) : (
                 <button
                   type="button"
                   onClick={handleResend}
-                  className="text-terracotta underline hover:no-underline"
+                  className="text-[var(--kkb-coral)] underline hover:no-underline"
                 >
                   Renvoyer le code
                 </button>
@@ -210,23 +210,23 @@ export default function LoginPage() {
           </form>
         ) : (
           <div className="space-y-4 py-2">
-            <div className="bg-[#FCEEE6] rounded-xl p-4 space-y-2">
-              <ExternalLink className="h-6 w-6 text-terracotta mx-auto" />
-              <p className="text-sm text-[#5A4A43] font-quicksand">
+            <div className="bg-[var(--kkb-coral-light)] rounded-xl p-4 space-y-2">
+              <ExternalLink className="h-6 w-6 text-[var(--kkb-coral)] mx-auto" />
+              <p className="text-sm text-[var(--kkb-text-secondary)] font-quicksand">
                 Cliquez sur le lien dans votre email pour vous connecter automatiquement.
               </p>
-              <p className="text-xs text-[#8c7169] font-quicksand">
+              <p className="text-xs text-[var(--kkb-text-tertiary)] font-quicksand">
                 Le lien est valable 60 minutes.
               </p>
             </div>
-            <div className="text-sm text-[#8c7169]">
+            <div className="text-sm text-[var(--kkb-text-tertiary)]">
               {countdown > 0 ? (
                 <span>Renvoyer dans {countdown}s</span>
               ) : (
                 <button
                   type="button"
                   onClick={handleResend}
-                  className="text-terracotta underline hover:no-underline"
+                  className="text-[var(--kkb-coral)] underline hover:no-underline"
                 >
                   Renvoyer l&apos;email
                 </button>
@@ -238,7 +238,7 @@ export default function LoginPage() {
         <button
           type="button"
           onClick={() => { setState('idle'); setDigits(['', '', '', '', '', '']); setError(null); setAuthMode('code') }}
-          className="text-xs text-[#8c7169] underline"
+          className="text-xs text-[var(--kkb-text-tertiary)] underline"
         >
           Utiliser une autre adresse
         </button>
@@ -252,11 +252,11 @@ export default function LoginPage() {
       {/* Logo */}
       <div className="text-center space-y-1">
         <div className="flex items-center justify-center gap-2 mb-2">
-          <UtensilsCrossed className="h-8 w-8 text-terracotta" />
-          <span className="font-dosis font-bold text-2xl text-terracotta">MenuFamille</span>
+          <UtensilsCrossed className="h-8 w-8 text-[var(--kkb-coral)]" />
+          <span className="font-dosis font-bold text-2xl text-[var(--kkb-coral)]">KeskonBouf</span>
         </div>
-        <h1 className="font-dosis font-bold text-2xl text-[#2C1810]">La table de famille</h1>
-        <p className="text-sm text-[#5A4A43]">
+        <h1 className="font-dosis font-bold text-2xl text-[var(--kkb-text-primary)]">La table de famille</h1>
+        <p className="text-sm text-[var(--kkb-text-secondary)]">
           Rejoignez la table.<br />
           Commencez à planifier vos repas familiaux.
         </p>
@@ -267,12 +267,12 @@ export default function LoginPage() {
         <div className="space-y-1">
           <label
             htmlFor="email"
-            className="block text-xs font-semibold tracking-widest uppercase text-[#5A4A43] font-quicksand"
+            className="block text-xs font-semibold tracking-widest uppercase text-[var(--kkb-text-secondary)] font-quicksand"
           >
             Adresse email
           </label>
           <div className="relative">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#8c7169]" />
+            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--kkb-text-tertiary)]" />
             <Input
               id="email"
               type="email"
@@ -281,7 +281,7 @@ export default function LoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               required
               disabled={state === 'sending'}
-              className="pl-9 border-[#E8C99A] focus:border-terracotta bg-white"
+              className="pl-9 border-[var(--kkb-border)] focus:border-[var(--kkb-coral-hover)] bg-white"
             />
           </div>
         </div>
@@ -290,7 +290,7 @@ export default function LoginPage() {
 
         <Button
           type="submit"
-          className="w-full bg-terracotta hover:bg-[#C74E21] text-white font-quicksand"
+          className="w-full bg-[var(--kkb-coral)] hover:bg-[var(--kkb-coral-hover)] text-white font-quicksand"
           disabled={state === 'sending'}
         >
           {state === 'sending' ? 'Envoi en cours…' : (
@@ -304,22 +304,22 @@ export default function LoginPage() {
 
       {/* Séparateur */}
       <div className="flex items-center gap-3">
-        <div className="flex-1 h-px bg-[#E8C99A]" />
-        <span className="text-xs text-[#8c7169] font-quicksand">OU CONTINUER VIA</span>
-        <div className="flex-1 h-px bg-[#E8C99A]" />
+        <div className="flex-1 h-px bg-[var(--kkb-border)]" />
+        <span className="text-xs text-[var(--kkb-text-tertiary)] font-quicksand">OU CONTINUER VIA</span>
+        <div className="flex-1 h-px bg-[var(--kkb-border)]" />
       </div>
 
       {/* Boutons stub OAuth */}
       <div className="space-y-2">
         {stubToast && (
-          <p className="text-center text-xs text-[#5A4A43] bg-[#FEF3E0] border border-[#E8C99A] rounded-lg px-3 py-2">
+          <p className="text-center text-xs text-[var(--kkb-text-secondary)] bg-[var(--kkb-warning-light)] border border-[var(--kkb-border)] rounded-lg px-3 py-2">
             Bientôt disponible
           </p>
         )}
         <Button
           type="button"
           variant="outline"
-          className="w-full border-[#E8C99A] text-[#5A4A43] hover:bg-[#FDF6EE] font-quicksand"
+          className="w-full border-[var(--kkb-border)] text-[var(--kkb-text-secondary)] hover:bg-[var(--kkb-bg)] font-quicksand"
           onClick={() => setStubToast(true)}
         >
           <Globe className="mr-2 h-4 w-4" />
@@ -328,7 +328,7 @@ export default function LoginPage() {
         <Button
           type="button"
           variant="outline"
-          className="w-full border-[#E8C99A] text-[#5A4A43] hover:bg-[#FDF6EE] font-quicksand"
+          className="w-full border-[var(--kkb-border)] text-[var(--kkb-text-secondary)] hover:bg-[var(--kkb-bg)] font-quicksand"
           onClick={() => setStubToast(true)}
         >
           <Globe className="mr-2 h-4 w-4" />
@@ -337,9 +337,9 @@ export default function LoginPage() {
       </div>
 
       {/* Lien bas */}
-      <p className="text-center text-sm text-[#8c7169]">
+      <p className="text-center text-sm text-[var(--kkb-text-tertiary)]">
         Déjà un compte ?{' '}
-        <span className="font-semibold text-terracotta">Se connecter</span>
+        <span className="font-semibold text-[var(--kkb-coral)]">Se connecter</span>
       </p>
     </div>
   )

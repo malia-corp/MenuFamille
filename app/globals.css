@@ -55,23 +55,6 @@
 
     --kkb-shadow-card: 0 2px 12px rgba(22,25,26,0.07);
     --kkb-shadow-fab:  0 4px 20px rgba(242,102,74,0.35);
-
-    /* MenuFamille tokens — conserves jusqu'au sweep de rebrand (feat/keskonbouf-rebrand-sweep),
-       pour ne pas casser les pages qui les referencent encore entre les branches. */
-    --mf-primary:        #B0461C;
-    --mf-primary-hover:  #C74E21;
-    --mf-border-warm:    #E8C99A;
-    --mf-bg-page:        #FDF6EE;
-    --mf-bg-card:        #FCEEE6;
-    --mf-bg-card-alt:    #FFF8F6;
-    --mf-text-primary:   #2C1810;
-    --mf-text-secondary: #5A4A43;
-    --mf-text-tertiary:  #7A6158;
-    --mf-green:          #2A7D4F;
-    --mf-green-bg:       #EAF5EE;
-    --mf-gold:           #F5A623;
-    --mf-gold-text:      #8A5C0A;
-    --mf-gold-bg:        #FEF3E0;
   }
 
   .dark {

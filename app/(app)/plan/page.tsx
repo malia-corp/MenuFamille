@@ -24,10 +24,10 @@ import {
   X,
 } from 'lucide-react'
 import { composedName } from '@/lib/utils/composed-name'
+import { MEAL_LABEL, MEAL_EMOJI, type MealType } from '@/lib/constants/meal-type'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type MealType  = 'petit_dejeuner' | 'dejeuner' | 'gouter' | 'diner'
 type DayOfWeek = 'lundi' | 'mardi' | 'mercredi' | 'jeudi' | 'vendredi' | 'samedi' | 'dimanche'
 type ViewState = 'loading' | 'generating' | 'review'
 type Scope     = 'all' | 'mes' | 'famille' | 'communaute'
@@ -130,20 +130,6 @@ const DAY_OPTIONS: { val: DayOfWeek; label: string; full: string }[] = [
   { val: 'dimanche', label: 'Dim', full: 'Dimanche' },
 ]
 
-const MEAL_LABEL: Record<MealType, string> = {
-  petit_dejeuner: 'Petit-déj.',
-  dejeuner:       'Déjeuner',
-  gouter:         'Goûter',
-  diner:          'Dîner',
-}
-
-const MEAL_EMOJI: Record<MealType, string> = {
-  petit_dejeuner: '🌅',
-  dejeuner:       '🍽',
-  gouter:         '🧁',
-  diner:          '🌙',
-}
-
 const SCOPE_OPTIONS: { val: Scope; label: string }[] = [
   { val: 'all',        label: 'Tout'         },
   { val: 'mes',        label: 'Mes recettes' },
@@ -198,7 +184,8 @@ export default function PlanPage() {
   const [modCount,     setModCount]     = useState(0)
   const [sessionTime,  setSessionTime]  = useState(0)
   const [selectedWeek, setSelectedWeek] = useState(getMondayISO())
-  const sessionStartRef = useRef<number | null>(null)
+  const sessionStartRef  = useRef<number | null>(null)
+  const autoGenTriggered = useRef(false)
 
   // ── Edit bottom sheet ─────────────────────────────────────────────────────
   const [editTarget,              setEditTarget]              = useState<EditTarget | null>(null)
@@ -294,6 +281,25 @@ export default function PlanPage() {
       setViewState('review')
     }
   }
+
+  // ── Déclenchement depuis le FAB (composant global de layout) ─────────────
+  // Depuis une autre route : navigation vers /plan?generate=1, consommé ici.
+  // Depuis /plan : événement direct, pas de state/contexte partagé.
+
+  useEffect(() => {
+    if (autoGenTriggered.current || viewState !== 'review') return
+    if (typeof window === 'undefined') return
+    if (new URLSearchParams(window.location.search).get('generate') !== '1') return
+    autoGenTriggered.current = true
+    router.replace('/plan')
+    void generateMenu()
+  }, [viewState]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    function onGenerateEvent() { void generateMenu() }
+    window.addEventListener('kkb:generate-week', onGenerateEvent)
+    return () => window.removeEventListener('kkb:generate-week', onGenerateEvent)
+  }) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Chrono de session ─────────────────────────────────────────────────────
 
@@ -574,17 +580,17 @@ export default function PlanPage() {
   return (
     <>
       {/* Sous-header : navigation semaine */}
-      <div className="sticky top-14 z-30 bg-[var(--mf-bg-page)] border-b border-[var(--mf-border-warm)] px-4 h-10 flex items-center justify-between">
+      <div className="sticky top-14 z-30 bg-[var(--kkb-bg)] border-b border-[var(--kkb-border)] px-4 h-10 flex items-center justify-between">
         <button
           type="button"
           onClick={goToPrevWeek}
-          className="p-1.5 text-[var(--mf-text-secondary)] hover:text-[var(--mf-primary)] transition-colors"
+          className="p-1.5 text-[var(--kkb-text-secondary)] hover:text-[var(--kkb-coral)] transition-colors"
           aria-label="Semaine précédente"
         >
           <ChevronLeft className="h-4 w-4" />
         </button>
 
-        <p className="font-quicksand text-xs font-semibold text-[var(--mf-text-secondary)]">
+        <p className="font-quicksand text-xs font-semibold text-[var(--kkb-text-secondary)]">
           {formatWeekRange(selectedWeek)}
         </p>
 
@@ -592,7 +598,7 @@ export default function PlanPage() {
           <button
             type="button"
             onClick={goToNextWeek}
-            className="p-1.5 text-[var(--mf-text-secondary)] hover:text-[var(--mf-primary)] transition-colors"
+            className="p-1.5 text-[var(--kkb-text-secondary)] hover:text-[var(--kkb-coral)] transition-colors"
             aria-label="Semaine suivante"
           >
             <ChevronRight className="h-4 w-4" />
@@ -600,7 +606,7 @@ export default function PlanPage() {
           <button
             type="button"
             onClick={() => router.push('/plan/configure')}
-            className="p-1.5 text-[var(--mf-text-secondary)] hover:text-[var(--mf-primary)] transition-colors"
+            className="p-1.5 text-[var(--kkb-text-secondary)] hover:text-[var(--kkb-coral)] transition-colors"
             aria-label="Configurer les repas"
           >
             <Settings className="h-4 w-4" />
@@ -609,33 +615,33 @@ export default function PlanPage() {
       </div>
 
       {/* Stepper */}
-      <div className="bg-[var(--mf-bg-page)] border-b border-[var(--mf-border-warm)] px-4 py-2.5">
+      <div className="bg-[var(--kkb-bg)] border-b border-[var(--kkb-border)] px-4 py-2.5">
         <div className="flex items-center justify-center gap-1.5">
           <button
             type="button"
             onClick={() => router.push('/plan/configure')}
             className="flex items-center gap-1.5 group"
           >
-            <div className="w-5 h-5 rounded-full bg-[var(--mf-green)] flex items-center justify-center">
+            <div className="w-5 h-5 rounded-full bg-[var(--kkb-success)] flex items-center justify-center">
               <span className="text-white text-[10px] font-bold">✓</span>
             </div>
-            <span className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--mf-text-tertiary)] group-hover:text-[var(--mf-primary)] transition-colors">
+            <span className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--kkb-text-tertiary)] group-hover:text-[var(--kkb-coral)] transition-colors">
               Configurer
             </span>
           </button>
 
-          <ChevronRight className="h-3 w-3 text-[var(--mf-border-warm)]" />
+          <ChevronRight className="h-3 w-3 text-[var(--kkb-border)]" />
 
           <div className="flex items-center gap-1.5">
-            <div className="w-5 h-5 rounded-full bg-[var(--mf-primary)] flex items-center justify-center">
+            <div className="w-5 h-5 rounded-full bg-[var(--kkb-coral)] flex items-center justify-center">
               <span className="text-white text-[10px] font-bold">2</span>
             </div>
-            <span className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--mf-primary)]">
+            <span className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--kkb-coral)]">
               Choisir
             </span>
           </div>
 
-          <ChevronRight className="h-3 w-3 text-[var(--mf-border-warm)]" />
+          <ChevronRight className="h-3 w-3 text-[var(--kkb-border)]" />
 
           {plan && plan.meal_plan_items.length > 0 ? (
             <button
@@ -645,27 +651,27 @@ export default function PlanPage() {
             >
               <div className={`w-5 h-5 rounded-full flex items-center justify-center transition-colors ${
                 plan.status === 'finalized' || plan.status === 'shared'
-                  ? 'bg-[var(--mf-green)]'
-                  : 'bg-[var(--mf-border-warm)] group-hover:bg-[var(--mf-primary)]/20'
+                  ? 'bg-[var(--kkb-success)]'
+                  : 'bg-[var(--kkb-border)] group-hover:bg-[var(--kkb-coral)]/20'
               }`}>
                 <span className={`text-[10px] font-bold ${
                   plan.status === 'finalized' || plan.status === 'shared'
                     ? 'text-white'
-                    : 'text-[var(--mf-text-tertiary)] group-hover:text-[var(--mf-primary)]'
+                    : 'text-[var(--kkb-text-tertiary)] group-hover:text-[var(--kkb-coral)]'
                 }`}>
                   {plan.status === 'finalized' || plan.status === 'shared' ? '✓' : '3'}
                 </span>
               </div>
-              <span className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--mf-text-tertiary)] group-hover:text-[var(--mf-primary)] transition-colors">
+              <span className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--kkb-text-tertiary)] group-hover:text-[var(--kkb-coral)] transition-colors">
                 Valider
               </span>
             </button>
           ) : (
             <div className="flex items-center gap-1.5 opacity-40">
-              <div className="w-5 h-5 rounded-full bg-[var(--mf-border-warm)] flex items-center justify-center">
-                <span className="text-[var(--mf-text-tertiary)] text-[10px] font-bold">3</span>
+              <div className="w-5 h-5 rounded-full bg-[var(--kkb-border)] flex items-center justify-center">
+                <span className="text-[var(--kkb-text-tertiary)] text-[10px] font-bold">3</span>
               </div>
-              <span className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--mf-text-tertiary)]">
+              <span className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--kkb-text-tertiary)]">
                 Valider
               </span>
             </div>
@@ -676,24 +682,24 @@ export default function PlanPage() {
       {/* ── Chargement ── */}
       {viewState === 'loading' && (
         <div className="flex items-center justify-center min-h-[50vh]">
-          <Loader2 className="h-6 w-6 text-[var(--mf-primary)] animate-spin" />
+          <Loader2 className="h-6 w-6 text-[var(--kkb-coral)] animate-spin" />
         </div>
       )}
 
       {/* ── Overlay génération ── */}
       {viewState === 'generating' && (
-        <div className="fixed inset-0 z-50 bg-[var(--mf-bg-page)]/95 flex flex-col items-center justify-center gap-8 px-8">
-          <Loader2 className="h-12 w-12 text-[var(--mf-primary)] animate-spin" />
+        <div className="fixed inset-0 z-50 bg-[var(--kkb-bg)]/95 flex flex-col items-center justify-center gap-8 px-8">
+          <Loader2 className="h-12 w-12 text-[var(--kkb-coral)] animate-spin" />
           <div className="space-y-4 w-full max-w-xs">
             {GEN_STEPS.map((label, i) => (
               <div key={i} className="flex items-center gap-3">
                 {genStep > i ? (
-                  <CheckCircle className="h-5 w-5 text-[var(--mf-green)] flex-shrink-0" />
+                  <CheckCircle className="h-5 w-5 text-[var(--kkb-success)] flex-shrink-0" />
                 ) : (
-                  <div className="h-5 w-5 rounded-full border-2 border-[var(--mf-border-warm)] flex-shrink-0" />
+                  <div className="h-5 w-5 rounded-full border-2 border-[var(--kkb-border)] flex-shrink-0" />
                 )}
                 <p className={`text-sm font-quicksand transition-colors ${
-                  genStep > i ? 'text-[var(--mf-text-primary)] font-medium' : 'text-[var(--mf-text-tertiary)]'
+                  genStep > i ? 'text-[var(--kkb-text-primary)] font-medium' : 'text-[var(--kkb-text-tertiary)]'
                 }`}>
                   {label}
                 </p>
@@ -718,7 +724,7 @@ export default function PlanPage() {
             <button
               type="button"
               onClick={() => { void generateMenu() }}
-              className="flex items-center gap-1.5 text-[11px] font-quicksand text-[var(--mf-text-secondary)] border border-[var(--mf-border-warm)] rounded-lg px-2.5 py-1.5 hover:border-[var(--mf-primary)] hover:text-[var(--mf-primary)] transition-colors"
+              className="flex items-center gap-1.5 text-[11px] font-quicksand text-[var(--kkb-text-secondary)] border border-[var(--kkb-border)] rounded-lg px-2.5 py-1.5 hover:border-[var(--kkb-coral)] hover:text-[var(--kkb-coral)] transition-colors"
             >
               <Wand2 className="h-3 w-3" />
               Propositions aléatoires
@@ -727,29 +733,29 @@ export default function PlanPage() {
               {/* Contrôle convives */}
               {plan && (
                 <div className="flex items-center gap-1.5">
-                  <Users className="h-3 w-3 text-[var(--mf-text-tertiary)]" />
+                  <Users className="h-3 w-3 text-[var(--kkb-text-tertiary)]" />
                   <button type="button"
                     onClick={() => { void updateServings(servings - 1) }}
                     disabled={servings <= 1 || updatingServings}
-                    className="w-4 h-4 rounded-full flex items-center justify-center border border-[var(--mf-border-warm)] disabled:opacity-40 hover:border-[var(--mf-primary)] transition-colors">
-                    <Minus className="h-2.5 w-2.5 text-[var(--mf-text-secondary)]" />
+                    className="w-4 h-4 rounded-full flex items-center justify-center border border-[var(--kkb-border)] disabled:opacity-40 hover:border-[var(--kkb-coral)] transition-colors">
+                    <Minus className="h-2.5 w-2.5 text-[var(--kkb-text-secondary)]" />
                   </button>
-                  <span className="text-[11px] font-quicksand font-semibold text-[var(--mf-text-primary)] min-w-[1ch] text-center">
+                  <span className="text-[11px] font-quicksand font-semibold text-[var(--kkb-text-primary)] min-w-[1ch] text-center">
                     {updatingServings ? '…' : servings}
                   </span>
                   <button type="button"
                     onClick={() => { void updateServings(servings + 1) }}
                     disabled={servings >= 20 || updatingServings}
-                    className="w-4 h-4 rounded-full flex items-center justify-center border border-[var(--mf-border-warm)] disabled:opacity-40 hover:border-[var(--mf-primary)] transition-colors">
-                    <Plus className="h-2.5 w-2.5 text-[var(--mf-text-secondary)]" />
+                    className="w-4 h-4 rounded-full flex items-center justify-center border border-[var(--kkb-border)] disabled:opacity-40 hover:border-[var(--kkb-coral)] transition-colors">
+                    <Plus className="h-2.5 w-2.5 text-[var(--kkb-text-secondary)]" />
                   </button>
                 </div>
               )}
-              <span className="flex items-center gap-1 text-[11px] font-quicksand text-[var(--mf-text-tertiary)]">
+              <span className="flex items-center gap-1 text-[11px] font-quicksand text-[var(--kkb-text-tertiary)]">
                 <Pencil className="h-3 w-3" />
                 {modCount}
               </span>
-              <span className="flex items-center gap-1 text-[11px] font-quicksand text-[var(--mf-text-tertiary)]">
+              <span className="flex items-center gap-1 text-[11px] font-quicksand text-[var(--kkb-text-tertiary)]">
                 <Timer className="h-3 w-3" />
                 {formatTime(sessionTime)}
               </span>
@@ -758,13 +764,13 @@ export default function PlanPage() {
 
           {activeConfigs.length === 0 && (
             <div className="mx-4 flex flex-col items-center gap-3 py-8 text-center">
-              <p className="text-sm font-quicksand text-[var(--mf-text-secondary)]">
+              <p className="text-sm font-quicksand text-[var(--kkb-text-secondary)]">
                 Aucun type de repas actif.
               </p>
               <button
                 type="button"
                 onClick={() => router.push('/plan/configure')}
-                className="text-sm text-[var(--mf-primary)] underline font-quicksand"
+                className="text-sm text-[var(--kkb-coral)] underline font-quicksand"
               >
                 Configurer les repas
               </button>
@@ -775,13 +781,13 @@ export default function PlanPage() {
             <div key={config.meal_type} className="space-y-2.5">
               <div className="flex items-center gap-2 px-4">
                 <span className="text-xl">{MEAL_EMOJI[config.meal_type]}</span>
-                <span className="font-dosis font-semibold text-sm text-[var(--mf-text-primary)]">
+                <span className="font-dosis font-semibold text-sm text-[var(--kkb-text-primary)]">
                   {MEAL_LABEL[config.meal_type]}
                 </span>
                 <span className={`text-[10px] font-quicksand font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
                   config.mode === 'template'
-                    ? 'bg-[var(--mf-gold-bg)] text-[var(--mf-gold)]'
-                    : 'bg-[var(--mf-bg-card)] text-[var(--mf-text-tertiary)]'
+                    ? 'bg-[var(--kkb-warning-light)] text-[var(--kkb-warning)]'
+                    : 'bg-[var(--kkb-coral-light)] text-[var(--kkb-text-tertiary)]'
                 }`}>
                   {config.mode === 'template' ? 'Modèle semaine' : 'Quotidien'}
                 </span>
@@ -837,10 +843,10 @@ export default function PlanPage() {
       {editTarget && (
         <>
           <div className="fixed inset-0 z-40 bg-black/30" onClick={closeEdit} aria-hidden="true" />
-          <div className="fixed bottom-0 left-0 right-0 z-50 bg-[var(--mf-bg-page)] rounded-t-2xl shadow-xl flex flex-col max-h-[85vh]">
+          <div className="fixed bottom-0 left-0 right-0 z-50 bg-[var(--kkb-bg)] rounded-t-2xl shadow-xl flex flex-col max-h-[85vh]">
             {/* Handle */}
             <div className="flex justify-center pt-2.5 pb-1 flex-shrink-0">
-              <div className="w-10 h-1 rounded-full bg-[var(--mf-border-warm)]" />
+              <div className="w-10 h-1 rounded-full bg-[var(--kkb-border)]" />
             </div>
 
             {/* Header */}
@@ -854,19 +860,19 @@ export default function PlanPage() {
                       setSuggestedRecipes([])
                       void loadPickerRecipes('all', null, editSearch, 'main')
                     }}
-                    className="p-1 -ml-1 mr-0.5 text-[var(--mf-text-secondary)] hover:text-[var(--mf-primary)] transition-colors"
+                    className="p-1 -ml-1 mr-0.5 text-[var(--kkb-text-secondary)] hover:text-[var(--kkb-coral)] transition-colors"
                     aria-label="Retour"
                   >
                     <ChevronLeft className="h-5 w-5" />
                   </button>
                 )}
                 <div>
-                  <p className="font-dosis font-bold text-base text-[var(--mf-text-primary)]">
+                  <p className="font-dosis font-bold text-base text-[var(--kkb-text-primary)]">
                     {compositionMode === 'side'  ? 'Choisir un accompagnement'
                      : compositionMode === 'drink' ? 'Choisir une boisson'
                      : editTarget.itemId ? 'Changer ce repas' : 'Choisir une recette'}
                   </p>
-                  <p className="text-xs font-quicksand text-[var(--mf-text-secondary)] mt-0.5">
+                  <p className="text-xs font-quicksand text-[var(--kkb-text-secondary)] mt-0.5">
                     {MEAL_EMOJI[editTarget.mealType]}&nbsp;
                     {MEAL_LABEL[editTarget.mealType]} — {editTarget.dayLabel}
                   </p>
@@ -875,7 +881,7 @@ export default function PlanPage() {
               <button
                 type="button"
                 onClick={closeEdit}
-                className="p-1.5 -mr-1 text-[var(--mf-text-tertiary)] hover:text-[var(--mf-text-primary)] transition-colors"
+                className="p-1.5 -mr-1 text-[var(--kkb-text-tertiary)] hover:text-[var(--kkb-text-primary)] transition-colors"
                 aria-label="Fermer"
               >
                 <X className="h-5 w-5" />
@@ -884,15 +890,15 @@ export default function PlanPage() {
 
             {/* Search */}
             <div className="px-4 pb-2 flex-shrink-0">
-              <div className="flex items-center gap-2 bg-[var(--mf-bg-card)] border border-[var(--mf-border-warm)] rounded-xl px-3 py-2">
-                <Search className="h-4 w-4 text-[var(--mf-text-tertiary)] flex-shrink-0" />
+              <div className="flex items-center gap-2 bg-[var(--kkb-coral-light)] border border-[var(--kkb-border)] rounded-xl px-3 py-2">
+                <Search className="h-4 w-4 text-[var(--kkb-text-tertiary)] flex-shrink-0" />
                 <input
                   type="search"
                   placeholder="Chercher une recette…"
                   aria-label="Chercher une recette"
                   value={editSearch}
                   onChange={e => handlePickerSearch(e.target.value)}
-                  className="flex-1 bg-transparent text-sm font-quicksand text-[var(--mf-text-primary)] placeholder:text-[var(--mf-text-tertiary)] outline-none"
+                  className="flex-1 bg-transparent text-sm font-quicksand text-[var(--kkb-text-primary)] placeholder:text-[var(--kkb-text-tertiary)] outline-none"
                   autoFocus
                 />
               </div>
@@ -907,8 +913,8 @@ export default function PlanPage() {
                   onClick={() => handleScopeChange(opt.val)}
                   className={`flex-shrink-0 px-3 py-1 rounded-full text-[11px] font-quicksand font-bold transition-colors ${
                     pickerScope === opt.val
-                      ? 'bg-[var(--mf-primary)] text-white'
-                      : 'bg-[var(--mf-bg-card)] text-[var(--mf-text-secondary)] border border-[var(--mf-border-warm)]'
+                      ? 'bg-[var(--kkb-coral)] text-white'
+                      : 'bg-[var(--kkb-coral-light)] text-[var(--kkb-text-secondary)] border border-[var(--kkb-border)]'
                   }`}
                 >
                   {opt.label}
@@ -924,8 +930,8 @@ export default function PlanPage() {
                   onClick={() => handleCategoryChange(null)}
                   className={`flex-shrink-0 px-3 py-1 rounded-full text-[11px] font-quicksand font-bold transition-colors ${
                     pickerCategory === null
-                      ? 'bg-[var(--mf-primary)] text-white'
-                      : 'bg-[var(--mf-bg-card)] text-[var(--mf-text-secondary)] border border-[var(--mf-border-warm)]'
+                      ? 'bg-[var(--kkb-coral)] text-white'
+                      : 'bg-[var(--kkb-coral-light)] text-[var(--kkb-text-secondary)] border border-[var(--kkb-border)]'
                   }`}
                 >
                   Tous
@@ -937,8 +943,8 @@ export default function PlanPage() {
                     onClick={() => handleCategoryChange(cat.id)}
                     className={`flex-shrink-0 px-3 py-1 rounded-full text-[11px] font-quicksand font-bold transition-colors ${
                       pickerCategory === cat.id
-                        ? 'bg-[var(--mf-primary)] text-white'
-                        : 'bg-[var(--mf-bg-card)] text-[var(--mf-text-secondary)] border border-[var(--mf-border-warm)]'
+                        ? 'bg-[var(--kkb-coral)] text-white'
+                        : 'bg-[var(--kkb-coral-light)] text-[var(--kkb-text-secondary)] border border-[var(--kkb-border)]'
                     }`}
                   >
                     {cat.icon} {cat.name}
@@ -947,19 +953,19 @@ export default function PlanPage() {
               </div>
             )}
 
-            <div className="border-t border-[var(--mf-border-warm)] flex-shrink-0" />
+            <div className="border-t border-[var(--kkb-border)] flex-shrink-0" />
 
             {/* Suggestions personnalisées — uniquement en mode accompagnement/boisson */}
             {compositionMode !== null && suggestedRecipes.length > 0 && (
-              <div className="px-4 py-3 flex-shrink-0 border-b border-[var(--mf-border-warm)]/60">
-                <p className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--mf-text-secondary)] mb-2">
+              <div className="px-4 py-3 flex-shrink-0 border-b border-[var(--kkb-border)]/60">
+                <p className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--kkb-text-secondary)] mb-2">
                   Suggéré pour vous
                 </p>
                 <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
                   {suggestedRecipes.map(s => (
                     <button key={s.id} type="button" onClick={() => { void changeRecipe(s) }}
                       disabled={changingRecipe || addingComposition}
-                      className="flex-shrink-0 flex items-center gap-1.5 bg-[var(--mf-bg-card)] border border-[var(--mf-border-warm)] rounded-full px-3 py-1.5 text-xs font-quicksand font-medium text-[var(--mf-text-primary)] disabled:opacity-50">
+                      className="flex-shrink-0 flex items-center gap-1.5 bg-[var(--kkb-coral-light)] border border-[var(--kkb-border)] rounded-full px-3 py-1.5 text-xs font-quicksand font-medium text-[var(--kkb-text-primary)] disabled:opacity-50">
                       <span>{s.category?.icon ?? '🍴'}</span>
                       {s.name}
                     </button>
@@ -972,10 +978,10 @@ export default function PlanPage() {
             <div className="overflow-y-auto flex-1">
               {pickerLoading ? (
                 <div className="flex justify-center py-8">
-                  <Loader2 className="h-5 w-5 text-[var(--mf-primary)] animate-spin" />
+                  <Loader2 className="h-5 w-5 text-[var(--kkb-coral)] animate-spin" />
                 </div>
               ) : editRecipes.length === 0 ? (
-                <p className="text-sm font-quicksand text-[var(--mf-text-tertiary)] text-center py-8">
+                <p className="text-sm font-quicksand text-[var(--kkb-text-tertiary)] text-center py-8">
                   {editSearch ? 'Aucune recette trouvée' : 'Aucune recette disponible'}
                 </p>
               ) : (
@@ -985,19 +991,19 @@ export default function PlanPage() {
                     type="button"
                     disabled={changingRecipe || addingComposition}
                     onClick={() => { void changeRecipe(recipe) }}
-                    className="w-full flex items-center gap-3 px-4 py-3 border-b border-[var(--mf-border-warm)]/40 last:border-0 hover:bg-[var(--mf-bg-card)] transition-colors disabled:opacity-50"
+                    className="w-full flex items-center gap-3 px-4 py-3 border-b border-[var(--kkb-border)]/40 last:border-0 hover:bg-[var(--kkb-coral-light)] transition-colors disabled:opacity-50"
                   >
                     <span className="text-xl flex-shrink-0">
                       {recipe.categories?.icon ?? '🍴'}
                     </span>
                     <div className="flex-1 min-w-0 text-left">
-                      <p className="text-sm font-quicksand font-medium text-[var(--mf-text-primary)] truncate">
+                      <p className="text-sm font-quicksand font-medium text-[var(--kkb-text-primary)] truncate">
                         {recipe.name}
                       </p>
                       {recipe.prep_time_min && (
                         <div className="flex items-center gap-1 mt-0.5">
-                          <Clock className="h-3 w-3 text-[var(--mf-text-tertiary)]" />
-                          <span className="text-[11px] font-quicksand text-[var(--mf-text-secondary)]">
+                          <Clock className="h-3 w-3 text-[var(--kkb-text-tertiary)]" />
+                          <span className="text-[11px] font-quicksand text-[var(--kkb-text-secondary)]">
                             {recipe.prep_time_min} min
                           </span>
                         </div>
@@ -1006,14 +1012,14 @@ export default function PlanPage() {
                     {recipe.visibility !== 'private' && (
                       <span className={`text-[10px] font-quicksand font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full flex-shrink-0 ${
                         recipe.visibility === 'circle'
-                          ? 'bg-[var(--mf-gold-bg)] text-[var(--mf-gold)]'
+                          ? 'bg-[var(--kkb-warning-light)] text-[var(--kkb-warning)]'
                           : 'bg-emerald-50 text-emerald-600'
                       }`}>
                         {recipe.visibility === 'circle' ? 'Cercle' : 'Commun.'}
                       </span>
                     )}
                     {(changingRecipe || addingComposition) && (
-                      <Loader2 className="h-4 w-4 text-[var(--mf-primary)] animate-spin flex-shrink-0" />
+                      <Loader2 className="h-4 w-4 text-[var(--kkb-coral)] animate-spin flex-shrink-0" />
                     )}
                   </button>
                 ))
@@ -1021,20 +1027,20 @@ export default function PlanPage() {
 
               {/* Section accompagnement — visible si sauce ET item existant ET pas en mode composition */}
               {editTarget.itemId && sheetDetails !== null && compositionMode === null && (
-                <div className="px-4 py-3 border-t border-[var(--mf-border-warm)]/60">
-                  <p className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--mf-text-secondary)] mb-2">
+                <div className="px-4 py-3 border-t border-[var(--kkb-border)]/60">
+                  <p className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--kkb-text-secondary)] mb-2">
                     Accompagnement
                   </p>
                   {sheetDetails.meal_compositions.filter(c => c.role === 'side').map(comp => (
                     <div key={comp.id} className="flex items-center gap-2 py-1.5">
-                      <span className="flex-1 text-sm font-quicksand text-[var(--mf-text-primary)] truncate">
+                      <span className="flex-1 text-sm font-quicksand text-[var(--kkb-text-primary)] truncate">
                         {comp.recipes?.name ?? '?'}
                       </span>
                       <button
                         type="button"
                         disabled={!!deletingCompId}
                         onClick={() => { void deleteComposition(comp.id) }}
-                        className="p-1 text-[var(--mf-text-tertiary)] hover:text-red-500 transition-colors disabled:opacity-40"
+                        className="p-1 text-[var(--kkb-text-tertiary)] hover:text-red-500 transition-colors disabled:opacity-40"
                         aria-label="Supprimer l'accompagnement"
                       >
                         {deletingCompId === comp.id
@@ -1050,7 +1056,7 @@ export default function PlanPage() {
                       void loadPickerRecipes(pickerScope, pickerCategory, editSearch, 'side')
                       if (sheetDetails.mainRecipeId) void loadSuggestions(sheetDetails.mainRecipeId, 'side')
                     }}
-                    className="mt-1 flex items-center gap-1 text-xs font-quicksand text-[var(--mf-primary)] hover:underline"
+                    className="mt-1 flex items-center gap-1 text-xs font-quicksand text-[var(--kkb-coral)] hover:underline"
                   >
                     <Plus className="h-3 w-3" />
                     Ajouter un accompagnement
@@ -1060,20 +1066,20 @@ export default function PlanPage() {
 
               {/* Section boisson — visible si item existant ET détails chargés ET pas en mode composition */}
               {editTarget.itemId && sheetDetails !== null && compositionMode === null && (
-                <div className="px-4 py-3 border-t border-[var(--mf-border-warm)]/60">
-                  <p className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--mf-text-secondary)] mb-2">
+                <div className="px-4 py-3 border-t border-[var(--kkb-border)]/60">
+                  <p className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--kkb-text-secondary)] mb-2">
                     Boisson
                   </p>
                   {sheetDetails.meal_compositions.filter(c => c.role === 'drink').map(comp => (
                     <div key={comp.id} className="flex items-center gap-2 py-1.5">
-                      <span className="flex-1 text-sm font-quicksand text-[var(--mf-text-primary)] truncate">
+                      <span className="flex-1 text-sm font-quicksand text-[var(--kkb-text-primary)] truncate">
                         {comp.recipes?.name ?? '?'}
                       </span>
                       <button
                         type="button"
                         disabled={!!deletingCompId}
                         onClick={() => { void deleteComposition(comp.id) }}
-                        className="p-1 text-[var(--mf-text-tertiary)] hover:text-red-500 transition-colors disabled:opacity-40"
+                        className="p-1 text-[var(--kkb-text-tertiary)] hover:text-red-500 transition-colors disabled:opacity-40"
                         aria-label="Supprimer la boisson"
                       >
                         {deletingCompId === comp.id
@@ -1089,7 +1095,7 @@ export default function PlanPage() {
                       void loadPickerRecipes('all', null, '', 'drink')
                       if (sheetDetails.mainRecipeId) void loadSuggestions(sheetDetails.mainRecipeId, 'drink')
                     }}
-                    className="mt-1 flex items-center gap-1 text-xs font-quicksand text-[var(--mf-primary)] hover:underline"
+                    className="mt-1 flex items-center gap-1 text-xs font-quicksand text-[var(--kkb-coral)] hover:underline"
                   >
                     <Plus className="h-3 w-3" />
                     Ajouter une boisson
@@ -1115,10 +1121,10 @@ export default function PlanPage() {
                     closeEdit()
                     router.push(`/recipes/add?${params}`)
                   }}
-                  className="w-full flex items-center gap-3 px-4 py-3 border-2 border-dashed border-[var(--mf-primary)]/40 rounded-xl hover:bg-[var(--mf-bg-card)] transition-colors group"
+                  className="w-full flex items-center gap-3 px-4 py-3 border-2 border-dashed border-[var(--kkb-coral)]/40 rounded-xl hover:bg-[var(--kkb-coral-light)] transition-colors group"
                 >
-                  <PlusCircle className="h-5 w-5 text-[var(--mf-text-tertiary)] group-hover:text-[var(--mf-primary)] transition-colors" />
-                  <span className="text-sm font-quicksand text-[var(--mf-text-tertiary)] group-hover:text-[var(--mf-primary)] transition-colors">
+                  <PlusCircle className="h-5 w-5 text-[var(--kkb-text-tertiary)] group-hover:text-[var(--kkb-coral)] transition-colors" />
+                  <span className="text-sm font-quicksand text-[var(--kkb-text-tertiary)] group-hover:text-[var(--kkb-coral)] transition-colors">
                     Créer un repas personnalisé…
                   </span>
                 </button>
@@ -1139,14 +1145,14 @@ function TemplateEmptyCard({ onAdd }: { onAdd: () => void }) {
     <button
       type="button"
       onClick={onAdd}
-      className="mx-4 border-2 border-dashed border-[var(--mf-border-warm)] rounded-xl p-3.5 flex items-center gap-3 w-[calc(100%-2rem)] hover:border-[var(--mf-primary)]/50 hover:bg-[var(--mf-bg-card)] transition-colors group"
+      className="mx-4 border-2 border-dashed border-[var(--kkb-border)] rounded-xl p-3.5 flex items-center gap-3 w-[calc(100%-2rem)] hover:border-[var(--kkb-coral)]/50 hover:bg-[var(--kkb-coral-light)] transition-colors group"
     >
-      <PlusCircle className="h-6 w-6 text-[var(--mf-text-tertiary)] group-hover:text-[var(--mf-primary)] transition-colors flex-shrink-0" />
+      <PlusCircle className="h-6 w-6 text-[var(--kkb-text-tertiary)] group-hover:text-[var(--kkb-coral)] transition-colors flex-shrink-0" />
       <div className="text-left">
-        <p className="text-sm font-quicksand text-[var(--mf-text-tertiary)] group-hover:text-[var(--mf-primary)] transition-colors">
+        <p className="text-sm font-quicksand text-[var(--kkb-text-tertiary)] group-hover:text-[var(--kkb-coral)] transition-colors">
           Ajouter une recette
         </p>
-        <p className="text-[11px] font-quicksand text-[var(--mf-text-tertiary)]">
+        <p className="text-[11px] font-quicksand text-[var(--kkb-text-tertiary)]">
           Toute la semaine
         </p>
       </div>
@@ -1161,14 +1167,14 @@ function DailyEmptyCard({ dayLabel, onAdd }: { dayLabel: string; onAdd: () => vo
     <button
       type="button"
       onClick={onAdd}
-      className="flex-shrink-0 w-28 border-2 border-dashed border-[var(--mf-border-warm)] rounded-xl p-2.5 flex flex-col gap-1 min-h-[100px] hover:border-[var(--mf-primary)]/50 hover:bg-[var(--mf-bg-card)] transition-colors group"
+      className="flex-shrink-0 w-28 border-2 border-dashed border-[var(--kkb-border)] rounded-xl p-2.5 flex flex-col gap-1 min-h-[100px] hover:border-[var(--kkb-coral)]/50 hover:bg-[var(--kkb-coral-light)] transition-colors group"
     >
-      <p className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--mf-text-tertiary)] self-start">
+      <p className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--kkb-text-tertiary)] self-start">
         {dayLabel}
       </p>
       <div className="flex-1 flex flex-col items-center justify-center gap-1">
-        <PlusCircle className="h-5 w-5 text-[var(--mf-text-tertiary)] group-hover:text-[var(--mf-primary)] transition-colors" />
-        <p className="text-[10px] font-quicksand text-[var(--mf-text-tertiary)] group-hover:text-[var(--mf-primary)] transition-colors">
+        <PlusCircle className="h-5 w-5 text-[var(--kkb-text-tertiary)] group-hover:text-[var(--kkb-coral)] transition-colors" />
+        <p className="text-[10px] font-quicksand text-[var(--kkb-text-tertiary)] group-hover:text-[var(--kkb-coral)] transition-colors">
           Ajouter
         </p>
       </div>
@@ -1191,22 +1197,22 @@ function TemplateCard({ item, locking, onEdit, onLock }: TemplateCardProps) {
 
   return (
     <div className={`mx-4 border rounded-xl p-3.5 flex items-center gap-3 transition-colors ${
-      locked ? 'bg-orange-50 border-[var(--mf-primary)]/30' : 'bg-[var(--mf-bg-card)] border-[var(--mf-border-warm)]'
+      locked ? 'bg-orange-50 border-[var(--kkb-coral)]/30' : 'bg-[var(--kkb-coral-light)] border-[var(--kkb-border)]'
     }`}>
       <div className="flex-shrink-0">
         {recipe?.categories?.icon
           ? <span className="text-2xl">{recipe.categories.icon}</span>
-          : <Utensils className="h-6 w-6 text-[var(--mf-text-tertiary)]" />}
+          : <Utensils className="h-6 w-6 text-[var(--kkb-text-tertiary)]" />}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="font-dosis font-semibold text-sm text-[var(--mf-text-primary)] truncate">
+        <p className="font-dosis font-semibold text-sm text-[var(--kkb-text-primary)] truncate">
           {composedName(recipe?.name, item.meal_compositions)}
         </p>
-        <p className="text-[11px] font-quicksand text-[var(--mf-text-tertiary)]">Toute la semaine</p>
+        <p className="text-[11px] font-quicksand text-[var(--kkb-text-tertiary)]">Toute la semaine</p>
         {recipe?.prep_time_min && (
           <div className="flex items-center gap-1 mt-0.5">
-            <Clock className="h-3 w-3 text-[var(--mf-text-tertiary)]" />
-            <span className="text-[11px] font-quicksand text-[var(--mf-text-secondary)]">
+            <Clock className="h-3 w-3 text-[var(--kkb-text-tertiary)]" />
+            <span className="text-[11px] font-quicksand text-[var(--kkb-text-secondary)]">
               {recipe.prep_time_min} min
             </span>
           </div>
@@ -1217,14 +1223,14 @@ function TemplateCard({ item, locking, onEdit, onLock }: TemplateCardProps) {
           aria-label={locked ? 'Déverrouiller' : 'Verrouiller'}
           className="p-1.5 transition-colors disabled:opacity-40">
           {locking
-            ? <Loader2 className="h-4 w-4 text-[var(--mf-text-tertiary)] animate-spin" />
+            ? <Loader2 className="h-4 w-4 text-[var(--kkb-text-tertiary)] animate-spin" />
             : locked
-              ? <Lock className="h-4 w-4 text-[var(--mf-primary)]" />
-              : <LockOpen className="h-4 w-4 text-[var(--mf-text-tertiary)]" />}
+              ? <Lock className="h-4 w-4 text-[var(--kkb-coral)]" />
+              : <LockOpen className="h-4 w-4 text-[var(--kkb-text-tertiary)]" />}
         </button>
         <button type="button" onClick={onEdit}
           aria-label="Changer ce repas"
-          className="p-1.5 text-[var(--mf-text-secondary)] hover:text-[var(--mf-primary)] transition-colors">
+          className="p-1.5 text-[var(--kkb-text-secondary)] hover:text-[var(--kkb-coral)] transition-colors">
           <Pencil className="h-4 w-4" />
         </button>
       </div>
@@ -1248,22 +1254,22 @@ function DailyCard({ dayLabel, item, locking, onEdit, onLock }: DailyCardProps) 
 
   return (
     <div className={`flex-shrink-0 w-28 border rounded-xl p-2.5 flex flex-col gap-1.5 transition-colors ${
-      locked ? 'bg-orange-50 border-[var(--mf-primary)]/30' : 'bg-[var(--mf-bg-card)] border-[var(--mf-border-warm)]'
+      locked ? 'bg-orange-50 border-[var(--kkb-coral)]/30' : 'bg-[var(--kkb-coral-light)] border-[var(--kkb-border)]'
     }`}>
-      <p className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--mf-text-tertiary)]">
+      <p className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--kkb-text-tertiary)]">
         {dayLabel}
       </p>
       <div className="flex-1">
         {recipe?.categories?.icon
           ? <span className="text-xl">{recipe.categories.icon}</span>
-          : <Utensils className="h-5 w-5 text-[var(--mf-text-tertiary)]" />}
-        <p className="text-[11px] font-quicksand font-semibold text-[var(--mf-text-primary)] mt-1 line-clamp-2 leading-tight">
+          : <Utensils className="h-5 w-5 text-[var(--kkb-text-tertiary)]" />}
+        <p className="text-[11px] font-quicksand font-semibold text-[var(--kkb-text-primary)] mt-1 line-clamp-2 leading-tight">
           {composedName(recipe?.name, item.meal_compositions)}
         </p>
         {recipe?.prep_time_min && (
           <div className="flex items-center gap-0.5 mt-1">
-            <Clock className="h-2.5 w-2.5 text-[var(--mf-text-tertiary)]" />
-            <span className="text-[10px] font-quicksand text-[var(--mf-text-secondary)]">
+            <Clock className="h-2.5 w-2.5 text-[var(--kkb-text-tertiary)]" />
+            <span className="text-[10px] font-quicksand text-[var(--kkb-text-secondary)]">
               {recipe.prep_time_min} min
             </span>
           </div>
@@ -1274,14 +1280,14 @@ function DailyCard({ dayLabel, item, locking, onEdit, onLock }: DailyCardProps) 
           aria-label={locked ? 'Déverrouiller' : 'Verrouiller'}
           className="p-1 transition-colors disabled:opacity-40">
           {locking
-            ? <Loader2 className="h-3.5 w-3.5 text-[var(--mf-text-tertiary)] animate-spin" />
+            ? <Loader2 className="h-3.5 w-3.5 text-[var(--kkb-text-tertiary)] animate-spin" />
             : locked
-              ? <Lock className="h-3.5 w-3.5 text-[var(--mf-primary)]" />
-              : <LockOpen className="h-3.5 w-3.5 text-[var(--mf-text-tertiary)]" />}
+              ? <Lock className="h-3.5 w-3.5 text-[var(--kkb-coral)]" />
+              : <LockOpen className="h-3.5 w-3.5 text-[var(--kkb-text-tertiary)]" />}
         </button>
         <button type="button" onClick={onEdit}
           aria-label="Changer ce repas"
-          className="p-1 text-[var(--mf-text-secondary)] hover:text-[var(--mf-primary)] transition-colors">
+          className="p-1 text-[var(--kkb-text-secondary)] hover:text-[var(--kkb-coral)] transition-colors">
           <Pencil className="h-3.5 w-3.5" />
         </button>
       </div>

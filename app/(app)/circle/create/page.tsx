@@ -56,30 +56,30 @@ export default function CreateCirclePage() {
     return (
       <div className="max-w-sm mx-auto px-4 py-8 space-y-6 text-center">
         <div className="flex justify-center">
-          <CheckCircle className="h-12 w-12 text-market-green" />
+          <CheckCircle className="h-12 w-12 text-[var(--kkb-success)]" />
         </div>
         <div className="space-y-1">
-          <h1 className="font-dosis font-bold text-xl text-[#2C1810]">Cercle créé !</h1>
-          <p className="text-sm text-[#5A4A43]">
+          <h1 className="font-dosis font-bold text-xl text-[var(--kkb-text-primary)]">Cercle créé !</h1>
+          <p className="text-sm text-[var(--kkb-text-secondary)]">
             Partage ce code avec ta famille pour qu&apos;ils te rejoignent.
           </p>
         </div>
 
-        <div className="bg-[#FCEEE6] rounded-xl border border-[#E8C99A] p-4 space-y-3 text-left">
-          <p className="text-xs text-[#8c7169] uppercase tracking-widest font-medium">Nom du cercle</p>
-          <p className="font-semibold text-[#2C1810]">{circle.name}</p>
-          <p className="text-xs text-[#8c7169] uppercase tracking-widest font-medium">Code d&apos;invitation</p>
+        <div className="bg-[var(--kkb-coral-light)] rounded-xl border border-[var(--kkb-border)] p-4 space-y-3 text-left">
+          <p className="text-xs text-[var(--kkb-text-tertiary)] uppercase tracking-widest font-medium">Nom du cercle</p>
+          <p className="font-semibold text-[var(--kkb-text-primary)]">{circle.name}</p>
+          <p className="text-xs text-[var(--kkb-text-tertiary)] uppercase tracking-widest font-medium">Code d&apos;invitation</p>
           <div className="flex items-center gap-2">
-            <span className="font-mono text-2xl font-bold text-terracotta tracking-widest">
+            <span className="font-mono text-2xl font-bold text-[var(--kkb-coral)] tracking-widest">
               {circle.invite_code}
             </span>
             <button
               type="button"
               onClick={copyCode}
-              className="ml-auto flex items-center gap-1.5 text-sm text-[#5A4A43] hover:text-terracotta transition-colors"
+              className="ml-auto flex items-center gap-1.5 text-sm text-[var(--kkb-text-secondary)] hover:text-[var(--kkb-coral-hover)] transition-colors"
             >
               {copied ? (
-                <><CheckCircle className="h-4 w-4 text-market-green" /> Copié</>
+                <><CheckCircle className="h-4 w-4 text-[var(--kkb-success)]" /> Copié</>
               ) : (
                 <><Copy className="h-4 w-4" /> Copier</>
               )}
@@ -88,7 +88,7 @@ export default function CreateCirclePage() {
         </div>
 
         <Button
-          className="w-full bg-terracotta hover:bg-[#C74E21] text-white font-quicksand"
+          className="w-full bg-[var(--kkb-coral)] hover:bg-[var(--kkb-coral-hover)] text-white font-quicksand"
           onClick={() => router.push('/')}
         >
           Commencer à planifier
@@ -101,17 +101,17 @@ export default function CreateCirclePage() {
     <div className="max-w-sm mx-auto px-4 py-8 space-y-6">
       <div className="text-center space-y-2">
         <div className="flex justify-center">
-          <Users className="h-10 w-10 text-terracotta" />
+          <Users className="h-10 w-10 text-[var(--kkb-coral)]" />
         </div>
-        <h1 className="font-dosis font-bold text-xl text-[#2C1810]">Créer un cercle familial</h1>
-        <p className="text-sm text-[#5A4A43]">
+        <h1 className="font-dosis font-bold text-xl text-[var(--kkb-text-primary)]">Créer un cercle familial</h1>
+        <p className="text-sm text-[var(--kkb-text-secondary)]">
           Un cercle te permet de partager tes menus et recettes avec ta famille.
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="name" className="text-[#5A4A43]">Nom du cercle</Label>
+          <Label htmlFor="name" className="text-[var(--kkb-text-secondary)]">Nom du cercle</Label>
           <Input
             id="name"
             type="text"
@@ -120,7 +120,7 @@ export default function CreateCirclePage() {
             onChange={(e) => setName(e.target.value)}
             required
             disabled={state === 'saving'}
-            className="border-[#E8C99A] bg-white"
+            className="border-[var(--kkb-border)] bg-white"
           />
         </div>
 
@@ -128,7 +128,7 @@ export default function CreateCirclePage() {
 
         <Button
           type="submit"
-          className="w-full bg-terracotta hover:bg-[#C74E21] text-white font-quicksand"
+          className="w-full bg-[var(--kkb-coral)] hover:bg-[var(--kkb-coral-hover)] text-white font-quicksand"
           disabled={state === 'saving'}
         >
           <Plus className="mr-2 h-4 w-4" />
@@ -138,7 +138,7 @@ export default function CreateCirclePage() {
 
       <button
         type="button"
-        className="w-full text-sm text-[#8c7169] hover:text-[#5A4A43] transition-colors"
+        className="w-full text-sm text-[var(--kkb-text-tertiary)] hover:text-[var(--kkb-text-secondary)] transition-colors"
         onClick={() => router.back()}
       >
         Retour
