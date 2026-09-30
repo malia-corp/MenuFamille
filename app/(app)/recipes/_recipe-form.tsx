@@ -48,10 +48,19 @@ interface Category { id: string; name: string; icon: string | null; slug: string
 interface Circle  { id: string; name: string }
 interface AssocItem { id: string; name: string }
 interface PickerRecipe { id: string; name: string; categories: { icon: string | null } | null }
+type AssocScope = 'all' | 'mes' | 'famille' | 'communaute'
 
 // Une recette de catégorie boisson ou bouillie n'a pas d'accompagnement au
 // sens culinaire — pas de section à afficher dans ces cas.
 const NO_ASSOCIATIONS_SLUGS = new Set(['boisson', 'bouillie-cereales'])
+
+// Mêmes filtres que le picker de planification (/plan) — cohérence d'UX.
+const ASSOC_SCOPE_OPTIONS: { val: AssocScope; label: string }[] = [
+  { val: 'all',        label: 'Tout'         },
+  { val: 'mes',        label: 'Mes recettes' },
+  { val: 'famille',    label: 'Famille'      },
+  { val: 'communaute',  label: 'Communauté'   },
+]
 
 const VISIBILITY_OPTIONS: { value: VisibilityVal; label: string; sub: string; Icon: React.ElementType }[] = [
   { value: 'private',   label: 'Seulement moi',  sub: 'Visible uniquement par vous',          Icon: Lock  },
@@ -117,6 +126,8 @@ export function RecipeForm({
   const [drinkItems,  setDrinkItems]  = useState<AssocItem[]>([])
   const [assocPicker, setAssocPicker] = useState<'side' | 'drink' | null>(null)
   const [assocSearch, setAssocSearch] = useState('')
+  const [assocScope,    setAssocScope]    = useState<AssocScope>('all')
+  const [assocCategory, setAssocCategory] = useState<string | null>(null)
   const [assocResults, setAssocResults] = useState<PickerRecipe[]>([])
   const [assocLoading, setAssocLoading] = useState(false)
   const assocSearchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -141,14 +152,17 @@ export function RecipeForm({
   function openAssocPicker(mode: 'side' | 'drink') {
     setAssocPicker(mode)
     setAssocSearch('')
-    void searchAssocRecipes('')
+    setAssocScope('all')
+    setAssocCategory(null)
+    void searchAssocRecipes('all', null, '')
   }
 
-  async function searchAssocRecipes(query: string) {
+  async function searchAssocRecipes(scope: AssocScope, categoryId: string | null, query: string) {
     setAssocLoading(true)
     try {
-      const params = new URLSearchParams({ scope: 'all' })
-      if (query.trim()) params.set('search', query.trim())
+      const params = new URLSearchParams({ scope })
+      if (categoryId)    params.set('category_id', categoryId)
+      if (query.trim())  params.set('search', query.trim())
       const res = await fetch(`/api/recipes?${params}`)
       const data = await res.json()
       setAssocResults(Array.isArray(data) ? data : [])
@@ -162,7 +176,17 @@ export function RecipeForm({
   function handleAssocSearch(value: string) {
     setAssocSearch(value)
     if (assocSearchTimerRef.current) clearTimeout(assocSearchTimerRef.current)
-    assocSearchTimerRef.current = setTimeout(() => void searchAssocRecipes(value), 300)
+    assocSearchTimerRef.current = setTimeout(() => void searchAssocRecipes(assocScope, assocCategory, value), 300)
+  }
+
+  function handleAssocScopeChange(scope: AssocScope) {
+    setAssocScope(scope)
+    void searchAssocRecipes(scope, assocCategory, assocSearch)
+  }
+
+  function handleAssocCategoryChange(catId: string | null) {
+    setAssocCategory(catId)
+    void searchAssocRecipes(assocScope, catId, assocSearch)
   }
 
   function toggleAssocItem(recipe: PickerRecipe) {
@@ -535,6 +559,56 @@ export function RecipeForm({
                   autoFocus />
               </div>
             </div>
+
+            {/* Pills scope */}
+            <div className="flex gap-1.5 px-4 pb-2 overflow-x-auto scrollbar-hide flex-shrink-0">
+              {ASSOC_SCOPE_OPTIONS.map(opt => (
+                <button
+                  key={opt.val}
+                  type="button"
+                  onClick={() => handleAssocScopeChange(opt.val)}
+                  className={`flex-shrink-0 px-3 py-1 rounded-full text-[11px] font-quicksand font-bold transition-colors ${
+                    assocScope === opt.val
+                      ? 'bg-[var(--mf-primary)] text-white'
+                      : 'bg-[var(--mf-bg-card)] text-[var(--mf-text-secondary)] border border-[var(--mf-border-warm)]'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Pills catégorie */}
+            {categories.length > 0 && (
+              <div className="flex gap-1.5 px-4 pb-2 overflow-x-auto scrollbar-hide flex-shrink-0">
+                <button
+                  type="button"
+                  onClick={() => handleAssocCategoryChange(null)}
+                  className={`flex-shrink-0 px-3 py-1 rounded-full text-[11px] font-quicksand font-bold transition-colors ${
+                    assocCategory === null
+                      ? 'bg-[var(--mf-primary)] text-white'
+                      : 'bg-[var(--mf-bg-card)] text-[var(--mf-text-secondary)] border border-[var(--mf-border-warm)]'
+                  }`}
+                >
+                  Tous
+                </button>
+                {categories.map(cat => (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => handleAssocCategoryChange(cat.id)}
+                    className={`flex-shrink-0 px-3 py-1 rounded-full text-[11px] font-quicksand font-bold transition-colors ${
+                      assocCategory === cat.id
+                        ? 'bg-[var(--mf-primary)] text-white'
+                        : 'bg-[var(--mf-bg-card)] text-[var(--mf-text-secondary)] border border-[var(--mf-border-warm)]'
+                    }`}
+                  >
+                    {cat.icon} {cat.name}
+                  </button>
+                ))}
+              </div>
+            )}
+
             <div className="border-t border-[var(--mf-border-warm)] flex-shrink-0" />
             <div className="overflow-y-auto flex-1">
               {assocLoading ? (
