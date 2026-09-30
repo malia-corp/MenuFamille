@@ -15,7 +15,7 @@ export async function GET() {
         id, name, invite_code, created_by, created_at,
         family_circle_members (
           id, role, joined_at,
-          users ( id, display_name, email )
+          users ( id, display_name, email, member_dietary_prefs ( id, pref_type, value, severity ) )
         )
       )
     `)

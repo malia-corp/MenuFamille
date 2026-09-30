@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import {
+  AlertTriangle,
   BarChart3,
   CheckCircle2,
   ChevronLeft,
@@ -38,6 +39,11 @@ interface Composition {
   recipes:    { name: string } | null
 }
 
+interface AllergyWarning {
+  member_display_name: string
+  allergen:             string
+}
+
 interface PlanItem {
   id:                string
   day_of_week:       DayOfWeek
@@ -45,6 +51,7 @@ interface PlanItem {
   applies_all_days:  boolean
   recipes:           PlanRecipe | null
   meal_compositions: Composition[]
+  allergy_warnings?: AllergyWarning[]
 }
 
 interface Plan {
@@ -93,10 +100,11 @@ function formatWeekRange(weekStart: string): string {
 
 // ─── Sous-composant : ligne recette ──────────────────────────────────────────
 
-function RecipeRow({ recipe, label, displayName }: {
+function RecipeRow({ recipe, label, displayName, warnings }: {
   recipe:       PlanRecipe | null
   label:        string
   displayName?: string
+  warnings?:    AllergyWarning[]
 }) {
   return (
     <div className="flex items-center gap-3 px-3 py-2.5 border-b border-[var(--mf-border-warm)]/30 last:border-0">
@@ -118,6 +126,16 @@ function RecipeRow({ recipe, label, displayName }: {
                 <span className="text-[10px] font-quicksand text-[var(--mf-text-secondary)]">
                   {recipe.prep_time_min} min
                 </span>
+              </div>
+            )}
+            {warnings && warnings.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-1">
+                {warnings.map((w, i) => (
+                  <span key={i} className="inline-flex items-center gap-1 text-[10px] font-quicksand font-medium text-red-700 bg-red-50 px-1.5 py-0.5 rounded-full">
+                    <AlertTriangle className="h-2.5 w-2.5" />
+                    {w.member_display_name} · {w.allergen}
+                  </span>
+                ))}
               </div>
             )}
           </div>
@@ -355,6 +373,7 @@ function ValidateInner() {
                   recipe={templateItem?.recipes ?? null}
                   label="Toute la semaine"
                   displayName={templateItem ? composedName(templateItem.recipes?.name, templateItem.meal_compositions) : undefined}
+                  warnings={templateItem?.allergy_warnings}
                 />
               ) : (
                 DAY_OPTIONS.map(d => {
@@ -367,6 +386,7 @@ function ValidateInner() {
                       recipe={item?.recipes ?? null}
                       label={d.full}
                       displayName={item ? composedName(item.recipes?.name, item.meal_compositions) : undefined}
+                      warnings={item?.allergy_warnings}
                     />
                   )
                 })
