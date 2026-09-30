@@ -1,5 +1,10 @@
 # MenuFamille — Brief de design
 
+> **Dépassé par le design system KeskonBouf** (nom commercial, palette coral/teal, typographie
+> Bricolage Grotesque/Nunito Sans — implémenté dans `app/globals.css`). Conservé pour ses règles
+> de microcopy et d'accessibilité, encore valables ; ne plus s'y référer pour la palette ou la
+> typographie.
+
 **Document de référence pour la génération des maquettes (Claude Design)**
 Version 1.0 — Juin 2026 — basé sur le Cahier des Charges v3.0
 
