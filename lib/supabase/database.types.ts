@@ -696,7 +696,6 @@ export type Database = {
           parent_recipe_id: string | null
           photo_url: string | null
           prep_time_min: number | null
-          recipe_type: Database["public"]["Enums"]["recipe_type_enum"]
           servings: number
           slug: string
           source_url: string | null
@@ -719,7 +718,6 @@ export type Database = {
           parent_recipe_id?: string | null
           photo_url?: string | null
           prep_time_min?: number | null
-          recipe_type?: Database["public"]["Enums"]["recipe_type_enum"]
           servings?: number
           slug: string
           source_url?: string | null
@@ -742,7 +740,6 @@ export type Database = {
           parent_recipe_id?: string | null
           photo_url?: string | null
           prep_time_min?: number | null
-          recipe_type?: Database["public"]["Enums"]["recipe_type_enum"]
           servings?: number
           slug?: string
           source_url?: string | null
@@ -1065,11 +1062,6 @@ export type Database = {
       meal_type_enum: "petit_dejeuner" | "dejeuner" | "gouter" | "diner"
       notification_channel_enum: "push" | "in_app"
       recipe_difficulty_enum: "facile" | "moyen" | "difficile"
-      recipe_type_enum:
-        | "plat_principal"
-        | "accompagnement"
-        | "boisson"
-        | "sauce"
       recipe_visibility_enum: "private" | "circle" | "community"
       shopping_list_status_enum: "active" | "completed" | "archived"
       survey_reaction_enum: "aime" | "bof" | "naime_pas"
@@ -1216,12 +1208,6 @@ export const Constants = {
       meal_type_enum: ["petit_dejeuner", "dejeuner", "gouter", "diner"],
       notification_channel_enum: ["push", "in_app"],
       recipe_difficulty_enum: ["facile", "moyen", "difficile"],
-      recipe_type_enum: [
-        "plat_principal",
-        "accompagnement",
-        "boisson",
-        "sauce",
-      ],
       recipe_visibility_enum: ["private", "circle", "community"],
       shopping_list_status_enum: ["active", "completed", "archived"],
       survey_reaction_enum: ["aime", "bof", "naime_pas"],
