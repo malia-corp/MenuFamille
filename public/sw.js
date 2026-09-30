@@ -2,9 +2,9 @@ self.addEventListener('push', (event) => {
   if (!event.data) return
 
   let payload = {}
-  try { payload = event.data.json() } catch { payload = { title: 'MenuFamille', body: event.data.text() } }
+  try { payload = event.data.json() } catch { payload = { title: 'KeskonBouf', body: event.data.text() } }
 
-  const { title = 'MenuFamille', body = '', url = '/' } = payload
+  const { title = 'KeskonBouf', body = '', url = '/' } = payload
 
   event.waitUntil(
     self.registration.showNotification(title, {

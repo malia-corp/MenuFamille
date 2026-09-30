@@ -42,14 +42,14 @@ export default function JoinCirclePage() {
     return (
       <div className="max-w-sm mx-auto px-4 py-8 space-y-6 text-center">
         <div className="flex justify-center">
-          <CheckCircle className="h-12 w-12 text-market-green" />
+          <CheckCircle className="h-12 w-12 text-[var(--kkb-success)]" />
         </div>
-        <h1 className="font-dosis font-bold text-xl text-[#2C1810]">Tu as rejoint le cercle !</h1>
-        <p className="text-sm text-[#5A4A43]">
-          Bienvenue dans <span className="font-semibold text-[#2C1810]">{circleName}</span>
+        <h1 className="font-dosis font-bold text-xl text-[var(--kkb-text-primary)]">Tu as rejoint le cercle !</h1>
+        <p className="text-sm text-[var(--kkb-text-secondary)]">
+          Bienvenue dans <span className="font-semibold text-[var(--kkb-text-primary)]">{circleName}</span>
         </p>
         <Button
-          className="w-full bg-terracotta hover:bg-[#C74E21] text-white font-quicksand"
+          className="w-full bg-[var(--kkb-coral)] hover:bg-[var(--kkb-coral-hover)] text-white font-quicksand"
           onClick={() => router.push('/')}
         >
           Commencer à planifier
@@ -62,17 +62,17 @@ export default function JoinCirclePage() {
     <div className="max-w-sm mx-auto px-4 py-8 space-y-6">
       <div className="text-center space-y-2">
         <div className="flex justify-center">
-          <Key className="h-10 w-10 text-terracotta" />
+          <Key className="h-10 w-10 text-[var(--kkb-coral)]" />
         </div>
-        <h1 className="font-dosis font-bold text-xl text-[#2C1810]">Rejoindre un cercle</h1>
-        <p className="text-sm text-[#5A4A43]">
+        <h1 className="font-dosis font-bold text-xl text-[var(--kkb-text-primary)]">Rejoindre un cercle</h1>
+        <p className="text-sm text-[var(--kkb-text-secondary)]">
           Saisis le code partagé par la planificatrice de ta famille.
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="code" className="text-[#5A4A43]">Code d&apos;invitation</Label>
+          <Label htmlFor="code" className="text-[var(--kkb-text-secondary)]">Code d&apos;invitation</Label>
           <Input
             id="code"
             type="text"
@@ -81,7 +81,7 @@ export default function JoinCirclePage() {
             onChange={(e) => setCode(e.target.value.toUpperCase())}
             required
             disabled={state === 'joining'}
-            className="font-mono tracking-widest text-center text-lg uppercase border-[#E8C99A] bg-white"
+            className="font-mono tracking-widest text-center text-lg uppercase border-[var(--kkb-border)] bg-white"
           />
         </div>
 
@@ -89,7 +89,7 @@ export default function JoinCirclePage() {
 
         <Button
           type="submit"
-          className="w-full bg-terracotta hover:bg-[#C74E21] text-white font-quicksand"
+          className="w-full bg-[var(--kkb-coral)] hover:bg-[var(--kkb-coral-hover)] text-white font-quicksand"
           disabled={state === 'joining'}
         >
           <Users className="mr-2 h-4 w-4" />
@@ -99,7 +99,7 @@ export default function JoinCirclePage() {
 
       <button
         type="button"
-        className="w-full text-sm text-[#8c7169] hover:text-[#5A4A43] transition-colors"
+        className="w-full text-sm text-[var(--kkb-text-tertiary)] hover:text-[var(--kkb-text-secondary)] transition-colors"
         onClick={() => router.back()}
       >
         Retour

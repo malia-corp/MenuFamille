@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { AlertTriangle, Check, Copy, Heart, Key, LogOut, MoreVertical, Plus, Share2, ThumbsDown, Users, X } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 
-const AVATAR_COLORS = ['#B0461C', '#1B6035', '#B07A12', '#3A2E28', '#5A4A43']
+const AVATAR_COLORS = ['var(--kkb-coral)', 'var(--kkb-success)', 'var(--kkb-warning)', 'var(--kkb-teal)', 'var(--kkb-text-secondary)']
 
 type PrefType = 'allergy' | 'dislike' | 'preference' | 'favorite'
 type Severity = 'strict' | 'light'
@@ -32,7 +32,7 @@ function prefChipStyle(pref: Pref): { className: string; Icon: React.ElementType
   }
   if (pref.pref_type === 'dislike')  return { className: 'bg-gray-100 text-gray-600 border-gray-200', Icon: ThumbsDown }
   if (pref.pref_type === 'favorite') return { className: 'bg-emerald-50 text-emerald-700 border-emerald-200', Icon: Heart }
-  return { className: 'bg-[var(--mf-bg-page)] text-[var(--mf-text-secondary)] border-[var(--mf-border-warm)]', Icon: null }
+  return { className: 'bg-[var(--kkb-bg)] text-[var(--kkb-text-secondary)] border-[var(--kkb-border)]', Icon: null }
 }
 
 interface Member {
@@ -97,7 +97,7 @@ export default function CirclePage() {
 
   function whatsappUrl(code: string, name: string) {
     const text = encodeURIComponent(
-      `Rejoins notre cercle familial "${name}" sur MenuFamille ! Code : ${code}`
+      `Rejoins notre cercle familial "${name}" sur KeskonBouf ! Code : ${code}`
     )
     return `https://wa.me/?text=${text}`
   }
@@ -208,7 +208,7 @@ export default function CirclePage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <p className="text-sm text-[#8c7169]">Chargement…</p>
+        <p className="text-sm text-[var(--kkb-text-tertiary)]">Chargement…</p>
       </div>
     )
   }
@@ -216,16 +216,16 @@ export default function CirclePage() {
   if (circles.length === 0) {
     return (
       <div className="max-w-sm mx-auto px-4 py-8 space-y-6 text-center">
-        <Users className="h-12 w-12 text-[#E8C99A] mx-auto" />
+        <Users className="h-12 w-12 text-[var(--kkb-border)] mx-auto" />
         <div className="space-y-1">
-          <h1 className="font-dosis font-bold text-xl text-[#2C1810]">Pas encore de cercle</h1>
-          <p className="text-sm text-[#5A4A43]">Crée ou rejoins un cercle familial pour planifier ensemble.</p>
+          <h1 className="font-dosis font-bold text-xl text-[var(--kkb-text-primary)]">Pas encore de cercle</h1>
+          <p className="text-sm text-[var(--kkb-text-secondary)]">Crée ou rejoins un cercle familial pour planifier ensemble.</p>
         </div>
         <div className="space-y-2">
           <button
             type="button"
             onClick={() => router.push('/circle/create')}
-            className="w-full flex items-center justify-center gap-2 bg-terracotta text-white rounded-xl py-3 font-quicksand font-medium hover:bg-[#C74E21] transition-colors"
+            className="w-full flex items-center justify-center gap-2 bg-[var(--kkb-coral)] text-white rounded-xl py-3 font-quicksand font-medium hover:bg-[var(--kkb-coral-hover)] transition-colors"
           >
             <Plus className="h-4 w-4" />
             Créer un cercle
@@ -233,7 +233,7 @@ export default function CirclePage() {
           <button
             type="button"
             onClick={() => router.push('/circle/join')}
-            className="w-full flex items-center justify-center gap-2 border border-[#E8C99A] text-[#5A4A43] rounded-xl py-3 font-quicksand font-medium hover:bg-[#FDF6EE] transition-colors"
+            className="w-full flex items-center justify-center gap-2 border border-[var(--kkb-border)] text-[var(--kkb-text-secondary)] rounded-xl py-3 font-quicksand font-medium hover:bg-[var(--kkb-bg)] transition-colors"
           >
             <Key className="h-4 w-4" />
             Rejoindre avec un code
@@ -250,20 +250,20 @@ export default function CirclePage() {
 
   return (
     <div className="max-w-sm mx-auto px-4 py-6 space-y-6">
-      <h1 className="font-dosis font-bold text-xl text-[#2C1810]">{circle.name}</h1>
+      <h1 className="font-dosis font-bold text-xl text-[var(--kkb-text-primary)]">{circle.name}</h1>
 
       {/* Section CODE D'INVITATION */}
-      <section className="bg-[#FCEEE6] border border-[#E8C99A] rounded-xl p-4 space-y-3">
-        <p className="text-xs text-[#8c7169] uppercase tracking-widest font-medium">Code d&apos;invitation</p>
+      <section className="bg-[var(--kkb-coral-light)] border border-[var(--kkb-border)] rounded-xl p-4 space-y-3">
+        <p className="text-xs text-[var(--kkb-text-tertiary)] uppercase tracking-widest font-medium">Code d&apos;invitation</p>
         <div className="flex items-center justify-between">
-          <span className="font-dosis font-bold text-3xl text-terracotta tracking-widest">
+          <span className="font-dosis font-bold text-3xl text-[var(--kkb-coral)] tracking-widest">
             {circle.invite_code}
           </span>
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => copyCode(circle.invite_code)}
-              className="flex items-center gap-1.5 text-sm text-[#5A4A43] hover:text-terracotta transition-colors px-2 py-1 rounded-lg hover:bg-white"
+              className="flex items-center gap-1.5 text-sm text-[var(--kkb-text-secondary)] hover:text-[var(--kkb-coral-hover)] transition-colors px-2 py-1 rounded-lg hover:bg-white"
               title="Copier le code"
             >
               <Copy className="h-4 w-4" />
@@ -273,7 +273,7 @@ export default function CirclePage() {
               href={whatsappUrl(circle.invite_code, circle.name)}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 text-sm text-[#5A4A43] hover:text-market-green transition-colors px-2 py-1 rounded-lg hover:bg-white"
+              className="flex items-center gap-1.5 text-sm text-[var(--kkb-text-secondary)] hover:text-[var(--kkb-success)] transition-colors px-2 py-1 rounded-lg hover:bg-white"
               title="Partager sur WhatsApp"
             >
               <Share2 className="h-4 w-4" />
@@ -285,7 +285,7 @@ export default function CirclePage() {
 
       {/* Section MEMBRES DU CERCLE */}
       <section className="space-y-2">
-        <p className="text-xs text-[#8c7169] uppercase tracking-widest font-medium">Membres du cercle</p>
+        <p className="text-xs text-[var(--kkb-text-tertiary)] uppercase tracking-widest font-medium">Membres du cercle</p>
         <div className="space-y-2" ref={menuRef}>
           {members.map((member, index) => {
             const u = member.users
@@ -299,7 +299,7 @@ export default function CirclePage() {
             return (
               <div
                 key={member.id}
-                className="bg-white border border-[#E8C99A] rounded-xl px-4 py-3 flex items-center gap-3"
+                className="bg-white border border-[var(--kkb-border)] rounded-xl px-4 py-3 flex items-center gap-3"
               >
                 {/* Avatar */}
                 <div
@@ -311,16 +311,16 @@ export default function CirclePage() {
 
                 {/* Nom + rôle */}
                 <div className="flex-1 min-w-0">
-                  <p className="font-quicksand font-semibold text-[#2C1810] text-sm truncate">
+                  <p className="font-quicksand font-semibold text-[var(--kkb-text-primary)] text-sm truncate">
                     {u.display_name || u.email}
-                    {isCurrentUser && <span className="text-[#8c7169] font-normal"> (moi)</span>}
+                    {isCurrentUser && <span className="text-[var(--kkb-text-tertiary)] font-normal"> (moi)</span>}
                   </p>
                   <Badge
                     variant="secondary"
                     className={`text-[10px] mt-0.5 ${
                       member.role === 'planificatrice'
-                        ? 'bg-[#FEF3E0] text-[#B07A12]'
-                        : 'bg-[#EAF5EE] text-[#1B6035]'
+                        ? 'bg-[var(--kkb-warning-light)] text-[var(--kkb-warning)]'
+                        : 'bg-[var(--kkb-success-light)] text-[var(--kkb-success)]'
                     }`}
                   >
                     {member.role}
@@ -350,7 +350,7 @@ export default function CirclePage() {
                       <button
                         type="button"
                         onClick={() => openPrefSheet(circle.id, u.id, u.display_name || u.email)}
-                        className="inline-flex items-center gap-1 text-[10px] font-quicksand font-medium px-1.5 py-0.5 rounded-full border border-dashed border-[var(--mf-primary)]/40 text-[var(--mf-primary)]"
+                        className="inline-flex items-center gap-1 text-[10px] font-quicksand font-medium px-1.5 py-0.5 rounded-full border border-dashed border-[var(--kkb-coral)]/40 text-[var(--kkb-coral)]"
                       >
                         <Plus className="h-2.5 w-2.5" />
                         Ajouter
@@ -365,13 +365,13 @@ export default function CirclePage() {
                     <button
                       type="button"
                       onClick={() => setOpenMenu(openMenu === member.id ? null : member.id)}
-                      className="p-1 rounded-lg text-[#8c7169] hover:text-[#5A4A43] hover:bg-[#FDF6EE]"
+                      className="p-1 rounded-lg text-[var(--kkb-text-tertiary)] hover:text-[var(--kkb-text-secondary)] hover:bg-[var(--kkb-bg)]"
                       aria-label="Options du membre"
                     >
                       <MoreVertical className="h-4 w-4" />
                     </button>
                     {openMenu === member.id && (
-                      <div className="absolute right-0 top-8 z-10 bg-white border border-[#E8C99A] rounded-xl shadow-lg py-1 min-w-[140px]">
+                      <div className="absolute right-0 top-8 z-10 bg-white border border-[var(--kkb-border)] rounded-xl shadow-lg py-1 min-w-[140px]">
                         <button
                           type="button"
                           onClick={() => removeMember(circle.id, u.id)}
@@ -394,7 +394,7 @@ export default function CirclePage() {
         <button
           type="button"
           onClick={() => router.push('/circle/create')}
-          className="w-full flex items-center justify-center gap-2 border border-[#E8C99A] text-[#5A4A43] rounded-xl py-3 font-quicksand text-sm hover:bg-[#FDF6EE] transition-colors"
+          className="w-full flex items-center justify-center gap-2 border border-[var(--kkb-border)] text-[var(--kkb-text-secondary)] rounded-xl py-3 font-quicksand text-sm hover:bg-[var(--kkb-bg)] transition-colors"
         >
           <Plus className="h-4 w-4" />
           Créer un autre cercle
@@ -418,10 +418,10 @@ export default function CirclePage() {
           <div className="fixed inset-0 bg-black/40 z-40" onClick={closePrefSheet} />
           <div className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-3xl p-5 space-y-4 max-h-[85vh] overflow-y-auto">
             <div className="flex items-start justify-between">
-              <p className="font-dosis font-bold text-base text-[#2C1810]">
+              <p className="font-dosis font-bold text-base text-[var(--kkb-text-primary)]">
                 Préférence de {sheetTarget.displayName}
               </p>
-              <button type="button" onClick={closePrefSheet} className="p-1 -mr-1 text-[#8c7169]" aria-label="Fermer">
+              <button type="button" onClick={closePrefSheet} className="p-1 -mr-1 text-[var(--kkb-text-tertiary)]" aria-label="Fermer">
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -433,7 +433,7 @@ export default function CirclePage() {
               value={prefValue}
               onChange={(e) => setPrefValue(e.target.value)}
               autoFocus
-              className="w-full px-3 py-2.5 rounded-xl border border-[#E8C99A] bg-[#FDF6EE] text-sm font-quicksand text-[#2C1810] placeholder:text-[#9A8F84] outline-none focus:border-terracotta"
+              className="w-full px-3 py-2.5 rounded-xl border border-[var(--kkb-border)] bg-[var(--kkb-bg)] text-sm font-quicksand text-[var(--kkb-text-primary)] placeholder:text-[var(--kkb-text-tertiary)] outline-none focus:border-[var(--kkb-coral-hover)]"
             />
 
             <div className="flex gap-2">
@@ -444,8 +444,8 @@ export default function CirclePage() {
                   onClick={() => setPrefType(opt.value)}
                   className={`flex-1 py-2 rounded-xl text-xs font-quicksand font-medium border transition-colors ${
                     prefType === opt.value
-                      ? 'bg-terracotta text-white border-terracotta'
-                      : 'bg-white border-[#E8C99A] text-[#5A4A43]'
+                      ? 'bg-[var(--kkb-coral)] text-white border-[var(--kkb-coral)]'
+                      : 'bg-white border-[var(--kkb-border)] text-[var(--kkb-text-secondary)]'
                   }`}
                 >
                   {opt.label}
@@ -461,7 +461,7 @@ export default function CirclePage() {
                   className={`flex-1 py-2 rounded-xl text-xs font-quicksand font-medium border transition-colors ${
                     prefSeverity === 'strict'
                       ? 'bg-red-50 text-red-700 border-red-300'
-                      : 'bg-white border-[#E8C99A] text-[#5A4A43]'
+                      : 'bg-white border-[var(--kkb-border)] text-[var(--kkb-text-secondary)]'
                   }`}
                 >
                   Sévère (exclure des repas)
@@ -472,7 +472,7 @@ export default function CirclePage() {
                   className={`flex-1 py-2 rounded-xl text-xs font-quicksand font-medium border transition-colors ${
                     prefSeverity === 'light'
                       ? 'bg-orange-50 text-orange-700 border-orange-300'
-                      : 'bg-white border-[#E8C99A] text-[#5A4A43]'
+                      : 'bg-white border-[var(--kkb-border)] text-[var(--kkb-text-secondary)]'
                   }`}
                 >
                   Légère (éviter)
@@ -484,7 +484,7 @@ export default function CirclePage() {
               type="button"
               onClick={() => void savePref()}
               disabled={!prefValue.trim() || savingPref}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl font-dosis font-bold text-sm bg-terracotta text-white disabled:opacity-50 transition-opacity"
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl font-dosis font-bold text-sm bg-[var(--kkb-coral)] text-white disabled:opacity-50 transition-opacity"
             >
               <Check className="h-4 w-4" />
               {savingPref ? 'Enregistrement…' : 'Enregistrer'}

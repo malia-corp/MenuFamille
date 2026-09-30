@@ -14,10 +14,10 @@ import {
   Utensils,
 } from 'lucide-react'
 import { composedName } from '@/lib/utils/composed-name'
+import { MEAL_LABEL, MEAL_EMOJI, type MealType } from '@/lib/constants/meal-type'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type MealType  = 'petit_dejeuner' | 'dejeuner' | 'gouter' | 'diner'
 type DayOfWeek = 'lundi' | 'mardi' | 'mercredi' | 'jeudi' | 'vendredi' | 'samedi' | 'dimanche'
 
 interface MealConfig {
@@ -74,20 +74,6 @@ const DAY_OPTIONS: { val: DayOfWeek; full: string }[] = [
   { val: 'dimanche', full: 'Dimanche' },
 ]
 
-const MEAL_LABEL: Record<MealType, string> = {
-  petit_dejeuner: 'Petit-déj.',
-  dejeuner:       'Déjeuner',
-  gouter:         'Goûter',
-  diner:          'Dîner',
-}
-
-const MEAL_EMOJI: Record<MealType, string> = {
-  petit_dejeuner: '🌅',
-  dejeuner:       '🍽',
-  gouter:         '🧁',
-  diner:          '🌙',
-}
-
 // ─── Helper ───────────────────────────────────────────────────────────────────
 
 function formatWeekRange(weekStart: string): string {
@@ -107,8 +93,8 @@ function RecipeRow({ recipe, label, displayName, warnings }: {
   warnings?:    AllergyWarning[]
 }) {
   return (
-    <div className="flex items-center gap-3 px-3 py-2.5 border-b border-[var(--mf-border-warm)]/30 last:border-0">
-      <p className="w-20 text-[10px] font-quicksand font-semibold text-[var(--mf-text-tertiary)] flex-shrink-0">
+    <div className="flex items-center gap-3 px-3 py-2.5 border-b border-[var(--kkb-border)]/30 last:border-0">
+      <p className="w-20 text-[10px] font-quicksand font-semibold text-[var(--kkb-text-tertiary)] flex-shrink-0">
         {label}
       </p>
       {recipe ? (
@@ -117,13 +103,13 @@ function RecipeRow({ recipe, label, displayName, warnings }: {
             {recipe.categories?.icon ?? '🍴'}
           </span>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-quicksand font-medium text-[var(--mf-text-primary)] truncate">
+            <p className="text-xs font-quicksand font-medium text-[var(--kkb-text-primary)] truncate">
               {displayName ?? recipe.name}
             </p>
             {recipe.prep_time_min && (
               <div className="flex items-center gap-0.5 mt-0.5">
-                <Clock className="h-2.5 w-2.5 text-[var(--mf-text-tertiary)]" />
-                <span className="text-[10px] font-quicksand text-[var(--mf-text-secondary)]">
+                <Clock className="h-2.5 w-2.5 text-[var(--kkb-text-tertiary)]" />
+                <span className="text-[10px] font-quicksand text-[var(--kkb-text-secondary)]">
                   {recipe.prep_time_min} min
                 </span>
               </div>
@@ -142,8 +128,8 @@ function RecipeRow({ recipe, label, displayName, warnings }: {
         </>
       ) : (
         <div className="flex items-center gap-2 flex-1">
-          <Utensils className="h-3.5 w-3.5 text-[var(--mf-text-tertiary)] flex-shrink-0" />
-          <p className="text-xs font-quicksand text-[var(--mf-text-tertiary)] italic">Non planifié</p>
+          <Utensils className="h-3.5 w-3.5 text-[var(--kkb-text-tertiary)] flex-shrink-0" />
+          <p className="text-xs font-quicksand text-[var(--kkb-text-tertiary)] italic">Non planifié</p>
         </div>
       )}
     </div>
@@ -259,7 +245,7 @@ function ValidateInner() {
     if (!shareToken) return
     try {
       await navigator.share({
-        title: 'Menu de la semaine — MenuFamille',
+        title: 'Menu de la semaine — KeskonBouf',
         text:  'Donne ton avis sur notre menu de la semaine !',
         url:   `${window.location.origin}/s/${shareToken}`,
       })
@@ -271,7 +257,7 @@ function ValidateInner() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
-        <Loader2 className="h-6 w-6 text-[var(--mf-primary)] animate-spin" />
+        <Loader2 className="h-6 w-6 text-[var(--kkb-coral)] animate-spin" />
       </div>
     )
   }
@@ -279,13 +265,13 @@ function ValidateInner() {
   if (!plan) {
     return (
       <div className="px-4 py-12 text-center space-y-4">
-        <p className="text-sm font-quicksand text-[var(--mf-text-secondary)]">
+        <p className="text-sm font-quicksand text-[var(--kkb-text-secondary)]">
           Aucun menu à valider pour cette semaine.
         </p>
         <button
           type="button"
           onClick={() => router.push('/plan')}
-          className="text-sm font-quicksand text-[var(--mf-primary)] underline"
+          className="text-sm font-quicksand text-[var(--kkb-coral)] underline"
         >
           Retour au planning
         </button>
@@ -316,20 +302,20 @@ function ValidateInner() {
   return (
     <div>
       {/* Header */}
-      <div className="sticky top-14 z-30 bg-[var(--mf-bg-page)] border-b border-[var(--mf-border-warm)] px-4 h-12 flex items-center gap-3">
+      <div className="sticky top-14 z-30 bg-[var(--kkb-bg)] border-b border-[var(--kkb-border)] px-4 h-12 flex items-center gap-3">
         <button
           type="button"
           onClick={() => router.back()}
-          className="p-1.5 -ml-1.5 text-[var(--mf-text-secondary)] hover:text-[var(--mf-primary)] transition-colors"
+          className="p-1.5 -ml-1.5 text-[var(--kkb-text-secondary)] hover:text-[var(--kkb-coral)] transition-colors"
           aria-label="Retour"
         >
           <ChevronLeft className="h-5 w-5" />
         </button>
         <div>
-          <p className="font-dosis font-bold text-sm text-[var(--mf-text-primary)]">
+          <p className="font-dosis font-bold text-sm text-[var(--kkb-text-primary)]">
             Confirmer le menu
           </p>
-          <p className="text-[11px] font-quicksand text-[var(--mf-text-secondary)]">
+          <p className="text-[11px] font-quicksand text-[var(--kkb-text-secondary)]">
             {formatWeekRange(plan.week_start)}
           </p>
         </div>
@@ -352,17 +338,17 @@ function ValidateInner() {
           return (
             <div
               key={config.meal_type}
-              className="mx-4 bg-[var(--mf-bg-card)] border border-[var(--mf-border-warm)] rounded-xl overflow-hidden"
+              className="mx-4 bg-[var(--kkb-coral-light)] border border-[var(--kkb-border)] rounded-xl overflow-hidden"
             >
-              <div className="flex items-center gap-2 px-3 py-2 border-b border-[var(--mf-border-warm)]/50">
+              <div className="flex items-center gap-2 px-3 py-2 border-b border-[var(--kkb-border)]/50">
                 <span className="text-base">{MEAL_EMOJI[config.meal_type]}</span>
-                <span className="font-dosis font-semibold text-sm text-[var(--mf-text-primary)]">
+                <span className="font-dosis font-semibold text-sm text-[var(--kkb-text-primary)]">
                   {MEAL_LABEL[config.meal_type]}
                 </span>
                 <span className={`ml-auto text-[10px] font-quicksand font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full ${
                   config.mode === 'template'
-                    ? 'bg-[var(--mf-gold-bg)] text-[var(--mf-gold)]'
-                    : 'bg-[var(--mf-bg-page)] text-[var(--mf-text-tertiary)]'
+                    ? 'bg-[var(--kkb-warning-light)] text-[var(--kkb-warning)]'
+                    : 'bg-[var(--kkb-bg)] text-[var(--kkb-text-tertiary)]'
                 }`}>
                   {config.mode === 'template' ? 'Modèle' : 'Quotidien'}
                 </span>
@@ -399,11 +385,11 @@ function ValidateInner() {
       {/* Compteur */}
       <div className="mx-4 mb-5 flex items-center gap-2">
         {filledSlots === totalSlots ? (
-          <CheckCircle2 className="h-4 w-4 text-[var(--mf-green)] flex-shrink-0" />
+          <CheckCircle2 className="h-4 w-4 text-[var(--kkb-success)] flex-shrink-0" />
         ) : (
-          <div className="h-4 w-4 rounded-full border-2 border-[var(--mf-border-warm)] flex-shrink-0" />
+          <div className="h-4 w-4 rounded-full border-2 border-[var(--kkb-border)] flex-shrink-0" />
         )}
-        <p className="text-[11px] font-quicksand text-[var(--mf-text-secondary)]">
+        <p className="text-[11px] font-quicksand text-[var(--kkb-text-secondary)]">
           {filledSlots === totalSlots
             ? `${filledSlots} repas planifiés`
             : `${filledSlots}/${totalSlots} repas planifiés — ${totalSlots - filledSlots} non renseigné${totalSlots - filledSlots > 1 ? 's' : ''}`
@@ -418,7 +404,7 @@ function ValidateInner() {
             type="button"
             onClick={() => { void validate() }}
             disabled={validating}
-            className="w-full bg-[var(--mf-primary)] text-white rounded-2xl py-3.5 font-dosis font-bold text-base flex items-center justify-center gap-2 disabled:opacity-60 transition-opacity"
+            className="w-full bg-[var(--kkb-coral)] text-white rounded-2xl py-3.5 font-dosis font-bold text-base flex items-center justify-center gap-2 disabled:opacity-60 transition-opacity"
           >
             {validating
               ? <Loader2 className="h-5 w-5 animate-spin" />
@@ -443,7 +429,7 @@ function ValidateInner() {
                 type="button"
                 onClick={() => { void share() }}
                 disabled={sharing}
-                className="w-full border border-[var(--mf-primary)] text-[var(--mf-primary)] rounded-2xl py-3 font-dosis font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-60 hover:bg-[var(--mf-primary)]/5 transition-colors"
+                className="w-full border border-[var(--kkb-coral)] text-[var(--kkb-coral)] rounded-2xl py-3 font-dosis font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-60 hover:bg-[var(--kkb-coral)]/5 transition-colors"
               >
                 {sharing
                   ? <Loader2 className="h-4 w-4 animate-spin" />
@@ -452,11 +438,11 @@ function ValidateInner() {
                 {sharing ? 'Génération du lien…' : 'Partager ce menu'}
               </button>
             ) : (
-              <div className="bg-[var(--mf-bg-card)] border border-[var(--mf-border-warm)] rounded-2xl px-4 py-3 space-y-2.5">
-                <p className="text-[11px] font-quicksand font-semibold text-[var(--mf-text-secondary)] uppercase tracking-wider">
+              <div className="bg-[var(--kkb-coral-light)] border border-[var(--kkb-border)] rounded-2xl px-4 py-3 space-y-2.5">
+                <p className="text-[11px] font-quicksand font-semibold text-[var(--kkb-text-secondary)] uppercase tracking-wider">
                   Lien de partage
                 </p>
-                <p className="text-xs font-quicksand text-[var(--mf-text-primary)] truncate">
+                <p className="text-xs font-quicksand text-[var(--kkb-text-primary)] truncate">
                   {shareUrl}
                 </p>
                 <div className="flex items-center gap-2">
@@ -464,7 +450,7 @@ function ValidateInner() {
                     <button
                       type="button"
                       onClick={() => { void shareNative() }}
-                      className="flex-1 flex items-center justify-center gap-1.5 bg-[var(--mf-primary)] text-white rounded-lg px-3 py-2 text-[11px] font-quicksand font-semibold hover:opacity-80 transition-opacity"
+                      className="flex-1 flex items-center justify-center gap-1.5 bg-[var(--kkb-coral)] text-white rounded-lg px-3 py-2 text-[11px] font-quicksand font-semibold hover:opacity-80 transition-opacity"
                     >
                       <Share2 className="h-3 w-3" />
                       Partager
@@ -475,15 +461,15 @@ function ValidateInner() {
                     onClick={() => { void copyLink() }}
                     className={`flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-[11px] font-quicksand font-semibold transition-colors ${
                       canNativeShare
-                        ? 'flex-shrink-0 border border-[var(--mf-border-warm)] text-[var(--mf-text-secondary)] hover:border-[var(--mf-primary)] hover:text-[var(--mf-primary)]'
-                        : 'flex-1 bg-[var(--mf-primary)] text-white hover:opacity-80'
+                        ? 'flex-shrink-0 border border-[var(--kkb-border)] text-[var(--kkb-text-secondary)] hover:border-[var(--kkb-coral)] hover:text-[var(--kkb-coral)]'
+                        : 'flex-1 bg-[var(--kkb-coral)] text-white hover:opacity-80'
                     }`}
                   >
                     <Copy className="h-3 w-3" />
                     {copied ? 'Copié !' : 'Copier'}
                   </button>
                 </div>
-                <p className="text-[10px] font-quicksand text-[var(--mf-text-tertiary)]">
+                <p className="text-[10px] font-quicksand text-[var(--kkb-text-tertiary)]">
                   Ce lien est valable 30 jours.
                 </p>
               </div>
@@ -494,7 +480,7 @@ function ValidateInner() {
               <button
                 type="button"
                 onClick={() => router.push(`/plan/${plan.id}/survey`)}
-                className="w-full border border-[#2A7D4F] text-[#2A7D4F] rounded-2xl py-3 font-dosis font-bold text-sm flex items-center justify-center gap-2 hover:bg-[#F0FAF5] transition-colors"
+                className="w-full border border-[var(--kkb-success)] text-[var(--kkb-success)] rounded-2xl py-3 font-dosis font-bold text-sm flex items-center justify-center gap-2 hover:bg-[var(--kkb-success-light)] transition-colors"
               >
                 <BarChart3 className="h-4 w-4" />
                 Voir les résultats du sondage ({surveyCount})
@@ -513,7 +499,7 @@ export default function ValidatePage() {
   return (
     <Suspense fallback={
       <div className="flex items-center justify-center min-h-[50vh]">
-        <Loader2 className="h-6 w-6 text-[var(--mf-primary)] animate-spin" />
+        <Loader2 className="h-6 w-6 text-[var(--kkb-coral)] animate-spin" />
       </div>
     }>
       <ValidateInner />

@@ -20,9 +20,9 @@ type AnswerState = {
 }
 
 const REACTION_CONFIG: { value: Reaction; emoji: string; label: string; bg: string; border: string }[] = [
-  { value: 'aime',      emoji: '😊', label: 'J\'aime',    bg: '#F0FAF5', border: '#2A7D4F' },
-  { value: 'bof',       emoji: '😐', label: 'Bof',        bg: '#FDF8EC', border: '#F5A623' },
-  { value: 'naime_pas', emoji: '😕', label: 'J\'aime pas', bg: '#FCEBEB', border: '#C0392B' },
+  { value: 'aime',      emoji: '😊', label: 'J\'aime',    bg: 'var(--kkb-success-light)', border: 'var(--kkb-success)' },
+  { value: 'bof',       emoji: '😐', label: 'Bof',        bg: 'var(--kkb-bg)', border: 'var(--kkb-warning)' },
+  { value: 'naime_pas', emoji: '😕', label: 'J\'aime pas', bg: 'var(--kkb-danger-light)', border: 'var(--kkb-danger)' },
 ]
 
 const MEAL_LABEL: Record<string, string> = {
@@ -158,13 +158,13 @@ export function SurveySection({ token, items }: { token: string; items: SurveyIt
 
   if (submitted) {
     return (
-      <section className="bg-white border border-[#EDE4D6] rounded-2xl p-5 text-center space-y-2">
-        <CheckCircle className="h-8 w-8 text-[#2A7D4F] mx-auto" />
-        <p className="font-dosis font-semibold text-base text-[#3D2C20]">Avis envoyé !</p>
-        <p className="text-xs font-quicksand text-[var(--mf-text-tertiary)]">Merci pour votre retour.</p>
+      <section className="bg-white border border-[var(--kkb-border-light)] rounded-2xl p-5 text-center space-y-2">
+        <CheckCircle className="h-8 w-8 text-[var(--kkb-success)] mx-auto" />
+        <p className="font-dosis font-semibold text-base text-[var(--kkb-text-primary)]">Avis envoyé !</p>
+        <p className="text-xs font-quicksand text-[var(--kkb-text-tertiary)]">Merci pour votre retour.</p>
         <button
           onClick={handleModify}
-          className="text-xs font-quicksand text-[var(--mf-primary)] underline mt-1"
+          className="text-xs font-quicksand text-[var(--kkb-coral)] underline mt-1"
         >
           Modifier mes réponses
         </button>
@@ -176,25 +176,25 @@ export function SurveySection({ token, items }: { token: string; items: SurveyIt
     <section className="space-y-4">
       {/* Titre section */}
       <div>
-        <p className="text-[11px] font-quicksand font-bold uppercase tracking-wider text-[var(--mf-text-tertiary)] mb-0.5">
+        <p className="text-[11px] font-quicksand font-bold uppercase tracking-wider text-[var(--kkb-text-tertiary)] mb-0.5">
           Votre avis
         </p>
-        <h2 className="font-dosis font-bold text-lg text-[#3D2C20]">
+        <h2 className="font-dosis font-bold text-lg text-[var(--kkb-text-primary)]">
           Donnez votre avis sur ce menu
         </h2>
       </div>
 
       {/* Champ prénom — masqué si l'utilisateur est connecté */}
       {isLoggedIn ? (
-        <div className="bg-white border border-[#EDE4D6] rounded-xl px-3 py-2.5 flex items-center gap-2.5">
-          <UserCircle className="h-4 w-4 text-[#2A7D4F] flex-shrink-0" />
-          <p className="text-sm font-quicksand text-[#3D2C20]">{name}</p>
+        <div className="bg-white border border-[var(--kkb-border-light)] rounded-xl px-3 py-2.5 flex items-center gap-2.5">
+          <UserCircle className="h-4 w-4 text-[var(--kkb-success)] flex-shrink-0" />
+          <p className="text-sm font-quicksand text-[var(--kkb-text-primary)]">{name}</p>
         </div>
       ) : (
-        <div className="bg-white border border-[#EDE4D6] rounded-xl px-3 py-2.5 flex items-center gap-2.5">
-          <UserCircle className="h-4 w-4 text-[var(--mf-text-tertiary)] flex-shrink-0" />
+        <div className="bg-white border border-[var(--kkb-border-light)] rounded-xl px-3 py-2.5 flex items-center gap-2.5">
+          <UserCircle className="h-4 w-4 text-[var(--kkb-text-tertiary)] flex-shrink-0" />
           <div className="flex-1">
-            <p className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--mf-text-tertiary)] mb-0.5">
+            <p className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--kkb-text-tertiary)] mb-0.5">
               Votre prénom
             </p>
             <input
@@ -204,7 +204,7 @@ export function SurveySection({ token, items }: { token: string; items: SurveyIt
               onBlur={() => name.trim() && localStorage.setItem(STORAGE_KEY_NAME, name.trim())}
               placeholder="Comment vous appelez-vous ?"
               aria-label="Votre prénom"
-              className="w-full text-sm font-quicksand text-[#3D2C20] bg-transparent outline-none placeholder:text-[#C5B8AE]"
+              className="w-full text-sm font-quicksand text-[var(--kkb-text-primary)] bg-transparent outline-none placeholder:text-[var(--kkb-text-tertiary)]"
             />
           </div>
         </div>
@@ -212,7 +212,7 @@ export function SurveySection({ token, items }: { token: string; items: SurveyIt
 
       {/* Indicateur de progression */}
       {ratedCount > 0 && (
-        <p className="text-xs font-quicksand font-medium text-[var(--mf-text-tertiary)] text-right">
+        <p className="text-xs font-quicksand font-medium text-[var(--kkb-text-tertiary)] text-right">
           {ratedCount} / {items.length} repas notés
         </p>
       )}
@@ -226,15 +226,15 @@ export function SurveySection({ token, items }: { token: string; items: SurveyIt
         return (
           <div
             key={item.id}
-            className="bg-white border border-[#EDE4D6] rounded-xl p-3 space-y-3"
+            className="bg-white border border-[var(--kkb-border-light)] rounded-xl p-3 space-y-3"
           >
             {/* Nom du repas */}
             <div>
-              <p className="text-[10px] font-quicksand font-semibold uppercase tracking-wider text-[var(--mf-text-tertiary)]">
+              <p className="text-[10px] font-quicksand font-semibold uppercase tracking-wider text-[var(--kkb-text-tertiary)]">
                 {MEAL_LABEL[item.meal_type] ?? item.meal_type}
                 {item.applies_all_days ? ' · Toute la semaine' : ` · ${item.day_of_week.charAt(0).toUpperCase() + item.day_of_week.slice(1)}`}
               </p>
-              <p className="font-dosis font-semibold text-sm text-[#3D2C20] mt-0.5">
+              <p className="font-dosis font-semibold text-sm text-[var(--kkb-text-primary)] mt-0.5">
                 {item.recipe_name ?? 'Repas non défini'}
               </p>
             </div>
@@ -256,7 +256,7 @@ export function SurveySection({ token, items }: { token: string; items: SurveyIt
                     'flex-1 flex flex-col items-center gap-0.5 py-2 rounded-lg border text-xs font-quicksand font-medium transition-all',
                     selected === r.value
                       ? 'border-2'
-                      : 'border-[#EDE4D6] text-[var(--mf-text-tertiary)] disabled:opacity-40',
+                      : 'border-[var(--kkb-border-light)] text-[var(--kkb-text-tertiary)] disabled:opacity-40',
                     !name.trim() ? 'cursor-not-allowed' : 'cursor-pointer',
                   ].join(' ')}
                 >
@@ -271,14 +271,14 @@ export function SurveySection({ token, items }: { token: string; items: SurveyIt
             {/* Champ commentaire (apparaît après sélection) */}
             {hasReaction && (
               <div className="flex items-start gap-2 animate-in fade-in duration-200">
-                <MessageSquare className="h-3.5 w-3.5 text-[var(--mf-text-tertiary)] mt-2 flex-shrink-0" />
+                <MessageSquare className="h-3.5 w-3.5 text-[var(--kkb-text-tertiary)] mt-2 flex-shrink-0" />
                 <textarea
                   value={answer.comment}
                   onChange={e => updateComment(item.id, e.target.value)}
                   onBlur={() => blurComment(item.id)}
                   placeholder="Un commentaire ? (facultatif)"
                   rows={2}
-                  className="flex-1 text-xs font-quicksand text-[#3D2C20] bg-[#FDF6EE] border border-[#EDE4D6] rounded-lg px-2.5 py-1.5 outline-none placeholder:text-[#C5B8AE] resize-none"
+                  className="flex-1 text-xs font-quicksand text-[var(--kkb-text-primary)] bg-[var(--kkb-bg)] border border-[var(--kkb-border-light)] rounded-lg px-2.5 py-1.5 outline-none placeholder:text-[var(--kkb-text-tertiary)] resize-none"
                 />
               </div>
             )}
@@ -288,7 +288,7 @@ export function SurveySection({ token, items }: { token: string; items: SurveyIt
 
       {/* Erreur */}
       {error && (
-        <p className="text-xs font-quicksand text-[#C0392B] text-center">{error}</p>
+        <p className="text-xs font-quicksand text-[var(--kkb-danger)] text-center">{error}</p>
       )}
 
       {/* Bouton envoi */}
@@ -298,8 +298,8 @@ export function SurveySection({ token, items }: { token: string; items: SurveyIt
         className={[
           'w-full flex items-center justify-center gap-2 py-3 rounded-xl font-dosis font-bold text-sm transition-all',
           ratedCount > 0 && name.trim()
-            ? 'bg-[var(--mf-primary)] text-white'
-            : 'bg-[#EDE4D6] text-[var(--mf-text-tertiary)] cursor-not-allowed',
+            ? 'bg-[var(--kkb-coral)] text-white'
+            : 'bg-[var(--kkb-border-light)] text-[var(--kkb-text-tertiary)] cursor-not-allowed',
         ].join(' ')}
       >
         <Send className="h-4 w-4" />

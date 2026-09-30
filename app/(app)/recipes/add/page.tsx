@@ -14,7 +14,7 @@ const MEAL_LABEL: Record<string, string> = {
   diner:          'Dîner',
 }
 
-const INPUT = 'w-full px-3 py-2.5 rounded-xl border border-[var(--mf-border-warm)] bg-[var(--mf-bg-card-alt)] text-sm font-quicksand text-[var(--mf-text-primary)] placeholder:text-[var(--mf-text-tertiary)] focus:outline-none focus:border-[var(--mf-primary)]'
+const INPUT = 'w-full px-3 py-2.5 rounded-xl border border-[var(--kkb-border)] bg-[var(--kkb-surface)] text-sm font-quicksand text-[var(--kkb-text-primary)] placeholder:text-[var(--kkb-text-tertiary)] focus:outline-none focus:border-[var(--kkb-coral)]'
 
 function RecipeAddInner() {
   const router       = useRouter()
@@ -196,12 +196,12 @@ function RecipeAddInner() {
   return (
     <>
       {/* Sub-header */}
-      <div className="sticky top-14 z-30 bg-[var(--mf-bg-page)] border-b border-[var(--mf-border-warm)] px-4 h-10 flex items-center gap-2.5">
+      <div className="sticky top-14 z-30 bg-[var(--kkb-bg)] border-b border-[var(--kkb-border)] px-4 h-10 flex items-center gap-2.5">
         <button type="button" onClick={() => router.back()}
-          className="p-1 -ml-1 text-[var(--mf-text-secondary)] hover:text-[var(--mf-primary)]" aria-label="Retour">
+          className="p-1 -ml-1 text-[var(--kkb-text-secondary)] hover:text-[var(--kkb-coral)]" aria-label="Retour">
           <ArrowLeft className="h-4 w-4" />
         </button>
-        <p className="font-dosis font-semibold text-sm text-[var(--mf-text-primary)]">
+        <p className="font-dosis font-semibold text-sm text-[var(--kkb-text-primary)]">
           {isPlanCtx && planHeader ? `Nouveau repas — ${planHeader}` : 'Nouvelle recette'}
         </p>
       </div>
@@ -211,21 +211,21 @@ function RecipeAddInner() {
         <div className="max-w-sm mx-auto px-4 pt-4 space-y-2">
           <div className="flex gap-2">
             <div className="relative flex-1">
-              <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--mf-text-tertiary)]" />
+              <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--kkb-text-tertiary)]" />
               <input
                 type="url"
                 placeholder="Coller un lien de recette…"
                 aria-label="Lien de la recette à importer"
                 value={importUrl}
                 onChange={e => { setImportUrl(e.target.value); setImportError(null); setImportWarning(null) }}
-                className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[var(--mf-border-warm)] bg-[var(--mf-bg-card-alt)] text-sm font-quicksand text-[var(--mf-text-primary)] placeholder:text-[var(--mf-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--mf-primary)]/30"
+                className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[var(--kkb-border)] bg-[var(--kkb-surface)] text-sm font-quicksand text-[var(--kkb-text-primary)] placeholder:text-[var(--kkb-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--kkb-coral)]/30"
               />
             </div>
             <button
               type="button"
               onClick={handleImport}
               disabled={!importUrl.trim() || importing}
-              className="bg-[var(--mf-primary)] text-white rounded-xl px-3 disabled:opacity-50 flex items-center hover:bg-[var(--mf-primary-hover)] transition-colors"
+              className="bg-[var(--kkb-coral)] text-white rounded-xl px-3 disabled:opacity-50 flex items-center hover:bg-[var(--kkb-coral-hover)] transition-colors"
               aria-label="Importer la recette"
             >
               {importing
@@ -234,7 +234,7 @@ function RecipeAddInner() {
             </button>
           </div>
           {importDomain && (
-            <p className="text-[11px] font-quicksand text-[var(--mf-text-tertiary)]">
+            <p className="text-[11px] font-quicksand text-[var(--kkb-text-tertiary)]">
               Importée depuis {importDomain} — vérifiez et complétez si nécessaire
             </p>
           )}
@@ -261,8 +261,8 @@ function RecipeAddInner() {
       >
         {/* Dialogue doublon (décision CDC 5.3.2) — masqué en contexte plan */}
         {!isPlanCtx && conflict && (
-          <div className="bg-[var(--mf-gold-bg)] border border-[var(--mf-gold)]/40 rounded-xl p-4 space-y-3">
-            <p className="text-sm font-quicksand font-medium text-[var(--mf-text-primary)]">
+          <div className="bg-[var(--kkb-warning-light)] border border-[var(--kkb-warning)]/40 rounded-xl p-4 space-y-3">
+            <p className="text-sm font-quicksand font-medium text-[var(--kkb-text-primary)]">
               Une recette similaire existe déjà :{' '}
               <span className="font-semibold">&ldquo;{conflict.name}&rdquo;</span>
             </p>
@@ -276,17 +276,17 @@ function RecipeAddInner() {
                 <button key={opt.val} type="button" onClick={() => setConflictChoice(opt.val)}
                   className={`w-full flex items-start gap-3 px-3 py-2.5 rounded-xl border text-left transition-colors ${
                     conflictChoice === opt.val
-                      ? 'border-[var(--mf-primary)] bg-white'
-                      : 'border-[var(--mf-border-warm)] bg-white/60'
+                      ? 'border-[var(--kkb-coral)] bg-white'
+                      : 'border-[var(--kkb-border)] bg-white/60'
                   }`}>
                   <div className={`mt-0.5 w-3.5 h-3.5 rounded-full border-2 flex-shrink-0 transition-colors ${
                     conflictChoice === opt.val
-                      ? 'border-[var(--mf-primary)] bg-[var(--mf-primary)]'
-                      : 'border-[var(--mf-border-warm)]'
+                      ? 'border-[var(--kkb-coral)] bg-[var(--kkb-coral)]'
+                      : 'border-[var(--kkb-border)]'
                   }`} />
                   <div>
-                    <p className="text-xs font-quicksand font-semibold text-[var(--mf-text-primary)]">{opt.label}</p>
-                    <p className="text-xs font-quicksand text-[var(--mf-text-tertiary)]">{opt.sub}</p>
+                    <p className="text-xs font-quicksand font-semibold text-[var(--kkb-text-primary)]">{opt.label}</p>
+                    <p className="text-xs font-quicksand text-[var(--kkb-text-tertiary)]">{opt.sub}</p>
                   </div>
                 </button>
               ))}
@@ -300,7 +300,7 @@ function RecipeAddInner() {
             )}
 
             <button type="button" onClick={confirmConflict} disabled={loading}
-              className="w-full py-3 rounded-xl bg-[var(--mf-primary)] text-white font-quicksand font-semibold text-sm hover:bg-[var(--mf-primary-hover)] disabled:opacity-60 transition-colors">
+              className="w-full py-3 rounded-xl bg-[var(--kkb-coral)] text-white font-quicksand font-semibold text-sm hover:bg-[var(--kkb-coral-hover)] disabled:opacity-60 transition-colors">
               {loading ? 'En cours…' : 'Confirmer'}
             </button>
           </div>
@@ -314,7 +314,7 @@ export default function RecipeAddPage() {
   return (
     <Suspense fallback={
       <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="h-6 w-6 text-[var(--mf-primary)] animate-spin" />
+        <Loader2 className="h-6 w-6 text-[var(--kkb-coral)] animate-spin" />
       </div>
     }>
       <RecipeAddInner />

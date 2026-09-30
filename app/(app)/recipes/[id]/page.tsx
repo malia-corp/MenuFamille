@@ -216,7 +216,7 @@ export default function RecipeDetailPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <p className="text-sm text-[var(--mf-text-tertiary)] font-quicksand">Chargement…</p>
+        <p className="text-sm text-[var(--kkb-text-tertiary)] font-quicksand">Chargement…</p>
       </div>
     )
   }
@@ -226,7 +226,7 @@ export default function RecipeDetailPage() {
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 px-4">
         <p className="text-sm text-red-600 font-quicksand text-center">{error ?? 'Recette introuvable'}</p>
         <button type="button" onClick={() => router.back()}
-          className="text-xs text-[var(--mf-primary)] underline font-quicksand">
+          className="text-xs text-[var(--kkb-coral)] underline font-quicksand">
           Retour
         </button>
       </div>
@@ -239,24 +239,24 @@ export default function RecipeDetailPage() {
   return (
     <>
       {/* Sous-header de navigation */}
-      <div className="sticky top-14 z-30 bg-[var(--mf-bg-page)] border-b border-[var(--mf-border-warm)] px-4 h-10 flex items-center gap-2.5">
+      <div className="sticky top-14 z-30 bg-[var(--kkb-bg)] border-b border-[var(--kkb-border)] px-4 h-10 flex items-center gap-2.5">
         <button type="button" onClick={() => router.back()}
-          className="p-1 -ml-1 text-[var(--mf-text-secondary)] hover:text-[var(--mf-primary)]"
+          className="p-1 -ml-1 text-[var(--kkb-text-secondary)] hover:text-[var(--kkb-coral)]"
           aria-label="Retour">
           <ArrowLeft className="h-4 w-4" />
         </button>
-        <p className="font-dosis font-semibold text-sm text-[var(--mf-text-primary)] truncate flex-1">
+        <p className="font-dosis font-semibold text-sm text-[var(--kkb-text-primary)] truncate flex-1">
           {recipe.name}
         </p>
         {isOwner && (
           <div className="flex items-center gap-1 flex-shrink-0">
             <button type="button" onClick={() => router.push(`/recipes/${id}/edit`)}
-              className="p-1.5 text-[var(--mf-text-secondary)] hover:text-[var(--mf-primary)] transition-colors"
+              className="p-1.5 text-[var(--kkb-text-secondary)] hover:text-[var(--kkb-coral)] transition-colors"
               aria-label="Modifier">
               <Pencil className="h-4 w-4" />
             </button>
             <button type="button" onClick={() => setShowConfirmDelete(true)}
-              className="p-1.5 text-[var(--mf-text-secondary)] hover:text-red-500 transition-colors"
+              className="p-1.5 text-[var(--kkb-text-secondary)] hover:text-red-500 transition-colors"
               aria-label="Supprimer">
               <Trash2 className="h-4 w-4" />
             </button>
@@ -279,11 +279,11 @@ export default function RecipeDetailPage() {
         {/* Badge catégorie + nom */}
         <div className="space-y-1.5">
           {recipe.categories && (
-            <span className="inline-flex items-center gap-1 text-[10px] font-quicksand font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[var(--mf-gold-bg)] text-[var(--mf-gold)]">
+            <span className="inline-flex items-center gap-1 text-[10px] font-quicksand font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[var(--kkb-warning-light)] text-[var(--kkb-warning)]">
               {recipe.categories.icon} {recipe.categories.name}
             </span>
           )}
-          <h1 className="font-dosis font-bold text-2xl text-[var(--mf-text-primary)] leading-tight">
+          <h1 className="font-dosis font-bold text-2xl text-[var(--kkb-text-primary)] leading-tight">
             {recipe.name}
           </h1>
         </div>
@@ -291,37 +291,37 @@ export default function RecipeDetailPage() {
         {/* Métadonnées */}
         <div className="flex flex-wrap gap-x-4 gap-y-2">
           {totalMin > 0 && (
-            <div className="flex items-center gap-1.5 text-xs text-[var(--mf-text-secondary)] font-quicksand">
-              <Clock className="h-3.5 w-3.5 text-[var(--mf-primary)]" />
+            <div className="flex items-center gap-1.5 text-xs text-[var(--kkb-text-secondary)] font-quicksand">
+              <Clock className="h-3.5 w-3.5 text-[var(--kkb-coral)]" />
               {totalMin} min
             </div>
           )}
-          <div className="flex items-center gap-1.5 text-xs text-[var(--mf-text-secondary)] font-quicksand">
-            <Users className="h-3.5 w-3.5 text-[var(--mf-primary)]" />
+          <div className="flex items-center gap-1.5 text-xs text-[var(--kkb-text-secondary)] font-quicksand">
+            <Users className="h-3.5 w-3.5 text-[var(--kkb-coral)]" />
             {recipe.servings} pers.
           </div>
           {recipe.difficulty && (
-            <div className="flex items-center gap-1.5 text-xs text-[var(--mf-text-secondary)] font-quicksand">
-              <ChefHat className="h-3.5 w-3.5 text-[var(--mf-primary)]" />
+            <div className="flex items-center gap-1.5 text-xs text-[var(--kkb-text-secondary)] font-quicksand">
+              <ChefHat className="h-3.5 w-3.5 text-[var(--kkb-coral)]" />
               {DIFFICULTY_LABEL[recipe.difficulty]}
             </div>
           )}
           {recipe.categories && (
-            <div className="flex items-center gap-1.5 text-xs text-[var(--mf-text-secondary)] font-quicksand">
-              <Utensils className="h-3.5 w-3.5 text-[var(--mf-primary)]" />
+            <div className="flex items-center gap-1.5 text-xs text-[var(--kkb-text-secondary)] font-quicksand">
+              <Utensils className="h-3.5 w-3.5 text-[var(--kkb-coral)]" />
               {recipe.categories.name}
             </div>
           )}
           <button
             type="button"
             onClick={toggleFavorite}
-            className="flex items-center gap-1.5 text-xs font-quicksand text-[var(--mf-text-secondary)] hover:text-[var(--mf-primary)] transition-colors"
+            className="flex items-center gap-1.5 text-xs font-quicksand text-[var(--kkb-text-secondary)] hover:text-[var(--kkb-coral)] transition-colors"
             aria-label={recipe.is_favorited ? 'Retirer des favoris' : 'Ajouter aux favoris'}
           >
             {recipe.is_favorited ? (
               <Heart className="h-3.5 w-3.5 fill-red-400 text-red-400" />
             ) : (
-              <HeartOff className="h-3.5 w-3.5 text-[var(--mf-text-tertiary)]" />
+              <HeartOff className="h-3.5 w-3.5 text-[var(--kkb-text-tertiary)]" />
             )}
             {recipe.is_favorited ? 'Favori' : 'Non favori'}
           </button>
@@ -329,17 +329,17 @@ export default function RecipeDetailPage() {
 
         {/* Contrôle portions */}
         {recipe.recipe_ingredients.length > 0 && (
-          <div className="flex items-center justify-between bg-[var(--mf-bg-card)] rounded-xl px-4 py-3">
-            <span className="text-sm font-quicksand font-medium text-[var(--mf-text-primary)]">Portions</span>
+          <div className="flex items-center justify-between bg-[var(--kkb-coral-light)] rounded-xl px-4 py-3">
+            <span className="text-sm font-quicksand font-medium text-[var(--kkb-text-primary)]">Portions</span>
             <div className="flex items-center gap-3">
               <button type="button" onClick={() => setServings((s) => Math.max(1, s - 1))} disabled={servings <= 1}
-                className="w-8 h-8 rounded-full flex items-center justify-center border border-[var(--mf-border-warm)] text-[var(--mf-text-secondary)] disabled:opacity-40 hover:border-[var(--mf-primary)] hover:text-[var(--mf-primary)] transition-colors"
+                className="w-8 h-8 rounded-full flex items-center justify-center border border-[var(--kkb-border)] text-[var(--kkb-text-secondary)] disabled:opacity-40 hover:border-[var(--kkb-coral)] hover:text-[var(--kkb-coral)] transition-colors"
                 aria-label="Réduire les portions">
                 <Minus className="h-3.5 w-3.5" />
               </button>
-              <span className="w-6 text-center font-dosis font-bold text-lg text-[var(--mf-text-primary)]">{servings}</span>
+              <span className="w-6 text-center font-dosis font-bold text-lg text-[var(--kkb-text-primary)]">{servings}</span>
               <button type="button" onClick={() => setServings((s) => s + 1)}
-                className="w-8 h-8 rounded-full flex items-center justify-center border border-[var(--mf-border-warm)] text-[var(--mf-text-secondary)] hover:border-[var(--mf-primary)] hover:text-[var(--mf-primary)] transition-colors"
+                className="w-8 h-8 rounded-full flex items-center justify-center border border-[var(--kkb-border)] text-[var(--kkb-text-secondary)] hover:border-[var(--kkb-coral)] hover:text-[var(--kkb-coral)] transition-colors"
                 aria-label="Augmenter les portions">
                 <Plus className="h-3.5 w-3.5" />
               </button>
@@ -350,15 +350,15 @@ export default function RecipeDetailPage() {
         {/* Ingrédients */}
         {recipe.recipe_ingredients.length > 0 && (
           <div className="space-y-2">
-            <h2 className="font-dosis font-semibold text-base text-[var(--mf-text-primary)]">Ingrédients</h2>
+            <h2 className="font-dosis font-semibold text-base text-[var(--kkb-text-primary)]">Ingrédients</h2>
             <div className="space-y-1.5">
               {recipe.recipe_ingredients.map((ing) => (
-                <div key={ing.id} className="flex items-center gap-2 py-1.5 border-b border-[var(--mf-border-warm)]/40 last:border-0">
-                  <span className="w-16 text-right text-sm font-quicksand font-medium text-[var(--mf-primary)] flex-shrink-0">
+                <div key={ing.id} className="flex items-center gap-2 py-1.5 border-b border-[var(--kkb-border)]/40 last:border-0">
+                  <span className="w-16 text-right text-sm font-quicksand font-medium text-[var(--kkb-coral)] flex-shrink-0">
                     {formatQty(ing.quantity, servings, recipe.servings)}
                     {ing.unit ? ` ${ing.unit}` : ''}
                   </span>
-                  <span className="text-sm font-quicksand text-[var(--mf-text-primary)]">{ing.name}</span>
+                  <span className="text-sm font-quicksand text-[var(--kkb-text-primary)]">{ing.name}</span>
                 </div>
               ))}
             </div>
@@ -368,14 +368,14 @@ export default function RecipeDetailPage() {
         {/* Préparation */}
         {recipe.recipe_steps.length > 0 && (
           <div className="space-y-3">
-            <h2 className="font-dosis font-semibold text-base text-[var(--mf-text-primary)]">Préparation</h2>
+            <h2 className="font-dosis font-semibold text-base text-[var(--kkb-text-primary)]">Préparation</h2>
             <div className="space-y-3">
               {recipe.recipe_steps.map((step) => (
                 <div key={step.id} className="flex gap-3">
-                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--mf-primary)] flex items-center justify-center">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--kkb-coral)] flex items-center justify-center">
                     <span className="text-xs font-dosis font-bold text-white">{step.step_number}</span>
                   </div>
-                  <p className="text-sm font-quicksand text-[var(--mf-text-primary)] leading-relaxed pt-0.5">
+                  <p className="text-sm font-quicksand text-[var(--kkb-text-primary)] leading-relaxed pt-0.5">
                     {step.description}
                   </p>
                 </div>
@@ -386,18 +386,18 @@ export default function RecipeDetailPage() {
 
         {/* Encart astuce */}
         {recipe.description && (
-          <div className="bg-[var(--mf-gold-bg)] rounded-xl p-4 flex gap-3">
-            <Lightbulb className="h-5 w-5 text-[var(--mf-gold)] flex-shrink-0 mt-0.5" />
+          <div className="bg-[var(--kkb-warning-light)] rounded-xl p-4 flex gap-3">
+            <Lightbulb className="h-5 w-5 text-[var(--kkb-warning)] flex-shrink-0 mt-0.5" />
             <div>
-              <p className="text-xs font-quicksand font-bold uppercase tracking-wider text-[var(--mf-gold)] mb-1">Astuce</p>
-              <p className="text-sm font-quicksand text-[var(--mf-text-secondary)] leading-relaxed">{recipe.description}</p>
+              <p className="text-xs font-quicksand font-bold uppercase tracking-wider text-[var(--kkb-warning)] mb-1">Astuce</p>
+              <p className="text-sm font-quicksand text-[var(--kkb-text-secondary)] leading-relaxed">{recipe.description}</p>
             </div>
           </div>
         )}
 
         {/* Bouton "Ajouter à mon menu" */}
         <button type="button" onClick={openAddMenu}
-          className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-[var(--mf-primary)] text-white font-quicksand font-semibold text-sm hover:bg-[var(--mf-primary-hover)] transition-colors">
+          className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-[var(--kkb-coral)] text-white font-quicksand font-semibold text-sm hover:bg-[var(--kkb-coral-hover)] transition-colors">
           <CalendarPlus className="h-4 w-4" />
           Ajouter à mon menu
         </button>
@@ -407,15 +407,15 @@ export default function RecipeDetailPage() {
       {showConfirmDelete && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 px-4 pb-6">
           <div className="w-full max-w-sm bg-white rounded-2xl p-5 space-y-4 shadow-xl">
-            <p className="font-dosis font-bold text-base text-[var(--mf-text-primary)]">
+            <p className="font-dosis font-bold text-base text-[var(--kkb-text-primary)]">
               Supprimer cette recette ?
             </p>
-            <p className="text-sm font-quicksand text-[var(--mf-text-secondary)] leading-relaxed">
+            <p className="text-sm font-quicksand text-[var(--kkb-text-secondary)] leading-relaxed">
               Cette action est irréversible. La recette sera définitivement supprimée.
             </p>
             <div className="flex gap-3">
               <button type="button" onClick={() => setShowConfirmDelete(false)}
-                className="flex-1 py-3 rounded-xl border border-[var(--mf-border-warm)] text-sm font-quicksand font-medium text-[var(--mf-text-secondary)] hover:border-[var(--mf-primary)] transition-colors">
+                className="flex-1 py-3 rounded-xl border border-[var(--kkb-border)] text-sm font-quicksand font-medium text-[var(--kkb-text-secondary)] hover:border-[var(--kkb-coral)] transition-colors">
                 Annuler
               </button>
               <button type="button" onClick={deleteRecipe} disabled={deleting}
@@ -434,20 +434,20 @@ export default function RecipeDetailPage() {
           onClick={e => { if (e.target === e.currentTarget) setShowAddMenu(false) }}
         >
           <div className="w-full max-w-sm bg-white rounded-2xl p-5 space-y-4 shadow-xl">
-            <p className="font-dosis font-bold text-base text-[var(--mf-text-primary)]">
+            <p className="font-dosis font-bold text-base text-[var(--kkb-text-primary)]">
               Ajouter à mon menu
             </p>
 
             {/* Semaine */}
             <div className="space-y-1.5">
-              <p className="text-xs font-quicksand font-semibold text-[var(--mf-text-secondary)]">SEMAINE</p>
+              <p className="text-xs font-quicksand font-semibold text-[var(--kkb-text-secondary)]">SEMAINE</p>
               <div className="flex gap-2">
                 {([{ val: 'current', label: 'Cette semaine' }, { val: 'next', label: 'Semaine prochaine' }] as const).map(o => (
                   <button key={o.val} type="button" onClick={() => setAddWeek(o.val)}
                     className={`flex-1 py-2 rounded-xl text-xs font-quicksand font-medium border transition-colors ${
                       addWeek === o.val
-                        ? 'bg-[var(--mf-primary)] text-white border-[var(--mf-primary)]'
-                        : 'border-[var(--mf-border-warm)] text-[var(--mf-text-secondary)]'
+                        ? 'bg-[var(--kkb-coral)] text-white border-[var(--kkb-coral)]'
+                        : 'border-[var(--kkb-border)] text-[var(--kkb-text-secondary)]'
                     }`}>{o.label}</button>
                 ))}
               </div>
@@ -455,14 +455,14 @@ export default function RecipeDetailPage() {
 
             {/* Jour */}
             <div className="space-y-1.5">
-              <p className="text-xs font-quicksand font-semibold text-[var(--mf-text-secondary)]">JOUR</p>
+              <p className="text-xs font-quicksand font-semibold text-[var(--kkb-text-secondary)]">JOUR</p>
               <div className="flex flex-wrap gap-1.5">
                 {DAY_OPTIONS.map(d => (
                   <button key={d.val} type="button" onClick={() => setAddDay(d.val)}
                     className={`px-3 py-1.5 rounded-xl text-xs font-quicksand font-medium border transition-colors ${
                       addDay === d.val
-                        ? 'bg-[var(--mf-primary)] text-white border-[var(--mf-primary)]'
-                        : 'border-[var(--mf-border-warm)] text-[var(--mf-text-secondary)]'
+                        ? 'bg-[var(--kkb-coral)] text-white border-[var(--kkb-coral)]'
+                        : 'border-[var(--kkb-border)] text-[var(--kkb-text-secondary)]'
                     }`}>{d.label}</button>
                 ))}
               </div>
@@ -470,14 +470,14 @@ export default function RecipeDetailPage() {
 
             {/* Repas */}
             <div className="space-y-1.5">
-              <p className="text-xs font-quicksand font-semibold text-[var(--mf-text-secondary)]">REPAS</p>
+              <p className="text-xs font-quicksand font-semibold text-[var(--kkb-text-secondary)]">REPAS</p>
               <div className="flex flex-wrap gap-1.5">
                 {(mealConfig ?? []).map(m => (
                   <button key={m.meal_type} type="button" onClick={() => setAddMeal(m.meal_type)}
                     className={`px-3 py-1.5 rounded-xl text-xs font-quicksand font-medium border transition-colors ${
                       addMeal === m.meal_type
-                        ? 'bg-[var(--mf-primary)] text-white border-[var(--mf-primary)]'
-                        : 'border-[var(--mf-border-warm)] text-[var(--mf-text-secondary)]'
+                        ? 'bg-[var(--kkb-coral)] text-white border-[var(--kkb-coral)]'
+                        : 'border-[var(--kkb-border)] text-[var(--kkb-text-secondary)]'
                     }`}>{m.label}</button>
                 ))}
               </div>
@@ -494,12 +494,12 @@ export default function RecipeDetailPage() {
             ) : (
               <div className="flex gap-3">
                 <button type="button" onClick={() => setShowAddMenu(false)}
-                  className="flex-1 py-3 rounded-xl border border-[var(--mf-border-warm)] text-sm font-quicksand font-medium text-[var(--mf-text-secondary)] hover:border-[var(--mf-primary)] transition-colors">
+                  className="flex-1 py-3 rounded-xl border border-[var(--kkb-border)] text-sm font-quicksand font-medium text-[var(--kkb-text-secondary)] hover:border-[var(--kkb-coral)] transition-colors">
                   Annuler
                 </button>
                 <button type="button" onClick={confirmAddToMenu}
                   disabled={!addDay || !addMeal || addingMenu}
-                  className="flex-1 py-3 rounded-xl bg-[var(--mf-primary)] text-white text-sm font-quicksand font-semibold hover:bg-[var(--mf-primary-hover)] disabled:opacity-60 transition-colors">
+                  className="flex-1 py-3 rounded-xl bg-[var(--kkb-coral)] text-white text-sm font-quicksand font-semibold hover:bg-[var(--kkb-coral-hover)] disabled:opacity-60 transition-colors">
                   {addingMenu ? 'Ajout…' : 'Confirmer'}
                 </button>
               </div>

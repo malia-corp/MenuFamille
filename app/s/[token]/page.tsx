@@ -3,11 +3,11 @@ import { Clock, Utensils } from 'lucide-react'
 import { createServiceClient } from '@/lib/supabase/service'
 import { SurveySection } from './_survey-section'
 import { composedName } from '@/lib/utils/composed-name'
+import { MEAL_LABEL, MEAL_EMOJI, type MealType } from '@/lib/constants/meal-type'
 import type { Metadata } from 'next'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type MealType  = 'petit_dejeuner' | 'dejeuner' | 'gouter' | 'diner'
 type DayOfWeek = 'lundi' | 'mardi' | 'mercredi' | 'jeudi' | 'vendredi' | 'samedi' | 'dimanche'
 
 interface PublicRecipe {
@@ -40,20 +40,6 @@ interface PublicPlan {
 // ─── Constantes ───────────────────────────────────────────────────────────────
 
 const MEAL_ORDER: MealType[] = ['petit_dejeuner', 'dejeuner', 'gouter', 'diner']
-
-const MEAL_LABEL: Record<MealType, string> = {
-  petit_dejeuner: 'Petit-déjeuner',
-  dejeuner:       'Déjeuner',
-  gouter:         'Goûter',
-  diner:          'Dîner',
-}
-
-const MEAL_EMOJI: Record<MealType, string> = {
-  petit_dejeuner: '🌅',
-  dejeuner:       '🍽',
-  gouter:         '🧁',
-  diner:          '🌙',
-}
 
 const DAY_OPTIONS: { val: DayOfWeek; full: string }[] = [
   { val: 'lundi',    full: 'Lundi'    },
@@ -88,10 +74,10 @@ export async function generateMetadata(
     .gt('token_expires_at', new Date().toISOString())
     .maybeSingle()
 
-  if (!data) return { title: 'Menu partagé — MenuFamille' }
+  if (!data) return { title: 'Menu partagé — KeskonBouf' }
 
   return {
-    title: `Menu ${formatWeekRange(data.week_start)} — MenuFamille`,
+    title: `Menu ${formatWeekRange(data.week_start)} — KeskonBouf`,
   }
 }
 
@@ -132,20 +118,20 @@ export default async function SharedMenuPage({ params }: { params: { token: stri
   const activeMealTypes = MEAL_ORDER.filter(mt => byMealType.has(mt))
 
   return (
-    <div className="min-h-screen bg-[#FDF6EE]">
+    <div className="min-h-screen bg-[var(--kkb-bg)]">
       {/* Header minimal */}
-      <header className="bg-white border-b border-[#EDE4D6] px-4 py-3 flex items-center gap-2">
+      <header className="bg-white border-b border-[var(--kkb-border-light)] px-4 py-3 flex items-center gap-2">
         <span className="text-xl">🥘</span>
-        <span className="font-dosis font-bold text-base text-[var(--mf-primary)]">MenuFamille</span>
+        <span className="font-dosis font-bold text-base text-[var(--kkb-coral)]">KeskonBouf</span>
       </header>
 
       <main className="max-w-lg mx-auto px-4 py-6 space-y-6">
         {/* Titre semaine */}
         <div>
-          <p className="text-[11px] font-quicksand font-bold uppercase tracking-wider text-[var(--mf-text-tertiary)] mb-0.5">
+          <p className="text-[11px] font-quicksand font-bold uppercase tracking-wider text-[var(--kkb-text-tertiary)] mb-0.5">
             Menu partagé
           </p>
-          <h1 className="font-dosis font-bold text-xl text-[#3D2C20]">
+          <h1 className="font-dosis font-bold text-xl text-[var(--kkb-text-primary)]">
             {formatWeekRange(plan.week_start)}
           </h1>
         </div>
@@ -161,17 +147,17 @@ export default async function SharedMenuPage({ params }: { params: { token: stri
             <section key={mealType}>
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-xl">{MEAL_EMOJI[mealType]}</span>
-                <h2 className="font-dosis font-semibold text-base text-[#3D2C20]">
+                <h2 className="font-dosis font-semibold text-base text-[var(--kkb-text-primary)]">
                   {MEAL_LABEL[mealType]}
                 </h2>
                 {isTemplate && (
-                  <span className="text-[10px] font-quicksand font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-[#FDF0DC] text-[var(--mf-gold-text)]">
+                  <span className="text-[10px] font-quicksand font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-[var(--kkb-warning-light)] text-[var(--kkb-warning)]">
                     Modèle semaine
                   </span>
                 )}
               </div>
 
-              <div className="bg-white border border-[#EDE4D6] rounded-xl overflow-hidden">
+              <div className="bg-white border border-[var(--kkb-border-light)] rounded-xl overflow-hidden">
                 {isTemplate ? (
                   <SharedRecipeRow
                     recipe={templateItem!.recipes}
@@ -197,13 +183,13 @@ export default async function SharedMenuPage({ params }: { params: { token: stri
         })}
 
         {activeMealTypes.length === 0 && (
-          <p className="text-sm font-quicksand text-[var(--mf-text-tertiary)] text-center py-8">
+          <p className="text-sm font-quicksand text-[var(--kkb-text-tertiary)] text-center py-8">
             Ce menu ne contient aucun repas planifié.
           </p>
         )}
 
         {/* Séparateur */}
-        <hr className="border-[#EDE4D6]" />
+        <hr className="border-[var(--kkb-border-light)]" />
 
         {/* Section sondage */}
         <SurveySection
@@ -218,9 +204,9 @@ export default async function SharedMenuPage({ params }: { params: { token: stri
         />
 
         {/* Footer CTA */}
-        <div className="pt-4 border-t border-[#EDE4D6] text-center space-y-1">
-          <p className="text-xs font-quicksand text-[var(--mf-text-tertiary)]">
-            Planifiez vos menus familiaux avec MenuFamille
+        <div className="pt-4 border-t border-[var(--kkb-border-light)] text-center space-y-1">
+          <p className="text-xs font-quicksand text-[var(--kkb-text-tertiary)]">
+            Planifiez vos menus familiaux avec KeskonBouf
           </p>
         </div>
       </main>
@@ -232,15 +218,15 @@ export default async function SharedMenuPage({ params }: { params: { token: stri
 
 function ExpiredLinkPage() {
   return (
-    <div className="min-h-screen bg-[#FDF6EE] flex items-center justify-center px-6">
+    <div className="min-h-screen bg-[var(--kkb-bg)] flex items-center justify-center px-6">
       <div className="text-center space-y-3 max-w-xs">
-        <div className="w-12 h-12 rounded-full bg-[#FDF0DC] flex items-center justify-center mx-auto">
-          <Clock className="h-6 w-6 text-[var(--mf-gold-text)]" />
+        <div className="w-12 h-12 rounded-full bg-[var(--kkb-warning-light)] flex items-center justify-center mx-auto">
+          <Clock className="h-6 w-6 text-[var(--kkb-warning)]" />
         </div>
-        <h1 className="font-dosis font-bold text-lg text-[#3D2C20]">
+        <h1 className="font-dosis font-bold text-lg text-[var(--kkb-text-primary)]">
           Ce lien a expiré
         </h1>
-        <p className="text-sm font-quicksand text-[var(--mf-text-tertiary)]">
+        <p className="text-sm font-quicksand text-[var(--kkb-text-tertiary)]">
           Demandez à la personne qui a partagé ce menu de vous envoyer un nouveau lien.
         </p>
       </div>
@@ -260,8 +246,8 @@ function SharedRecipeRow({
   displayName?: string
 }) {
   return (
-    <div className="flex items-center gap-3 px-3 py-2.5 border-b border-[#EDE4D6]/50 last:border-0">
-      <p className="w-20 text-[10px] font-quicksand font-semibold text-[var(--mf-text-tertiary)] flex-shrink-0">
+    <div className="flex items-center gap-3 px-3 py-2.5 border-b border-[var(--kkb-border-light)]/50 last:border-0">
+      <p className="w-20 text-[10px] font-quicksand font-semibold text-[var(--kkb-text-tertiary)] flex-shrink-0">
         {label}
       </p>
       {recipe ? (
@@ -270,13 +256,13 @@ function SharedRecipeRow({
             {recipe.categories?.icon ?? '🍴'}
           </span>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-quicksand font-medium text-[#3D2C20] truncate">
+            <p className="text-xs font-quicksand font-medium text-[var(--kkb-text-primary)] truncate">
               {displayName ?? recipe.name}
             </p>
             {recipe.prep_time_min && (
               <div className="flex items-center gap-0.5 mt-0.5">
-                <Clock className="h-2.5 w-2.5 text-[var(--mf-text-tertiary)]" />
-                <span className="text-[10px] font-quicksand text-[#6B5D54]">
+                <Clock className="h-2.5 w-2.5 text-[var(--kkb-text-tertiary)]" />
+                <span className="text-[10px] font-quicksand text-[var(--kkb-text-secondary)]">
                   {recipe.prep_time_min} min
                 </span>
               </div>
@@ -285,8 +271,8 @@ function SharedRecipeRow({
         </>
       ) : (
         <div className="flex items-center gap-2 flex-1">
-          <Utensils className="h-3.5 w-3.5 text-[var(--mf-text-tertiary)] flex-shrink-0" />
-          <p className="text-xs font-quicksand text-[var(--mf-text-tertiary)] italic">Non planifié</p>
+          <Utensils className="h-3.5 w-3.5 text-[var(--kkb-text-tertiary)] flex-shrink-0" />
+          <p className="text-xs font-quicksand text-[var(--kkb-text-tertiary)] italic">Non planifié</p>
         </div>
       )}
     </div>
