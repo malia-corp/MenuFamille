@@ -18,20 +18,17 @@ export function MobileHeader({ displayName, title, showBack = false }: MobileHea
   return (
     <header className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-white border-b border-[var(--kkb-border)]/50 h-14 flex items-center px-4">
       <div className="flex items-center justify-between w-full max-w-sm mx-auto">
-        {showBack ? (
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="p-1 -ml-1 text-[var(--kkb-teal)]"
-            aria-label="Retour"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
-        ) : (
-          <div className="w-5" />
-        )}
-
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 -ml-1">
+          {showBack && (
+            <button
+              type="button"
+              onClick={() => router.back()}
+              className="p-1 mr-0.5 text-[var(--kkb-teal)]"
+              aria-label="Retour"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+          )}
           <Image src="/logo-icon.svg" alt="" width={20} height={20} className="h-5 w-5" />
           <span className="font-dosis font-bold text-[var(--kkb-coral)]">{title ?? 'KeskonBouf'}</span>
         </div>
