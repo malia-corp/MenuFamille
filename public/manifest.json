@@ -1,0 +1,22 @@
+{
+  "name": "KeskonBouf",
+  "short_name": "KeskonBouf",
+  "description": "Planification de menus familiaux — Saveurs & Partage",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F4F2EF",
+  "theme_color": "#0E5A5E",
+  "icons": [
+    {
+      "src": "/logo-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
+    }
+  ]
+}
