@@ -1,0 +1,67 @@
+'use client'
+
+import Image from 'next/image'
+import { Pencil } from 'lucide-react'
+import { CompositionCarousel, type ChipItem } from './composition-carousel'
+
+interface MealCardCompactProps {
+  emoji: string
+  badgeLabel: string
+  badgeBg: string
+  badgeText: string
+  photoUrl: string | null
+  title: string
+  subtitle: string
+  compositionTitle: string
+  compositions: ChipItem[]
+  onEdit: () => void
+  onAddComposition: () => void
+}
+
+export function MealCardCompact({
+  emoji,
+  badgeLabel,
+  badgeBg,
+  badgeText,
+  photoUrl,
+  title,
+  subtitle,
+  compositionTitle,
+  compositions,
+  onEdit,
+  onAddComposition,
+}: MealCardCompactProps) {
+  return (
+    <div className="bg-white rounded-xl border-[0.5px] border-[var(--kkb-border)] shadow-sm overflow-hidden">
+      <div className="relative h-36 w-full">
+        {photoUrl ? (
+          <Image src={photoUrl} alt={title} fill sizes="400px" loading="lazy" className="object-cover" />
+        ) : (
+          <div className="h-full w-full flex items-center justify-center text-5xl bg-[var(--kkb-coral)]">{emoji}</div>
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+        <div className="absolute top-1.5 left-1.5">
+          <span
+            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-quicksand font-bold border border-[var(--kkb-border)]"
+            style={{ backgroundColor: badgeBg, color: badgeText }}
+          >
+            {emoji} {badgeLabel}
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={onEdit}
+          aria-label="Modifier"
+          className="absolute top-1.5 right-1.5 h-7 w-7 rounded-full bg-white/90 hover:bg-white flex items-center justify-center text-[var(--kkb-text-secondary)] active:scale-95 transition-transform"
+        >
+          <Pencil className="h-3.5 w-3.5" />
+        </button>
+        <div className="absolute bottom-1.5 left-2.5 right-2.5 text-white">
+          <h4 className="font-dosis font-bold text-lg leading-tight">{title}</h4>
+          <p className="text-[11px] font-quicksand text-white/90">{subtitle}</p>
+        </div>
+      </div>
+      <CompositionCarousel title={compositionTitle} items={compositions} onAdd={onAddComposition} addLabel="Extra" />
+    </div>
+  )
+}
