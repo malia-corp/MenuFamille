@@ -25,10 +25,11 @@ import {
 } from 'lucide-react'
 import { composedName } from '@/lib/utils/composed-name'
 import { MEAL_LABEL, MEAL_EMOJI, type MealType } from '@/lib/constants/meal-type'
+import { DAY_OPTIONS, getMondayISO, shiftWeek, formatWeekRange, type DayOfWeek } from '@/lib/utils/week'
+import { sortByMealType } from '@/lib/utils/sort-meal-configs'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type DayOfWeek = 'lundi' | 'mardi' | 'mercredi' | 'jeudi' | 'vendredi' | 'samedi' | 'dimanche'
 type ViewState = 'loading' | 'generating' | 'review'
 type Scope     = 'all' | 'mes' | 'famille' | 'communaute'
 
@@ -120,16 +121,6 @@ const GEN_STEPS = [
   'Finalisation…',
 ]
 
-const DAY_OPTIONS: { val: DayOfWeek; label: string; full: string }[] = [
-  { val: 'lundi',    label: 'Lun', full: 'Lundi'    },
-  { val: 'mardi',    label: 'Mar', full: 'Mardi'    },
-  { val: 'mercredi', label: 'Mer', full: 'Mercredi' },
-  { val: 'jeudi',    label: 'Jeu', full: 'Jeudi'    },
-  { val: 'vendredi', label: 'Ven', full: 'Vendredi' },
-  { val: 'samedi',   label: 'Sam', full: 'Samedi'   },
-  { val: 'dimanche', label: 'Dim', full: 'Dimanche' },
-]
-
 const SCOPE_OPTIONS: { val: Scope; label: string }[] = [
   { val: 'all',        label: 'Tout'         },
   { val: 'mes',        label: 'Mes recettes' },
@@ -138,34 +129,6 @@ const SCOPE_OPTIONS: { val: Scope; label: string }[] = [
 ]
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function getMondayISO(d: Date = new Date()): string {
-  const day  = d.getDay()
-  const diff = day === 0 ? -6 : 1 - day
-  const mon  = new Date(d)
-  mon.setDate(d.getDate() + diff)
-  const y  = mon.getFullYear()
-  const m  = String(mon.getMonth() + 1).padStart(2, '0')
-  const dd = String(mon.getDate()).padStart(2, '0')
-  return `${y}-${m}-${dd}`
-}
-
-function shiftWeek(iso: string, delta: -1 | 1): string {
-  const d = new Date(iso + 'T00:00:00')
-  d.setDate(d.getDate() + delta * 7)
-  const y  = d.getFullYear()
-  const m  = String(d.getMonth() + 1).padStart(2, '0')
-  const dd = String(d.getDate()).padStart(2, '0')
-  return `${y}-${m}-${dd}`
-}
-
-function formatWeekRange(weekStart: string): string {
-  const start = new Date(weekStart + 'T00:00:00')
-  const end   = new Date(start)
-  end.setDate(start.getDate() + 6)
-  const fmt = (d: Date) => d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
-  return `${fmt(start)} – ${fmt(end)}`
-}
 
 function formatTime(s: number): string {
   return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`
@@ -225,9 +188,9 @@ export default function PlanPage() {
       const planData: Plan      = await planRes.json()
       const configData: unknown = await configRes.json()
 
-      const active = (Array.isArray(configData) ? configData as MealConfig[] : [])
-        .filter(c => c.is_active)
-        .sort((a, b) => a.display_order - b.display_order)
+      const active = sortByMealType(
+        (Array.isArray(configData) ? configData as MealConfig[] : []).filter(c => c.is_active)
+      )
 
       setConfigs(active)
       setPlan(planData?.id ? planData : null)

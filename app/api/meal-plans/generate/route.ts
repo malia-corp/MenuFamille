@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
 import { loadStrictAllergens, findAllergenMatches } from '@/lib/utils/allergen-exclusion'
+import { sortByMealType } from '@/lib/utils/sort-meal-configs'
 import { NextRequest } from 'next/server'
 
 const DAYS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'] as const
@@ -38,12 +39,12 @@ export async function POST(request: NextRequest) {
   let mark = performance.now()
 
   // 1. Configs actives
-  const { data: configs } = await service
+  const { data: rawConfigs } = await service
     .from('user_meal_config')
     .select('meal_type, mode, display_order')
     .eq('user_id', user.id)
     .eq('is_active', true)
-    .order('display_order')
+  const configs = sortByMealType(rawConfigs ?? [])
   mark = lap('1-configs', mark)
 
   if (!configs?.length) {

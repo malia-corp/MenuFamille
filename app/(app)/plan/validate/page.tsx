@@ -15,10 +15,10 @@ import {
 } from 'lucide-react'
 import { composedName } from '@/lib/utils/composed-name'
 import { MEAL_LABEL, MEAL_EMOJI, type MealType } from '@/lib/constants/meal-type'
+import { DAY_OPTIONS, formatWeekRange, type DayOfWeek } from '@/lib/utils/week'
+import { sortByMealType } from '@/lib/utils/sort-meal-configs'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-
-type DayOfWeek = 'lundi' | 'mardi' | 'mercredi' | 'jeudi' | 'vendredi' | 'samedi' | 'dimanche'
 
 interface MealConfig {
   meal_type:     MealType
@@ -60,28 +60,6 @@ interface Plan {
   status:          string
   share_token:     string | null
   meal_plan_items: PlanItem[]
-}
-
-// ─── Constantes ───────────────────────────────────────────────────────────────
-
-const DAY_OPTIONS: { val: DayOfWeek; full: string }[] = [
-  { val: 'lundi',    full: 'Lundi'    },
-  { val: 'mardi',    full: 'Mardi'    },
-  { val: 'mercredi', full: 'Mercredi' },
-  { val: 'jeudi',    full: 'Jeudi'    },
-  { val: 'vendredi', full: 'Vendredi' },
-  { val: 'samedi',   full: 'Samedi'   },
-  { val: 'dimanche', full: 'Dimanche' },
-]
-
-// ─── Helper ───────────────────────────────────────────────────────────────────
-
-function formatWeekRange(weekStart: string): string {
-  const start = new Date(weekStart + 'T00:00:00')
-  const end   = new Date(start)
-  end.setDate(start.getDate() + 6)
-  const fmt = (d: Date) => d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
-  return `${fmt(start)} – ${fmt(end)}`
 }
 
 // ─── Sous-composant : ligne recette ──────────────────────────────────────────
@@ -174,9 +152,9 @@ function ValidateInner() {
       const planData:   Plan    = await planRes.json()
       const configData: unknown = await configRes.json()
 
-      const active = (Array.isArray(configData) ? configData as MealConfig[] : [])
-        .filter(c => c.is_active)
-        .sort((a, b) => a.display_order - b.display_order)
+      const active = sortByMealType(
+        (Array.isArray(configData) ? configData as MealConfig[] : []).filter(c => c.is_active)
+      )
 
       setPlan(planData?.id ? planData : null)
       setConfigs(active)
