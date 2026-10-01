@@ -1,7 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
-
 import { DEFAULT_MEAL_CONFIGS } from '@/lib/constants/meal-type'
-
+import { sortByMealType } from '@/lib/utils/sort-meal-configs'
 
 export async function GET() {
   const supabase = await createClient()
