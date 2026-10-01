@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { CalendarDays, PlusCircle, Settings, UtensilsCrossed, Zap } from 'lucide-react'
 import { DAY_OPTIONS, getMondayISO, formatWeekRange, dayOfWeekFromDate, type DayOfWeek } from '@/lib/utils/week'
 import { MEAL_LABEL, MEAL_EMOJI, MEAL_COLOR, type MealType } from '@/lib/constants/meal-type'
+import { sortByMealType } from '@/lib/utils/sort-meal-configs'
 import { MealCardHero } from '@/components/home/meal-card-hero'
 import { MealCardCompact } from '@/components/home/meal-card-compact'
 import { WeekDayPicker } from '@/components/home/week-day-picker'
@@ -157,7 +158,7 @@ export default function HomePage() {
   }, [weekStart])
 
   const activeConfigs = useMemo(
-    () => configs.filter(c => c.is_active).sort((a, b) => a.display_order - b.display_order),
+    () => sortByMealType(configs.filter(c => c.is_active)),
     [configs]
   )
 

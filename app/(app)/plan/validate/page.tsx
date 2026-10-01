@@ -16,6 +16,7 @@ import {
 import { composedName } from '@/lib/utils/composed-name'
 import { MEAL_LABEL, MEAL_EMOJI, type MealType } from '@/lib/constants/meal-type'
 import { DAY_OPTIONS, formatWeekRange, type DayOfWeek } from '@/lib/utils/week'
+import { sortByMealType } from '@/lib/utils/sort-meal-configs'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -151,9 +152,9 @@ function ValidateInner() {
       const planData:   Plan    = await planRes.json()
       const configData: unknown = await configRes.json()
 
-      const active = (Array.isArray(configData) ? configData as MealConfig[] : [])
-        .filter(c => c.is_active)
-        .sort((a, b) => a.display_order - b.display_order)
+      const active = sortByMealType(
+        (Array.isArray(configData) ? configData as MealConfig[] : []).filter(c => c.is_active)
+      )
 
       setPlan(planData?.id ? planData : null)
       setConfigs(active)
