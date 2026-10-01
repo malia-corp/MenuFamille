@@ -7,10 +7,13 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return Response.json({ error: 'Non authentifié' }, { status: 401 })
 
+  // Trie par date d'adhesion pour que circles[0] (pas de notion de "cercle
+  // actif", cf. docs/ecarts-implementation.md #1) designe toujours le meme
+  // cercle que celui choisi par getViewer() dans app/(app)/layout.tsx.
   const { data, error } = await supabase
     .from('family_circle_members')
     .select(`
-      role,
+      role, joined_at,
       family_circles (
         id, name, invite_code, created_by, created_at,
         family_circle_members (
@@ -20,6 +23,7 @@ export async function GET() {
       )
     `)
     .eq('user_id', user.id)
+    .order('joined_at')
 
   if (error) return Response.json({ error: error.message }, { status: 500 })
 
