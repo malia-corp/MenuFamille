@@ -23,7 +23,7 @@ export function UpcomingCarousel({ days }: { days: UpcomingDay[] }) {
           key={d.key}
           className="shrink-0 w-44 bg-white rounded-xl border-[0.5px] border-[var(--kkb-border)] overflow-hidden shadow-sm"
         >
-          <div className="h-28 w-full relative">
+          <div className="aspect-[4/3] w-full relative">
             {d.photoUrl ? (
               <FramedPhoto src={d.photoUrl} alt={d.title} />
             ) : (

@@ -60,7 +60,7 @@ export function MealCardHero({
 
   return (
     <div className="relative rounded-xl overflow-hidden bg-white border-[0.5px] border-[var(--kkb-border)] shadow-md">
-      <div className="h-56 w-full relative">
+      <div className="aspect-[4/3] w-full relative">
         {photoUrl ? (
           <FramedPhoto src={photoUrl} alt={title} />
         ) : (

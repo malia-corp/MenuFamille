@@ -19,7 +19,7 @@ export function UpcomingGrid({ days }: { days: UpcomingGridDay[] }) {
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
       {days.map(d => (
         <div key={d.key} className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col">
-          <div className="relative h-32 w-full shrink-0">
+          <div className="relative aspect-[4/3] w-full shrink-0">
             {d.lunchPhoto ? (
               <FramedPhoto src={d.lunchPhoto} alt={d.lunchTitle ?? ''} />
             ) : (

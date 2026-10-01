@@ -33,13 +33,13 @@ export function MealCardCompact({
 }: MealCardCompactProps) {
   return (
     <div className="bg-white rounded-xl border-[0.5px] border-[var(--kkb-border)] shadow-sm overflow-hidden">
-      <div className="relative h-36 w-full">
+      <div className="relative aspect-[4/3] w-full">
         {photoUrl ? (
           <FramedPhoto src={photoUrl} alt={title} />
         ) : (
           <div className="h-full w-full flex items-center justify-center text-5xl bg-[var(--kkb-coral)]">{emoji}</div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/75 to-transparent" />
         <div className="absolute top-1.5 left-1.5">
           <span
             className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-quicksand font-bold border border-[var(--kkb-border)]"
