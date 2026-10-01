@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import Image from 'next/image'
 import { Clock, Heart, UtensilsCrossed } from 'lucide-react'
 import { CompositionCarousel, type ChipItem } from './composition-carousel'
 
@@ -62,7 +61,8 @@ export function MealCardHero({
     <div className="relative rounded-xl overflow-hidden bg-white border-[0.5px] border-[var(--kkb-border)] shadow-md">
       <div className="h-56 w-full relative">
         {photoUrl ? (
-          <Image src={photoUrl} alt={title} fill sizes="500px" loading="lazy" className="object-cover" />
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={photoUrl} alt={title} loading="lazy" className="absolute inset-0 w-full h-full object-cover" />
         ) : (
           <div className="h-full w-full flex items-center justify-center text-6xl bg-[var(--kkb-coral)]">{emoji}</div>
         )}

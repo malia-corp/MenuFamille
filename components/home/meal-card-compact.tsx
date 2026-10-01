@@ -1,6 +1,5 @@
 'use client'
 
-import Image from 'next/image'
 import { Pencil } from 'lucide-react'
 import { CompositionCarousel, type ChipItem } from './composition-carousel'
 
@@ -35,7 +34,8 @@ export function MealCardCompact({
     <div className="bg-white rounded-xl border-[0.5px] border-[var(--kkb-border)] shadow-sm overflow-hidden">
       <div className="relative h-36 w-full">
         {photoUrl ? (
-          <Image src={photoUrl} alt={title} fill sizes="400px" loading="lazy" className="object-cover" />
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={photoUrl} alt={title} loading="lazy" className="absolute inset-0 w-full h-full object-cover" />
         ) : (
           <div className="h-full w-full flex items-center justify-center text-5xl bg-[var(--kkb-coral)]">{emoji}</div>
         )}

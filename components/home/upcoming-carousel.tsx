@@ -1,6 +1,5 @@
 'use client'
 
-import Image from 'next/image'
 import { Clock } from 'lucide-react'
 
 export interface UpcomingDay {
@@ -25,7 +24,8 @@ export function UpcomingCarousel({ days }: { days: UpcomingDay[] }) {
         >
           <div className="h-28 w-full relative">
             {d.photoUrl ? (
-              <Image src={d.photoUrl} alt={d.title} fill sizes="200px" loading="lazy" className="object-cover" />
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={d.photoUrl} alt={d.title} loading="lazy" className="absolute inset-0 w-full h-full object-cover" />
             ) : (
               <div className="h-full w-full flex items-center justify-center text-3xl bg-[var(--kkb-coral)]">
                 {d.emoji}
