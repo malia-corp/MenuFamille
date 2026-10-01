@@ -1,5 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
+
 import { DEFAULT_MEAL_CONFIGS } from '@/lib/constants/meal-type'
+
 
 export async function GET() {
   const supabase = await createClient()
@@ -11,7 +13,6 @@ export async function GET() {
     .from('user_meal_config')
     .select('*')
     .eq('user_id', user.id)
-    .order('display_order')
 
   if (error) return Response.json({ error: error.message }, { status: 500 })
 
@@ -20,13 +21,12 @@ export async function GET() {
       .from('user_meal_config')
       .insert(DEFAULT_MEAL_CONFIGS.map((c) => ({ ...c, user_id: user.id })))
       .select()
-      .order('display_order')
 
     if (insertError) return Response.json({ error: insertError.message }, { status: 500 })
-    return Response.json(inserted)
+    return Response.json(sortByMealType(inserted ?? []))
   }
 
-  return Response.json(data)
+  return Response.json(sortByMealType(data))
 }
 
 export async function PUT(request: Request) {
