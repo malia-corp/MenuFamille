@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/service'
 
 export async function POST(request: Request) {
   const supabase = await createClient()
@@ -11,7 +12,13 @@ export async function POST(request: Request) {
     return Response.json({ error: 'Code d\'invitation requis' }, { status: 400 })
   }
 
-  const { data: circle, error: circleError } = await supabase
+  // Service role : la policy RLS circles_select_member exige deja d'etre
+  // membre du cercle pour le lire — ce qui est exactement ce que cette
+  // route sert a faire pour la premiere fois. Avec le client session, la
+  // recherche par code ne trouvait jamais rien pour un non-membre, meme
+  // avec un code correct ("Code invalide" trompeur).
+  const service = createServiceClient()
+  const { data: circle, error: circleError } = await service
     .from('family_circles')
     .select('*')
     .eq('invite_code', invite_code.trim().toUpperCase())

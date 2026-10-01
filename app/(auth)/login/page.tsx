@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import {
   ArrowLeft,
@@ -15,7 +16,6 @@ import {
   Share2,
   Shield,
   Timer,
-  UtensilsCrossed,
 } from 'lucide-react'
 
 type State = 'idle' | 'sending' | 'otp' | 'verifying'
@@ -314,7 +314,7 @@ export default function LoginPage() {
     <div className="space-y-7">
       {/* Logo */}
       <div className="flex items-center justify-center gap-2 pt-2">
-        <UtensilsCrossed className="h-6 w-6 text-[var(--kkb-coral)]" />
+        <Image src="/logo-icon.svg" alt="" width={28} height={28} className="h-7 w-7" />
         <span className="text-h2 text-[var(--kkb-coral)] text-[22px]">KeskonBouf</span>
       </div>
 
