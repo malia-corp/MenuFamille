@@ -1,6 +1,7 @@
 'use client'
 
 import { Clock } from 'lucide-react'
+import { FramedPhoto } from './framed-photo'
 
 export interface UpcomingDay {
   key: string
@@ -24,8 +25,7 @@ export function UpcomingCarousel({ days }: { days: UpcomingDay[] }) {
         >
           <div className="h-28 w-full relative">
             {d.photoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={d.photoUrl} alt={d.title} loading="lazy" className="absolute inset-0 w-full h-full object-cover" />
+              <FramedPhoto src={d.photoUrl} alt={d.title} />
             ) : (
               <div className="h-full w-full flex items-center justify-center text-3xl bg-[var(--kkb-coral)]">
                 {d.emoji}

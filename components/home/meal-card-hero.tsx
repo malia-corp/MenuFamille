@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Clock, Heart, UtensilsCrossed } from 'lucide-react'
 import { CompositionCarousel, type ChipItem } from './composition-carousel'
+import { FramedPhoto } from './framed-photo'
 
 const DIFFICULTY_LABEL: Record<string, string> = {
   facile: 'Niveau facile',
@@ -61,8 +62,7 @@ export function MealCardHero({
     <div className="relative rounded-xl overflow-hidden bg-white border-[0.5px] border-[var(--kkb-border)] shadow-md">
       <div className="h-56 w-full relative">
         {photoUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={photoUrl} alt={title} loading="lazy" className="absolute inset-0 w-full h-full object-cover" />
+          <FramedPhoto src={photoUrl} alt={title} />
         ) : (
           <div className="h-full w-full flex items-center justify-center text-6xl bg-[var(--kkb-coral)]">{emoji}</div>
         )}

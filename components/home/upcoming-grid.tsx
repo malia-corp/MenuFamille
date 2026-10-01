@@ -1,6 +1,7 @@
 'use client'
 
 import { HelpCircle, ThumbsUp } from 'lucide-react'
+import { FramedPhoto } from './framed-photo'
 
 export interface UpcomingGridDay {
   key: string
@@ -20,8 +21,7 @@ export function UpcomingGrid({ days }: { days: UpcomingGridDay[] }) {
         <div key={d.key} className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col">
           <div className="relative h-32 w-full shrink-0">
             {d.lunchPhoto ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={d.lunchPhoto} alt={d.lunchTitle ?? ''} loading="lazy" className="absolute inset-0 w-full h-full object-cover" />
+              <FramedPhoto src={d.lunchPhoto} alt={d.lunchTitle ?? ''} />
             ) : (
               <div className="h-full w-full bg-[var(--kkb-coral-light)] flex items-center justify-center text-3xl">🍽</div>
             )}
