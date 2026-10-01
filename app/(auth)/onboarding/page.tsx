@@ -10,7 +10,6 @@ export default function OnboardingPage() {
   const router = useRouter()
   const [step, setStep] = useState<Step>('profile')
   const [displayName, setDisplayName] = useState('')
-  const [familySize, setFamilySize] = useState(1)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -27,7 +26,7 @@ export default function OnboardingPage() {
     const res = await fetch('/api/users/me', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ display_name: displayName, family_size: familySize }),
+      body: JSON.stringify({ display_name: displayName }),
     })
 
     if (res.ok) {
@@ -175,23 +174,6 @@ export default function OnboardingPage() {
             placeholder="ex. Malia"
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
-            required
-            disabled={saving}
-            className="w-full px-4 py-3.5 rounded-[var(--kkb-radius-sm)] border-[1.5px] border-[var(--kkb-border)] bg-white font-quicksand text-sm text-[var(--kkb-text-primary)] outline-none focus:border-[var(--kkb-coral)] disabled:opacity-50"
-          />
-        </div>
-
-        <div className="space-y-1.5">
-          <label htmlFor="family_size" className="text-kkb-label text-[var(--kkb-text-tertiary)]">
-            Nombre de personnes dans ton foyer
-          </label>
-          <input
-            id="family_size"
-            type="number"
-            min={1}
-            max={20}
-            value={familySize}
-            onChange={(e) => setFamilySize(Number(e.target.value))}
             required
             disabled={saving}
             className="w-full px-4 py-3.5 rounded-[var(--kkb-radius-sm)] border-[1.5px] border-[var(--kkb-border)] bg-white font-quicksand text-sm text-[var(--kkb-text-primary)] outline-none focus:border-[var(--kkb-coral)] disabled:opacity-50"
