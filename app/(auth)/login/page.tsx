@@ -1,10 +1,22 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { ArrowRight, ExternalLink, Globe, Mail, MailCheck, ShieldCheck, UtensilsCrossed } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import {
+  ArrowLeft,
+  ArrowRight,
+  ExternalLink,
+  Globe,
+  Headphones,
+  Lightbulb,
+  Mail,
+  MailCheck,
+  Pencil,
+  Share2,
+  Shield,
+  Timer,
+} from 'lucide-react'
 
 type State = 'idle' | 'sending' | 'otp' | 'verifying'
 type AuthMode = 'code' | 'link'
@@ -16,6 +28,7 @@ export default function LoginPage() {
   const [authMode, setAuthMode] = useState<AuthMode>('code')
   const [digits, setDigits] = useState(['', '', '', '', '', ''])
   const [error, setError] = useState<string | null>(null)
+  const [shake, setShake] = useState(false)
   const [stubToast, setStubToast] = useState(false)
   const [countdown, setCountdown] = useState(60)
   const inputRefs = useRef<(HTMLInputElement | null)[]>([])
@@ -35,12 +48,19 @@ export default function LoginPage() {
     return () => clearTimeout(timer)
   }, [state, countdown])
 
-  // Toast stub OAuth
+  // Toast stub OAuth / support
   useEffect(() => {
     if (!stubToast) return
     const timer = setTimeout(() => setStubToast(false), 2000)
     return () => clearTimeout(timer)
   }, [stubToast])
+
+  function resetToEmailStep() {
+    setState('idle')
+    setDigits(['', '', '', '', '', ''])
+    setError(null)
+    setAuthMode('code')
+  }
 
   async function handleEmailSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -86,8 +106,11 @@ export default function LoginPage() {
     if (res.ok) {
       router.push(data.redirect)
     } else {
-      setError(data.error ?? 'Code invalide')
+      setError(data.error ?? 'Code incorrect')
       setState('otp')
+      setDigits(['', '', '', '', '', ''])
+      setShake(true)
+      setTimeout(() => inputRefs.current[0]?.focus(), 50)
     }
   }
 
@@ -119,53 +142,74 @@ export default function LoginPage() {
     setTimeout(() => inputRefs.current[0]?.focus(), 50)
   }
 
-  // ── Écran OTP / Lien ───────────────────────────────────────────────────────
+  const digitsFilled = digits.every((d) => d !== '')
+
+  // ── Écran OTP ──────────────────────────────────────────────────────────────
   if (state === 'otp' || state === 'verifying') {
     return (
-      <div className="space-y-6 text-center">
-        <div className="flex justify-center">
-          <MailCheck className="h-12 w-12 text-[var(--kkb-coral)]" />
-        </div>
-
-        <div className="space-y-1">
-          <h1 className="font-dosis font-bold text-2xl text-[var(--kkb-text-primary)]">
-            Vérifiez votre boîte mail
-          </h1>
-          <p className="text-sm text-[var(--kkb-text-secondary)]">
-            Email envoyé à{' '}
-            <span className="font-semibold text-[var(--kkb-text-primary)]">{email}</span>
-          </p>
-        </div>
-
-        {/* Sélecteur de mode */}
-        <div className="flex rounded-xl border border-[var(--kkb-border)] overflow-hidden">
+      <div className="space-y-6">
+        {/* Barre de navigation */}
+        <div className="flex items-center justify-between">
           <button
             type="button"
-            onClick={() => { setAuthMode('code'); setError(null) }}
-            className={`flex-1 py-2.5 text-sm font-quicksand font-medium transition-colors ${
-              authMode === 'code'
-                ? 'bg-[var(--kkb-coral)] text-white'
-                : 'bg-white text-[var(--kkb-text-secondary)] hover:bg-[var(--kkb-bg)]'
-            }`}
+            onClick={resetToEmailStep}
+            aria-label="Retour"
+            className="p-1.5 text-[var(--kkb-teal)]"
           >
-            Saisir le code
+            <ArrowLeft className="h-5 w-5" />
           </button>
+          <span className="flex items-center gap-1.5 text-[var(--kkb-teal)] text-sm font-quicksand font-semibold">
+            <Shield className="h-4 w-4" /> Étape sécurisée
+          </span>
           <button
             type="button"
-            onClick={() => { setAuthMode('link'); setError(null) }}
-            className={`flex-1 py-2.5 text-sm font-quicksand font-medium transition-colors ${
-              authMode === 'link'
-                ? 'bg-[var(--kkb-coral)] text-white'
-                : 'bg-white text-[var(--kkb-text-secondary)] hover:bg-[var(--kkb-bg)]'
-            }`}
+            onClick={() => setStubToast(true)}
+            aria-label="Support"
+            className="p-1.5 text-[var(--kkb-text-tertiary)]"
           >
-            Utiliser le lien
+            <Headphones className="h-5 w-5" />
+          </button>
+        </div>
+
+        {/* Illustration */}
+        <div className="flex justify-center py-2">
+          <div className="h-[120px] w-[120px] rounded-full bg-[var(--kkb-coral-light)] flex items-center justify-center">
+            <MailCheck className="h-12 w-12 text-[var(--kkb-coral)]" />
+          </div>
+        </div>
+
+        <div className="text-center space-y-1.5">
+          <h1 className="text-h1 text-[var(--kkb-coral)]">Vérifiez votre boîte mail ✨</h1>
+          <p className="text-kkb-body text-[var(--kkb-text-secondary)]">
+            Nous venons de glisser un code à 6 chiffres dans la boîte de
+          </p>
+          <button
+            type="button"
+            onClick={resetToEmailStep}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-coral-light)] text-[var(--kkb-coral)] font-quicksand font-semibold text-sm"
+          >
+            <Mail className="h-4 w-4" /> {email}
+            <Pencil className="h-3.5 w-3.5" />
+          </button>
+        </div>
+
+        {/* Toggle discret lien magique */}
+        <div className="text-center">
+          <button
+            type="button"
+            onClick={() => setAuthMode((m) => (m === 'code' ? 'link' : 'code'))}
+            className="text-xs font-quicksand text-[var(--kkb-text-tertiary)] underline hover:text-[var(--kkb-coral)]"
+          >
+            {authMode === 'code' ? 'Utiliser le lien magique plutôt' : 'Saisir le code plutôt'}
           </button>
         </div>
 
         {authMode === 'code' ? (
           <form onSubmit={handleOtpSubmit} className="space-y-5">
-            <div className="flex justify-center gap-2">
+            <div
+              className={`flex justify-center gap-2.5 ${shake ? 'animate-shake' : ''}`}
+              onAnimationEnd={() => setShake(false)}
+            >
               {digits.map((d, i) => (
                 <input
                   key={i}
@@ -178,31 +222,45 @@ export default function LoginPage() {
                   onChange={(e) => handleDigitChange(i, e.target.value)}
                   onKeyDown={(e) => handleDigitKeyDown(i, e)}
                   disabled={state === 'verifying'}
-                  className="w-10 h-12 text-center text-xl font-semibold border-2 border-[var(--kkb-border)] rounded-lg bg-white focus:border-[var(--kkb-coral-hover)] focus:outline-none disabled:opacity-50"
+                  className={`w-12 h-14 text-center font-quicksand font-bold text-2xl rounded-[var(--kkb-radius-sm)] border-[1.5px] outline-none transition-colors disabled:opacity-50 ${
+                    d
+                      ? 'border-[var(--kkb-teal)] bg-[var(--kkb-teal-light)] text-[var(--kkb-teal)]'
+                      : 'border-[var(--kkb-border)] bg-white text-[var(--kkb-text-primary)] focus:border-[var(--kkb-coral)] focus:shadow-[0_0_0_3px_var(--kkb-coral-light)]'
+                  }`}
                 />
               ))}
             </div>
 
-            {error && <p className="text-sm text-red-600">{error}</p>}
+            {error && <p className="text-sm text-center text-[var(--kkb-danger)]">{error}</p>}
 
-            <Button
+            <div className="flex items-start gap-2 bg-[var(--kkb-warning-light)] rounded-[var(--kkb-radius-sm)] p-3">
+              <Lightbulb className="h-4 w-4 text-[var(--kkb-warning)] shrink-0 mt-0.5" />
+              <p className="text-xs font-quicksand text-[var(--kkb-text-secondary)]">
+                Pensez à regarder dans vos courriers indésirables ou dans l&apos;onglet « Promotions » si la
+                tambouille tarde à arriver.
+              </p>
+            </div>
+
+            <button
               type="submit"
-              className="w-full bg-[var(--kkb-coral)] hover:bg-[var(--kkb-coral-hover)] text-white font-quicksand"
-              disabled={state === 'verifying'}
+              disabled={state === 'verifying' || !digitsFilled}
+              className="w-full flex items-center justify-center gap-2 rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-coral)] hover:bg-[var(--kkb-coral-hover)] text-white font-quicksand font-bold text-[15px] py-4 transition-colors disabled:opacity-50"
             >
-              <ShieldCheck className="mr-2 h-4 w-4" />
-              {state === 'verifying' ? 'Vérification…' : 'Valider le code'}
-            </Button>
+              {state === 'verifying' ? 'Vérification…' : 'Vérifier et continuer'}
+              {state !== 'verifying' && <ArrowRight className="h-4 w-4" />}
+            </button>
 
-            <div className="text-sm text-[var(--kkb-text-tertiary)]">
+            <div className="flex items-center justify-center gap-1.5 text-sm text-[var(--kkb-text-tertiary)] font-quicksand">
+              <Timer className="h-3.5 w-3.5" />
               {countdown > 0 ? (
-                <span>Renvoyer dans {countdown}s</span>
+                <span>
+                  Renvoyer un nouveau code dans{' '}
+                  <span className="font-bold text-[var(--kkb-coral)]">
+                    00:{String(countdown).padStart(2, '0')}
+                  </span>
+                </span>
               ) : (
-                <button
-                  type="button"
-                  onClick={handleResend}
-                  className="text-[var(--kkb-coral)] underline hover:no-underline"
-                >
+                <button type="button" onClick={handleResend} className="text-[var(--kkb-coral)] underline hover:no-underline">
                   Renvoyer le code
                 </button>
               )}
@@ -210,24 +268,19 @@ export default function LoginPage() {
           </form>
         ) : (
           <div className="space-y-4 py-2">
-            <div className="bg-[var(--kkb-coral-light)] rounded-xl p-4 space-y-2">
+            <div className="bg-[var(--kkb-coral-light)] rounded-[var(--kkb-radius-sm)] p-4 space-y-2 text-center">
               <ExternalLink className="h-6 w-6 text-[var(--kkb-coral)] mx-auto" />
               <p className="text-sm text-[var(--kkb-text-secondary)] font-quicksand">
                 Cliquez sur le lien dans votre email pour vous connecter automatiquement.
               </p>
-              <p className="text-xs text-[var(--kkb-text-tertiary)] font-quicksand">
-                Le lien est valable 60 minutes.
-              </p>
+              <p className="text-xs text-[var(--kkb-text-tertiary)] font-quicksand">Le lien est valable 60 minutes.</p>
             </div>
-            <div className="text-sm text-[var(--kkb-text-tertiary)]">
+            <div className="flex items-center justify-center gap-1.5 text-sm text-[var(--kkb-text-tertiary)] font-quicksand">
+              <Timer className="h-3.5 w-3.5" />
               {countdown > 0 ? (
                 <span>Renvoyer dans {countdown}s</span>
               ) : (
-                <button
-                  type="button"
-                  onClick={handleResend}
-                  className="text-[var(--kkb-coral)] underline hover:no-underline"
-                >
+                <button type="button" onClick={handleResend} className="text-[var(--kkb-coral)] underline hover:no-underline">
                   Renvoyer l&apos;email
                 </button>
               )}
@@ -235,13 +288,23 @@ export default function LoginPage() {
           </div>
         )}
 
-        <button
-          type="button"
-          onClick={() => { setState('idle'); setDigits(['', '', '', '', '', '']); setError(null); setAuthMode('code') }}
-          className="text-xs text-[var(--kkb-text-tertiary)] underline"
-        >
-          Utiliser une autre adresse
-        </button>
+        {stubToast && (
+          <p className="text-center text-xs text-[var(--kkb-text-secondary)] bg-[var(--kkb-warning-light)] border border-[var(--kkb-border)] rounded-lg px-3 py-2">
+            Bientôt disponible
+          </p>
+        )}
+
+        <div className="text-center space-y-1.5 pt-2">
+          <p className="flex items-center justify-center gap-1.5 text-xs text-[var(--kkb-text-tertiary)] font-quicksand">
+            ♥ Cuisiné avec amour pour toute la famille
+          </p>
+          <p className="text-[13px] text-[var(--kkb-text-secondary)] font-quicksand">
+            Besoin d&apos;aide ?{' '}
+            <button type="button" onClick={() => setStubToast(true)} className="text-[var(--kkb-coral)] underline">
+              Contacter le support familial
+            </button>
+          </p>
+        </div>
       </div>
     )
   }
@@ -250,96 +313,96 @@ export default function LoginPage() {
   return (
     <div className="space-y-7">
       {/* Logo */}
+      <div className="flex items-center justify-center gap-2 pt-2">
+        <Image src="/logo-icon.svg" alt="" width={28} height={28} className="h-7 w-7" />
+        <span className="text-h2 text-[var(--kkb-coral)] text-[22px]">KeskonBouf</span>
+      </div>
+
+      {/* Textes */}
       <div className="text-center space-y-1">
-        <div className="flex items-center justify-center gap-2 mb-2">
-          <UtensilsCrossed className="h-8 w-8 text-[var(--kkb-coral)]" />
-          <span className="font-dosis font-bold text-2xl text-[var(--kkb-coral)]">KeskonBouf</span>
-        </div>
-        <h1 className="font-dosis font-bold text-2xl text-[var(--kkb-text-primary)]">La table de famille</h1>
-        <p className="text-sm text-[var(--kkb-text-secondary)]">
-          Rejoignez la table.<br />
-          Commencez à planifier vos repas familiaux.
-        </p>
+        <h1 className="text-h1 text-[var(--kkb-text-primary)]">Bienvenue dans la famille !</h1>
+        <p className="text-kkb-body text-[var(--kkb-text-secondary)]">Planifiez vos repas ensemble.</p>
       </div>
 
       {/* Formulaire email */}
       <form onSubmit={handleEmailSubmit} className="space-y-4">
-        <div className="space-y-1">
-          <label
-            htmlFor="email"
-            className="block text-xs font-semibold tracking-widest uppercase text-[var(--kkb-text-secondary)] font-quicksand"
-          >
-            Adresse email
+        <div className="space-y-1.5">
+          <label htmlFor="email" className="text-kkb-label text-[var(--kkb-text-tertiary)]">
+            Adresse e-mail
           </label>
           <div className="relative">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--kkb-text-tertiary)]" />
-            <Input
+            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--kkb-text-tertiary)]" />
+            <input
               id="email"
               type="email"
-              placeholder="votre@email.com"
+              placeholder="ex: rosine.famille@gmail.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
               disabled={state === 'sending'}
-              className="pl-9 border-[var(--kkb-border)] focus:border-[var(--kkb-coral-hover)] bg-white"
+              className="w-full pl-11 pr-4 py-3.5 rounded-[var(--kkb-radius-sm)] border-[1.5px] border-[var(--kkb-border)] bg-white text-[var(--kkb-text-primary)] font-quicksand text-sm outline-none focus:border-[var(--kkb-coral)] disabled:opacity-50"
             />
           </div>
         </div>
 
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && <p className="text-sm text-[var(--kkb-danger)]">{error}</p>}
 
-        <Button
+        <button
           type="submit"
-          className="w-full bg-[var(--kkb-coral)] hover:bg-[var(--kkb-coral-hover)] text-white font-quicksand"
           disabled={state === 'sending'}
+          className="w-full flex items-center justify-center gap-2 rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-coral)] hover:bg-[var(--kkb-coral-hover)] text-white font-quicksand font-bold text-[15px] py-4 transition-colors disabled:opacity-50"
         >
-          {state === 'sending' ? 'Envoi en cours…' : (
-            <>
-              Continuer
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </>
-          )}
-        </Button>
+          {state === 'sending' ? 'Envoi en cours…' : 'Continuer'}
+          {state !== 'sending' && <ArrowRight className="h-4 w-4" />}
+        </button>
       </form>
 
       {/* Séparateur */}
       <div className="flex items-center gap-3">
         <div className="flex-1 h-px bg-[var(--kkb-border)]" />
-        <span className="text-xs text-[var(--kkb-text-tertiary)] font-quicksand">OU CONTINUER VIA</span>
+        <span className="text-[11px] font-quicksand font-semibold uppercase text-[var(--kkb-text-tertiary)]">
+          Ou connectez-vous avec
+        </span>
         <div className="flex-1 h-px bg-[var(--kkb-border)]" />
       </div>
 
-      {/* Boutons stub OAuth */}
+      {/* Boutons sociaux */}
       <div className="space-y-2">
         {stubToast && (
           <p className="text-center text-xs text-[var(--kkb-text-secondary)] bg-[var(--kkb-warning-light)] border border-[var(--kkb-border)] rounded-lg px-3 py-2">
             Bientôt disponible
           </p>
         )}
-        <Button
-          type="button"
-          variant="outline"
-          className="w-full border-[var(--kkb-border)] text-[var(--kkb-text-secondary)] hover:bg-[var(--kkb-bg)] font-quicksand"
-          onClick={() => setStubToast(true)}
-        >
-          <Globe className="mr-2 h-4 w-4" />
-          Google
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          className="w-full border-[var(--kkb-border)] text-[var(--kkb-text-secondary)] hover:bg-[var(--kkb-bg)] font-quicksand"
-          onClick={() => setStubToast(true)}
-        >
-          <Globe className="mr-2 h-4 w-4" />
-          Facebook
-        </Button>
+        <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={() => setStubToast(true)}
+            className="flex-1 flex items-center justify-center gap-2 border-[1.5px] border-[var(--kkb-border)] bg-white text-[var(--kkb-text-secondary)] font-quicksand font-semibold text-sm rounded-[var(--kkb-radius-pill)] py-3.5"
+          >
+            <Globe className="h-4 w-4" /> Google
+          </button>
+          <button
+            type="button"
+            onClick={() => setStubToast(true)}
+            className="flex-1 flex items-center justify-center gap-2 border-[1.5px] border-[var(--kkb-border)] bg-white text-[var(--kkb-text-secondary)] font-quicksand font-semibold text-sm rounded-[var(--kkb-radius-pill)] py-3.5"
+          >
+            <Share2 className="h-4 w-4" /> Facebook
+          </button>
+        </div>
       </div>
 
-      {/* Lien bas */}
-      <p className="text-center text-sm text-[var(--kkb-text-tertiary)]">
-        Déjà un compte ?{' '}
-        <span className="font-semibold text-[var(--kkb-coral)]">Se connecter</span>
+      {/* Légal */}
+      <p className="text-center text-[11px] text-[var(--kkb-text-tertiary)] font-quicksand leading-relaxed">
+        En continuant, vous acceptez nos{' '}
+        <span className="underline text-[var(--kkb-coral)]">Conditions d&apos;utilisation</span>, notre{' '}
+        <span className="underline text-[var(--kkb-coral)]">Politique de confidentialité</span> et nos{' '}
+        <span className="underline text-[var(--kkb-coral)]">Mentions légales</span>.
+      </p>
+
+      {/* Pied */}
+      <p className="text-center text-sm text-[var(--kkb-text-secondary)] font-quicksand">
+        Nouveau ici ?{' '}
+        <span className="font-bold underline text-[var(--kkb-coral)]">Créer un compte</span>
       </p>
     </div>
   )

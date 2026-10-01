@@ -122,12 +122,15 @@
     color: var(--kkb-text-tertiary);
   }
 
-  .hide-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
+
+  .animate-shake {
+    animation: kkb-shake 0.4s ease-in-out;
   }
-  .hide-scrollbar::-webkit-scrollbar {
-    display: none;
-  }
+}
+
+@keyframes kkb-shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-8px); }
+  40%, 80% { transform: translateX(8px); }
+
 }

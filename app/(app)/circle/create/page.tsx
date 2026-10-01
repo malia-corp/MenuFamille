@@ -18,6 +18,7 @@ interface Circle {
 export default function CreateCirclePage() {
   const router = useRouter()
   const [name, setName] = useState('')
+  const [familySize, setFamilySize] = useState(1)
   const [state, setState] = useState<State>('idle')
   const [circle, setCircle] = useState<Circle | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -28,11 +29,20 @@ export default function CreateCirclePage() {
     setState('saving')
     setError(null)
 
-    const res = await fetch('/api/circles', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name }),
-    })
+    const [res] = await Promise.all([
+      fetch('/api/circles', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name }),
+      }),
+      // Non bloquant : la taille du foyer est une info de profil annexe,
+      // son echec eventuel ne doit pas empecher la creation du cercle.
+      fetch('/api/users/me', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ family_size: familySize }),
+      }).catch(() => {}),
+    ])
 
     const data = await res.json()
 
@@ -118,6 +128,23 @@ export default function CreateCirclePage() {
             placeholder="ex. Famille Tiando"
             value={name}
             onChange={(e) => setName(e.target.value)}
+            required
+            disabled={state === 'saving'}
+            className="border-[var(--kkb-border)] bg-white"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="family_size" className="text-[var(--kkb-text-secondary)]">
+            Nombre de personnes dans le foyer
+          </Label>
+          <Input
+            id="family_size"
+            type="number"
+            min={1}
+            max={20}
+            value={familySize}
+            onChange={(e) => setFamilySize(Number(e.target.value))}
             required
             disabled={state === 'saving'}
             className="border-[var(--kkb-border)] bg-white"
