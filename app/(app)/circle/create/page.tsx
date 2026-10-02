@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { CheckCircle, Copy, Plus, Users } from 'lucide-react'
+import { CheckCircle, Plus, Users } from 'lucide-react'
+import { ShareActions, circleInvitePayload } from '@/components/ui/share-actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -22,7 +23,6 @@ export default function CreateCirclePage() {
   const [state, setState] = useState<State>('idle')
   const [circle, setCircle] = useState<Circle | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [copied, setCopied] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -55,13 +55,6 @@ export default function CreateCirclePage() {
     }
   }
 
-  async function copyCode() {
-    if (!circle) return
-    await navigator.clipboard.writeText(circle.invite_code)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
-
   if (state === 'done' && circle) {
     return (
       <div className="max-w-sm mx-auto px-4 py-8 space-y-6 text-center">
@@ -83,17 +76,12 @@ export default function CreateCirclePage() {
             <span className="font-mono text-2xl font-bold text-[var(--kkb-coral)] tracking-widest">
               {circle.invite_code}
             </span>
-            <button
-              type="button"
-              onClick={copyCode}
-              className="ml-auto flex items-center gap-1.5 text-sm text-[var(--kkb-text-secondary)] hover:text-[var(--kkb-coral-hover)] transition-colors"
-            >
-              {copied ? (
-                <><CheckCircle className="h-4 w-4 text-[var(--kkb-success)]" /> Copié</>
-              ) : (
-                <><Copy className="h-4 w-4" /> Copier</>
-              )}
-            </button>
+            <ShareActions
+              getPayload={() => circleInvitePayload(circle.name, circle.invite_code)}
+              copyLabel="Copier"
+              className="ml-auto flex items-center gap-3"
+              buttonClassName="flex items-center gap-1.5 text-sm text-[var(--kkb-text-secondary)] hover:text-[var(--kkb-coral-hover)] transition-colors disabled:opacity-60"
+            />
           </div>
         </div>
 
