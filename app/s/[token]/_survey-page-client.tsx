@@ -2,12 +2,13 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ChevronDown, Clock, Loader2, Send, UnfoldHorizontal, UserCircle, XCircle } from 'lucide-react'
+import { CalendarDays, ChevronDown, Clock, Hand, Loader2, Send, UnfoldHorizontal, UserCircle, XCircle, type LucideIcon } from 'lucide-react'
 import { PublicHeader } from '@/components/survey/public-header'
 import { MealVoteCard, type Reaction } from '@/components/survey/meal-vote-card'
 import { ViewToggle, type SurveyViewMode } from '@/components/survey/view-toggle'
 import { VoteIdentityPanel } from '@/components/survey/vote-identity-panel'
-import { MEAL_EMOJI, MEAL_LABEL, MEAL_TYPE_ORDER, type MealType } from '@/lib/constants/meal-type'
+import { MEAL_LABEL, MEAL_TYPE_ORDER, type MealType } from '@/lib/constants/meal-type'
+import { MEAL_ICON } from '@/lib/constants/meal-type-icon'
 import { DAY_OPTIONS, formatWeekRange, type DayOfWeek } from '@/lib/utils/week'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -57,7 +58,7 @@ interface AnswerState {
 interface SectionGroup {
   key:         string
   title:       string
-  emoji:       string
+  icon:        LucideIcon
   items:       SurveyItem[]
 }
 
@@ -295,7 +296,7 @@ export function SurveyPageClient({ token }: { token: string }) {
   // Chips : uniquement sur les repas journaliers (la section "Toute la semaine"
   // reste affichée une fois en tête, jamais filtrée par ce toggle).
   const typeChips = activeMealTypes.map(mt => ({
-    value: mt, label: MEAL_LABEL[mt], emoji: MEAL_EMOJI[mt], count: dailyByType.get(mt)!.length,
+    value: mt, label: MEAL_LABEL[mt], icon: MEAL_ICON[mt], count: dailyByType.get(mt)!.length,
   }))
 
   const activeDays = DAY_OPTIONS.filter(d => dailyItems.some(i => i.day_of_week === d.val))
@@ -309,14 +310,14 @@ export function SurveyPageClient({ token }: { token: string }) {
   if (viewMode === 'type') {
     sections = activeMealTypes
       .filter(mt => activeFilter === null || activeFilter === mt)
-      .map(mt => ({ key: mt, title: MEAL_LABEL[mt], emoji: MEAL_EMOJI[mt], items: dailyByType.get(mt)! }))
+      .map(mt => ({ key: mt, title: MEAL_LABEL[mt], icon: MEAL_ICON[mt], items: dailyByType.get(mt)! }))
   } else {
     sections = activeDays
       .filter(d => activeFilter === null || activeFilter === d.val)
       .map(d => ({
         key: d.val,
         title: `${d.full} ${dateNumFor(d.val)}`,
-        emoji: '\u{1F4C5}',
+        icon: CalendarDays,
         items: dailyItems.filter(i => i.day_of_week === d.val),
       }))
   }
@@ -364,8 +365,9 @@ export function SurveyPageClient({ token }: { token: string }) {
       <MealVoteCard
         key={item.id}
         dayLabel={item.applies_all_days
-          ? `${MEAL_EMOJI[item.meal_type]} ${MEAL_LABEL[item.meal_type]} · Toute la semaine`
-          : byDay ? `${MEAL_EMOJI[item.meal_type]} ${MEAL_LABEL[item.meal_type]}` : dayLabelFor(item)}
+          ? `${MEAL_LABEL[item.meal_type]} · Toute la semaine`
+          : byDay ? MEAL_LABEL[item.meal_type] : dayLabelFor(item)}
+        withMealIcon={item.applies_all_days || byDay}
         mealType={item.meal_type}
         recipe={item.recipe}
         compositions={item.compositions}
@@ -394,13 +396,13 @@ export function SurveyPageClient({ token }: { token: string }) {
             <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-6 xl:gap-10">
               <div className="space-y-2 xl:max-w-2xl">
                 <span className="inline-block text-[11px] font-quicksand font-bold uppercase tracking-wide px-2.5 py-1 rounded-full bg-[var(--kkb-teal-light)] text-[var(--kkb-teal)]">
-                  {'\u{1F5D3}'} Semaine en cours · {formatWeekRange(data.plan.week_start)}
+                  <CalendarDays className="inline h-3.5 w-3.5 -mt-0.5 mr-1" />Semaine en cours · {formatWeekRange(data.plan.week_start)}
                 </span>
                 <h1 className="font-dosis font-extrabold text-2xl xl:text-3xl text-[var(--kkb-text-primary)]">
                   Le menu de {plannerFirstName}
                 </h1>
                 <p className="text-sm xl:text-base font-quicksand text-[var(--kkb-text-secondary)]">
-                  Salut ! {'\u{1F44B}'} Dis-nous ce qui te fait envie pour les repas de cette semaine. Ton avis
+                  Salut ! <Hand className="inline h-4 w-4 -mt-0.5 text-[var(--kkb-coral)]" /> Dis-nous ce qui te fait envie pour les repas de cette semaine. Ton avis
                   compte beaucoup pour la cuisine de la maison !
                 </p>
               </div>
@@ -490,7 +492,7 @@ export function SurveyPageClient({ token }: { token: string }) {
                   className="w-full flex items-center justify-between gap-2 mb-2 lg:cursor-pointer"
                 >
                   <h2 className="font-dosis font-bold text-xl text-[var(--kkb-text-primary)]">
-                    {section.emoji} {section.title}
+                    <section.icon className="inline h-5 w-5 -mt-1 mr-1.5 text-[var(--kkb-coral)]" />{section.title}
                   </h2>
                   <ChevronDown className={`hidden lg:block h-5 w-5 text-[var(--kkb-text-tertiary)] transition-transform ${collapsed ? '-rotate-90' : ''}`} />
                 </button>

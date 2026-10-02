@@ -1,9 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { Loader2, MessageCircle } from 'lucide-react'
+import { Check, CupSoda, Loader2, MessageCircle, Salad, Tag } from 'lucide-react'
 import { FramedPhoto } from '@/components/home/framed-photo'
-import { MEAL_EMOJI, type MealType } from '@/lib/constants/meal-type'
+import type { MealType } from '@/lib/constants/meal-type'
+import { MEAL_ICON } from '@/lib/constants/meal-type-icon'
 
 export type Reaction = 'aime' | 'bof' | 'naime_pas'
 
@@ -36,6 +37,7 @@ interface MealComposition {
 
 interface MealVoteCardProps {
   dayLabel:        string // "Lundi 14 · Midi", type de repas en vue "Par Jour", ou "Toute la semaine"
+  withMealIcon?:   boolean // icône du type de repas devant dayLabel
   mealType:        MealType
   recipe:          MealRecipe | null
   compositions:    MealComposition[]
@@ -50,10 +52,11 @@ interface MealVoteCardProps {
 }
 
 export function MealVoteCard({
-  dayLabel, mealType, recipe, compositions, reaction, comment,
+  dayLabel, withMealIcon, mealType, recipe, compositions, reaction, comment,
   onSelectReaction, onCommentChange, onSaveComment, savingComment, justSaved, disabled,
 }: MealVoteCardProps) {
   const [commentOpen, setCommentOpen] = useState(false)
+  const MealIcon = MEAL_ICON[mealType]
 
   const sides = compositions.filter(c => c.role === 'side' && c.name).map(c => ({ id: c.id, name: c.name! }))
   const drinkComp = compositions.find(c => c.role === 'drink' && c.name)
@@ -63,10 +66,13 @@ export function MealVoteCard({
     <div className="bg-white border border-[var(--kkb-border)] rounded-[var(--kkb-radius-card)] overflow-hidden h-full flex flex-col">
       {/* Header carte */}
       <div className="flex items-center justify-between gap-2 px-3 pt-3">
-        <p className="min-w-0 truncate font-quicksand font-bold text-xs text-[var(--kkb-text-secondary)]">{dayLabel}</p>
+        <p className="min-w-0 flex items-center gap-1 font-quicksand font-bold text-xs text-[var(--kkb-text-secondary)]">
+          {withMealIcon && <MealIcon className="h-3.5 w-3.5 shrink-0 text-[var(--kkb-coral)]" />}
+          <span className="truncate">{dayLabel}</span>
+        </p>
         {recipe?.category && (
           <span className="inline-flex items-center gap-1 text-[10px] font-quicksand font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-[var(--kkb-teal-light)] text-[var(--kkb-teal)] shrink-0">
-            {recipe.category.icon} {recipe.category.name}
+            <Tag className="h-3 w-3" /> {recipe.category.name}
           </span>
         )}
       </div>
@@ -76,8 +82,8 @@ export function MealVoteCard({
         {recipe?.photo_url ? (
           <FramedPhoto src={recipe.photo_url} alt={recipe.name} />
         ) : (
-          <div className="absolute inset-0 bg-[var(--kkb-coral)] flex items-center justify-center text-[48px]">
-            {MEAL_EMOJI[mealType]}
+          <div className="absolute inset-0 bg-[var(--kkb-coral)] flex items-center justify-center">
+            <MealIcon className="h-12 w-12 text-white" />
           </div>
         )}
       </div>
@@ -91,12 +97,12 @@ export function MealVoteCard({
           <div className="flex flex-wrap gap-1.5 mt-1.5">
             {sides.map(s => (
               <span key={s.id} className="inline-flex items-center gap-1 bg-[var(--kkb-coral-light)] text-[var(--kkb-coral)] rounded-full px-2.5 py-1 text-[11px] font-quicksand font-bold">
-                {'\u{1F957}'} {s.name}
+                <Salad className="h-3.5 w-3.5" /> {s.name}
               </span>
             ))}
             {drink && (
               <span className="inline-flex items-center gap-1 bg-[var(--kkb-teal-light)] text-[var(--kkb-teal)] rounded-full px-2.5 py-1 text-[11px] font-quicksand font-bold">
-                {'\u{1F964}'} {drink.name}
+                <CupSoda className="h-3.5 w-3.5" /> {drink.name}
               </span>
             )}
           </div>
@@ -175,8 +181,8 @@ export function MealVoteCard({
 
       {/* Indicateur de sauvegarde */}
       <div className="px-3 pb-2.5">
-        <p className={`text-[11px] font-quicksand font-semibold text-[var(--kkb-success)] transition-opacity duration-200 ${justSaved ? 'opacity-100' : 'opacity-0'}`}>
-          {'\u2713'} Sauvegardé
+        <p className={`flex items-center gap-1 text-[11px] font-quicksand font-semibold text-[var(--kkb-success)] transition-opacity duration-200 ${justSaved ? 'opacity-100' : 'opacity-0'}`}>
+          <Check className="h-3 w-3" /> Sauvegardé
         </p>
       </div>
     </div>

@@ -1,6 +1,6 @@
 'use client'
 
-import { CalendarDays, Utensils } from 'lucide-react'
+import { CalendarDays, Utensils, type LucideIcon } from 'lucide-react'
 import type { MealType } from '@/lib/constants/meal-type'
 import type { DayOfWeek } from '@/lib/utils/week'
 
@@ -9,7 +9,7 @@ export type SurveyViewMode = 'type' | 'day'
 interface TypeChip {
   value: MealType
   label: string
-  emoji: string
+  icon:  LucideIcon
   count: number
 }
 
@@ -36,8 +36,8 @@ export function ViewToggle({
   totalCount, typeChips, dayChips, daysAvailableCount, categoriesCount,
 }: ViewToggleProps) {
   const chips = viewMode === 'type'
-    ? typeChips.map(c => ({ value: c.value as string, label: `${c.emoji} ${c.label}`, count: c.count }))
-    : dayChips.map(c => ({ value: c.value as string, label: c.label, count: c.count }))
+    ? typeChips.map(c => ({ value: c.value as string, label: c.label, icon: c.icon as LucideIcon | null, count: c.count }))
+    : dayChips.map(c => ({ value: c.value as string, label: c.label, icon: null, count: c.count }))
 
   return (
     <section className="mb-4">
@@ -77,10 +77,11 @@ export function ViewToggle({
             key={c.value}
             type="button"
             onClick={() => onFilterChange(c.value)}
-            className={`flex-shrink-0 px-3 py-1 rounded-full text-[11px] font-quicksand font-bold whitespace-nowrap transition-colors ${
+            className={`flex-shrink-0 inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-quicksand font-bold whitespace-nowrap transition-colors ${
               activeFilter === c.value ? 'bg-[var(--kkb-teal)] text-white' : 'bg-white border border-[var(--kkb-border)] text-[var(--kkb-text-secondary)]'
             }`}
           >
+            {c.icon && <c.icon className="h-3 w-3" />}
             {c.label} ({c.count})
           </button>
         ))}
