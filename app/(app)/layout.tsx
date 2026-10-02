@@ -17,11 +17,16 @@ async function getViewer(): Promise<Viewer> {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { role: null, displayName: null, circleName: null }
 
+  // Pas de notion de "cercle actif" (cf. docs/ecarts-implementation.md #1) :
+  // pour un compte dans 2+ cercles, on prend le premier rejoint plutot
+  // qu'une ligne arbitraire — deterministe, et coherent avec /api/circles
+  // qui trie pareil pour que circles[0] designe le meme cercle.
   const [{ data: membership }, { data: profile }] = await Promise.all([
     supabase
       .from('family_circle_members')
       .select('role, family_circles ( name )')
       .eq('user_id', user.id)
+      .order('joined_at')
       .limit(1)
       .maybeSingle(),
     supabase.from('users').select('display_name').eq('id', user.id).maybeSingle(),

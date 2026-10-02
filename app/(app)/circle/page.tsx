@@ -40,7 +40,7 @@ interface Member {
   id: string
   role: string
   joined_at: string
-  users: { id: string; display_name: string; email: string; member_dietary_prefs: Pref[] }
+  users: { id: string; display_name: string; email: string; member_dietary_prefs: Pref[] } | null
 }
 
 interface Circle {
@@ -96,7 +96,7 @@ export default function CirclePage() {
       setCircles((prev) =>
         prev.map((c) =>
           c.id === circleId
-            ? { ...c, family_circle_members: c.family_circle_members.filter((m) => m.users.id !== userId) }
+            ? { ...c, family_circle_members: c.family_circle_members.filter((m) => m.users?.id !== userId) }
             : c
         )
       )
@@ -142,20 +142,20 @@ export default function CirclePage() {
           c.id === sheetTarget.circleId
             ? {
                 ...c,
-                family_circle_members: c.family_circle_members.map((m) =>
-                  m.users.id === sheetTarget.userId
-                    ? {
-                        ...m,
-                        users: {
-                          ...m.users,
-                          member_dietary_prefs: [
-                            ...m.users.member_dietary_prefs.filter((p) => p.id !== saved.id),
-                            saved,
-                          ],
-                        },
-                      }
-                    : m
-                ),
+                family_circle_members: c.family_circle_members.map((m) => {
+                  if (!m.users || m.users.id !== sheetTarget.userId) return m
+                  const users = m.users
+                  return {
+                    ...m,
+                    users: {
+                      ...users,
+                      member_dietary_prefs: [
+                        ...users.member_dietary_prefs.filter((p) => p.id !== saved.id),
+                        saved,
+                      ],
+                    },
+                  }
+                }),
               }
             : c
         )
@@ -180,11 +180,11 @@ export default function CirclePage() {
           c.id === circleId
             ? {
                 ...c,
-                family_circle_members: c.family_circle_members.map((m) =>
-                  m.users.id === userId
-                    ? { ...m, users: { ...m.users, member_dietary_prefs: m.users.member_dietary_prefs.filter((p) => p.id !== prefId) } }
-                    : m
-                ),
+                family_circle_members: c.family_circle_members.map((m) => {
+                  if (!m.users || m.users.id !== userId) return m
+                  const users = m.users
+                  return { ...m, users: { ...users, member_dietary_prefs: users.member_dietary_prefs.filter((p) => p.id !== prefId) } }
+                }),
               }
             : c
         )
@@ -261,6 +261,7 @@ export default function CirclePage() {
         <div className="space-y-2" ref={menuRef}>
           {members.map((member, index) => {
             const u = member.users
+            if (!u) return null // profil illisible (RLS) — ne doit plus arriver, cf. migration users_select_circle_mates
             const initial = (u.display_name || u.email)[0].toUpperCase()
             const avatarColor = AVATAR_COLORS[index % AVATAR_COLORS.length]
             const isCurrentUser = u.id === currentUserId
