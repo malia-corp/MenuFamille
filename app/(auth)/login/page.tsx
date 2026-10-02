@@ -16,6 +16,8 @@ import {
   Share2,
   Shield,
   Timer,
+  Heart,
+  Sparkles,
 } from 'lucide-react'
 
 type State = 'idle' | 'sending' | 'otp' | 'verifying'
@@ -179,7 +181,7 @@ export default function LoginPage() {
         </div>
 
         <div className="text-center space-y-1.5">
-          <h1 className="text-h1 text-[var(--kkb-coral)]">Vérifiez votre boîte mail ✨</h1>
+          <h1 className="text-h1 text-[var(--kkb-coral)] flex items-center justify-center gap-2">Vérifiez votre boîte mail <Sparkles className="h-6 w-6" /></h1>
           <p className="text-kkb-body text-[var(--kkb-text-secondary)]">
             Nous venons de glisser un code à 6 chiffres dans la boîte de
           </p>
@@ -296,7 +298,7 @@ export default function LoginPage() {
 
         <div className="text-center space-y-1.5 pt-2">
           <p className="flex items-center justify-center gap-1.5 text-xs text-[var(--kkb-text-tertiary)] font-quicksand">
-            ♥ Cuisiné avec amour pour toute la famille
+            <Heart className="h-3.5 w-3.5 text-[var(--kkb-coral)]" /> Cuisiné avec amour pour toute la famille
           </p>
           <p className="text-[13px] text-[var(--kkb-text-secondary)] font-quicksand">
             Besoin d&apos;aide ?{' '}

@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
     const userSubs = (subs ?? []).filter(s => s.user_id === pref.user_id)
     if (userSubs.length === 0) continue
 
-    const title = `🍽 Rappel ${MEAL_LABEL[pref.meal_type] ?? pref.meal_type}`
+    const title = `\u{1F37D} Rappel ${MEAL_LABEL[pref.meal_type] ?? pref.meal_type}`
     const body  = 'Votre repas approche. Bonne dégustation !'
     const payload = JSON.stringify({ title, body, url: '/plan' })
 

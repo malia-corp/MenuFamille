@@ -2,9 +2,10 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { CalendarDays, PlusCircle, Settings, UtensilsCrossed, Zap } from 'lucide-react'
+import { CalendarDays, CupSoda, Hand, PlusCircle, Salad, Settings, UtensilsCrossed, Zap } from 'lucide-react'
 import { DAY_OPTIONS, getMondayISO, formatWeekRange, dayOfWeekFromDate, type DayOfWeek } from '@/lib/utils/week'
-import { MEAL_LABEL, MEAL_EMOJI, MEAL_COLOR, type MealType } from '@/lib/constants/meal-type'
+import { MEAL_LABEL, MEAL_COLOR, type MealType } from '@/lib/constants/meal-type'
+import { MEAL_ICON } from '@/lib/constants/meal-type-icon'
 import { sortByMealType } from '@/lib/utils/sort-meal-configs'
 import { MealCardHero } from '@/components/home/meal-card-hero'
 import { MealCardCompact } from '@/components/home/meal-card-compact'
@@ -98,7 +99,10 @@ function toChips(compositions: Composition[]): ChipItem[] {
     .slice()
     .sort((a, b) => a.sort_order - b.sort_order)
     .filter((c): c is Composition & { recipes: CompositionRecipeRef } => !!c.recipes)
-    .map(c => ({ icon: c.recipes.categories?.icon ?? '🍽', name: c.recipes.name }))
+    .map(c => ({
+      icon: c.role === 'drink' ? CupSoda : c.role === 'side' ? Salad : UtensilsCrossed,
+      name: c.recipes.name,
+    }))
 }
 
 export default function HomePage() {
@@ -217,7 +221,7 @@ export default function HomePage() {
         mealLabel:   MEAL_LABEL.dejeuner,
         title:       item.recipes.name,
         photoUrl:    item.recipes.photo_url,
-        emoji:       MEAL_EMOJI.dejeuner,
+        icon:        MEAL_ICON.dejeuner,
         prepTimeMin: item.recipes.prep_time_min,
       })
     }
@@ -272,7 +276,7 @@ export default function HomePage() {
     <div className="space-y-4">
       {activeConfigs.map(config => {
         const item  = getItemForDay(config, selectedDay)
-        const emoji = MEAL_EMOJI[config.meal_type]
+        const icon  = MEAL_ICON[config.meal_type]
         const label = MEAL_LABEL[config.meal_type]
 
         if (!item?.recipes) {
@@ -300,7 +304,7 @@ export default function HomePage() {
           return (
             <MealCardHero
               key={config.meal_type}
-              emoji={emoji}
+              icon={icon}
               timeLabel={`${label} · ${formatTime(config.default_time)}`}
               photoUrl={item.recipes.photo_url}
               recipeId={item.recipes.id}
@@ -320,7 +324,7 @@ export default function HomePage() {
         return (
           <MealCardCompact
             key={config.meal_type}
-            emoji={emoji}
+            icon={icon}
             badgeLabel={`${formatTime(config.default_time)} · ${label.toUpperCase()}`}
             badgeBg={MEAL_COLOR[config.meal_type].bg}
             badgeText={MEAL_COLOR[config.meal_type].text}
@@ -350,7 +354,9 @@ export default function HomePage() {
     <div className="max-w-sm mx-auto px-4 pb-40 space-y-6 lg:hidden">
       {/* Salutation */}
       <section className="space-y-1 pt-2">
-        <h1 className="text-h1 text-[var(--kkb-text-primary)]">Bonjour{firstName ? `, ${firstName}` : ''} 👋</h1>
+        <h1 className="text-h1 text-[var(--kkb-text-primary)] flex items-center gap-2">
+          Bonjour{firstName ? `, ${firstName}` : ''} <Hand className="h-6 w-6 text-[var(--kkb-coral)]" />
+        </h1>
         <p className="text-kkb-body text-[var(--kkb-text-secondary)]">Prête pour une nouvelle semaine de délices ?</p>
       </section>
 
@@ -428,8 +434,8 @@ export default function HomePage() {
               </span>
             )}
           </div>
-          <h1 className="text-h1 text-[var(--kkb-text-primary)] text-3xl">
-            Bonjour{firstName ? ` ${firstName}` : ''} 👋
+          <h1 className="text-h1 text-[var(--kkb-text-primary)] text-3xl flex items-center gap-2">
+            Bonjour{firstName ? ` ${firstName}` : ''} <Hand className="h-7 w-7 text-[var(--kkb-coral)]" />
           </h1>
           <p className="text-kkb-body text-base text-[var(--kkb-text-secondary)] max-w-xl">
             Prête pour une nouvelle semaine gourmande et sereine ?

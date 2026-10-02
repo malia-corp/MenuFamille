@@ -7,7 +7,8 @@ import {
 import { formatDistanceToNow } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { composedName } from '@/lib/utils/composed-name'
-import { MEAL_LABEL, MEAL_EMOJI, type MealType } from '@/lib/constants/meal-type'
+import { MEAL_LABEL, type MealType } from '@/lib/constants/meal-type'
+import { MealTypeIcon } from '@/components/ui/meal-type-icon'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -57,15 +58,15 @@ const DAY_ORDER = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 
 const MEAL_ORDER: MealType[] = ['petit_dejeuner', 'dejeuner', 'gouter', 'diner']
 
 const RATING_CONFIG: { value: Rating; emoji: string; label: string; bg: string; border: string; textColor: string }[] = [
-  { value: 'excellent', emoji: '😊', label: 'Excellent',   bg: 'var(--kkb-success-light)', border: 'var(--kkb-success)', textColor: 'var(--kkb-success)' },
-  { value: 'correct',   emoji: '😐', label: 'Correct',     bg: 'var(--kkb-bg)', border: 'var(--kkb-warning)', textColor: 'var(--kkb-warning)' },
-  { value: 'decevant',  emoji: '😕', label: 'Décevant',    bg: 'var(--kkb-danger-light)', border: 'var(--kkb-danger)', textColor: 'var(--kkb-danger)' },
+  { value: 'excellent', emoji: '\u{1F60A}', label: 'Excellent',   bg: 'var(--kkb-success-light)', border: 'var(--kkb-success)', textColor: 'var(--kkb-success)' },
+  { value: 'correct',   emoji: '\u{1F610}', label: 'Correct',     bg: 'var(--kkb-bg)', border: 'var(--kkb-warning)', textColor: 'var(--kkb-warning)' },
+  { value: 'decevant',  emoji: '\u{1F615}', label: 'Décevant',    bg: 'var(--kkb-danger-light)', border: 'var(--kkb-danger)', textColor: 'var(--kkb-danger)' },
 ]
 
 const RATING_EMOJI: Record<Rating, string> = {
-  excellent: '😊',
-  correct:   '😐',
-  decevant:  '😕',
+  excellent: '\u{1F60A}',
+  correct:   '\u{1F610}',
+  decevant:  '\u{1F615}',
 }
 
 function getMealStatus(dayOfWeek: string, weekStart: string): Status {
@@ -213,7 +214,7 @@ export default function FeedbackPage() {
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-start gap-2.5 flex-1 min-w-0">
-                  <span className="text-xl flex-shrink-0">{MEAL_EMOJI[item.meal_type]}</span>
+                  <MealTypeIcon type={item.meal_type} className="h-5 w-5 mt-0.5 flex-shrink-0 text-[var(--kkb-coral)]" />
                   <div className="flex-1 min-w-0">
                     {isToday && (
                       <p className="text-[9px] font-quicksand font-bold uppercase tracking-wider text-[var(--kkb-coral)] mb-0.5">

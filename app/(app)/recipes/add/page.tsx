@@ -2,7 +2,7 @@
 
 import { Suspense, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { ArrowLeft, BookmarkPlus, Download, Link as LinkIcon, Loader2 } from 'lucide-react'
+import { AlertTriangle, ArrowLeft, BookmarkPlus, Download, Link as LinkIcon, Loader2 } from 'lucide-react'
 import { RecipeForm, RecipeFormValues, uid, IngredientRow, StepRow } from '../_recipe-form'
 
 type ConflictChoice = 'use' | 'variant' | 'independent'
@@ -240,7 +240,7 @@ function RecipeAddInner() {
           )}
           {importWarning && (
             <p className="text-[11px] font-quicksand text-amber-700 bg-amber-50 px-2 py-1.5 rounded-lg">
-              ⚠ {importWarning}
+              <AlertTriangle className="inline h-3.5 w-3.5 -mt-0.5 mr-1" />{importWarning}
             </p>
           )}
           {importError && <p className="text-xs text-red-600 font-quicksand">{importError}</p>}

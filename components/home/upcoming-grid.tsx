@@ -1,6 +1,6 @@
 'use client'
 
-import { HelpCircle, ThumbsUp } from 'lucide-react'
+import { HelpCircle, ThumbsUp, UtensilsCrossed } from 'lucide-react'
 import { FramedPhoto } from './framed-photo'
 
 export interface UpcomingGridDay {
@@ -23,7 +23,9 @@ export function UpcomingGrid({ days }: { days: UpcomingGridDay[] }) {
             {d.lunchPhoto ? (
               <FramedPhoto src={d.lunchPhoto} alt={d.lunchTitle ?? ''} />
             ) : (
-              <div className="h-full w-full bg-[var(--kkb-coral-light)] flex items-center justify-center text-3xl">🍽</div>
+              <div className="h-full w-full bg-[var(--kkb-coral-light)] flex items-center justify-center">
+                <UtensilsCrossed className="h-8 w-8 text-[var(--kkb-coral)]" />
+              </div>
             )}
             <span className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-white/90 text-[var(--kkb-text-secondary)] text-[10px] font-quicksand font-semibold uppercase">
               {d.dateLabel}

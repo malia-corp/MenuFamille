@@ -1,6 +1,6 @@
 'use client'
 
-import { Clock } from 'lucide-react'
+import { Clock, type LucideIcon } from 'lucide-react'
 import { FramedPhoto } from './framed-photo'
 
 export interface UpcomingDay {
@@ -9,7 +9,7 @@ export interface UpcomingDay {
   mealLabel: string
   title: string
   photoUrl: string | null
-  emoji: string
+  icon: LucideIcon
   prepTimeMin: number | null
 }
 
@@ -27,8 +27,8 @@ export function UpcomingCarousel({ days }: { days: UpcomingDay[] }) {
             {d.photoUrl ? (
               <FramedPhoto src={d.photoUrl} alt={d.title} />
             ) : (
-              <div className="h-full w-full flex items-center justify-center text-3xl bg-[var(--kkb-coral)]">
-                {d.emoji}
+              <div className="h-full w-full flex items-center justify-center bg-[var(--kkb-coral)]">
+                <d.icon className="h-8 w-8 text-white" />
               </div>
             )}
             <span className="absolute top-1.5 left-1.5 bg-[var(--kkb-coral)] text-white text-[8px] font-quicksand font-bold uppercase px-2 py-0.5 rounded-full">

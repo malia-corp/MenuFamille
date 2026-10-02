@@ -16,6 +16,7 @@ import {
   Trash2,
   Users,
   Utensils,
+  Check,
 } from 'lucide-react'
 
 interface Category {
@@ -488,8 +489,8 @@ export default function RecipeDetailPage() {
             )}
 
             {addMenuDone ? (
-              <p className="text-center text-sm font-quicksand font-semibold text-green-600">
-                ✓ Recette ajoutée au menu !
+              <p className="flex items-center justify-center gap-1.5 text-sm font-quicksand font-semibold text-green-600">
+                <Check className="h-4 w-4" /> Recette ajoutée au menu !
               </p>
             ) : (
               <div className="flex gap-3">
