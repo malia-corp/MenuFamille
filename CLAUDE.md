@@ -28,8 +28,8 @@ Plus aucun commit n'est poussé directement sur `main`. Pour chaque tâche logiq
    - `<slug>` : description courte en kebab-case
    - Exemples : `feat/sprint0-jour3-seed-data` → `feat/sprint0-jour3-connexion-supabase` (créée depuis la première, pas depuis `main`)
    - Une fois une branche mergée sur `main` par la développeuse, la branche suivante peut repartir d'un `main` à jour (`git checkout main && git pull`) si la chaîne n'a plus de raison d'être maintenue
-2. Committer sur cette branche (convention habituelle `feat(ID-story): ...`)
-3. Pousser la branche : `git push -u origin <branche>`
+2. Committer sur cette branche (convention habituelle `feat(ID-story): ...`) — automatique, pas besoin de validation préalable
+3. **Attendre une validation explicite de la développeuse avant de pousser** (ex. "tu peux pusher"). Ne jamais enchaîner commit et push automatiquement, et ne pas interpréter l'approbation d'un commit comme une approbation du push qui suit. Une fois validé : `git push -u origin <branche>`
 4. Ouvrir la Pull Request manuellement sur GitHub (lien de comparaison fourni à chaque push) — la PR d'une branche enfant cible sa branche parente tant que celle-ci n'est pas mergée, pour refléter la chaîne réelle
 5. Revue et merge effectués par la développeuse via l'interface GitHub — jamais de merge automatique
 
@@ -68,6 +68,25 @@ Voir [`docs/decisions.md`](docs/decisions.md) pour le détail. Résumé :
 3. Feedback post-repas : 3 emojis (😊/😐/😕), pas des étoiles
 4. Import recette : `source_url` + table `recipe_imports`, pas de scan IA
 5. Notifications : couvrent les 4 types de repas
+
+---
+
+## Icônes — lucide-react, pas d'emojis
+
+- Toute icône d'interface utilise `lucide-react`. Ne jamais écrire d'emoji littéral dans le code : les caractères emoji ne sont pas acceptés par la plateforme de déploiement.
+- Types de repas : utiliser `MEAL_ICON` (`lib/constants/meal-type-icon.ts`) — `Coffee` (petit-déj.), `UtensilsCrossed` (déjeuner), `Cookie` (goûter), `Moon` (dîner). En JSX, `<MealTypeIcon type={...} />` (`components/ui/meal-type-icon.tsx`).
+- Correspondances établies : accompagnement `Salad`, boisson `CupSoda`, catégorie `Tag`, jour/semaine `CalendarDays`, sauvegarde `Check`.
+- Seule exception : les emojis de réaction (vote du sondage 😊/😐/😕, feedback post-repas), écrits en échappements unicode (`'\u{1F60A}'`), jamais en caractère littéral. Idem pour les textes de notification push, où une icône React est impossible.
+- `MEAL_EMOJI` (`lib/constants/meal-type.ts`) est conservé pour ces seuls contextes texte (notifications) ; ne pas l'utiliser dans l'interface.
+
+---
+
+## Partage — un seul modèle
+
+Tout partage (lien de sondage, récap, invitation au cercle…) passe par `<ShareActions>` (`components/ui/share-actions.tsx`) : bouton « Partager » qui ouvre la feuille de partage native de l'appareil (WhatsApp, SMS, mail…, affiché seulement si `navigator.share` existe) + bouton « Copier ». Jamais de lien `wa.me` ni de bouton dédié à une application.
+
+- Contenus réutilisables : `surveyLinkPayload(token)` (lien du sondage), `circleInvitePayload(nom, code)` (invitation, « Copier » copie le code seul).
+- Un nouveau type de partage = une nouvelle fonction `...Payload` dans ce même fichier.
 
 ---
 

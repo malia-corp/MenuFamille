@@ -2,11 +2,11 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Bell, Info, Save } from 'lucide-react'
+import { ArrowLeft, Bell, Check, Info, Save } from 'lucide-react'
+import { MEAL_LABEL, type MealType } from '@/lib/constants/meal-type'
+import { MealTypeIcon } from '@/components/ui/meal-type-icon'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-
-type MealType = 'petit_dejeuner' | 'dejeuner' | 'gouter' | 'diner'
 
 interface MealConfig {
   meal_type:     MealType
@@ -25,20 +25,6 @@ interface NotifPref {
 }
 
 // ─── Constantes ───────────────────────────────────────────────────────────────
-
-const MEAL_LABEL: Record<MealType, string> = {
-  petit_dejeuner: 'Petit-déjeuner',
-  dejeuner:       'Déjeuner',
-  gouter:         'Goûter',
-  diner:          'Dîner',
-}
-
-const MEAL_EMOJI: Record<MealType, string> = {
-  petit_dejeuner: '🌅',
-  dejeuner:       '🍽',
-  gouter:         '🧁',
-  diner:          '🌙',
-}
 
 const DAYS = [
   { label: 'L', value: 1 },
@@ -187,21 +173,21 @@ export default function NotificationsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="h-5 w-5 border-2 border-[#E87D3E] border-t-transparent rounded-full animate-spin" />
+        <div className="h-5 w-5 border-2 border-[var(--kkb-coral)] border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-[#FDF6EE] pb-28">
+    <div className="min-h-screen bg-[var(--kkb-bg)] pb-28">
       {/* Header */}
-      <div className="sticky top-14 z-30 bg-[#FDF6EE] border-b border-[#E8C99A] px-4 py-3 flex items-center gap-3">
-        <button type="button" onClick={() => router.back()} className="p-1 -ml-1 text-[#5A4A43]">
+      <div className="sticky top-14 z-30 bg-[var(--kkb-bg)] border-b border-[var(--kkb-border)] px-4 py-3 flex items-center gap-3">
+        <button type="button" onClick={() => router.back()} className="p-1 -ml-1 text-[var(--kkb-text-secondary)]">
           <ArrowLeft className="h-5 w-5" />
         </button>
         <div className="flex items-center gap-2">
-          <Bell className="h-4 w-4 text-terracotta" />
-          <h1 className="font-dosis font-bold text-base text-[#2C1810]">Notifications</h1>
+          <Bell className="h-4 w-4 text-[var(--kkb-coral)]" />
+          <h1 className="font-dosis font-bold text-base text-[var(--kkb-text-primary)]">Notifications</h1>
         </div>
       </div>
 
@@ -209,7 +195,7 @@ export default function NotificationsPage() {
 
         {/* Section rappels */}
         <div>
-          <p className="text-[11px] font-quicksand font-bold uppercase tracking-wider text-[#9A8F84] mb-3">
+          <p className="text-[11px] font-quicksand font-bold uppercase tracking-wider text-[var(--kkb-text-tertiary)] mb-3">
             Rappels de repas
           </p>
           <div className="space-y-3">
@@ -218,12 +204,12 @@ export default function NotificationsPage() {
               if (!pref) return null
 
               return (
-                <div key={cfg.meal_type} className="bg-white border border-[#EDE4D6] rounded-2xl p-4 space-y-3">
+                <div key={cfg.meal_type} className="bg-white border border-[var(--kkb-border-light)] rounded-2xl p-4 space-y-3">
                   {/* Ligne titre + toggle */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
-                      <span className="text-xl">{MEAL_EMOJI[cfg.meal_type]}</span>
-                      <span className="font-dosis font-semibold text-sm text-[#2C1810]">
+                      <MealTypeIcon type={cfg.meal_type} className="h-5 w-5 text-[var(--kkb-coral)]" />
+                      <span className="font-dosis font-semibold text-sm text-[var(--kkb-text-primary)]">
                         {MEAL_LABEL[cfg.meal_type]}
                       </span>
                     </div>
@@ -232,7 +218,7 @@ export default function NotificationsPage() {
                       onClick={() => handleReminderToggle(cfg.meal_type, !pref.reminder_enabled)}
                       className={[
                         'relative w-10 h-6 rounded-full transition-colors',
-                        pref.reminder_enabled ? 'bg-[#E87D3E]' : 'bg-[#D9CFC5]',
+                        pref.reminder_enabled ? 'bg-[var(--kkb-coral)]' : 'bg-[var(--kkb-border-light)]',
                       ].join(' ')}
                       aria-label={pref.reminder_enabled ? 'Désactiver' : 'Activer'}
                     >
@@ -245,23 +231,23 @@ export default function NotificationsPage() {
 
                   {/* Détails — visibles si actif */}
                   {pref.reminder_enabled && (
-                    <div className="space-y-3 pt-1 border-t border-[#EDE4D6]">
+                    <div className="space-y-3 pt-1 border-t border-[var(--kkb-border-light)]">
                       {/* Heure */}
                       <div>
-                        <p className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[#9A8F84] mb-1">
+                        <p className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--kkb-text-tertiary)] mb-1">
                           Heure du rappel
                         </p>
                         <input
                           type="time"
                           value={pref.reminder_time ?? cfg.default_time}
                           onChange={e => updatePref(cfg.meal_type, { reminder_time: e.target.value })}
-                          className="font-quicksand text-sm text-[#3D2C20] bg-[#FDF6EE] border border-[#EDE4D6] rounded-lg px-3 py-1.5 outline-none"
+                          className="font-quicksand text-sm text-[var(--kkb-text-primary)] bg-[var(--kkb-bg)] border border-[var(--kkb-border-light)] rounded-lg px-3 py-1.5 outline-none"
                         />
                       </div>
 
                       {/* Jours */}
                       <div>
-                        <p className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[#9A8F84] mb-1.5">
+                        <p className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--kkb-text-tertiary)] mb-1.5">
                           Jours
                         </p>
                         <div className="flex gap-1.5">
@@ -275,8 +261,8 @@ export default function NotificationsPage() {
                                 className={[
                                   'w-8 h-8 rounded-full text-xs font-quicksand font-semibold transition-all',
                                   active
-                                    ? 'bg-[#E87D3E] text-white'
-                                    : 'bg-[#FDF6EE] text-[#9A8F84] border border-[#EDE4D6]',
+                                    ? 'bg-[var(--kkb-coral)] text-white'
+                                    : 'bg-[var(--kkb-bg)] text-[var(--kkb-text-tertiary)] border border-[var(--kkb-border-light)]',
                                 ].join(' ')}
                               >
                                 {d.label}
@@ -295,7 +281,7 @@ export default function NotificationsPage() {
 
         {/* Section feedback */}
         <div>
-          <p className="text-[11px] font-quicksand font-bold uppercase tracking-wider text-[#9A8F84] mb-3">
+          <p className="text-[11px] font-quicksand font-bold uppercase tracking-wider text-[var(--kkb-text-tertiary)] mb-3">
             Demandes d&apos;avis post-repas
           </p>
           <div className="space-y-3">
@@ -304,11 +290,11 @@ export default function NotificationsPage() {
               if (!pref) return null
 
               return (
-                <div key={cfg.meal_type} className="bg-white border border-[#EDE4D6] rounded-2xl p-4 space-y-3">
+                <div key={cfg.meal_type} className="bg-white border border-[var(--kkb-border-light)] rounded-2xl p-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
-                      <span className="text-xl">{MEAL_EMOJI[cfg.meal_type]}</span>
-                      <span className="font-dosis font-semibold text-sm text-[#2C1810]">
+                      <MealTypeIcon type={cfg.meal_type} className="h-5 w-5 text-[var(--kkb-coral)]" />
+                      <span className="font-dosis font-semibold text-sm text-[var(--kkb-text-primary)]">
                         {MEAL_LABEL[cfg.meal_type]}
                       </span>
                     </div>
@@ -317,7 +303,7 @@ export default function NotificationsPage() {
                       onClick={() => updatePref(cfg.meal_type, { feedback_enabled: !pref.feedback_enabled })}
                       className={[
                         'relative w-10 h-6 rounded-full transition-colors',
-                        pref.feedback_enabled ? 'bg-[#E87D3E]' : 'bg-[#D9CFC5]',
+                        pref.feedback_enabled ? 'bg-[var(--kkb-coral)]' : 'bg-[var(--kkb-border-light)]',
                       ].join(' ')}
                       aria-label={pref.feedback_enabled ? 'Désactiver' : 'Activer'}
                     >
@@ -329,8 +315,8 @@ export default function NotificationsPage() {
                   </div>
 
                   {pref.feedback_enabled && (
-                    <div className="space-y-2 pt-1 border-t border-[#EDE4D6]">
-                      <p className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[#9A8F84]">
+                    <div className="space-y-2 pt-1 border-t border-[var(--kkb-border-light)]">
+                      <p className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--kkb-text-tertiary)]">
                         Délai après le repas
                       </p>
                       <div className="flex gap-2 flex-wrap">
@@ -342,8 +328,8 @@ export default function NotificationsPage() {
                             className={[
                               'px-3 py-1.5 rounded-full text-xs font-quicksand font-medium border transition-all',
                               pref.feedback_delay_min === d.value
-                                ? 'bg-[#E87D3E] text-white border-[#E87D3E]'
-                                : 'bg-white text-[#5A4A43] border-[#EDE4D6]',
+                                ? 'bg-[var(--kkb-coral)] text-white border-[var(--kkb-coral)]'
+                                : 'bg-white text-[var(--kkb-text-secondary)] border-[var(--kkb-border-light)]',
                             ].join(' ')}
                           >
                             {d.label}
@@ -359,16 +345,16 @@ export default function NotificationsPage() {
         </div>
 
         {/* Note iOS */}
-        <div className="flex items-start gap-2.5 bg-[#FDF0DC] border border-[#F5C97A] rounded-xl p-3">
-          <Info className="h-4 w-4 text-[#C9820A] flex-shrink-0 mt-0.5" />
-          <p className="text-xs font-quicksand text-[#7A5C00]">
-            Sur iPhone, ajoutez MenuFamille à votre écran d&apos;accueil (Partager → Sur l&apos;écran d&apos;accueil) pour recevoir les notifications push.
+        <div className="flex items-start gap-2.5 bg-[var(--kkb-warning-light)] border border-[var(--kkb-warning)] rounded-xl p-3">
+          <Info className="h-4 w-4 text-[var(--kkb-warning)] flex-shrink-0 mt-0.5" />
+          <p className="text-xs font-quicksand text-[var(--kkb-warning)]">
+            Sur iPhone, ajoutez KeskonBouf à votre écran d&apos;accueil (Partager → Sur l&apos;écran d&apos;accueil) pour recevoir les notifications push.
           </p>
         </div>
       </div>
 
       {/* Bouton Save sticky */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-[#FDF6EE] border-t border-[#E8C99A] z-20">
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-[var(--kkb-bg)] border-t border-[var(--kkb-border)] z-20">
         <button
           type="button"
           onClick={handleSave}
@@ -376,13 +362,13 @@ export default function NotificationsPage() {
           className={[
             'w-full max-w-lg mx-auto flex items-center justify-center gap-2 py-3 rounded-2xl font-dosis font-bold text-sm transition-all',
             saved
-              ? 'bg-[#2A7D4F] text-white'
-              : 'bg-[#E87D3E] text-white',
+              ? 'bg-[var(--kkb-success)] text-white'
+              : 'bg-[var(--kkb-coral)] text-white',
             saving ? 'opacity-60' : '',
           ].join(' ')}
         >
-          <Save className="h-4 w-4" />
-          {saving ? 'Enregistrement…' : saved ? 'Préférences sauvegardées ✓' : 'Enregistrer mes préférences'}
+          {saved && !saving ? <Check className="h-4 w-4" /> : <Save className="h-4 w-4" />}
+          {saving ? 'Enregistrement…' : saved ? 'Préférences sauvegardées' : 'Enregistrer mes préférences'}
         </button>
       </div>
     </div>

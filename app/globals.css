@@ -4,62 +4,79 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 20 14.3% 4.1%;
-    --card: 0 0% 100%;
-    --card-foreground: 20 14.3% 4.1%;
+    --background: 36 18% 95%;      /* --kkb-bg #F4F2EF */
+    --foreground: 195 8% 9%;       /* --kkb-text-primary #16191A */
+    --card: 0 0% 100%;             /* --kkb-surface #FFFFFF */
+    --card-foreground: 195 8% 9%;
     --popover: 0 0% 100%;
-    --popover-foreground: 20 14.3% 4.1%;
-    --primary: 17 72% 40%;        /* terracotta #B0461C */
+    --popover-foreground: 195 8% 9%;
+    --primary: 10 87% 62%;         /* --kkb-coral #F2664A */
     --primary-foreground: 0 0% 100%;
-    --secondary: 37 91% 55%;      /* african-gold #F5A623 */
-    --secondary-foreground: 20 14.3% 4.1%;
-    --muted: 60 4.8% 95.9%;
-    --muted-foreground: 25 5.3% 44.7%;
-    --accent: 152 49% 33%;        /* market-green #2A7D4F */
+    --secondary: 183 74% 21%;      /* --kkb-teal #0E5A5E */
+    --secondary-foreground: 0 0% 100%;
+    --muted: 36 18% 95%;
+    --muted-foreground: 16 12% 46%; /* --kkb-text-secondary #5A4A43 */
+    --accent: 147 50% 33%;         /* --kkb-success #2A7D4F */
     --accent-foreground: 0 0% 100%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 60 9.1% 97.8%;
-    --border: 20 5.9% 90%;
-    --input: 20 5.9% 90%;
-    --ring: 17 72% 40%;
-    --radius: 0.75rem;
-    /* MenuFamille design tokens */
-    --mf-primary:        #B0461C;
-    --mf-primary-hover:  #C74E21;
-    --mf-border-warm:    #E8C99A;
-    --mf-bg-page:        #FDF6EE;
-    --mf-bg-card:        #FCEEE6;
-    --mf-bg-card-alt:    #FFF8F6;
-    --mf-text-primary:   #2C1810;
-    --mf-text-secondary: #5A4A43;
-    --mf-text-tertiary:  #8c7169;
-    --mf-green:          #2A7D4F;
-    --mf-green-bg:       #EAF5EE;
-    --mf-gold:           #F5A623;
-    --mf-gold-bg:        #FEF3E0;
+    --destructive: 6 63% 46%;      /* --kkb-danger #C0392B */
+    --destructive-foreground: 0 0% 100%;
+    --border: 36 63% 76%;          /* --kkb-border #E8C99A */
+    --input: 36 63% 76%;
+    --ring: 10 87% 62%;
+    --radius: 0.875rem;
+
+    /* KeskonBouf design tokens */
+    --kkb-coral:          #F2664A;
+    --kkb-coral-hover:    #E0573C;
+    --kkb-coral-light:    #FBE9E3;
+    --kkb-teal:           #0E5A5E;
+    --kkb-teal-light:     #E4F0EE;
+
+    --kkb-bg:             #F4F2EF;
+    --kkb-surface:        #FFFFFF;
+    --kkb-border:         #E8C99A;
+    --kkb-border-light:   #F0E6DC;
+
+    --kkb-text-primary:   #16191A;
+    --kkb-text-secondary: #5A4A43;
+    --kkb-text-tertiary:  #8c7169;
+
+    --kkb-success:        #2A7D4F;
+    --kkb-success-light:  #EAF5EE;
+    --kkb-warning:        #F5A623;
+    --kkb-warning-light:  #FEF3E0;
+    --kkb-danger:         #C0392B;
+    --kkb-danger-light:   #FCEBEB;
+
+    --kkb-radius-pill:    999px;
+    --kkb-radius-card:    14px;
+    --kkb-radius-sm:      10px;
+    --kkb-radius-xs:      8px;
+
+    --kkb-shadow-card: 0 2px 12px rgba(22,25,26,0.07);
+    --kkb-shadow-fab:  0 4px 20px rgba(242,102,74,0.35);
   }
 
   .dark {
-    --background: 20 14.3% 4.1%;
-    --foreground: 60 9.1% 97.8%;
-    --card: 20 14.3% 4.1%;
-    --card-foreground: 60 9.1% 97.8%;
-    --popover: 20 14.3% 4.1%;
-    --popover-foreground: 60 9.1% 97.8%;
-    --primary: 15 74% 50%;
+    --background: 195 8% 9%;
+    --foreground: 36 18% 95%;
+    --card: 195 8% 12%;
+    --card-foreground: 36 18% 95%;
+    --popover: 195 8% 12%;
+    --popover-foreground: 36 18% 95%;
+    --primary: 10 87% 62%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 37 91% 55%;
-    --secondary-foreground: 20 14.3% 4.1%;
-    --muted: 12 6.5% 15.1%;
-    --muted-foreground: 24 5.4% 63.9%;
-    --accent: 152 49% 33%;
+    --secondary: 183 50% 30%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 195 8% 16%;
+    --muted-foreground: 36 10% 70%;
+    --accent: 147 50% 33%;
     --accent-foreground: 0 0% 100%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 60 9.1% 97.8%;
-    --border: 12 6.5% 15.1%;
-    --input: 12 6.5% 15.1%;
-    --ring: 15 74% 50%;
+    --destructive: 6 63% 46%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 195 8% 20%;
+    --input: 195 8% 20%;
+    --ring: 10 87% 62%;
   }
 }
 
@@ -77,4 +94,59 @@
   .text-balance {
     text-wrap: balance;
   }
+
+  /* Hierarchie typographique KeskonBouf — cf. globals.css :root pour les tokens couleur */
+  .text-h1 {
+    @apply font-dosis font-extrabold text-2xl;
+  }
+  .text-h2 {
+    @apply font-dosis font-bold text-lg;
+  }
+  .text-h3 {
+    @apply font-dosis font-semibold text-[15px];
+  }
+  .text-kkb-label {
+    @apply font-quicksand font-bold text-[10px] uppercase tracking-[0.08em];
+  }
+  .text-kkb-body {
+    @apply font-quicksand font-normal text-sm;
+  }
+  .text-btn-primary {
+    @apply font-quicksand font-bold text-[15px];
+  }
+  .text-btn-secondary {
+    @apply font-quicksand font-semibold text-sm;
+  }
+  .text-kkb-meta {
+    @apply font-quicksand font-normal text-xs;
+    color: var(--kkb-text-tertiary);
+  }
+
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .animate-shake {
+    animation: kkb-shake 0.4s ease-in-out;
+  }
+
+  .animate-kkb-pulse {
+    animation: kkb-pulse 1.5s ease-in-out infinite;
+  }
+}
+
+@keyframes kkb-shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-8px); }
+  40%, 80% { transform: translateX(8px); }
+}
+
+@keyframes kkb-pulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.1); }
 }

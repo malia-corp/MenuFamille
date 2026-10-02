@@ -24,9 +24,17 @@ interface UserProfile {
   dietary_prefs: Record<string, unknown>
 }
 
+interface DietaryPref {
+  id:       string
+  pref_type: 'allergy' | 'dislike' | 'preference' | 'favorite'
+  value:     string
+  severity:  'strict' | 'light' | null
+}
+
 export default function ProfilePage() {
   const router = useRouter()
   const [profile, setProfile] = useState<UserProfile | null>(null)
+  const [dietaryPrefs, setDietaryPrefs] = useState<DietaryPref[]>([])
   const [loading, setLoading] = useState(true)
   const [editMode, setEditMode] = useState(false)
   const [editName, setEditName] = useState('')
@@ -40,6 +48,10 @@ export default function ProfilePage() {
         setProfile(data)
         setLoading(false)
       })
+    fetch('/api/users/me/dietary-prefs')
+      .then((r) => r.json())
+      .then((res) => setDietaryPrefs(Array.isArray(res?.data) ? res.data : []))
+      .catch(() => {})
   }, [])
 
   useEffect(() => {
@@ -77,15 +89,13 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <p className="text-sm text-[#8c7169]">Chargement…</p>
+        <p className="text-sm text-[var(--kkb-text-tertiary)]">Chargement…</p>
       </div>
     )
   }
 
   const initial = (profile?.display_name || '?')[0].toUpperCase()
-  const allergies: string[] = Array.isArray(profile?.dietary_prefs?.allergies)
-    ? (profile.dietary_prefs.allergies as string[])
-    : []
+  const allergies = dietaryPrefs.filter(p => p.pref_type === 'allergy')
   const cuisines: string[] = Array.isArray(profile?.dietary_prefs?.cuisines)
     ? (profile.dietary_prefs.cuisines as string[])
     : []
@@ -95,7 +105,7 @@ export default function ProfilePage() {
 
       {/* Toast */}
       {toast && (
-        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-[#2C1810] text-white text-sm rounded-xl px-4 py-2 shadow-lg font-quicksand">
+        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-[var(--kkb-text-primary)] text-white text-sm rounded-xl px-4 py-2 shadow-lg font-quicksand">
           {toast}
         </div>
       )}
@@ -103,14 +113,14 @@ export default function ProfilePage() {
       {/* Avatar + Nom */}
       <div className="flex flex-col items-center gap-3 pt-2">
         <div className="relative">
-          <div className="h-20 w-20 rounded-full bg-terracotta flex items-center justify-center text-white font-dosis font-bold text-3xl">
+          <div className="h-20 w-20 rounded-full bg-[var(--kkb-coral)] flex items-center justify-center text-white font-dosis font-bold text-3xl">
             {initial}
           </div>
           {!editMode && (
             <button
               type="button"
               onClick={startEdit}
-              className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full bg-[#FDF6EE] border-2 border-[#E8C99A] flex items-center justify-center text-[#5A4A43] hover:text-terracotta"
+              className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full bg-[var(--kkb-bg)] border-2 border-[var(--kkb-border)] flex items-center justify-center text-[var(--kkb-text-secondary)] hover:text-[var(--kkb-coral-hover)]"
               aria-label="Modifier le nom"
             >
               <Pencil className="h-3.5 w-3.5" />
@@ -124,14 +134,14 @@ export default function ProfilePage() {
               value={editName}
               onChange={(e) => setEditName(e.target.value)}
               disabled={saving}
-              className="border-[#E8C99A] bg-white text-center font-dosis font-bold text-lg"
+              className="border-[var(--kkb-border)] bg-white text-center font-dosis font-bold text-lg"
               autoFocus
             />
             <button
               type="button"
               onClick={saveEdit}
               disabled={saving}
-              className="p-2 text-market-green hover:text-[#1B6035]"
+              className="p-2 text-[var(--kkb-success)] hover:text-[var(--kkb-success)]"
               aria-label="Enregistrer"
             >
               <Save className="h-5 w-5" />
@@ -139,7 +149,7 @@ export default function ProfilePage() {
             <button
               type="button"
               onClick={() => setEditMode(false)}
-              className="p-2 text-[#8c7169] hover:text-[#5A4A43]"
+              className="p-2 text-[var(--kkb-text-tertiary)] hover:text-[var(--kkb-text-secondary)]"
               aria-label="Annuler"
             >
               <X className="h-5 w-5" />
@@ -147,58 +157,65 @@ export default function ProfilePage() {
           </div>
         ) : (
           <div className="text-center">
-            <p className="font-dosis font-bold text-xl text-[#2C1810]">{profile?.display_name}</p>
-            <p className="text-sm text-[#8c7169] italic font-quicksand">Planificatrice des menus familiaux</p>
+            <p className="font-dosis font-bold text-xl text-[var(--kkb-text-primary)]">{profile?.display_name}</p>
+            <p className="text-sm text-[var(--kkb-text-tertiary)] italic font-quicksand">Planificatrice des menus familiaux</p>
           </div>
         )}
       </div>
 
       {/* MON IMPACT */}
-      <section className="bg-[#FCEEE6] border border-[#E8C99A] rounded-xl p-4">
-        <p className="text-xs text-[#8c7169] uppercase tracking-widest font-medium mb-3">Mon impact</p>
+      <section className="bg-[var(--kkb-coral-light)] border border-[var(--kkb-border)] rounded-xl p-4">
+        <p className="text-xs text-[var(--kkb-text-tertiary)] uppercase tracking-widest font-medium mb-3">Mon impact</p>
         <div className="grid grid-cols-2 gap-3">
           <div className="text-center">
-            <p className="font-dosis font-bold text-2xl text-terracotta">0</p>
-            <p className="text-[10px] text-[#8c7169] uppercase tracking-wide font-medium">Recettes partagées</p>
+            <p className="font-dosis font-bold text-2xl text-[var(--kkb-coral)]">0</p>
+            <p className="text-[10px] text-[var(--kkb-text-tertiary)] uppercase tracking-wide font-medium">Recettes partagées</p>
           </div>
           <div className="text-center">
-            <p className="font-dosis font-bold text-2xl text-terracotta">0</p>
-            <p className="text-[10px] text-[#8c7169] uppercase tracking-wide font-medium">Repas planifiés</p>
+            <p className="font-dosis font-bold text-2xl text-[var(--kkb-coral)]">0</p>
+            <p className="text-[10px] text-[var(--kkb-text-tertiary)] uppercase tracking-wide font-medium">Repas planifiés</p>
           </div>
         </div>
       </section>
 
       {/* MA FAMILLE */}
-      <section className="bg-white border border-[#E8C99A] rounded-xl overflow-hidden">
+      <section className="bg-white border border-[var(--kkb-border)] rounded-xl overflow-hidden">
         <button
           type="button"
           onClick={() => router.push('/circle')}
-          className="w-full flex items-center justify-between px-4 py-3.5 hover:bg-[#FDF6EE] transition-colors"
+          className="w-full flex items-center justify-between px-4 py-3.5 hover:bg-[var(--kkb-bg)] transition-colors"
         >
           <div className="flex items-center gap-3">
-            <Users className="h-5 w-5 text-terracotta" />
-            <span className="font-quicksand font-medium text-[#2C1810] text-sm">Ma famille</span>
+            <Users className="h-5 w-5 text-[var(--kkb-coral)]" />
+            <span className="font-quicksand font-medium text-[var(--kkb-text-primary)] text-sm">Ma famille</span>
           </div>
-          <ChevronRight className="h-4 w-4 text-[#8c7169]" />
+          <ChevronRight className="h-4 w-4 text-[var(--kkb-text-tertiary)]" />
         </button>
       </section>
 
       {/* PRÉFÉRENCES ALIMENTAIRES */}
       <section className="space-y-2">
-        <p className="text-xs text-[#8c7169] uppercase tracking-widest font-medium">Préférences alimentaires</p>
-        <div className="bg-white border border-[#E8C99A] rounded-xl p-4 space-y-3">
+        <p className="text-xs text-[var(--kkb-text-tertiary)] uppercase tracking-widest font-medium">Préférences alimentaires</p>
+        <div className="bg-white border border-[var(--kkb-border)] rounded-xl p-4 space-y-3">
           {allergies.length === 0 && cuisines.length === 0 ? (
-            <p className="text-sm text-[#8c7169] italic font-quicksand">Aucune préférence renseignée</p>
+            <p className="text-sm text-[var(--kkb-text-tertiary)] italic font-quicksand">Aucune préférence renseignée</p>
           ) : (
             <>
               {allergies.length > 0 && (
                 <div className="space-y-1.5">
-                  <p className="text-xs text-[#8c7169] font-medium">Allergies</p>
+                  <p className="text-xs text-[var(--kkb-text-tertiary)] font-medium">Allergies</p>
                   <div className="flex flex-wrap gap-1.5">
                     {allergies.map((a) => (
-                      <Badge key={a} className="text-xs bg-[#FEF3E0] text-[#B07A12] border-[#E8C99A]">
+                      <Badge
+                        key={a.id}
+                        className={`text-xs ${
+                          a.severity === 'strict'
+                            ? 'bg-red-50 text-red-700 border-red-200'
+                            : 'bg-orange-50 text-orange-700 border-orange-200'
+                        }`}
+                      >
                         <AlertTriangle className="h-3 w-3 mr-1" />
-                        {a}
+                        {a.value}
                       </Badge>
                     ))}
                   </div>
@@ -206,10 +223,10 @@ export default function ProfilePage() {
               )}
               {cuisines.length > 0 && (
                 <div className="space-y-1.5">
-                  <p className="text-xs text-[#8c7169] font-medium">Cuisines préférées</p>
+                  <p className="text-xs text-[var(--kkb-text-tertiary)] font-medium">Cuisines préférées</p>
                   <div className="flex flex-wrap gap-1.5">
                     {cuisines.map((c) => (
-                      <Badge key={c} className="text-xs bg-[#EAF5EE] text-[#1B6035] border-[#c3e6d0]">
+                      <Badge key={c} className="text-xs bg-[var(--kkb-success-light)] text-[var(--kkb-success)] border-[var(--kkb-success-light)]">
                         {c}
                       </Badge>
                     ))}
@@ -223,8 +240,8 @@ export default function ProfilePage() {
 
       {/* PARAMÈTRES */}
       <section className="space-y-2">
-        <p className="text-xs text-[#8c7169] uppercase tracking-widest font-medium">Paramètres</p>
-        <div className="bg-white border border-[#E8C99A] rounded-xl overflow-hidden divide-y divide-[#F5EDE5]">
+        <p className="text-xs text-[var(--kkb-text-tertiary)] uppercase tracking-widest font-medium">Paramètres</p>
+        <div className="bg-white border border-[var(--kkb-border)] rounded-xl overflow-hidden divide-y divide-[var(--kkb-border-light)]">
           {[
             { icon: Bell, label: 'Notifications' },
             { icon: Globe, label: 'Langue' },
@@ -234,13 +251,13 @@ export default function ProfilePage() {
               key={label}
               type="button"
               onClick={() => setToast('Bientôt disponible')}
-              className="w-full flex items-center justify-between px-4 py-3.5 hover:bg-[#FDF6EE] transition-colors"
+              className="w-full flex items-center justify-between px-4 py-3.5 hover:bg-[var(--kkb-bg)] transition-colors"
             >
               <div className="flex items-center gap-3">
-                <Icon className="h-5 w-5 text-[#5A4A43]" />
-                <span className="font-quicksand font-medium text-[#2C1810] text-sm">{label}</span>
+                <Icon className="h-5 w-5 text-[var(--kkb-text-secondary)]" />
+                <span className="font-quicksand font-medium text-[var(--kkb-text-primary)] text-sm">{label}</span>
               </div>
-              <ChevronRight className="h-4 w-4 text-[#8c7169]" />
+              <ChevronRight className="h-4 w-4 text-[var(--kkb-text-tertiary)]" />
             </button>
           ))}
 

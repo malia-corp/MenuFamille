@@ -1,24 +1,34 @@
 import type { Metadata } from 'next'
-import { Dosis, Quicksand } from 'next/font/google'
+import { Bricolage_Grotesque, Nunito_Sans } from 'next/font/google'
 import './globals.css'
 
-const dosis = Dosis({
+const bricolageGrotesque = Bricolage_Grotesque({
   subsets: ['latin'],
-  weight: ['600', '700'],
+  weight: ['400', '500', '600', '700', '800'],
   variable: '--font-dosis',
 })
 
-const quicksand = Quicksand({
+const nunitoSans = Nunito_Sans({
   subsets: ['latin'],
-  weight: ['400', '500', '600'],
+  weight: ['400', '500', '600', '700'],
   variable: '--font-quicksand',
 })
 
 export const metadata: Metadata = {
-  title: 'MenuFamille — Planification de menus familiaux',
+  title: 'KeskonBouf — Saveurs & Partage',
   description:
     'PWA mobile-first de planification de menus hebdomadaires pour familles béninoises et africaines francophones.',
   manifest: '/manifest.json',
+  icons: {
+    icon: '/logo-icon.svg',
+    shortcut: '/logo.ico',
+    apple: '/logo-icon.svg',
+  },
+  openGraph: {
+    title: 'KeskonBouf — Saveurs & Partage',
+    description:
+      'PWA mobile-first de planification de menus hebdomadaires pour familles béninoises et africaines francophones.',
+  },
 }
 
 export default function RootLayout({
@@ -28,7 +38,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr">
-      <body className={`${dosis.variable} ${quicksand.variable} font-quicksand antialiased`}>
+      <body className={`${bricolageGrotesque.variable} ${nunitoSans.variable} font-quicksand antialiased`}>
         {children}
       </body>
     </html>

@@ -1,11 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
-
-const DEFAULT_CONFIGS = [
-  { meal_type: 'dejeuner' as const, is_active: true, mode: 'daily' as const, display_order: 1, default_time: '12:00' },
-  { meal_type: 'diner' as const, is_active: true, mode: 'daily' as const, display_order: 2, default_time: '19:00' },
-  { meal_type: 'petit_dejeuner' as const, is_active: false, mode: 'template' as const, display_order: 3, default_time: '07:00' },
-  { meal_type: 'gouter' as const, is_active: false, mode: 'template' as const, display_order: 4, default_time: '16:00' },
-]
+import { DEFAULT_MEAL_CONFIGS } from '@/lib/constants/meal-type'
+import { sortByMealType } from '@/lib/utils/sort-meal-configs'
 
 export async function GET() {
   const supabase = await createClient()
@@ -17,22 +12,20 @@ export async function GET() {
     .from('user_meal_config')
     .select('*')
     .eq('user_id', user.id)
-    .order('display_order')
 
   if (error) return Response.json({ error: error.message }, { status: 500 })
 
   if (!data || data.length === 0) {
     const { data: inserted, error: insertError } = await supabase
       .from('user_meal_config')
-      .insert(DEFAULT_CONFIGS.map((c) => ({ ...c, user_id: user.id })))
+      .insert(DEFAULT_MEAL_CONFIGS.map((c) => ({ ...c, user_id: user.id })))
       .select()
-      .order('display_order')
 
     if (insertError) return Response.json({ error: insertError.message }, { status: 500 })
-    return Response.json(inserted)
+    return Response.json(sortByMealType(inserted ?? []))
   }
 
-  return Response.json(data)
+  return Response.json(sortByMealType(data))
 }
 
 export async function PUT(request: Request) {

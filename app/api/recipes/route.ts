@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
+import { upsertSuggestedAssociations } from '@/lib/utils/recipe-associations'
 import { NextRequest } from 'next/server'
 
 const DIACRITICS_RE = /[̀-ͯ]/g
@@ -43,6 +44,8 @@ export async function POST(request: NextRequest) {
     photo_url,
     source_url,
     raw_html_hash,
+    suggested_sides = [],
+    suggested_drinks = [],
   } = body
 
   if (!name || typeof name !== 'string' || name.trim().length < 2) {
@@ -89,7 +92,6 @@ export async function POST(request: NextRequest) {
       servings: Math.max(1, Number(servings) || 4),
       difficulty: difficulty || null,
       visibility,
-      recipe_type: ((body.recipe_type as string | undefined) || 'plat_principal') as 'plat_principal' | 'accompagnement' | 'boisson' | 'sauce',
       photo_url: (photo_url as string | undefined) || null,
     })
     .select('id')
@@ -137,6 +139,8 @@ export async function POST(request: NextRequest) {
     })
   }
 
+  await upsertSuggestedAssociations(service, recipe.id, user.id, suggested_sides, suggested_drinks)
+
   return Response.json({ id: recipe.id }, { status: 201 })
 }
 
@@ -166,11 +170,11 @@ export async function GET(request: NextRequest) {
     .eq('user_id', user.id)
   const favSet = new Set((favs ?? []).map((f) => f.recipe_id as string))
 
-  const recipe_type = searchParams.get('recipe_type') ?? ''
+  const exclude_category_id = searchParams.get('exclude_category_id') ?? ''
 
   let query = service
     .from('recipes')
-    .select('id, name, slug, description, prep_time_min, cook_time_min, servings, difficulty, photo_url, visibility, user_id, circle_id, recipe_type, categories(id, name, slug, icon, color)')
+    .select('id, name, slug, description, prep_time_min, cook_time_min, servings, difficulty, photo_url, visibility, user_id, circle_id, categories(id, name, slug, icon, color)')
 
   // Filtre de visibilité selon le scope
   if (scope === 'mes') {
@@ -190,17 +194,9 @@ export async function GET(request: NextRequest) {
 
   if (search) query = query.ilike('name', `%${search}%`)
   if (category_id) query = query.eq('category_id', category_id)
-  if (recipe_type) {
-    type RecipeTypeEnum = 'plat_principal' | 'accompagnement' | 'boisson' | 'sauce'
-    const types = recipe_type.split(',').map(t => t.trim()).filter(Boolean) as RecipeTypeEnum[]
-    if (types.length === 1) {
-      query = query.eq('recipe_type', types[0])
-    } else {
-      query = query.in('recipe_type', types)
-    }
-  }
+  if (exclude_category_id) query = query.neq('category_id', exclude_category_id)
 
-  query = query.order('created_at', { ascending: false })
+  query = query.order('created_at', { ascending: false }).limit(100)
 
   const { data, error } = await query
   if (error) return Response.json({ error: error.message }, { status: 500 })

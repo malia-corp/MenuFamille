@@ -1,7 +1,13 @@
-# MenuFamille — Brief de design
+# KeskonBouf — Brief de design
+
+> Nom commercial et palette mis à jour (ex-"MenuFamille", palette terracotta/or/vert) pour
+> refléter le design system KeskonBouf implémenté dans `app/globals.css`. Les sections 1, 3, 6, 7,
+> 8, 9, 10 (principes, composants, microcopy, accessibilité, inventaire d'écrans) restent valables
+> telles quelles — seules l'identité de marque, la palette et la typographie (sections 2, 4, 5)
+> ont changé.
 
 **Document de référence pour la génération des maquettes (Claude Design)**
-Version 1.0 — Juin 2026 — basé sur le Cahier des Charges v3.0
+Version 1.1 — Octobre 2026 — basé sur le Cahier des Charges v3.0
 
 ---
 
@@ -19,10 +25,10 @@ MenuFamille est une PWA mobile-first qui permet à une famille béninoise/africa
 
 | Élément | Valeur |
 |---|---|
-| Nom | MenuFamille (provisoire) |
+| Nom | KeskonBouf — sous-titre "Saveurs & Partage" |
 | Ton | Chaleureux, rassurant, jamais infantilisant. On s'adresse à une adulte compétente et occupée. |
 | Promesse | « 2 minutes pour planifier, zéro charge mentale » |
-| Inspiration visuelle | Marché ouest-africain : terracotta, épices, vert frais, papier kraft — pas une esthétique « app tech » froide |
+| Inspiration visuelle | Marché ouest-africain réinterprété en corail/bleu canard — chaleureux sans être rustique, moderne sans être froid |
 
 ---
 
@@ -41,25 +47,38 @@ MenuFamille est une PWA mobile-first qui permet à une famille béninoise/africa
 
 ## 4. Palette de couleurs
 
-| Rôle | Valeur | Usage |
-|---|---|---|
-| Primaire | `#D4572A` Terracotta | Actions principales, en-têtes, accents de marque |
-| Secondaire | `#F5A623` Or africain | Accents chaleureux, badges « modèle semaine », notifications neutres |
-| Accent positif | `#2A7D4F` Vert marché | Validation, réaction « J'aime », notifications réussies, cercle familial |
-| Attention | `#c43030` Rouge discret | Réaction « Non », alertes non bloquantes — jamais agressif |
-| Fond | `#FDF6EE` Crème chaud | Fond principal de toutes les surfaces |
-| Texte | `#2C1810` Brun foncé | Texte principal (jamais de noir pur) |
-| Texte secondaire | `#5A4A43` | Légendes, métadonnées |
+Palette KeskonBouf, définie comme variables CSS `--kkb-*` dans `app/globals.css` — toujours
+utiliser ces tokens, jamais de hex en dur dans le JSX/CSS.
 
-Mapper ces couleurs sur les CSS variables déjà en usage dans les maquettes existantes (`--color-background-primary`, `--color-background-secondary`, `--color-text-primary`, `--color-text-secondary`, `--color-text-tertiary`, `--color-border-primary/secondary/tertiary`, `--color-background-success/warning/danger`, `--color-text-success/warning/danger`) pour rester compatible avec le moteur de rendu utilisé jusqu'ici.
+| Rôle | Variable | Valeur | Usage |
+|---|---|---|---|
+| Corail (primaire) | `--kkb-coral` | `#F2664A` | Actions principales, CTA, accents forts |
+| Corail clair | `--kkb-coral-light` | `#FBE9E3` | Fonds d'état sélectionné |
+| Bleu canard (marque) | `--kkb-teal` | `#0E5A5E` | Sidebar, headers, éléments de marque |
+| Bleu canard clair | `--kkb-teal-light` | `#E4F0EE` | Fonds subtils teal |
+| Fond de page | `--kkb-bg` | `#F4F2EF` | Fond principal de toutes les surfaces |
+| Surface (carte) | `--kkb-surface` | `#FFFFFF` | Fond des cartes |
+| Bordure | `--kkb-border` | `#E8C99A` | Bordures de cartes, séparateurs |
+| Texte principal | `--kkb-text-primary` | `#16191A` | Texte principal (jamais de noir pur) |
+| Texte secondaire | `--kkb-text-secondary` | `#5A4A43` | Légendes, métadonnées |
+| Texte tertiaire | `--kkb-text-tertiary` | `#8c7169` | Méta discrète |
+| Succès | `--kkb-success` / `-light` | `#2A7D4F` / `#EAF5EE` | Validation, réaction « J'aime », cercle familial |
+| Attention | `--kkb-warning` / `-light` | `#F5A623` / `#FEF3E0` | Alertes non bloquantes, badges neutres |
+| Danger | `--kkb-danger` / `-light` | `#C0392B` / `#FCEBEB` | Réaction « Non », erreurs — jamais agressif |
 
 ---
 
 ## 5. Typographie & iconographie
 
-- **Police** : Poppins (titres) + Nunito (corps de texte) — lisibilité mobile, caractère chaleureux. Fallback système : `'Anthropic Sans', sans-serif` (déjà utilisé dans les maquettes existantes).
-- **Échelle** : Titre écran 18–20px / Sous-titre 13–14px / Corps 12–13px (mobile dense) / Légende 10–11px.
-- **Icônes** : Phosphor Icons ou Tabler Icons, trait fin, jamais de remplissage agressif. Les emoji (😊😐😕, 🔒, ☕🍽🍎🌙) sont des éléments d'interface à part entière, pas de simples décorations — ils portent le sens de l'état (réaction, type de repas).
+- **Police** : Bricolage Grotesque (titres, poids 400 à 800) + Nunito Sans (corps de texte, poids
+  400 à 700), chargées via `next/font/google` dans `app/layout.tsx`.
+- **Échelle stricte** (classes utilitaires `.text-h1`/`.text-h2`/`.text-h3`/`.text-kkb-label`/
+  `.text-kkb-body`/`.text-kkb-meta` dans `globals.css`) : H1 écran 24–28px/800 · H2 section
+  18–20px/700 · H3 carte 15–16px/600 · Label 10–11px/700 majuscules · Corps 14px/400 · Méta 12px/400.
+- **Icônes** : lucide-react exclusivement — zéro SVG inline, zéro fichier image comme icône. Les
+  emoji (😊😐😕, 🔒, ☕🍽🍎🌙) restent des éléments d'interface à part entière, pas de simples
+  décorations — ils portent le sens de l'état (réaction, type de repas) et sont explicitement
+  exemptés de la règle lucide-only.
 
 ---
 
@@ -154,6 +173,6 @@ Ces fichiers définissent déjà le vocabulaire visuel attendu — toute nouvell
 
 - Le détail technique (composants React, état Zustand) — voir CDC v3.0, section 9.
 - Les écrans de Phase 2/3 (budget, multi-cercles avancés, mode professionnel) — hors périmètre de cette vague de maquettes.
-- Toute charte graphique alternative — la palette terracotta/or/vert est un choix déjà validé, ne pas proposer d'alternative sans demande explicite.
+- Toute charte graphique alternative — la palette KeskonBouf (section 4) est un choix déjà validé, ne pas proposer d'alternative sans demande explicite.
 
 

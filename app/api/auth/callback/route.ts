@@ -1,13 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
+import { DEFAULT_MEAL_CONFIGS } from '@/lib/constants/meal-type'
 import { NextRequest, NextResponse } from 'next/server'
-
-const DEFAULT_MEAL_CONFIGS = [
-  { meal_type: 'dejeuner',       is_active: true,  mode: 'daily',    display_order: 1, default_time: '12:00' },
-  { meal_type: 'diner',          is_active: true,  mode: 'daily',    display_order: 2, default_time: '19:00' },
-  { meal_type: 'petit_dejeuner', is_active: false, mode: 'template', display_order: 3, default_time: '07:00' },
-  { meal_type: 'gouter',         is_active: false, mode: 'template', display_order: 4, default_time: '16:00' },
-] as const
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = request.nextUrl

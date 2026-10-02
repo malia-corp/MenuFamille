@@ -133,6 +133,45 @@ export type Database = {
         }
         Relationships: []
       }
+      meal_compositions: {
+        Row: {
+          id: string
+          meal_plan_item_id: string
+          recipe_id: string
+          role: string
+          sort_order: number
+        }
+        Insert: {
+          id?: string
+          meal_plan_item_id: string
+          recipe_id: string
+          role: string
+          sort_order?: number
+        }
+        Update: {
+          id?: string
+          meal_plan_item_id?: string
+          recipe_id?: string
+          role?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meal_compositions_meal_plan_item_id_fkey"
+            columns: ["meal_plan_item_id"]
+            isOneToOne: false
+            referencedRelation: "meal_plan_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meal_compositions_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       meal_feedback: {
         Row: {
           created_at: string
@@ -293,6 +332,41 @@ export type Database = {
           },
         ]
       }
+      member_dietary_prefs: {
+        Row: {
+          created_at: string
+          id: string
+          pref_type: Database["public"]["Enums"]["pref_type_enum"]
+          severity: Database["public"]["Enums"]["severity_enum"] | null
+          user_id: string
+          value: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          pref_type: Database["public"]["Enums"]["pref_type_enum"]
+          severity?: Database["public"]["Enums"]["severity_enum"] | null
+          user_id: string
+          value: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          pref_type?: Database["public"]["Enums"]["pref_type_enum"]
+          severity?: Database["public"]["Enums"]["severity_enum"] | null
+          user_id?: string
+          value?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "member_dietary_prefs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notification_prefs: {
         Row: {
           channel: Database["public"]["Enums"]["notification_channel_enum"]
@@ -330,80 +404,6 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "notification_prefs_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      meal_compositions: {
-        Row: {
-          id:                string
-          meal_plan_item_id: string
-          recipe_id:         string
-          role:              string
-          sort_order:        number
-        }
-        Insert: {
-          id?:               string
-          meal_plan_item_id: string
-          recipe_id:         string
-          role:              string
-          sort_order?:       number
-        }
-        Update: {
-          id?:               string
-          meal_plan_item_id?: string
-          recipe_id?:        string
-          role?:             string
-          sort_order?:       number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "meal_compositions_meal_plan_item_id_fkey"
-            columns: ["meal_plan_item_id"]
-            isOneToOne: false
-            referencedRelation: "meal_plan_items"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "meal_compositions_recipe_id_fkey"
-            columns: ["recipe_id"]
-            isOneToOne: false
-            referencedRelation: "recipes"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      push_subscriptions: {
-        Row: {
-          id:         string
-          user_id:    string
-          endpoint:   string
-          p256dh:     string
-          auth:       string
-          created_at: string
-        }
-        Insert: {
-          id?:        string
-          user_id:    string
-          endpoint:   string
-          p256dh:     string
-          auth:       string
-          created_at?: string
-        }
-        Update: {
-          id?:        string
-          user_id?:   string
-          endpoint?:  string
-          p256dh?:    string
-          auth?:      string
-          created_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "push_subscriptions_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"
@@ -470,6 +470,96 @@ export type Database = {
           },
           {
             foreignKeyName: "pantry_items_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          id: string
+          p256dh: string
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          p256dh: string
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          p256dh?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      recipe_associations: {
+        Row: {
+          associated_recipe_id: string
+          frequency: number
+          id: string
+          last_used_at: string
+          recipe_id: string
+          role: string
+          source: string
+          user_id: string
+        }
+        Insert: {
+          associated_recipe_id: string
+          frequency?: number
+          id?: string
+          last_used_at?: string
+          recipe_id: string
+          role: string
+          source: string
+          user_id: string
+        }
+        Update: {
+          associated_recipe_id?: string
+          frequency?: number
+          id?: string
+          last_used_at?: string
+          recipe_id?: string
+          role?: string
+          source?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recipe_associations_associated_recipe_id_fkey"
+            columns: ["associated_recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recipe_associations_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recipe_associations_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"
@@ -645,7 +735,6 @@ export type Database = {
           slug: string
           source_url: string | null
           user_id: string | null
-          recipe_type: Database["public"]["Enums"]["recipe_type_enum"]
           variant_label: string | null
           visibility: Database["public"]["Enums"]["recipe_visibility_enum"]
         }
@@ -664,7 +753,6 @@ export type Database = {
           parent_recipe_id?: string | null
           photo_url?: string | null
           prep_time_min?: number | null
-          recipe_type?: Database["public"]["Enums"]["recipe_type_enum"]
           servings?: number
           slug: string
           source_url?: string | null
@@ -687,7 +775,6 @@ export type Database = {
           parent_recipe_id?: string | null
           photo_url?: string | null
           prep_time_min?: number | null
-          recipe_type?: Database["public"]["Enums"]["recipe_type_enum"]
           servings?: number
           slug?: string
           source_url?: string | null
@@ -943,7 +1030,7 @@ export type Database = {
           email: string
           family_size: number
           id: string
-          preferences: Json | null
+          preferences: Json
         }
         Insert: {
           created_at?: string
@@ -952,7 +1039,7 @@ export type Database = {
           email: string
           family_size?: number
           id: string
-          preferences?: Json | null
+          preferences?: Json
         }
         Update: {
           created_at?: string
@@ -961,7 +1048,7 @@ export type Database = {
           email?: string
           family_size?: number
           id?: string
-          preferences?: Json | null
+          preferences?: Json
         }
         Relationships: []
       }
@@ -974,8 +1061,25 @@ export type Database = {
         Args: { p_circle_id: string; p_user_id: string }
         Returns: boolean
       }
+      recipe_association_suggestions: {
+        Args: { p_limit?: number; p_recipe_id: string; p_role: string }
+        Returns: {
+          associated_recipe_id: string
+          score: number
+        }[]
+      }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
+      upsert_recipe_association: {
+        Args: {
+          p_associated_recipe_id: string
+          p_recipe_id: string
+          p_role: string
+          p_source: string
+          p_user_id: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       circle_role_enum: "planificatrice" | "membre"
@@ -992,9 +1096,10 @@ export type Database = {
       meal_plan_status_enum: "draft" | "shared" | "finalized"
       meal_type_enum: "petit_dejeuner" | "dejeuner" | "gouter" | "diner"
       notification_channel_enum: "push" | "in_app"
+      pref_type_enum: "allergy" | "dislike" | "preference" | "favorite"
       recipe_difficulty_enum: "facile" | "moyen" | "difficile"
-      recipe_type_enum: "plat_principal" | "accompagnement" | "boisson" | "sauce"
       recipe_visibility_enum: "private" | "circle" | "community"
+      severity_enum: "strict" | "light"
       shopping_list_status_enum: "active" | "completed" | "archived"
       survey_reaction_enum: "aime" | "bof" | "naime_pas"
     }
@@ -1012,12 +1117,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1041,11 +1146,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1066,11 +1171,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1091,11 +1196,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1108,11 +1213,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1139,8 +1244,10 @@ export const Constants = {
       meal_plan_status_enum: ["draft", "shared", "finalized"],
       meal_type_enum: ["petit_dejeuner", "dejeuner", "gouter", "diner"],
       notification_channel_enum: ["push", "in_app"],
+      pref_type_enum: ["allergy", "dislike", "preference", "favorite"],
       recipe_difficulty_enum: ["facile", "moyen", "difficile"],
       recipe_visibility_enum: ["private", "circle", "community"],
+      severity_enum: ["strict", "light"],
       shopping_list_status_enum: ["active", "completed", "archived"],
       survey_reaction_enum: ["aime", "bof", "naime_pas"],
     },

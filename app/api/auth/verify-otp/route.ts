@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
+import { DEFAULT_MEAL_CONFIGS } from '@/lib/constants/meal-type'
 import { NextRequest } from 'next/server'
 
 export async function POST(request: NextRequest) {
@@ -42,12 +43,9 @@ export async function POST(request: NextRequest) {
       return Response.json({ error: 'Erreur création profil' }, { status: 500 })
     }
 
-    await service.from('user_meal_config').insert([
-      { user_id: user.id, meal_type: 'dejeuner',       is_active: true,  mode: 'daily',    display_order: 1, default_time: '12:00' },
-      { user_id: user.id, meal_type: 'diner',          is_active: true,  mode: 'daily',    display_order: 2, default_time: '19:00' },
-      { user_id: user.id, meal_type: 'petit_dejeuner', is_active: false, mode: 'template', display_order: 3, default_time: '07:00' },
-      { user_id: user.id, meal_type: 'gouter',         is_active: false, mode: 'template', display_order: 4, default_time: '16:00' },
-    ])
+    await service.from('user_meal_config').insert(
+      DEFAULT_MEAL_CONFIGS.map((c) => ({ ...c, user_id: user.id }))
+    )
 
     return Response.json({ redirect: '/onboarding' })
   }

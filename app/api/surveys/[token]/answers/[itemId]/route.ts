@@ -1,22 +1,35 @@
 import { createServiceClient } from '@/lib/supabase/service'
+import { resolveSurveyPlan } from '@/lib/utils/survey-token'
 import { NextRequest } from 'next/server'
 
 export async function POST(
   request: NextRequest,
   { params }: { params: { token: string; itemId: string } }
 ) {
+  const resolved = await resolveSurveyPlan(params.token)
+
+  if (resolved.status === 'not_found') {
+    return Response.json({ error: 'Sondage introuvable' }, { status: 404 })
+  }
+  if (resolved.status === 'expired') {
+    return Response.json({ error: 'Ce lien a expiré' }, { status: 410 })
+  }
+
+  const { plan } = resolved
   const supabase = createServiceClient()
 
-  // Valider le token
-  const { data: plan } = await supabase
-    .from('meal_plans')
+  // L'item doit appartenir au plan designe par ce token — sans ca, un
+  // itemId d'un autre plan ne serait bloque que par la contrainte FK, pas
+  // par une verification applicative explicite.
+  const { data: item } = await supabase
+    .from('meal_plan_items')
     .select('id')
-    .eq('share_token', params.token)
-    .gt('token_expires_at', new Date().toISOString())
+    .eq('id', params.itemId)
+    .eq('meal_plan_id', plan.id)
     .maybeSingle()
 
-  if (!plan) {
-    return Response.json({ error: 'Sondage introuvable ou expiré' }, { status: 404 })
+  if (!item) {
+    return Response.json({ error: 'Repas introuvable pour ce sondage' }, { status: 404 })
   }
 
   const ip =
