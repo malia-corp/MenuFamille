@@ -12,7 +12,8 @@ export interface ResultItem {
   meal_type:        MealType
   day_of_week:      DayOfWeek
   applies_all_days: boolean
-  recipe_name:      string | null
+  recipe_name:      string | null // nom composé "plat + accompagnements + boisson"
+  main_name:        string | null // plat principal seul
   photo_url:        string | null
   description:      string | null
   side_names:       string[]

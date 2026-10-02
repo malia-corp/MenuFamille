@@ -193,7 +193,7 @@ function VotesResultsContent() {
   const recapText = [
     `Résultats du sondage KeskonBouf — semaine du ${weekRange}`,
     `${data.total_respondents} vote${data.total_respondents > 1 ? 's' : ''} · ${data.global_score ?? 0}% d'accord`,
-    favorites.length ? `Favoris : ${favorites.map(f => f.recipe_name).filter(Boolean).join(', ')}` : '',
+    favorites.length ? `Favoris : ${favorites.map(f => f.main_name).filter(Boolean).join(', ')}` : '',
   ].filter(Boolean).join('\n')
 
   return (
@@ -300,7 +300,7 @@ function VotesResultsContent() {
                   <li key={f.id} className="flex items-center gap-3 rounded-[var(--kkb-radius-sm)] bg-[var(--kkb-bg)] p-2.5">
                     <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--kkb-coral)] text-xs font-quicksand font-bold text-white">{idx + 1}</span>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-quicksand font-bold text-[var(--kkb-text-primary)]">{f.recipe_name ?? 'Repas'}</p>
+                      <p className="truncate text-sm font-quicksand font-bold text-[var(--kkb-text-primary)]">{f.main_name ?? 'Repas'}</p>
                       <p className="text-[11px] font-quicksand text-[var(--kkb-text-tertiary)]">{dayLabelOf(f)} · {MEAL_LABEL[f.meal_type]}</p>
                     </div>
                     <span className="shrink-0 rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-success-light)] px-2 py-0.5 text-[11px] font-quicksand font-bold text-[var(--kkb-success)]">

@@ -1,6 +1,6 @@
 'use client'
 
-import { Inbox, Pencil, ThumbsUp } from 'lucide-react'
+import { CupSoda, Inbox, Pencil, Salad, ThumbsUp } from 'lucide-react'
 import { MEAL_COLOR, MEAL_LABEL } from '@/lib/constants/meal-type'
 import { MealTypeIcon } from '@/components/ui/meal-type-icon'
 import { agreementPct, totalReactions } from '@/lib/utils/survey-score'
@@ -19,8 +19,6 @@ export function ResultCard({ item, dayLabel, onEdit }: ResultCardProps) {
   const total    = totalReactions(counts)
   const adhesion = agreementPct(counts)
   const color    = MEAL_COLOR[item.meal_type]
-  const subtitle = item.description
-    ?? [...item.side_names, ...(item.drink_name ? [item.drink_name] : [])].join(' · ')
 
   return (
     <article className="bg-white border border-[var(--kkb-border)] rounded-[var(--kkb-radius-card)] p-4 flex flex-col gap-3 h-full">
@@ -41,7 +39,7 @@ export function ResultCard({ item, dayLabel, onEdit }: ResultCardProps) {
         <button
           type="button"
           onClick={onEdit}
-          aria-label={`Modifier ${item.recipe_name ?? 'ce repas'}`}
+          aria-label={`Modifier ${item.main_name ?? 'ce repas'}`}
           className="ml-auto p-1.5 -mr-1.5 rounded-full text-[var(--kkb-text-tertiary)] hover:text-[var(--kkb-coral)] hover:bg-[var(--kkb-coral-light)] transition-colors print:hidden"
         >
           <Pencil className="h-4 w-4" />
@@ -53,7 +51,7 @@ export function ResultCard({ item, dayLabel, onEdit }: ResultCardProps) {
         <div className="relative h-20 w-20 lg:h-[90px] lg:w-[120px] rounded-[var(--kkb-radius-sm)] overflow-hidden bg-[var(--kkb-coral)] lg:row-span-2">
           {item.photo_url ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={item.photo_url} alt={item.recipe_name ?? ''} className="absolute inset-0 h-full w-full object-cover" />
+            <img src={item.photo_url} alt={item.main_name ?? ''} className="absolute inset-0 h-full w-full object-cover" />
           ) : (
             <div className="absolute inset-0 flex items-center justify-center">
               <MealTypeIcon type={item.meal_type} className="h-8 w-8 text-white" />
@@ -63,10 +61,24 @@ export function ResultCard({ item, dayLabel, onEdit }: ResultCardProps) {
 
         <div className="min-w-0">
           <h3 className="font-dosis font-bold text-base lg:text-lg leading-tight text-[var(--kkb-text-primary)]">
-            {item.recipe_name ?? 'Repas non défini'}
+            {item.main_name ?? 'Repas non défini'}
           </h3>
-          {subtitle && (
-            <p className="mt-0.5 text-[13px] font-quicksand text-[var(--kkb-text-secondary)] line-clamp-2">{subtitle}</p>
+          {(item.side_names.length > 0 || item.drink_name) && (
+            <div className="mt-1.5 flex flex-wrap gap-1">
+              {item.side_names.map(name => (
+                <span key={name} className="inline-flex items-center gap-1 rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-coral-light)] px-2 py-0.5 text-[11px] font-quicksand font-bold text-[var(--kkb-coral)]">
+                  <Salad className="h-3 w-3" /> {name}
+                </span>
+              ))}
+              {item.drink_name && (
+                <span className="inline-flex items-center gap-1 rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-teal-light)] px-2 py-0.5 text-[11px] font-quicksand font-bold text-[var(--kkb-teal)]">
+                  <CupSoda className="h-3 w-3" /> {item.drink_name}
+                </span>
+              )}
+            </div>
+          )}
+          {item.description && (
+            <p className="mt-1 text-[13px] font-quicksand text-[var(--kkb-text-secondary)] line-clamp-2">{item.description}</p>
           )}
         </div>
 

@@ -80,6 +80,7 @@ export async function GET(
       day_of_week:      item.day_of_week,
       applies_all_days: item.applies_all_days,
       recipe_name:      composedName(recipe?.name, comps),
+      main_name:        recipe?.name ?? null,
       photo_url:        recipe?.photo_url ?? null,
       description:      recipe?.description ?? null,
       side_names:       sorted.filter(c => c.role === 'side' && c.recipes).map(c => c.recipes!.name),

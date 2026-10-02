@@ -1,4 +1,4 @@
-import { Star } from 'lucide-react'
+import { CupSoda, Salad, Star } from 'lucide-react'
 import { MEAL_LABEL, MEAL_TYPE_ORDER, type MealType } from '@/lib/constants/meal-type'
 import { MealTypeIcon } from '@/components/ui/meal-type-icon'
 import { DAY_OPTIONS, formatWeekRange } from '@/lib/utils/week'
@@ -33,7 +33,7 @@ export function FridgePrintSheet({ data, favoriteIds }: { data: SurveyResultsDat
   const dailyRows    = mealTypes.length - templateRows
   const dailyRowMm   = dailyRows > 0 ? Math.min(45, (TABLE_HEIGHT_MM - templateRows * TEMPLATE_ROW_MM) / dailyRows) : 0
   const comments  = data.items
-    .flatMap(i => i.comments.map(c => ({ ...c, recipe: i.recipe_name })))
+    .flatMap(i => i.comments.map(c => ({ ...c, recipe: i.main_name })))
     .slice(0, MAX_COMMENTS)
   const voters    = Array.from(new Set(data.respondents.map(r => r.name.trim()).filter(Boolean)))
 
@@ -114,7 +114,10 @@ export function FridgePrintSheet({ data, favoriteIds }: { data: SurveyResultsDat
       )}
 
       <p className="mt-2 flex items-center gap-1 text-[7.5pt] text-[var(--kkb-text-tertiary)]">
-        <Star className="h-2.5 w-2.5 fill-[var(--kkb-warning)] text-[var(--kkb-warning)]" /> plat favori de la semaine · % = part des votes J&apos;adore + Ça passe
+        <Star className="h-2.5 w-2.5 fill-[var(--kkb-warning)] text-[var(--kkb-warning)]" /> plat favori
+        <Salad className="ml-2 h-2.5 w-2.5 text-[var(--kkb-coral)]" /> accompagnement
+        <CupSoda className="ml-2 h-2.5 w-2.5 text-[var(--kkb-teal)]" /> boisson
+        <span className="ml-2">· % = part des votes J&apos;adore + Ça passe</span>
       </p>
     </div>
   )
@@ -124,16 +127,27 @@ function MealCell({ item, favorite, inline }: { item: ResultItem; favorite: bool
   const counts   = { aime: item.aime, bof: item.bof, naime_pas: item.naime_pas }
   const pct      = agreementPct(counts)
   const rejected = isRejected(counts)
-  const extras   = [...item.side_names, ...(item.drink_name ? [item.drink_name] : [])].join(' · ')
   const Wrapper  = inline ? 'span' : 'div'
+  const extraLine = `items-start gap-1 text-[9pt] leading-snug text-[var(--kkb-text-secondary)] ${inline ? 'ml-2 inline-flex' : 'mt-0.5 flex'}`
 
   return (
     <Wrapper className={inline ? 'inline' : 'block'}>
       <span className={`font-bold leading-tight ${inline ? '' : 'block'}`}>
         {favorite && <Star className="mr-0.5 inline h-3 w-3 -mt-0.5 fill-[var(--kkb-warning)] text-[var(--kkb-warning)]" />}
-        {item.recipe_name ?? 'Repas non défini'}
+        {item.main_name ?? 'Repas non défini'}
       </span>
-      {extras && <span className={`text-[9pt] text-[var(--kkb-text-secondary)] ${inline ? 'ml-1.5' : 'mt-0.5 block'}`}>{extras}</span>}
+      {item.side_names.length > 0 && (
+        <span className={extraLine}>
+          <Salad className="mt-[1px] h-3 w-3 shrink-0 text-[var(--kkb-coral)]" aria-label="Accompagnement" />
+          {item.side_names.join(', ')}
+        </span>
+      )}
+      {item.drink_name && (
+        <span className={extraLine}>
+          <CupSoda className="mt-[1px] h-3 w-3 shrink-0 text-[var(--kkb-teal)]" aria-label="Boisson" />
+          {item.drink_name}
+        </span>
+      )}
       {pct !== null && (
         <span
           className={`text-[8.5pt] font-bold ${inline ? 'ml-1.5' : 'mt-1 block'}`}
