@@ -8,9 +8,9 @@ import { MEAL_EMOJI, type MealType } from '@/lib/constants/meal-type'
 export type Reaction = 'aime' | 'bof' | 'naime_pas'
 
 const REACTION_CONFIG: { value: Reaction; emoji: string; label: string }[] = [
-  { value: 'aime',      emoji: '😊', label: "J'adore"  },
-  { value: 'bof',       emoji: '😐', label: 'Ça passe' },
-  { value: 'naime_pas', emoji: '😕', label: 'Pas trop'  },
+  { value: 'aime',      emoji: '\u{1F60A}', label: "J'adore"  },
+  { value: 'bof',       emoji: '\u{1F610}', label: 'Ça passe' },
+  { value: 'naime_pas', emoji: '\u{1F615}', label: 'Pas trop'  },
 ]
 
 const REACTION_ACTIVE_CLASS: Record<Reaction, string> = {
@@ -35,8 +35,7 @@ interface MealComposition {
 }
 
 interface MealVoteCardProps {
-  dayLabel:        string // "Lundi · Midi" ou "Toute la semaine" (aussi utilisé en tooltip si compactHeader)
-  compactHeader?:  boolean // vue "Par Jour" : juste l'emoji du type de repas + dayLabel en hover, pour tenir sur 4 colonnes sans déformation
+  dayLabel:        string // "Lundi 14 · Midi", type de repas en vue "Par Jour", ou "Toute la semaine"
   mealType:        MealType
   recipe:          MealRecipe | null
   compositions:    MealComposition[]
@@ -51,7 +50,7 @@ interface MealVoteCardProps {
 }
 
 export function MealVoteCard({
-  dayLabel, compactHeader, mealType, recipe, compositions, reaction, comment,
+  dayLabel, mealType, recipe, compositions, reaction, comment,
   onSelectReaction, onCommentChange, onSaveComment, savingComment, justSaved, disabled,
 }: MealVoteCardProps) {
   const [commentOpen, setCommentOpen] = useState(false)
@@ -64,23 +63,7 @@ export function MealVoteCard({
     <div className="bg-white border border-[var(--kkb-border)] rounded-[var(--kkb-radius-card)] overflow-hidden h-full flex flex-col">
       {/* Header carte */}
       <div className="flex items-center justify-between gap-2 px-3 pt-3">
-        {compactHeader ? (
-          <>
-            {/* Mobile/tablette : pas de survol possible au tactile, texte complet */}
-            <p className="md:hidden font-quicksand font-bold text-xs text-[var(--kkb-text-secondary)]">{dayLabel}</p>
-            {/* Desktop : juste l'emoji, texte révélé + emoji animé au survol */}
-            <span className="hidden md:inline-flex items-center gap-1.5 group cursor-default" aria-label={dayLabel}>
-              <span className="text-base leading-none transition-transform duration-200 group-hover:scale-125 group-hover:-rotate-6">
-                {MEAL_EMOJI[mealType]}
-              </span>
-              <span className="max-w-0 overflow-hidden whitespace-nowrap opacity-0 group-hover:max-w-[160px] group-hover:opacity-100 transition-all duration-200 font-quicksand font-bold text-xs text-[var(--kkb-text-secondary)]">
-                {dayLabel}
-              </span>
-            </span>
-          </>
-        ) : (
-          <p className="font-quicksand font-bold text-xs text-[var(--kkb-text-secondary)]">{dayLabel}</p>
-        )}
+        <p className="min-w-0 truncate font-quicksand font-bold text-xs text-[var(--kkb-text-secondary)]">{dayLabel}</p>
         {recipe?.category && (
           <span className="inline-flex items-center gap-1 text-[10px] font-quicksand font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-[var(--kkb-teal-light)] text-[var(--kkb-teal)] shrink-0">
             {recipe.category.icon} {recipe.category.name}
@@ -108,12 +91,12 @@ export function MealVoteCard({
           <div className="flex flex-wrap gap-1.5 mt-1.5">
             {sides.map(s => (
               <span key={s.id} className="inline-flex items-center gap-1 bg-[var(--kkb-coral-light)] text-[var(--kkb-coral)] rounded-full px-2.5 py-1 text-[11px] font-quicksand font-bold">
-                🥗 {s.name}
+                {'\u{1F957}'} {s.name}
               </span>
             ))}
             {drink && (
               <span className="inline-flex items-center gap-1 bg-[var(--kkb-teal-light)] text-[var(--kkb-teal)] rounded-full px-2.5 py-1 text-[11px] font-quicksand font-bold">
-                🥤 {drink.name}
+                {'\u{1F964}'} {drink.name}
               </span>
             )}
           </div>
@@ -133,14 +116,22 @@ export function MealVoteCard({
             type="button"
             disabled={disabled}
             onClick={() => onSelectReaction(r.value)}
-            className={`flex-1 flex flex-col items-center gap-0.5 py-2.5 rounded-[var(--kkb-radius-pill)] border-[1.5px] font-quicksand font-bold text-[13px] transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed ${
+            aria-label={r.label}
+            className={`group relative flex-1 flex flex-col items-center gap-0.5 py-2.5 rounded-[var(--kkb-radius-pill)] border-[1.5px] font-quicksand font-bold text-[13px] transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed ${
               reaction === r.value
                 ? `${REACTION_ACTIVE_CLASS[r.value]} scale-105`
                 : 'bg-white border-[var(--kkb-border)] text-[var(--kkb-text-secondary)]'
             }`}
           >
-            <span className="text-lg leading-none">{r.emoji}</span>
-            {r.label}
+            <span className="text-lg leading-none transition-transform duration-200 md:group-hover:scale-125 md:group-hover:-rotate-12">
+              {r.emoji}
+            </span>
+            {/* Mobile : libellé toujours visible (pas de survol au tactile) */}
+            <span className="md:hidden">{r.label}</span>
+            {/* Desktop : libellé en bulle au survol, sans décaler la carte */}
+            <span className="hidden md:block pointer-events-none absolute -top-7 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-[var(--kkb-text-primary)] text-white text-[11px] px-2 py-0.5 opacity-0 translate-y-1 transition-all duration-200 group-hover:opacity-100 group-hover:translate-y-0">
+              {r.label}
+            </span>
           </button>
         ))}
         <button
@@ -185,7 +176,7 @@ export function MealVoteCard({
       {/* Indicateur de sauvegarde */}
       <div className="px-3 pb-2.5">
         <p className={`text-[11px] font-quicksand font-semibold text-[var(--kkb-success)] transition-opacity duration-200 ${justSaved ? 'opacity-100' : 'opacity-0'}`}>
-          ✓ Sauvegardé
+          {'\u2713'} Sauvegardé
         </p>
       </div>
     </div>

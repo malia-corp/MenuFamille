@@ -316,7 +316,7 @@ export function SurveyPageClient({ token }: { token: string }) {
       .map(d => ({
         key: d.val,
         title: `${d.full} ${dateNumFor(d.val)}`,
-        emoji: '📅',
+        emoji: '\u{1F4C5}',
         items: dailyItems.filter(i => i.day_of_week === d.val),
       }))
   }
@@ -358,14 +358,14 @@ export function SurveyPageClient({ token }: { token: string }) {
 
   const plannerFirstName = data.plan.planner_name?.trim().split(/\s+/)[0] ?? 'votre famille'
 
-  function renderCard(item: SurveyItem, compact: boolean = false) {
+  // byDay : le jour est déjà dans le titre de section, la carte affiche le type de repas.
+  function renderCard(item: SurveyItem, byDay: boolean = false) {
     return (
       <MealVoteCard
         key={item.id}
         dayLabel={item.applies_all_days
           ? `${MEAL_EMOJI[item.meal_type]} ${MEAL_LABEL[item.meal_type]} · Toute la semaine`
-          : compact ? `${MEAL_LABEL[item.meal_type]} · ${MOMENT_BY_MEAL_TYPE[item.meal_type]}` : dayLabelFor(item)}
-        compactHeader={compact}
+          : byDay ? `${MEAL_EMOJI[item.meal_type]} ${MEAL_LABEL[item.meal_type]}` : dayLabelFor(item)}
         mealType={item.meal_type}
         recipe={item.recipe}
         compositions={item.compositions}
@@ -394,13 +394,13 @@ export function SurveyPageClient({ token }: { token: string }) {
             <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-6 xl:gap-10">
               <div className="space-y-2 xl:max-w-2xl">
                 <span className="inline-block text-[11px] font-quicksand font-bold uppercase tracking-wide px-2.5 py-1 rounded-full bg-[var(--kkb-teal-light)] text-[var(--kkb-teal)]">
-                  🗓 Semaine en cours · {formatWeekRange(data.plan.week_start)}
+                  {'\u{1F5D3}'} Semaine en cours · {formatWeekRange(data.plan.week_start)}
                 </span>
                 <h1 className="font-dosis font-extrabold text-2xl xl:text-3xl text-[var(--kkb-text-primary)]">
                   Le menu de {plannerFirstName}
                 </h1>
                 <p className="text-sm xl:text-base font-quicksand text-[var(--kkb-text-secondary)]">
-                  Salut ! 👋 Dis-nous ce qui te fait envie pour les repas de cette semaine. Ton avis
+                  Salut ! {'\u{1F44B}'} Dis-nous ce qui te fait envie pour les repas de cette semaine. Ton avis
                   compte beaucoup pour la cuisine de la maison !
                 </p>
               </div>
