@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Clock, Heart, UtensilsCrossed } from 'lucide-react'
+import { Clock, Heart, UtensilsCrossed, type LucideIcon } from 'lucide-react'
 import { CompositionCarousel, type ChipItem } from './composition-carousel'
 import { FramedPhoto } from './framed-photo'
 
@@ -12,7 +12,7 @@ const DIFFICULTY_LABEL: Record<string, string> = {
 }
 
 interface MealCardHeroProps {
-  emoji: string
+  icon: LucideIcon
   timeLabel: string
   photoUrl: string | null
   recipeId: string | null
@@ -28,7 +28,7 @@ interface MealCardHeroProps {
 }
 
 export function MealCardHero({
-  emoji,
+  icon: Icon,
   timeLabel,
   photoUrl,
   recipeId,
@@ -64,11 +64,13 @@ export function MealCardHero({
         {photoUrl ? (
           <FramedPhoto src={photoUrl} alt={title} />
         ) : (
-          <div className="h-full w-full flex items-center justify-center text-6xl bg-[var(--kkb-coral)]">{emoji}</div>
+          <div className="h-full w-full flex items-center justify-center bg-[var(--kkb-coral)]">
+            <Icon className="h-14 w-14 text-white" />
+          </div>
         )}
         <div className="absolute top-3 left-3 flex gap-1.5">
-          <span className="bg-[var(--kkb-coral)] text-white px-2.5 py-0.5 rounded-full text-[10px] font-quicksand font-bold uppercase">
-            {emoji} {timeLabel}
+          <span className="inline-flex items-center gap-1 bg-[var(--kkb-coral)] text-white px-2.5 py-0.5 rounded-full text-[10px] font-quicksand font-bold uppercase">
+            <Icon className="h-3 w-3" /> {timeLabel}
           </span>
           <span className="bg-[var(--kkb-teal)] text-white px-2.5 py-0.5 rounded-full text-[10px] font-quicksand font-bold uppercase">
             Aujourd&apos;hui

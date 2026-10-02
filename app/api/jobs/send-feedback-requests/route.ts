@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
       type RawRecipe = { name: string } | null
       const recipeName = (item.recipes as unknown as RawRecipe)?.name ?? 'ce repas'
       const payload = JSON.stringify({
-        title: `⭐ Comment était ${recipeName} ?`,
+        title: `\u2B50 Comment était ${recipeName} ?`,
         body:  'Donnez votre avis sur ce repas.',
         url:   '/feedback',
       })

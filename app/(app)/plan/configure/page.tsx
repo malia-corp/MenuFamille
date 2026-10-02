@@ -5,7 +5,8 @@ import { Lock } from 'lucide-react'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import { MEAL_LABEL as MEAL_LABELS, MEAL_EMOJI, MEAL_COLOR, type MealType } from '@/lib/constants/meal-type'
+import { MEAL_LABEL as MEAL_LABELS, MEAL_COLOR, type MealType } from '@/lib/constants/meal-type'
+import { MEAL_ICON } from '@/lib/constants/meal-type-icon'
 
 interface MealConfig {
   id: string
@@ -17,7 +18,7 @@ interface MealConfig {
 }
 
 function mealVisual(mealType: MealType) {
-  return { emoji: MEAL_EMOJI[mealType], color: MEAL_COLOR[mealType].text, bg: MEAL_COLOR[mealType].bg }
+  return { icon: MEAL_ICON[mealType], color: MEAL_COLOR[mealType].text, bg: MEAL_COLOR[mealType].bg }
 }
 
 export default function ConfigurePage() {
@@ -105,7 +106,7 @@ export default function ConfigurePage() {
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
-                  <span className="text-xl">{visual.emoji}</span>
+                  <visual.icon className="h-5 w-5" style={{ color: visual.color }} />
                   <div>
                     <p className="font-dosis font-semibold text-[var(--kkb-text-primary)]">
                       {MEAL_LABELS[config.meal_type]}
@@ -197,7 +198,7 @@ export default function ConfigurePage() {
                     className="text-xs font-quicksand"
                     style={{ backgroundColor: v.bg, color: v.color, border: `1px solid ${v.color}30` }}
                   >
-                    {v.emoji} {MEAL_LABELS[c.meal_type]}
+                    <v.icon className="h-3 w-3 mr-1" /> {MEAL_LABELS[c.meal_type]}
                     <span className="ml-1 opacity-60">
                       {c.mode === 'template' ? '×1' : '×7'}
                     </span>

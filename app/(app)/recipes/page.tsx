@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Heart, HeartOff, Plus, Search } from 'lucide-react'
+import { Heart, HeartOff, Plus, Search, UtensilsCrossed } from 'lucide-react'
 
 interface Category {
   id: string
@@ -203,11 +203,9 @@ export default function RecipesPage() {
               onClick={() => router.push(`/recipes/${recipe.id}`)}
               className="text-left rounded-xl overflow-hidden border border-[var(--kkb-border)] bg-white shadow-sm active:scale-95 transition-transform"
             >
-              {/* En-tête avec emoji catégorie */}
+              {/* En-tête illustré (pas de photo dans la liste) */}
               <div className="relative h-24 flex items-center justify-center bg-[linear-gradient(135deg,_var(--kkb-coral),_var(--kkb-coral-hover))]">
-                <span className="text-4xl select-none" aria-hidden="true">
-                  {recipe.categories?.icon ?? '🍴'}
-                </span>
+                <UtensilsCrossed className="h-10 w-10 text-white" aria-hidden="true" />
                 <button
                   type="button"
                   onClick={async (e) => {

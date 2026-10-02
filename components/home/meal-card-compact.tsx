@@ -1,11 +1,11 @@
 'use client'
 
-import { Pencil } from 'lucide-react'
+import { Pencil, type LucideIcon } from 'lucide-react'
 import { CompositionCarousel, type ChipItem } from './composition-carousel'
 import { FramedPhoto } from './framed-photo'
 
 interface MealCardCompactProps {
-  emoji: string
+  icon: LucideIcon
   badgeLabel: string
   badgeBg: string
   badgeText: string
@@ -19,7 +19,7 @@ interface MealCardCompactProps {
 }
 
 export function MealCardCompact({
-  emoji,
+  icon: Icon,
   badgeLabel,
   badgeBg,
   badgeText,
@@ -37,7 +37,9 @@ export function MealCardCompact({
         {photoUrl ? (
           <FramedPhoto src={photoUrl} alt={title} />
         ) : (
-          <div className="h-full w-full flex items-center justify-center text-5xl bg-[var(--kkb-coral)]">{emoji}</div>
+          <div className="h-full w-full flex items-center justify-center bg-[var(--kkb-coral)]">
+            <Icon className="h-12 w-12 text-white" />
+          </div>
         )}
         <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/75 to-transparent" />
         <div className="absolute top-1.5 left-1.5">
@@ -45,7 +47,7 @@ export function MealCardCompact({
             className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-quicksand font-bold border border-[var(--kkb-border)]"
             style={{ backgroundColor: badgeBg, color: badgeText }}
           >
-            {emoji} {badgeLabel}
+            <Icon className="h-3 w-3" /> {badgeLabel}
           </span>
         </div>
         <button

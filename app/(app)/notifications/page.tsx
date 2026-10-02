@@ -2,8 +2,9 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Bell, Info, Save } from 'lucide-react'
-import { MEAL_LABEL, MEAL_EMOJI, type MealType } from '@/lib/constants/meal-type'
+import { ArrowLeft, Bell, Check, Info, Save } from 'lucide-react'
+import { MEAL_LABEL, type MealType } from '@/lib/constants/meal-type'
+import { MealTypeIcon } from '@/components/ui/meal-type-icon'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -207,7 +208,7 @@ export default function NotificationsPage() {
                   {/* Ligne titre + toggle */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
-                      <span className="text-xl">{MEAL_EMOJI[cfg.meal_type]}</span>
+                      <MealTypeIcon type={cfg.meal_type} className="h-5 w-5 text-[var(--kkb-coral)]" />
                       <span className="font-dosis font-semibold text-sm text-[var(--kkb-text-primary)]">
                         {MEAL_LABEL[cfg.meal_type]}
                       </span>
@@ -292,7 +293,7 @@ export default function NotificationsPage() {
                 <div key={cfg.meal_type} className="bg-white border border-[var(--kkb-border-light)] rounded-2xl p-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
-                      <span className="text-xl">{MEAL_EMOJI[cfg.meal_type]}</span>
+                      <MealTypeIcon type={cfg.meal_type} className="h-5 w-5 text-[var(--kkb-coral)]" />
                       <span className="font-dosis font-semibold text-sm text-[var(--kkb-text-primary)]">
                         {MEAL_LABEL[cfg.meal_type]}
                       </span>
@@ -366,8 +367,8 @@ export default function NotificationsPage() {
             saving ? 'opacity-60' : '',
           ].join(' ')}
         >
-          <Save className="h-4 w-4" />
-          {saving ? 'Enregistrement…' : saved ? 'Préférences sauvegardées ✓' : 'Enregistrer mes préférences'}
+          {saved && !saving ? <Check className="h-4 w-4" /> : <Save className="h-4 w-4" />}
+          {saving ? 'Enregistrement…' : saved ? 'Préférences sauvegardées' : 'Enregistrer mes préférences'}
         </button>
       </div>
     </div>

@@ -1,9 +1,9 @@
 'use client'
 
-import { PlusCircle } from 'lucide-react'
+import { PlusCircle, type LucideIcon } from 'lucide-react'
 
 export interface ChipItem {
-  icon: string
+  icon: LucideIcon
   name: string
   subtitle?: string
 }
@@ -33,8 +33,8 @@ export function CompositionCarousel({ title, hint = 'Glisser →', items, onAdd,
             key={i}
             className="shrink-0 bg-white border border-[var(--kkb-border)] rounded-lg p-2 w-36 shadow-sm flex items-center gap-2"
           >
-            <span className="h-8 w-8 rounded-full bg-[var(--kkb-bg)] flex items-center justify-center text-base shrink-0">
-              {item.icon}
+            <span className="h-8 w-8 rounded-full bg-[var(--kkb-bg)] flex items-center justify-center shrink-0">
+              <item.icon className="h-4 w-4 text-[var(--kkb-coral)]" />
             </span>
             <span className="min-w-0">
               <span className="block text-[11px] font-quicksand font-semibold text-[var(--kkb-text-primary)] truncate">

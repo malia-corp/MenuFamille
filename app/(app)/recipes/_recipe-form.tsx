@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ChevronDown, Globe, ImagePlus, Lock, Minus, Plus, Search, Trash2, Users, X } from 'lucide-react'
+import { ChevronDown, CupSoda, Globe, ImagePlus, Lock, Minus, Plus, Salad, Search, Trash2, Users, X } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
 // ── Types exportés ────────────────────────────────────────────
@@ -623,7 +623,9 @@ export function RecipeForm({
                   return (
                     <button key={recipe.id} type="button" onClick={() => toggleAssocItem(recipe)}
                       className="w-full flex items-center gap-3 px-4 py-3 border-b border-[var(--kkb-border)]/40 last:border-0 hover:bg-[var(--kkb-coral-light)] transition-colors">
-                      <span className="text-xl flex-shrink-0">{recipe.categories?.icon ?? '🍴'}</span>
+                      {assocPicker === 'side'
+                        ? <Salad className="h-5 w-5 flex-shrink-0 text-[var(--kkb-coral)]" />
+                        : <CupSoda className="h-5 w-5 flex-shrink-0 text-[var(--kkb-teal)]" />}
                       <span className="flex-1 min-w-0 text-left text-sm font-quicksand font-medium text-[var(--kkb-text-primary)] truncate">
                         {recipe.name}
                       </span>

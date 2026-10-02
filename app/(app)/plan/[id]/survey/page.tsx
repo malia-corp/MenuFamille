@@ -8,7 +8,8 @@ import {
 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { fr } from 'date-fns/locale'
-import { MEAL_LABEL, MEAL_EMOJI, type MealType } from '@/lib/constants/meal-type'
+import { MEAL_LABEL, type MealType } from '@/lib/constants/meal-type'
+import { MealTypeIcon } from '@/components/ui/meal-type-icon'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -150,7 +151,7 @@ export default function SurveyResultsPage() {
                   {/* Titre */}
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-2">
-                      <span className="text-xl">{MEAL_EMOJI[item.meal_type] ?? '🍴'}</span>
+                      <MealTypeIcon type={item.meal_type} className="h-5 w-5 text-[var(--kkb-coral)]" />
                       <div>
                         <p className="text-[10px] font-quicksand font-semibold uppercase tracking-wider text-[var(--kkb-text-tertiary)]">
                           {MEAL_LABEL[item.meal_type] ?? item.meal_type}
@@ -179,9 +180,9 @@ export default function SurveyResultsPage() {
                     </div>
                   ) : (
                     <div className="space-y-1.5">
-                      <DistributionBar emoji="😊" count={item.aime}      total={total} color="var(--kkb-success)" />
-                      <DistributionBar emoji="😐" count={item.bof}       total={total} color="var(--kkb-warning)" />
-                      <DistributionBar emoji="😕" count={item.naime_pas} total={total} color="var(--kkb-danger)" />
+                      <DistributionBar emoji={'\u{1F60A}'} count={item.aime}      total={total} color="var(--kkb-success)" />
+                      <DistributionBar emoji={'\u{1F610}'} count={item.bof}       total={total} color="var(--kkb-warning)" />
+                      <DistributionBar emoji={'\u{1F615}'} count={item.naime_pas} total={total} color="var(--kkb-danger)" />
                     </div>
                   )}
 
