@@ -84,8 +84,12 @@ export function FAB() {
     ? 'relative inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-white bg-[var(--kkb-coral)] shadow-[var(--kkb-shadow-fab)] transition-transform active:scale-[0.97]'
     : 'relative w-full flex items-center justify-center gap-1.5 rounded-full px-4 py-2 text-white bg-[var(--kkb-coral)] shadow-[var(--kkb-shadow-fab)] transition-transform active:scale-[0.97]'
 
+  // h-[40px] explicite (pas py-2) sur /plan pour matcher exactement la
+  // hauteur du bouton compact "Passer a ..." (meme bottom-[88px]) — avec
+  // des hauteurs fixees par le padding de part et d'autre, les deux boutons
+  // n'etaient pas rendus a la meme hauteur malgre le meme `bottom`.
   const floatingClass = isPlan
-    ? 'lg:hidden fixed z-[45] bottom-[88px] left-4 flex items-center gap-1.5 rounded-full px-4 py-2 text-white bg-[var(--kkb-coral)] shadow-[var(--kkb-shadow-fab)] transition-transform hover:scale-[1.03] active:scale-[0.97] whitespace-nowrap'
+    ? 'lg:hidden fixed z-[45] bottom-[88px] left-4 h-[40px] flex items-center gap-1 px-3.5 rounded-full text-white bg-[var(--kkb-coral)] shadow-[var(--kkb-shadow-fab)] transition-transform hover:scale-[1.03] active:scale-[0.97] whitespace-nowrap'
     : 'lg:hidden fixed z-[45] bottom-[88px] left-1/2 -translate-x-1/2 flex items-center gap-1.5 rounded-full px-4 py-2 text-white bg-[var(--kkb-coral)] shadow-[var(--kkb-shadow-fab)] transition-transform hover:scale-[1.03] active:scale-[0.97] whitespace-nowrap'
 
   const button = (
@@ -94,8 +98,8 @@ export function FAB() {
       onClick={handleClick}
       className={docked ? dockedClass : floatingClass}
     >
-      <Zap className={isPlan && docked ? 'h-3.5 w-3.5 shrink-0' : 'h-4 w-4 shrink-0'} />
-      <span className={`font-quicksand font-semibold ${isPlan && docked ? 'text-[12px]' : 'text-[13px]'}`}>
+      <Zap className={isPlan ? 'h-3.5 w-3.5 shrink-0' : 'h-4 w-4 shrink-0'} />
+      <span className={`font-quicksand font-semibold ${isPlan ? 'text-[12px]' : 'text-[13px]'}`}>
         Générer ma semaine
       </span>
     </button>
