@@ -2,9 +2,11 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Clock, Loader2, Send, UserCircle, XCircle } from 'lucide-react'
+import { ChevronDown, Clock, Loader2, Send, UnfoldHorizontal, UserCircle, XCircle } from 'lucide-react'
 import { PublicHeader } from '@/components/survey/public-header'
 import { MealVoteCard, type Reaction } from '@/components/survey/meal-vote-card'
+import { ViewToggle, type SurveyViewMode } from '@/components/survey/view-toggle'
+import { VoteIdentityPanel } from '@/components/survey/vote-identity-panel'
 import { MEAL_EMOJI, MEAL_LABEL, MEAL_TYPE_ORDER, type MealType } from '@/lib/constants/meal-type'
 import { DAY_OPTIONS, formatWeekRange, type DayOfWeek } from '@/lib/utils/week'
 
@@ -52,6 +54,14 @@ interface AnswerState {
   comment:  string
 }
 
+interface SectionGroup {
+  key:         string
+  title:       string
+  emoji:       string
+  items:       SurveyItem[]
+  mealType?:   MealType // present seulement en mode "type", pilote le repli desktop
+}
+
 const MOMENT_BY_MEAL_TYPE: Record<MealType, string> = {
   petit_dejeuner: 'Matin',
   dejeuner:       'Midi',
@@ -79,6 +89,10 @@ export function SurveyPageClient({ token }: { token: string }) {
   const [justSavedId,     setJustSavedId]     = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const justSavedTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const [viewMode,       setViewMode]       = useState<SurveyViewMode>('type')
+  const [activeFilter,   setActiveFilter]   = useState<string | null>(null)
+  const [collapsedTypes, setCollapsedTypes] = useState<Set<MealType>>(new Set())
 
   useEffect(() => {
     const storedName = localStorage.getItem(STORAGE_KEY_NAME)
@@ -198,6 +212,15 @@ export function SurveyPageClient({ token }: { token: string }) {
     setSubmitted(false)
   }
 
+  function changeViewMode(mode: SurveyViewMode) {
+    setViewMode(mode)
+    setActiveFilter(null)
+  }
+
+  function handleNameBlur() {
+    if (name.trim()) localStorage.setItem(STORAGE_KEY_NAME, name.trim())
+  }
+
   // ── États de chargement / erreur ──────────────────────────────────────────
 
   if (loadState === 'loading') {
@@ -233,8 +256,10 @@ export function SurveyPageClient({ token }: { token: string }) {
   // ── Contenu normal ─────────────────────────────────────────────────────────
 
   const templateItems = data.items.filter(i => i.applies_all_days)
+  const dailyItems     = data.items.filter(i => !i.applies_all_days)
+
   const dailyByType = new Map<MealType, SurveyItem[]>()
-  for (const item of data.items.filter(i => !i.applies_all_days)) {
+  for (const item of dailyItems) {
     const list = dailyByType.get(item.meal_type) ?? []
     list.push(item)
     dailyByType.set(item.meal_type, list)
@@ -245,135 +270,251 @@ export function SurveyPageClient({ token }: { token: string }) {
     .filter(mt => dailyByType.has(mt))
 
   const monday = new Date(data.plan.week_start + 'T00:00:00')
-  function dayLabelFor(item: SurveyItem) {
-    if (item.applies_all_days) return 'Toute la semaine'
-    const idx = DAY_OPTIONS.findIndex(d => d.val === item.day_of_week)
+  function dateNumFor(day: DayOfWeek) {
+    const idx = DAY_OPTIONS.findIndex(d => d.val === day)
     const date = new Date(monday)
     date.setDate(monday.getDate() + idx)
-    return `${DAY_OPTIONS[idx]?.full ?? ''} ${date.getDate()} · ${MOMENT_BY_MEAL_TYPE[item.meal_type]}`
+    return date.getDate()
+  }
+  function dayLabelFor(item: SurveyItem) {
+    if (item.applies_all_days) return 'Toute la semaine'
+    return `${DAY_OPTIONS.find(d => d.val === item.day_of_week)?.full ?? ''} ${dateNumFor(item.day_of_week)} · ${MOMENT_BY_MEAL_TYPE[item.meal_type]}`
+  }
+
+  // Chips : uniquement sur les repas journaliers (la section "Toute la semaine"
+  // reste affichée une fois en tête, jamais filtrée par ce toggle).
+  const typeChips = activeMealTypes.map(mt => ({
+    value: mt, label: MEAL_LABEL[mt], emoji: MEAL_EMOJI[mt], count: dailyByType.get(mt)!.length,
+  }))
+
+  const activeDays = DAY_OPTIONS.filter(d => dailyItems.some(i => i.day_of_week === d.val))
+  const dayChips = activeDays.map(d => ({
+    value: d.val, label: `${d.full.slice(0, 3)} ${dateNumFor(d.val)}`, count: dailyItems.filter(i => i.day_of_week === d.val).length,
+  }))
+
+  // Regroupement du rendu selon le mode actif — un seul jeu de donnees
+  // reorganise dynamiquement, pas de duplication de DOM comme la maquette.
+  let sections: SectionGroup[]
+  if (viewMode === 'type') {
+    sections = activeMealTypes
+      .filter(mt => activeFilter === null || activeFilter === mt)
+      .map(mt => ({ key: mt, title: MEAL_LABEL[mt], emoji: MEAL_EMOJI[mt], items: dailyByType.get(mt)!, mealType: mt }))
+  } else {
+    sections = activeDays
+      .filter(d => activeFilter === null || activeFilter === d.val)
+      .map(d => ({
+        key: d.val,
+        title: `${d.full} ${dateNumFor(d.val)}`,
+        emoji: '📅',
+        items: dailyItems.filter(i => i.day_of_week === d.val),
+      }))
+  }
+
+  const visibleTypeKeys = viewMode === 'type' ? sections.map(s => s.mealType!) : []
+  const anyCollapsed = visibleTypeKeys.some(mt => collapsedTypes.has(mt))
+
+  function toggleSection(mealType: MealType) {
+    setCollapsedTypes(prev => {
+      const next = new Set(prev)
+      if (next.has(mealType)) next.delete(mealType)
+      else next.add(mealType)
+      return next
+    })
+  }
+
+  function toggleAll() {
+    setCollapsedTypes(prev => {
+      const next = new Set(prev)
+      for (const mt of visibleTypeKeys) {
+        if (anyCollapsed) next.delete(mt)
+        else next.add(mt)
+      }
+      return next
+    })
+  }
+
+  function onFilterChange(filter: string | null) {
+    setActiveFilter(filter)
+    // Cliquer une chip de type deplie la section correspondante si repliee.
+    if (viewMode === 'type' && filter) {
+      setCollapsedTypes(prev => {
+        const next = new Set(prev)
+        next.delete(filter as MealType)
+        return next
+      })
+    }
   }
 
   const plannerFirstName = data.plan.planner_name?.trim().split(/\s+/)[0] ?? 'votre famille'
-  const progressPercent  = totalCount > 0 ? Math.round((ratedCount / totalCount) * 100) : 0
+
+  function renderCard(item: SurveyItem) {
+    return (
+      <MealVoteCard
+        key={item.id}
+        dayLabel={item.applies_all_days ? `${MEAL_EMOJI[item.meal_type]} ${MEAL_LABEL[item.meal_type]} · Toute la semaine` : dayLabelFor(item)}
+        mealType={item.meal_type}
+        recipe={item.recipe}
+        compositions={item.compositions}
+        reaction={answers[item.id]?.reaction ?? null}
+        comment={answers[item.id]?.comment ?? ''}
+        onSelectReaction={r => selectReaction(item.id, r)}
+        onCommentChange={v => updateComment(item.id, v)}
+        onSaveComment={() => saveComment(item.id)}
+        savingComment={savingCommentId === item.id}
+        justSaved={justSavedId === item.id}
+        disabled={!name.trim()}
+      />
+    )
+  }
 
   return (
     <div className="min-h-screen bg-[var(--kkb-bg)] pb-32">
       <PublicHeader plannerName={data.plan.planner_name} familyName={data.plan.family_name} />
 
-      <main className="max-w-[720px] mx-auto px-4 lg:px-6 py-5 lg:py-10">
-        {/* Hero */}
-        <section className="space-y-2 mb-6">
-          <span className="inline-block text-[11px] font-quicksand font-bold uppercase tracking-wide px-2.5 py-1 rounded-full bg-[var(--kkb-teal-light)] text-[var(--kkb-teal)]">
-            🗓 Semaine en cours · {formatWeekRange(data.plan.week_start)}
-          </span>
-          <h1 className="font-dosis font-extrabold text-2xl text-[var(--kkb-text-primary)]">
-            Le menu de {plannerFirstName}
-          </h1>
-          <p className="text-sm font-quicksand text-[var(--kkb-text-secondary)]">
-            Salut ! 👋 Dis-nous ce qui te fait envie pour les repas de cette semaine. Ton avis
-            compte beaucoup pour la cuisine de la maison !
-          </p>
-        </section>
-
-        {/* Champ prénom */}
-        <section className="mb-6">
-          <p className="text-[11px] font-quicksand font-bold uppercase tracking-wide text-[var(--kkb-text-tertiary)] mb-1.5">
-            Ton prénom ?
-          </p>
-          <div className="lg:max-w-[400px] lg:mx-auto flex items-center gap-2.5 bg-white border-[1.5px] border-[var(--kkb-border)] focus-within:border-[var(--kkb-coral)] rounded-[var(--kkb-radius-sm)] px-3.5 py-3 transition-colors">
-            <UserCircle className="h-4 w-4 text-[var(--kkb-text-tertiary)] shrink-0" />
-            <input
-              type="text"
-              value={name}
-              onChange={e => setName(e.target.value)}
-              onBlur={() => name.trim() && localStorage.setItem(STORAGE_KEY_NAME, name.trim())}
-              placeholder="Comment vous appelez-vous ?"
-              aria-label="Ton prénom"
-              className="flex-1 text-sm font-quicksand text-[var(--kkb-text-primary)] bg-transparent outline-none placeholder:text-[var(--kkb-text-tertiary)]"
-            />
-          </div>
-        </section>
-
-        {/* Section template */}
-        {templateItems.length > 0 && (
-          <>
-            <SectionSeparator label="Toute la semaine" />
-            <div className="space-y-3 mb-2">
-              {templateItems.map(item => (
-                <MealVoteCard
-                  key={item.id}
-                  dayLabel={`${MEAL_EMOJI[item.meal_type]} ${MEAL_LABEL[item.meal_type]} · Toute la semaine`}
-                  mealType={item.meal_type}
-                  recipe={item.recipe}
-                  compositions={item.compositions}
-                  reaction={answers[item.id]?.reaction ?? null}
-                  comment={answers[item.id]?.comment ?? ''}
-                  onSelectReaction={r => selectReaction(item.id, r)}
-                  onCommentChange={v => updateComment(item.id, v)}
-                  onSaveComment={() => saveComment(item.id)}
-                  savingComment={savingCommentId === item.id}
-                  justSaved={justSavedId === item.id}
-                  disabled={!name.trim()}
-                />
-              ))}
-            </div>
-          </>
-        )}
-
-        {activeMealTypes.length > 0 && <SectionSeparator label="Au programme" />}
-
-        {/* Sections par type de repas */}
-        {activeMealTypes.map(mealType => (
-          <section key={mealType} className="mb-5">
-            <h2 className="font-dosis font-bold text-xl text-[var(--kkb-text-primary)] mb-2">
-              {MEAL_EMOJI[mealType]} {MEAL_LABEL[mealType]}
-            </h2>
-            {dailyByType.get(mealType)!.map(item => (
-              <MealVoteCard
-                key={item.id}
-                dayLabel={dayLabelFor(item)}
-                mealType={item.meal_type}
-                recipe={item.recipe}
-                compositions={item.compositions}
-                reaction={answers[item.id]?.reaction ?? null}
-                comment={answers[item.id]?.comment ?? ''}
-                onSelectReaction={r => selectReaction(item.id, r)}
-                onCommentChange={v => updateComment(item.id, v)}
-                onSaveComment={() => saveComment(item.id)}
-                savingComment={savingCommentId === item.id}
-                justSaved={justSavedId === item.id}
-                disabled={!name.trim()}
-              />
-            ))}
+      <div className="max-w-5xl mx-auto px-4 lg:px-6 py-5 lg:py-10 xl:flex xl:gap-6 xl:items-start">
+        <main className="xl:flex-1 max-w-[720px] mx-auto xl:mx-0 xl:max-w-none min-w-0">
+          {/* Hero */}
+          <section className="space-y-2 mb-6">
+            <span className="inline-block text-[11px] font-quicksand font-bold uppercase tracking-wide px-2.5 py-1 rounded-full bg-[var(--kkb-teal-light)] text-[var(--kkb-teal)]">
+              🗓 Semaine en cours · {formatWeekRange(data.plan.week_start)}
+            </span>
+            <h1 className="font-dosis font-extrabold text-2xl text-[var(--kkb-text-primary)]">
+              Le menu de {plannerFirstName}
+            </h1>
+            <p className="text-sm font-quicksand text-[var(--kkb-text-secondary)]">
+              Salut ! 👋 Dis-nous ce qui te fait envie pour les repas de cette semaine. Ton avis
+              compte beaucoup pour la cuisine de la maison !
+            </p>
           </section>
-        ))}
 
-        {data.items.length === 0 && (
-          <p className="text-sm font-quicksand text-[var(--kkb-text-tertiary)] text-center py-8">
-            Ce menu ne contient aucun repas planifié pour le moment.
-          </p>
-        )}
+          {/* Champ prénom — masqué sur xl: (déplacé dans le panneau identité) */}
+          <section className="mb-6 xl:hidden">
+            <p className="text-[11px] font-quicksand font-bold uppercase tracking-wide text-[var(--kkb-text-tertiary)] mb-1.5">
+              Ton prénom ?
+            </p>
+            <div className="lg:max-w-[400px] flex items-center gap-2.5 bg-white border-[1.5px] border-[var(--kkb-border)] focus-within:border-[var(--kkb-coral)] rounded-[var(--kkb-radius-sm)] px-3.5 py-3 transition-colors">
+              <UserCircle className="h-4 w-4 text-[var(--kkb-text-tertiary)] shrink-0" />
+              <input
+                type="text"
+                value={name}
+                onChange={e => setName(e.target.value)}
+                onBlur={handleNameBlur}
+                placeholder="Comment vous appelez-vous ?"
+                aria-label="Ton prénom"
+                className="flex-1 text-sm font-quicksand text-[var(--kkb-text-primary)] bg-transparent outline-none placeholder:text-[var(--kkb-text-tertiary)]"
+              />
+            </div>
+          </section>
 
-        {error && (
-          <p className="text-sm font-quicksand text-[var(--kkb-danger)] text-center mb-3">{error}</p>
-        )}
+          {/* Section template — jamais filtrée par le toggle */}
+          {templateItems.length > 0 && (
+            <>
+              <SectionSeparator label="Toute la semaine" />
+              <div className="space-y-3 mb-2">
+                {templateItems.map(renderCard)}
+              </div>
+            </>
+          )}
 
-        {/* Footer */}
-        <footer className="pt-6 text-center space-y-0.5">
-          <p className="text-[11px] font-quicksand text-[var(--kkb-text-tertiary)]">
-            Lien partagé par {data.plan.family_name ? `la Famille ${data.plan.family_name}` : plannerFirstName}
-            {' · '}Menu du {formatWeekRange(data.plan.week_start)}
-          </p>
-          <p className="text-[11px] font-quicksand text-[var(--kkb-text-tertiary)]">
-            Cuisine du cœur, sérénité &amp; partage
-          </p>
-        </footer>
-      </main>
+          {data.items.length > 0 && (
+            <>
+              <SectionSeparator label="Au programme" />
+              <ViewToggle
+                viewMode={viewMode}
+                onViewModeChange={changeViewMode}
+                activeFilter={activeFilter}
+                onFilterChange={onFilterChange}
+                totalCount={dailyItems.length}
+                typeChips={typeChips}
+                dayChips={dayChips}
+                daysAvailableCount={activeDays.length}
+                categoriesCount={activeMealTypes.length}
+              />
+
+              {viewMode === 'type' && sections.length > 1 && (
+                <div className="hidden lg:flex justify-end mb-2">
+                  <button
+                    type="button"
+                    onClick={toggleAll}
+                    className="flex items-center gap-1.5 text-xs font-quicksand font-bold text-[var(--kkb-text-secondary)]"
+                  >
+                    <UnfoldHorizontal className="h-3.5 w-3.5" />
+                    {anyCollapsed ? 'Tout déplier' : 'Tout replier'}
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Sections regroupées (par type ou par jour selon viewMode) */}
+          {sections.map(section => {
+            const collapsible = viewMode === 'type'
+            const collapsed   = collapsible && section.mealType ? collapsedTypes.has(section.mealType) : false
+            return (
+              <section key={section.key} className="mb-5">
+                {collapsible ? (
+                  <button
+                    type="button"
+                    onClick={() => section.mealType && toggleSection(section.mealType)}
+                    className="w-full flex items-center justify-between gap-2 mb-2 lg:cursor-pointer"
+                  >
+                    <h2 className="font-dosis font-bold text-xl text-[var(--kkb-text-primary)]">
+                      {section.emoji} {section.title}
+                    </h2>
+                    <ChevronDown className={`hidden lg:block h-5 w-5 text-[var(--kkb-text-tertiary)] transition-transform ${collapsed ? '-rotate-90' : ''}`} />
+                  </button>
+                ) : (
+                  <h2 className="font-dosis font-bold text-xl text-[var(--kkb-text-primary)] mb-2">
+                    {section.emoji} {section.title}
+                  </h2>
+                )}
+                <div className={`lg:overflow-hidden lg:transition-[max-height] lg:duration-300 ${collapsed ? 'lg:max-h-0' : 'lg:max-h-[6000px]'}`}>
+                  {section.items.map(renderCard)}
+                </div>
+              </section>
+            )
+          })}
+
+          {data.items.length === 0 && (
+            <p className="text-sm font-quicksand text-[var(--kkb-text-tertiary)] text-center py-8">
+              Ce menu ne contient aucun repas planifié pour le moment.
+            </p>
+          )}
+
+          {error && (
+            <p className="text-sm font-quicksand text-[var(--kkb-danger)] text-center mb-3">{error}</p>
+          )}
+
+          {/* Footer */}
+          <footer className="pt-6 text-center space-y-0.5">
+            <p className="text-[11px] font-quicksand text-[var(--kkb-text-tertiary)]">
+              Lien partagé par {data.plan.family_name ? `la Famille ${data.plan.family_name}` : plannerFirstName}
+              {' · '}Menu du {formatWeekRange(data.plan.week_start)}
+            </p>
+            <p className="text-[11px] font-quicksand text-[var(--kkb-text-tertiary)]">
+              Cuisine du cœur, sérénité &amp; partage
+            </p>
+          </footer>
+        </main>
+
+        {/* Panneau identité de vote — desktop uniquement */}
+        <aside className="hidden xl:block w-[280px] shrink-0 sticky top-20">
+          <VoteIdentityPanel
+            name={name}
+            onNameChange={setName}
+            onNameBlur={handleNameBlur}
+            ratedCount={ratedCount}
+            totalCount={totalCount}
+            submitted={submitted}
+          />
+        </aside>
+      </div>
 
       {/* Barre sticky en bas */}
       <div className="fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-[var(--kkb-border)] lg:rounded-t-[var(--kkb-radius-card)] lg:shadow-[0_-4px_20px_rgba(22,25,26,0.08)]">
         <div className="max-w-[720px] mx-auto px-5 py-3 lg:flex lg:items-center lg:justify-between lg:gap-4" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
-          <div className="lg:flex-1">
+          {/* Progression — mobile uniquement, dupliquée dans le panneau identité sur xl: */}
+          <div className="xl:hidden">
             <div className="flex items-center justify-between mb-1">
               <p className="text-xs font-quicksand text-[var(--kkb-text-tertiary)]">
                 {ratedCount} / {totalCount} repas notés
@@ -382,7 +523,7 @@ export function SurveyPageClient({ token }: { token: string }) {
             <div className="h-1 w-full rounded-full bg-[var(--kkb-border)] overflow-hidden">
               <div
                 className="h-full rounded-full bg-[var(--kkb-coral)] transition-all duration-300"
-                style={{ width: `${progressPercent}%` }}
+                style={{ width: `${totalCount > 0 ? Math.round((ratedCount / totalCount) * 100) : 0}%` }}
               />
             </div>
           </div>
@@ -412,7 +553,7 @@ export function SurveyPageClient({ token }: { token: string }) {
           </div>
 
           {!submitted && (
-            <p className="text-center lg:hidden text-[11px] font-quicksand text-[var(--kkb-text-tertiary)] mt-2">
+            <p className="text-center text-[11px] font-quicksand text-[var(--kkb-text-tertiary)] mt-2 lg:mt-0">
               Modifiable à tout moment avant vendredi soir · Zéro gaspillage alimentaire
             </p>
           )}
