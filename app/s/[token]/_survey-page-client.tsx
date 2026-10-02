@@ -372,23 +372,41 @@ export function SurveyPageClient({ token }: { token: string }) {
     <div className="min-h-screen bg-[var(--kkb-bg)] pb-32">
       <PublicHeader plannerName={data.plan.planner_name} familyName={data.plan.family_name} />
 
-      <div className="max-w-5xl mx-auto px-4 lg:px-6 py-5 lg:py-10 xl:flex xl:gap-6 xl:items-start">
-        <main className="xl:flex-1 max-w-[720px] mx-auto xl:mx-0 xl:max-w-none min-w-0">
-          {/* Hero */}
-          <section className="space-y-2 mb-6">
-            <span className="inline-block text-[11px] font-quicksand font-bold uppercase tracking-wide px-2.5 py-1 rounded-full bg-[var(--kkb-teal-light)] text-[var(--kkb-teal)]">
-              🗓 Semaine en cours · {formatWeekRange(data.plan.week_start)}
-            </span>
-            <h1 className="font-dosis font-extrabold text-2xl text-[var(--kkb-text-primary)]">
-              Le menu de {plannerFirstName}
-            </h1>
-            <p className="text-sm font-quicksand text-[var(--kkb-text-secondary)]">
-              Salut ! 👋 Dis-nous ce qui te fait envie pour les repas de cette semaine. Ton avis
-              compte beaucoup pour la cuisine de la maison !
-            </p>
+      <div className="max-w-7xl mx-auto px-4 lg:px-6 xl:px-10 py-5 lg:py-10">
+        <main className="max-w-[720px] mx-auto xl:max-w-none">
+          {/* Hero — carte unique ; le panneau identité rejoint le texte de bienvenue
+              en ligne à partir de xl: (comme la maquette desktop), plutôt qu'une
+              colonne latérale fixe sur toute la hauteur de la page. */}
+          <section className="bg-white rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] p-6 lg:p-8 xl:p-10 mb-6">
+            <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-6 xl:gap-10">
+              <div className="space-y-2 xl:max-w-2xl">
+                <span className="inline-block text-[11px] font-quicksand font-bold uppercase tracking-wide px-2.5 py-1 rounded-full bg-[var(--kkb-teal-light)] text-[var(--kkb-teal)]">
+                  🗓 Semaine en cours · {formatWeekRange(data.plan.week_start)}
+                </span>
+                <h1 className="font-dosis font-extrabold text-2xl xl:text-3xl text-[var(--kkb-text-primary)]">
+                  Le menu de {plannerFirstName}
+                </h1>
+                <p className="text-sm xl:text-base font-quicksand text-[var(--kkb-text-secondary)]">
+                  Salut ! 👋 Dis-nous ce qui te fait envie pour les repas de cette semaine. Ton avis
+                  compte beaucoup pour la cuisine de la maison !
+                </p>
+              </div>
+
+              {/* Panneau identité de vote — rejoint le hero à partir de xl: */}
+              <div className="hidden xl:block xl:w-[360px] xl:shrink-0">
+                <VoteIdentityPanel
+                  name={name}
+                  onNameChange={setName}
+                  onNameBlur={handleNameBlur}
+                  ratedCount={ratedCount}
+                  totalCount={totalCount}
+                  submitted={submitted}
+                />
+              </div>
+            </div>
           </section>
 
-          {/* Champ prénom — masqué sur xl: (déplacé dans le panneau identité) */}
+          {/* Champ prénom — masqué sur xl: (déplacé dans le panneau identité du hero) */}
           <section className="mb-6 xl:hidden">
             <p className="text-[11px] font-quicksand font-bold uppercase tracking-wide text-[var(--kkb-text-tertiary)] mb-1.5">
               Ton prénom ?
@@ -411,7 +429,7 @@ export function SurveyPageClient({ token }: { token: string }) {
           {templateItems.length > 0 && (
             <>
               <SectionSeparator label="Toute la semaine" />
-              <div className="space-y-3 lg:space-y-0 lg:grid lg:grid-cols-2 xl:grid-cols-3 lg:gap-3 lg:items-start mb-2">
+              <div className="space-y-3 md:space-y-0 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-4 md:items-start mb-2">
                 {templateItems.map(renderCard)}
               </div>
             </>
@@ -464,7 +482,7 @@ export function SurveyPageClient({ token }: { token: string }) {
                   <ChevronDown className={`hidden lg:block h-5 w-5 text-[var(--kkb-text-tertiary)] transition-transform ${collapsed ? '-rotate-90' : ''}`} />
                 </button>
                 <div className={`lg:overflow-hidden lg:transition-[max-height] lg:duration-300 ${collapsed ? 'lg:max-h-0' : 'lg:max-h-[6000px]'}`}>
-                  <div className="space-y-3 lg:space-y-0 lg:grid lg:grid-cols-2 xl:grid-cols-3 lg:gap-3 lg:items-start">
+                  <div className="space-y-3 md:space-y-0 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-4 md:items-start">
                     {section.items.map(renderCard)}
                   </div>
                 </div>
@@ -493,18 +511,6 @@ export function SurveyPageClient({ token }: { token: string }) {
             </p>
           </footer>
         </main>
-
-        {/* Panneau identité de vote — desktop uniquement */}
-        <aside className="hidden xl:block w-[280px] shrink-0 sticky top-20">
-          <VoteIdentityPanel
-            name={name}
-            onNameChange={setName}
-            onNameBlur={handleNameBlur}
-            ratedCount={ratedCount}
-            totalCount={totalCount}
-            submitted={submitted}
-          />
-        </aside>
       </div>
 
       {/* Barre sticky en bas */}
