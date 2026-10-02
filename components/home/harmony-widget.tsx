@@ -58,7 +58,7 @@ export function HarmonyWidget({ respondentCount, memberCount, agreementPct, plan
 
       <button
         type="button"
-        onClick={() => planId && router.push(`/plan/${planId}/survey`)}
+        onClick={() => planId && router.push(`/votes/results?plan=${planId}`)}
         disabled={!planId}
         className="w-full h-11 rounded-lg bg-[var(--kkb-bg)] hover:bg-[var(--kkb-border-light)] text-[var(--kkb-text-primary)] font-quicksand text-sm flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
       >

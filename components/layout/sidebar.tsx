@@ -13,7 +13,7 @@ export function Sidebar({ role, displayName }: { role: Role; displayName?: strin
 
   return (
     <aside
-      className="hidden lg:flex fixed inset-y-0 left-0 z-30 w-60 flex-col text-white"
+      className="hidden lg:flex print:hidden fixed inset-y-0 left-0 z-30 w-60 flex-col text-white"
       style={{ background: 'var(--kkb-teal)' }}
     >
       <div className="px-5 pt-6 pb-5">
