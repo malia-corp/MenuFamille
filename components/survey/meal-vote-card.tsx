@@ -60,7 +60,7 @@ export function MealVoteCard({
   const drink = drinkComp ? { id: drinkComp.id, name: drinkComp.name! } : null
 
   return (
-    <div className="bg-white border border-[var(--kkb-border)] rounded-[var(--kkb-radius-card)] overflow-hidden mb-3">
+    <div className="bg-white border border-[var(--kkb-border)] rounded-[var(--kkb-radius-card)] overflow-hidden h-full flex flex-col">
       {/* Header carte */}
       <div className="flex items-center justify-between gap-2 px-3 pt-3">
         <p className="font-quicksand font-bold text-xs text-[var(--kkb-text-secondary)]">{dayLabel}</p>

@@ -59,7 +59,6 @@ interface SectionGroup {
   title:       string
   emoji:       string
   items:       SurveyItem[]
-  mealType?:   MealType // present seulement en mode "type", pilote le repli desktop
 }
 
 const MOMENT_BY_MEAL_TYPE: Record<MealType, string> = {
@@ -90,9 +89,11 @@ export function SurveyPageClient({ token }: { token: string }) {
   const [error, setError] = useState<string | null>(null)
   const justSavedTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const [viewMode,       setViewMode]       = useState<SurveyViewMode>('type')
-  const [activeFilter,   setActiveFilter]   = useState<string | null>(null)
-  const [collapsedTypes, setCollapsedTypes] = useState<Set<MealType>>(new Set())
+  const [viewMode,          setViewMode]          = useState<SurveyViewMode>('type')
+  const [activeFilter,      setActiveFilter]      = useState<string | null>(null)
+  // Cle generique (meal_type OU day_of_week selon viewMode) — un accordeon
+  // repliable existe dans les deux modes, pas seulement "Par Type".
+  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     const storedName = localStorage.getItem(STORAGE_KEY_NAME)
@@ -298,7 +299,7 @@ export function SurveyPageClient({ token }: { token: string }) {
   if (viewMode === 'type') {
     sections = activeMealTypes
       .filter(mt => activeFilter === null || activeFilter === mt)
-      .map(mt => ({ key: mt, title: MEAL_LABEL[mt], emoji: MEAL_EMOJI[mt], items: dailyByType.get(mt)!, mealType: mt }))
+      .map(mt => ({ key: mt, title: MEAL_LABEL[mt], emoji: MEAL_EMOJI[mt], items: dailyByType.get(mt)! }))
   } else {
     sections = activeDays
       .filter(d => activeFilter === null || activeFilter === d.val)
@@ -310,24 +311,24 @@ export function SurveyPageClient({ token }: { token: string }) {
       }))
   }
 
-  const visibleTypeKeys = viewMode === 'type' ? sections.map(s => s.mealType!) : []
-  const anyCollapsed = visibleTypeKeys.some(mt => collapsedTypes.has(mt))
+  const visibleSectionKeys = sections.map(s => s.key)
+  const anyCollapsed = visibleSectionKeys.some(key => collapsedSections.has(key))
 
-  function toggleSection(mealType: MealType) {
-    setCollapsedTypes(prev => {
+  function toggleSection(key: string) {
+    setCollapsedSections(prev => {
       const next = new Set(prev)
-      if (next.has(mealType)) next.delete(mealType)
-      else next.add(mealType)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
       return next
     })
   }
 
   function toggleAll() {
-    setCollapsedTypes(prev => {
+    setCollapsedSections(prev => {
       const next = new Set(prev)
-      for (const mt of visibleTypeKeys) {
-        if (anyCollapsed) next.delete(mt)
-        else next.add(mt)
+      for (const key of visibleSectionKeys) {
+        if (anyCollapsed) next.delete(key)
+        else next.add(key)
       }
       return next
     })
@@ -335,11 +336,11 @@ export function SurveyPageClient({ token }: { token: string }) {
 
   function onFilterChange(filter: string | null) {
     setActiveFilter(filter)
-    // Cliquer une chip de type deplie la section correspondante si repliee.
-    if (viewMode === 'type' && filter) {
-      setCollapsedTypes(prev => {
+    // Cliquer une chip deplie la section correspondante si elle etait repliee.
+    if (filter) {
+      setCollapsedSections(prev => {
         const next = new Set(prev)
-        next.delete(filter as MealType)
+        next.delete(filter)
         return next
       })
     }
@@ -410,7 +411,7 @@ export function SurveyPageClient({ token }: { token: string }) {
           {templateItems.length > 0 && (
             <>
               <SectionSeparator label="Toute la semaine" />
-              <div className="space-y-3 mb-2">
+              <div className="space-y-3 lg:space-y-0 lg:grid lg:grid-cols-2 xl:grid-cols-3 lg:gap-3 lg:items-start mb-2">
                 {templateItems.map(renderCard)}
               </div>
             </>
@@ -431,7 +432,7 @@ export function SurveyPageClient({ token }: { token: string }) {
                 categoriesCount={activeMealTypes.length}
               />
 
-              {viewMode === 'type' && sections.length > 1 && (
+              {sections.length > 1 && (
                 <div className="hidden lg:flex justify-end mb-2">
                   <button
                     type="button"
@@ -446,30 +447,26 @@ export function SurveyPageClient({ token }: { token: string }) {
             </>
           )}
 
-          {/* Sections regroupées (par type ou par jour selon viewMode) */}
+          {/* Sections regroupées (par type ou par jour selon viewMode) — un
+              accordeon repliable (desktop uniquement) dans les deux modes. */}
           {sections.map(section => {
-            const collapsible = viewMode === 'type'
-            const collapsed   = collapsible && section.mealType ? collapsedTypes.has(section.mealType) : false
+            const collapsed = collapsedSections.has(section.key)
             return (
               <section key={section.key} className="mb-5">
-                {collapsible ? (
-                  <button
-                    type="button"
-                    onClick={() => section.mealType && toggleSection(section.mealType)}
-                    className="w-full flex items-center justify-between gap-2 mb-2 lg:cursor-pointer"
-                  >
-                    <h2 className="font-dosis font-bold text-xl text-[var(--kkb-text-primary)]">
-                      {section.emoji} {section.title}
-                    </h2>
-                    <ChevronDown className={`hidden lg:block h-5 w-5 text-[var(--kkb-text-tertiary)] transition-transform ${collapsed ? '-rotate-90' : ''}`} />
-                  </button>
-                ) : (
-                  <h2 className="font-dosis font-bold text-xl text-[var(--kkb-text-primary)] mb-2">
+                <button
+                  type="button"
+                  onClick={() => toggleSection(section.key)}
+                  className="w-full flex items-center justify-between gap-2 mb-2 lg:cursor-pointer"
+                >
+                  <h2 className="font-dosis font-bold text-xl text-[var(--kkb-text-primary)]">
                     {section.emoji} {section.title}
                   </h2>
-                )}
+                  <ChevronDown className={`hidden lg:block h-5 w-5 text-[var(--kkb-text-tertiary)] transition-transform ${collapsed ? '-rotate-90' : ''}`} />
+                </button>
                 <div className={`lg:overflow-hidden lg:transition-[max-height] lg:duration-300 ${collapsed ? 'lg:max-h-0' : 'lg:max-h-[6000px]'}`}>
-                  {section.items.map(renderCard)}
+                  <div className="space-y-3 lg:space-y-0 lg:grid lg:grid-cols-2 xl:grid-cols-3 lg:gap-3 lg:items-start">
+                    {section.items.map(renderCard)}
+                  </div>
                 </div>
               </section>
             )
