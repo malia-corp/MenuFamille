@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   ArrowRight,
@@ -9,41 +9,37 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronUp,
-  Clock,
   LayoutGrid,
   Loader2,
   Minus,
   Plus,
-  PlusCircle,
-  Search,
   Settings,
+  Sparkles,
   Timer,
-  Trash2,
   Users,
-  X,
-  Zap,
 } from 'lucide-react'
-import { MEAL_EMOJI, MEAL_LABEL, type MealType } from '@/lib/constants/meal-type'
+import { MEAL_EMOJI, MEAL_FULL_LABEL, MEAL_LABEL, type MealType } from '@/lib/constants/meal-type'
 import { DAY_OPTIONS, getMondayISO, shiftWeek, formatWeekRange, dayOfWeekFromDate, type DayOfWeek } from '@/lib/utils/week'
 import { sortByMealType } from '@/lib/utils/sort-meal-configs'
-import { countFilledSlots, dayFilledCount, isDayComplete } from '@/lib/utils/plan-progress'
+import { countFilledSlots, countFilledByMealType, dayFilledCount, isDayComplete } from '@/lib/utils/plan-progress'
+import { type RecipeScope } from '@/lib/constants/recipe-scope'
 import { GeneratingOverlay } from '@/components/plan/generating-overlay'
 import { DayTabs } from '@/components/plan/day-tabs'
-import { MealTypeTabs } from '@/components/plan/meal-type-tabs'
-import { MealDetailCard, type SuggestionChip } from '@/components/plan/meal-detail-card'
+import { MealDetailCard, type CompositionChip } from '@/components/plan/meal-detail-card'
 import { WeekGrid } from '@/components/plan/week-grid'
 import { DayFocusView } from '@/components/plan/day-focus-view'
+import { RecipePickerPanel } from '@/components/plan/recipe-picker-panel'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type ViewState = 'loading' | 'generating' | 'review'
-type Scope     = 'all' | 'mes' | 'famille' | 'communaute'
 
 interface MealConfig {
   meal_type:     MealType
   is_active:     boolean
   mode:          'daily' | 'template'
   display_order: number
+  default_time?: string
 }
 
 interface PlanRecipe {
@@ -73,17 +69,6 @@ interface PlanItem {
   sort_order:        number
   recipes:           PlanRecipe | null
   meal_compositions: Composition[]
-}
-
-interface SheetDetails {
-  mainRecipeId:      string | null
-  meal_compositions: Composition[]
-}
-
-interface SuggestedRecipe {
-  id:       string
-  name:     string
-  category: { icon: string | null } | null
 }
 
 interface Plan {
@@ -118,19 +103,68 @@ interface EditTarget {
   isTemplate: boolean
 }
 
-// ─── Constantes ───────────────────────────────────────────────────────────────
-
-const SCOPE_OPTIONS: { val: Scope; label: string }[] = [
-  { val: 'all',        label: 'Tout'         },
-  { val: 'mes',        label: 'Mes recettes' },
-  { val: 'famille',    label: 'Famille'      },
-  { val: 'communaute', label: 'Communauté'   },
-]
-
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function formatTime(s: number): string {
   return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`
+}
+
+function toChips(compositions: Composition[], role: 'side' | 'drink'): CompositionChip[] {
+  return compositions.filter(c => c.role === role).map(c => ({ id: c.id, recipeId: c.recipe_id, name: c.recipes?.name ?? '?' }))
+}
+
+// ─── Hook : état d'un picker de recettes (plat principal / accompagnement / boisson) ──
+// Chacune des 3 instances (main/side/drink) a sa propre recherche/scope/catégorie/liste,
+// totalement indépendante des deux autres — contrainte (forcer ou exclure une catégorie,
+// ex. la boisson) passée à `reset()` plutôt que figée à la création.
+
+interface PickerConstraint {
+  forceCategoryId?:   string | null
+  excludeCategoryId?: string | null
+}
+
+function useRecipePicker() {
+  const [scope,      setScopeState]    = useState<RecipeScope>('all')
+  const [categoryId, setCategoryIdState] = useState<string | null>(null)
+  const [search,     setSearchState]   = useState('')
+  const [recipes,    setRecipes]       = useState<PickerRecipe[]>([])
+  const [loading,    setLoading]       = useState(false)
+  const timerRef      = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const constraintRef = useRef<PickerConstraint>({})
+
+  const load = useCallback(async (searchValue: string, scopeValue: RecipeScope, categoryValue: string | null) => {
+    setLoading(true)
+    try {
+      const params = new URLSearchParams({ scope: scopeValue })
+      const { forceCategoryId, excludeCategoryId } = constraintRef.current
+      const catId = forceCategoryId ?? categoryValue
+      if (catId) params.set('category_id', catId)
+      else if (excludeCategoryId) params.set('exclude_category_id', excludeCategoryId)
+      if (searchValue.trim()) params.set('search', searchValue.trim())
+      const res  = await fetch(`/api/recipes?${params}`)
+      const data = await res.json()
+      setRecipes(Array.isArray(data) ? data : [])
+    } catch {
+      setRecipes([])
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  function setScope(v: RecipeScope) { setScopeState(v); void load(search, v, categoryId) }
+  function setCategoryId(v: string | null) { setCategoryIdState(v); void load(search, scope, v) }
+  function setSearch(v: string) {
+    setSearchState(v)
+    if (timerRef.current) clearTimeout(timerRef.current)
+    timerRef.current = setTimeout(() => void load(v, scope, categoryId), 300)
+  }
+  function reset(constraint: PickerConstraint = {}) {
+    constraintRef.current = constraint
+    setScopeState('all'); setCategoryIdState(null); setSearchState('')
+    void load('', 'all', null)
+  }
+
+  return { scope, categoryId, search, recipes, loading, setScope, setCategoryId, setSearch, reset }
 }
 
 // ─── Composant principal ──────────────────────────────────────────────────────
@@ -149,39 +183,27 @@ export default function PlanPage() {
   const sessionStartRef  = useRef<number | null>(null)
   const autoGenTriggered = useRef(false)
 
-  // ── Navigation jour / type de repas actifs ────────────────────────────────
-  const [selectedDay,      setSelectedDay]      = useState<DayOfWeek>(() => dayOfWeekFromDate(new Date()))
-  const [selectedMealType, setSelectedMealType] = useState<MealType | null>(null)
+  const [selectedDay, setSelectedDay] = useState<DayOfWeek>(() => dayOfWeekFromDate(new Date()))
   const [showCompletedSummary, setShowCompletedSummary] = useState(false)
-  const [regeneratingSlot, setRegeneratingSlot] = useState(false)
   const [desktopView, setDesktopView] = useState<'week' | 'day'>('week')
 
-  // Suggestions affichées en permanence sur la carte (pas seulement dans la sheet)
-  const [cardSideSuggestions,  setCardSideSuggestions]  = useState<SuggestionChip[]>([])
-  const [cardDrinkSuggestions, setCardDrinkSuggestions] = useState<SuggestionChip[]>([])
-  const [mainSuggestions,      setMainSuggestions]      = useState<{ id: string; name: string; icon: string; prepTimeMin: number | null }[]>([])
+  const [servings,         setServings]         = useState(4)
+  const [updatingServings, setUpdatingServings] = useState(false)
+  const [pickerCategories,       setPickerCategories]       = useState<Category[]>([])
+  const [pickerCategoriesLoaded, setPickerCategoriesLoaded] = useState(false)
+  const [boissonCategoryId, setBoissonCategoryId] = useState<string | null>(null)
 
-  // ── Edit bottom sheet ─────────────────────────────────────────────────────
-  const [editTarget,              setEditTarget]              = useState<EditTarget | null>(null)
-  const [editRecipes,             setEditRecipes]             = useState<PickerRecipe[]>([])
-  const [editSearch,              setEditSearch]              = useState('')
-  const [changingRecipe,          setChangingRecipe]          = useState(false)
-  const [servings,                setServings]                = useState(4)
-  const [updatingServings,        setUpdatingServings]        = useState(false)
-  const [pickerLoading,           setPickerLoading]           = useState(false)
-  const [pickerCategories,        setPickerCategories]        = useState<Category[]>([])
-  const [pickerCategoriesLoaded,  setPickerCategoriesLoaded]  = useState(false)
-  const [pickerScope,             setPickerScope]             = useState<Scope>('all')
-  const [pickerCategory,          setPickerCategory]          = useState<string | null>(null)
-  const pickerSearchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [editTarget,     setEditTarget]     = useState<EditTarget | null>(null)
+  const [changingRecipe, setChangingRecipe] = useState(false)
+  const [lockingItemId,  setLockingItemId]  = useState<string | null>(null)
+  const [removingCompId, setRemovingCompId] = useState<string | null>(null)
+  const [addingCompId,   setAddingCompId]   = useState<string | null>(null)
+  const [sideOpen,       setSideOpen]       = useState(false)
+  const [drinkOpen,      setDrinkOpen]      = useState(false)
 
-  // ── Composition bottom sheet ──────────────────────────────────────────────
-  const [sheetDetails,      setSheetDetails]      = useState<SheetDetails | null>(null)
-  const [compositionMode,   setCompositionMode]   = useState<'side' | 'drink' | null>(null)
-  const [addingComposition, setAddingComposition] = useState(false)
-  const [suggestedRecipes,  setSuggestedRecipes]  = useState<SuggestedRecipe[]>([])
-  const [boissonCategoryId, setBoissonCategoryId]  = useState<string | null>(null)
-  const [removingCompId,    setRemovingCompId]    = useState<string | null>(null)
+  const mainPicker  = useRecipePicker()
+  const sidePicker  = useRecipePicker()
+  const drinkPicker = useRecipePicker()
 
   // ── Chargement (se relance quand selectedWeek change) ────────────────────
 
@@ -216,9 +238,7 @@ export default function PlanPage() {
     }
   }
 
-  // Categories (pour exclure/filtrer la boisson) — chargees des le depart plutot
-  // que seulement a la premiere ouverture de la sheet, car les suggestions
-  // rapides affichees en permanence sur la carte en ont besoin aussi.
+  // Categories (pour exclure/filtrer la boisson) — chargees des le depart.
   useEffect(() => {
     if (pickerCategoriesLoaded) return
     void (async () => {
@@ -272,10 +292,6 @@ export default function PlanPage() {
     }
   }
 
-  // ── Déclenchement depuis le FAB (composant global de layout) ─────────────
-  // Depuis une autre route : navigation vers /plan?generate=1, consommé ici.
-  // Depuis /plan : événement direct, pas de state/contexte partagé.
-
   useEffect(() => {
     if (autoGenTriggered.current || viewState !== 'review') return
     if (typeof window === 'undefined') return
@@ -303,25 +319,9 @@ export default function PlanPage() {
     return () => clearInterval(interval)
   }, [viewState])
 
-  // ── Chargement des détails du sheet (plat principal + compositions) ─────
-
-  useEffect(() => {
-    if (!editTarget?.itemId || !plan) { setSheetDetails(null); return }
-    void refreshSheetItem(editTarget.itemId, plan.id)
-  }, [editTarget?.itemId, plan?.id]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  // ── Type de repas actif par défaut (premier actif une fois les configs chargées) ──
+  // ── Helpers de données ────────────────────────────────────────────────────
 
   const activeConfigs = configs.filter(c => c.is_active)
-
-  useEffect(() => {
-    if (activeConfigs.length === 0) return
-    if (!selectedMealType || !activeConfigs.some(c => c.meal_type === selectedMealType)) {
-      setSelectedMealType(activeConfigs[0].meal_type)
-    }
-  }, [configs]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  // ── Helpers de données ────────────────────────────────────────────────────
 
   function getTemplateItem(mealType: MealType): PlanItem | undefined {
     return plan?.meal_plan_items.find(i => i.meal_type === mealType && i.applies_all_days)
@@ -339,189 +339,39 @@ export default function PlanPage() {
     return config.mode === 'template' ? getTemplateItem(mealType) : getDailyItem(mealType, day)
   }
 
-  const activeConfig = selectedMealType ? activeConfigs.find(c => c.meal_type === selectedMealType) : undefined
-  const activeItem   = selectedMealType ? getItemFor(selectedMealType, selectedDay) : undefined
-
-  // ── Suggestions affichées en permanence sur la carte du repas actif ──────
-
-  useEffect(() => {
-    const recipeId = activeItem?.recipes?.id
-    if (!recipeId) {
-      setCardSideSuggestions([])
-      setCardDrinkSuggestions([])
-    } else {
-      void fetchSuggestionChips(recipeId, 'side').then(setCardSideSuggestions)
-      void fetchSuggestionChips(recipeId, 'drink').then(setCardDrinkSuggestions)
-    }
-
-    void (async () => {
-      try {
-        const params = new URLSearchParams({ scope: 'all' })
-        if (boissonCategoryId) params.set('exclude_category_id', boissonCategoryId)
-        const res  = await fetch(`/api/recipes?${params}`)
-        const data = await res.json()
-        const list = (Array.isArray(data) ? data as PickerRecipe[] : [])
-          .filter(r => r.id !== recipeId)
-          .slice(0, 4)
-          .map(r => ({ id: r.id, name: r.name, icon: r.categories?.icon ?? '🍴', prepTimeMin: r.prep_time_min }))
-        setMainSuggestions(list)
-      } catch {
-        setMainSuggestions([])
-      }
-    })()
-  }, [activeItem?.id, activeItem?.recipes?.id, boissonCategoryId]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  async function fetchSuggestionChips(recipeId: string, role: 'side' | 'drink'): Promise<SuggestionChip[]> {
+  // Partie commune entre toutes les actions de composition : recharge un item
+  // et le fusionne dans `plan`.
+  async function syncItem(itemId: string, planId: string) {
     try {
-      const res  = await fetch(`/api/recipes/${recipeId}/suggestions?role=${role}`)
-      const data = await res.json()
-      return (Array.isArray(data) ? data : []).map((s: { id: string; name: string; category?: { icon: string | null } | null }) => ({
-        id: s.id, name: s.name, icon: s.category?.icon ?? '🍴',
-      }))
-    } catch {
-      return []
-    }
-  }
-
-  // ── Picker : chargement des recettes ─────────────────────────────────────
-  // mode 'main'  : tout sauf les boissons (recipe_type est supprimé — n'importe
-  //                quelle recette non-boisson peut être un plat principal)
-  // mode 'side'  : aucune restriction, comme avant (l'accompagnement n'est pas
-  //                une catégorie, c'est une relation apprise — voir suggestions)
-  // mode 'drink' : uniquement la catégorie boisson
-  async function loadPickerRecipes(
-    scope: Scope, categoryId: string | null, search: string,
-    mode: 'main' | 'side' | 'drink', boissonIdOverride?: string | null,
-  ) {
-    setPickerLoading(true)
-    try {
-      const params = new URLSearchParams({ scope })
-      if (categoryId)     params.set('category_id', categoryId)
-      if (search.trim())  params.set('search', search.trim())
-      const boissonId = boissonIdOverride !== undefined ? boissonIdOverride : boissonCategoryId
-      if (mode === 'drink' && boissonId) params.set('category_id', boissonId)
-      if (mode === 'main'  && boissonId) params.set('exclude_category_id', boissonId)
-      const res  = await fetch(`/api/recipes?${params}`)
-      const data = await res.json()
-      setEditRecipes(Array.isArray(data) ? (data as PickerRecipe[]) : [])
-    } catch {
-      setEditRecipes([])
-    } finally {
-      setPickerLoading(false)
-    }
-  }
-
-  async function loadSuggestions(mainRecipeId: string, role: 'side' | 'drink') {
-    try {
-      const res = await fetch(`/api/recipes/${mainRecipeId}/suggestions?role=${role}`)
-      const data = await res.json()
-      setSuggestedRecipes(Array.isArray(data) ? data : [])
-    } catch {
-      setSuggestedRecipes([])
-    }
-  }
-
-  // Partie commune entre "ouvrir la sheet" et "action rapide depuis la carte" :
-  // recharge un item et le fusionne dans `plan`, sans dépendre de la sheet.
-  async function syncItem(itemId: string, planId: string): Promise<Composition[]> {
-    const res = await fetch(`/api/meal-plans/${planId}/items/${itemId}`)
-    if (!res.ok) return []
-    const data = await res.json()
-    type R = { id: string; role: string; sort_order: number; recipe_id: string; recipes: { id: string; name: string } | null }
-    const comps: Composition[] = ((data.meal_compositions ?? []) as R[]).map(c => ({
-      id: c.id, role: c.role as 'side' | 'drink',
-      sort_order: c.sort_order, recipe_id: c.recipe_id, recipes: c.recipes ?? null,
-    }))
-    setPlan(prev => prev ? {
-      ...prev,
-      meal_plan_items: prev.meal_plan_items.map(i => i.id === itemId ? { ...i, meal_compositions: comps } : i),
-    } : prev)
-    return comps
-  }
-
-  async function refreshSheetItem(itemId: string, planId: string) {
-    try {
-      const comps = await syncItem(itemId, planId)
-      const res   = await fetch(`/api/meal-plans/${planId}/items/${itemId}`)
-      const data  = res.ok ? await res.json() : null
-      setSheetDetails({
-        mainRecipeId:      (data?.recipes as { id?: string } | null)?.id ?? null,
-        meal_compositions: comps,
-      })
+      const res = await fetch(`/api/meal-plans/${planId}/items/${itemId}`)
+      if (!res.ok) return
+      const data: PlanItem = await res.json()
+      setPlan(prev => prev ? {
+        ...prev,
+        meal_plan_items: prev.meal_plan_items.map(i => i.id === itemId ? data : i),
+      } : prev)
     } catch { /* silent */ }
   }
 
-  // ── Edit bottom sheet — actions ───────────────────────────────────────────
+  // ── Édition d'un repas ────────────────────────────────────────────────────
 
-  async function openEdit(
-    item:       PlanItem | null,
-    mealType:   MealType,
-    dayOfWeek:  DayOfWeek,
-    isTemplate: boolean,
-  ) {
+  function openEdit(item: PlanItem | null, mealType: MealType, dayOfWeek: DayOfWeek, isTemplate: boolean) {
     const dayOpt   = DAY_OPTIONS.find(d => d.val === dayOfWeek)
     const dayLabel = isTemplate ? 'Toute la semaine' : (dayOpt?.full ?? dayOfWeek)
     setEditTarget({ itemId: item?.id ?? null, mealType, dayLabel, dayOfWeek, isTemplate })
-    setEditSearch('')
-    setPickerScope('all')
-    setPickerCategory(null)
-    void loadPickerRecipes('all', null, '', 'main', boissonCategoryId)
+    setSideOpen(false)
+    setDrinkOpen(false)
+    mainPicker.reset({ excludeCategoryId: boissonCategoryId })
+    sidePicker.reset({})
+    drinkPicker.reset({ forceCategoryId: boissonCategoryId })
   }
 
   function closeEdit() {
-    if (pickerSearchTimerRef.current) clearTimeout(pickerSearchTimerRef.current)
     setEditTarget(null)
-    setEditSearch('')
-    setCompositionMode(null)
-    setSheetDetails(null)
-    setSuggestedRecipes([])
-  }
-
-  function pickerModeFor(mode: 'side' | 'drink' | null): 'main' | 'side' | 'drink' {
-    return mode ?? 'main'
-  }
-
-  function handleScopeChange(scope: Scope) {
-    setPickerScope(scope)
-    void loadPickerRecipes(scope, pickerCategory, editSearch, pickerModeFor(compositionMode))
-  }
-
-  function handleCategoryChange(catId: string | null) {
-    setPickerCategory(catId)
-    void loadPickerRecipes(pickerScope, catId, editSearch, pickerModeFor(compositionMode))
-  }
-
-  function handlePickerSearch(value: string) {
-    setEditSearch(value)
-    if (pickerSearchTimerRef.current) clearTimeout(pickerSearchTimerRef.current)
-    pickerSearchTimerRef.current = setTimeout(() => {
-      void loadPickerRecipes(pickerScope, pickerCategory, value, pickerModeFor(compositionMode))
-    }, 300)
   }
 
   async function changeRecipe(recipe: { id: string }) {
     if (!plan || !editTarget || changingRecipe) return
-
-    if (compositionMode !== null) {
-      if (!editTarget.itemId || addingComposition) return
-      setAddingComposition(true)
-      try {
-        const res = await fetch(`/api/meal-plans/${plan.id}/items/${editTarget.itemId}/compositions`, {
-          method:  'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body:    JSON.stringify({ recipe_id: recipe.id, role: compositionMode }),
-        })
-        if (!res.ok) throw new Error()
-        await refreshSheetItem(editTarget.itemId, plan.id)
-        setCompositionMode(null)
-        setSuggestedRecipes([])
-        void loadPickerRecipes('all', null, editSearch, 'main')
-      } catch { /* keep sheet open */ } finally {
-        setAddingComposition(false)
-      }
-      return
-    }
-
     setChangingRecipe(true)
     try {
       if (editTarget.itemId) {
@@ -536,6 +386,7 @@ export default function PlanPage() {
           ...prev,
           meal_plan_items: prev.meal_plan_items.map(i => i.id === updated.id ? updated : i),
         } : prev)
+        setEditTarget(t => t ? { ...t, itemId: updated.id } : t)
       } else {
         const res = await fetch(`/api/meal-plans/${plan.id}/items`, {
           method:  'POST',
@@ -554,117 +405,63 @@ export default function PlanPage() {
           ...prev,
           meal_plan_items: [...prev.meal_plan_items, newItem],
         } : prev)
+        setEditTarget(t => t ? { ...t, itemId: newItem.id } : t)
       }
       setModCount(c => c + 1)
-      closeEdit()
     } catch {
-      /* keep sheet open */
+      /* keep panel open */
     } finally {
       setChangingRecipe(false)
     }
   }
 
-  // Choix direct d'une suggestion de plat principal (sans ouvrir la sheet)
-  async function changeRecipeDirect(item: PlanItem, recipeId: string) {
-    if (!plan) return
-    try {
-      const res = await fetch(`/api/meal-plans/${plan.id}/items/${item.id}`, {
-        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ recipe_id: recipeId }),
-      })
-      if (!res.ok) return
-      const updated: PlanItem = await res.json()
-      setPlan(prev => prev ? { ...prev, meal_plan_items: prev.meal_plan_items.map(i => i.id === updated.id ? updated : i) } : prev)
-      setModCount(c => c + 1)
-    } catch { /* silent */ }
-  }
-
-  // Suppression d'une composition — appelable depuis la sheet (compId connu via
-  // editTarget) ou directement depuis la carte (chip "x", sans ouvrir la sheet).
   async function removeComposition(itemId: string, compId: string) {
     if (!plan || removingCompId) return
     setRemovingCompId(compId)
     try {
-      const res = await fetch(
-        `/api/meal-plans/${plan.id}/items/${itemId}/compositions/${compId}`,
-        { method: 'DELETE' }
-      )
+      const res = await fetch(`/api/meal-plans/${plan.id}/items/${itemId}/compositions/${compId}`, { method: 'DELETE' })
       if (!res.ok) throw new Error()
       await syncItem(itemId, plan.id)
-      if (editTarget?.itemId === itemId) await refreshSheetItem(itemId, plan.id)
     } catch { /* silent */ } finally {
       setRemovingCompId(null)
     }
   }
 
-  // Ajout rapide d'un accompagnement depuis une puce de suggestion affichée
-  // sur la carte — même endpoint que la sheet, sans l'ouvrir.
-  async function quickAddSide(item: PlanItem, recipeId: string) {
+  async function addComposition(itemId: string, role: 'side' | 'drink', recipeId: string) {
     if (!plan) return
+    setAddingCompId(recipeId)
     try {
-      await fetch(`/api/meal-plans/${plan.id}/items/${item.id}/compositions`, {
+      await fetch(`/api/meal-plans/${plan.id}/items/${itemId}/compositions`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ recipe_id: recipeId, role: 'side' }),
+        body:    JSON.stringify({ recipe_id: recipeId, role }),
       })
-      await syncItem(item.id, plan.id)
-    } catch { /* silent */ }
-  }
-
-  // Remplacement rapide de la boisson — retire l'actuelle puis ajoute la
-  // nouvelle (une seule boisson à la fois, contrairement aux accompagnements).
-  async function quickReplaceDrink(item: PlanItem, recipeId: string) {
-    if (!plan) return
-    try {
-      const current = item.meal_compositions.filter(c => c.role === 'drink')
-      for (const comp of current) {
-        await fetch(`/api/meal-plans/${plan.id}/items/${item.id}/compositions/${comp.id}`, { method: 'DELETE' })
-      }
-      await fetch(`/api/meal-plans/${plan.id}/items/${item.id}/compositions`, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ recipe_id: recipeId, role: 'drink' }),
-      })
-      await syncItem(item.id, plan.id)
-    } catch { /* silent */ }
-  }
-
-  // Re-tirage rapide d'un seul repas (pas une regeneration complete de la
-  // semaine) — pioche une autre recette dans le meme pool que la sheet.
-  async function regenerateSlot(mealType: MealType, day: DayOfWeek, isTemplate: boolean, item: PlanItem | undefined) {
-    if (!plan || regeneratingSlot) return
-    setRegeneratingSlot(true)
-    try {
-      const params = new URLSearchParams({ scope: 'all' })
-      if (boissonCategoryId) params.set('exclude_category_id', boissonCategoryId)
-      const res  = await fetch(`/api/recipes?${params}`)
-      const data = await res.json()
-      const pool = (Array.isArray(data) ? data as PickerRecipe[] : []).filter(r => r.id !== item?.recipes?.id)
-      if (pool.length === 0) return
-      const pick = pool[Math.floor(Math.random() * pool.length)]
-
-      if (item) {
-        const r = await fetch(`/api/meal-plans/${plan.id}/items/${item.id}`, {
-          method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ recipe_id: pick.id }),
-        })
-        if (r.ok) {
-          const updated: PlanItem = await r.json()
-          setPlan(prev => prev ? { ...prev, meal_plan_items: prev.meal_plan_items.map(i => i.id === updated.id ? updated : i) } : prev)
-        }
-      } else {
-        const r = await fetch(`/api/meal-plans/${plan.id}/items`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ day_of_week: day, meal_type: mealType, applies_all_days: isTemplate, recipe_id: pick.id }),
-        })
-        if (r.ok) {
-          const newItem: PlanItem = await r.json()
-          setPlan(prev => prev ? { ...prev, meal_plan_items: [...prev.meal_plan_items, newItem] } : prev)
-        }
-      }
-      setModCount(c => c + 1)
+      await syncItem(itemId, plan.id)
     } catch { /* silent */ } finally {
-      setRegeneratingSlot(false)
+      setAddingCompId(null)
+    }
+  }
+
+  function toggleComposition(itemId: string, role: 'side' | 'drink', recipe: PickerRecipe, currentChips: CompositionChip[]) {
+    const existing = currentChips.find(c => c.recipeId === recipe.id)
+    if (existing) void removeComposition(itemId, existing.id)
+    else void addComposition(itemId, role, recipe.id)
+  }
+
+  async function toggleLock(item: PlanItem) {
+    if (!plan || lockingItemId) return
+    setLockingItemId(item.id)
+    try {
+      const res = await fetch(`/api/meal-plans/${plan.id}/items/${item.id}/lock`, { method: 'POST' })
+      if (res.ok) {
+        const { is_locked }: { is_locked: boolean } = await res.json()
+        setPlan(prev => prev ? {
+          ...prev,
+          meal_plan_items: prev.meal_plan_items.map(i => i.id === item.id ? { ...i, is_locked } : i),
+        } : prev)
+      }
+    } catch { /* silent */ } finally {
+      setLockingItemId(null)
     }
   }
 
@@ -699,6 +496,20 @@ export default function PlanPage() {
     }
   }
 
+  function goToCreateCustom() {
+    if (!plan?.id || !editTarget) return
+    const params = new URLSearchParams({
+      plan_id:     plan.id,
+      meal_type:   editTarget.mealType,
+      day_of_week: editTarget.dayOfWeek,
+      applies_all: String(editTarget.isTemplate),
+      day_label:   editTarget.dayLabel,
+    })
+    if (editTarget.itemId) params.set('item_id', editTarget.itemId)
+    closeEdit()
+    router.push(`/recipes/add?${params}`)
+  }
+
   // ── Rendu ─────────────────────────────────────────────────────────────────
 
   const selectedDayIdx = DAY_OPTIONS.findIndex(d => d.val === selectedDay)
@@ -709,46 +520,95 @@ export default function PlanPage() {
     d => plan && isDayComplete(activeConfigs, plan.meal_plan_items, d.val)
   )
   const dayFilled = plan ? dayFilledCount(activeConfigs, plan.meal_plan_items, selectedDay) : 0
+  const serviceStats = plan
+    ? Object.entries(countFilledByMealType(activeConfigs, plan.meal_plan_items)).map(([mealType, stat]) => ({
+        mealType: mealType as MealType, ...stat,
+      }))
+    : []
 
-  const mealDetailCardEl = selectedMealType && activeConfig && (
-    <MealDetailCard
-      emoji={MEAL_EMOJI[selectedMealType]}
-      title={`${MEAL_LABEL[selectedMealType]} du ${dayOpt.full}`}
-      recipe={activeItem?.recipes ?? null}
-      sideChips={(activeItem?.meal_compositions ?? [])
-        .filter(c => c.role === 'side')
-        .map(c => ({ id: c.id, recipeId: c.recipe_id, name: c.recipes?.name ?? '?' }))}
-      drinkChip={(() => {
-        const d = (activeItem?.meal_compositions ?? []).find(c => c.role === 'drink')
-        return d ? { id: d.id, recipeId: d.recipe_id, name: d.recipes?.name ?? '?' } : null
-      })()}
-      sideSuggestions={cardSideSuggestions}
-      drinkSuggestions={cardDrinkSuggestions}
-      mainSuggestions={activeItem?.recipes ? mainSuggestions : []}
-      onEditMain={() => { void openEdit(activeItem ?? null, selectedMealType, selectedDay, activeConfig.mode === 'template') }}
-      onRegenerateMain={() => { void regenerateSlot(selectedMealType, selectedDay, activeConfig.mode === 'template', activeItem) }}
-      onAddSide={() => {
-        void openEdit(activeItem ?? null, selectedMealType, selectedDay, activeConfig.mode === 'template').then(() => {
-          setCompositionMode('side')
-          void loadPickerRecipes('all', null, '', 'side')
-          if (activeItem?.recipes?.id) void loadSuggestions(activeItem.recipes.id, 'side')
-        })
-      }}
-      onRemoveSide={compId => { if (activeItem) void removeComposition(activeItem.id, compId) }}
-      onQuickAddSide={recipeId => { if (activeItem) void quickAddSide(activeItem, recipeId) }}
-      onChangeDrink={() => {
-        void openEdit(activeItem ?? null, selectedMealType, selectedDay, activeConfig.mode === 'template').then(() => {
-          setCompositionMode('drink')
-          void loadPickerRecipes('all', null, '', 'drink')
-          if (activeItem?.recipes?.id) void loadSuggestions(activeItem.recipes.id, 'drink')
-        })
-      }}
-      onQuickReplaceDrink={recipeId => { if (activeItem) void quickReplaceDrink(activeItem, recipeId) }}
-      onPickMainSuggestion={recipeId => { if (activeItem) void changeRecipeDirect(activeItem, recipeId) }}
-      removingCompId={removingCompId}
-      busy={regeneratingSlot}
-    />
-  )
+  const editingItem = editTarget?.itemId ? plan?.meal_plan_items.find(i => i.id === editTarget.itemId) : undefined
+
+  function renderPickerPanel() {
+    if (!editTarget) return null
+    const sideChips  = toChips(editingItem?.meal_compositions ?? [], 'side')
+    const drinkChips = toChips(editingItem?.meal_compositions ?? [], 'drink')
+    const itemId     = editTarget.itemId
+
+    return (
+      <RecipePickerPanel
+        title={itemId ? 'Changer ce repas' : 'Choisir une recette'}
+        subtitle={`${MEAL_EMOJI[editTarget.mealType]} ${MEAL_LABEL[editTarget.mealType]} — ${editTarget.dayLabel}`}
+        onClose={closeEdit}
+        search={mainPicker.search}
+        onSearchChange={mainPicker.setSearch}
+        scope={mainPicker.scope}
+        onScopeChange={mainPicker.setScope}
+        categories={pickerCategories}
+        categoryId={mainPicker.categoryId}
+        onCategoryChange={mainPicker.setCategoryId}
+        recipes={mainPicker.recipes}
+        loading={mainPicker.loading}
+        picking={changingRecipe}
+        onPick={recipe => { void changeRecipe(recipe) }}
+        showCompositions={!!itemId}
+        side={itemId ? {
+          chips: sideChips, removingId: removingCompId, onRemove: compId => { void removeComposition(itemId, compId) },
+          open: sideOpen, onToggleOpen: () => setSideOpen(o => !o),
+          search: sidePicker.search, onSearchChange: sidePicker.setSearch,
+          scope: sidePicker.scope, onScopeChange: sidePicker.setScope,
+          categories: pickerCategories, categoryId: sidePicker.categoryId, onCategoryChange: sidePicker.setCategoryId,
+          recipes: sidePicker.recipes, loading: sidePicker.loading,
+          togglingId: addingCompId,
+          onToggleRecipe: recipe => toggleComposition(itemId, 'side', recipe, sideChips),
+        } : undefined}
+        drink={itemId ? {
+          chips: drinkChips, removingId: removingCompId, onRemove: compId => { void removeComposition(itemId, compId) },
+          open: drinkOpen, onToggleOpen: () => setDrinkOpen(o => !o),
+          search: drinkPicker.search, onSearchChange: drinkPicker.setSearch,
+          scope: drinkPicker.scope, onScopeChange: drinkPicker.setScope,
+          categories: [], categoryId: drinkPicker.categoryId, onCategoryChange: drinkPicker.setCategoryId,
+          recipes: drinkPicker.recipes, loading: drinkPicker.loading,
+          togglingId: addingCompId,
+          onToggleRecipe: recipe => toggleComposition(itemId, 'drink', recipe, drinkChips),
+        } : undefined}
+        onCreateCustom={goToCreateCustom}
+      />
+    )
+  }
+
+  function isEditingSlot(config: MealConfig, item: PlanItem | undefined) {
+    if (!editTarget || editTarget.mealType !== config.meal_type) return false
+    if (editTarget.isTemplate !== (config.mode === 'template')) return false
+    if (!editTarget.isTemplate && editTarget.dayOfWeek !== selectedDay) return false
+    return editTarget.itemId ? editTarget.itemId === item?.id : !item
+  }
+
+  function renderMealCards(allowInline: boolean) {
+    return activeConfigs.map(config => {
+      const item    = getItemFor(config.meal_type, selectedDay)
+      const editing = isEditingSlot(config, item)
+      const time    = config.default_time ? ` · ${config.default_time.replace(':', 'H')}` : ''
+      const eyebrow = `${MEAL_EMOJI[config.meal_type]} ${MEAL_LABEL[config.meal_type].toUpperCase()}${time}`
+
+      return (
+        <MealDetailCard
+          key={config.meal_type}
+          eyebrow={eyebrow}
+          emptyLabel={MEAL_FULL_LABEL[config.meal_type]}
+          recipe={item?.recipes ?? null}
+          sideChips={toChips(item?.meal_compositions ?? [], 'side')}
+          drinkChip={toChips(item?.meal_compositions ?? [], 'drink')[0] ?? null}
+          servings={servings}
+          isLocked={item?.is_locked ?? false}
+          locking={lockingItemId === item?.id}
+          onToggleLock={() => { if (item) void toggleLock(item) }}
+          onEdit={() => openEdit(item ?? null, config.meal_type, selectedDay, config.mode === 'template')}
+          dimmed={allowInline && editTarget !== null && !editing}
+          expanded={allowInline && editing ? renderPickerPanel() : undefined}
+        />
+      )
+    })
+  }
 
   return (
     <>
@@ -787,7 +647,7 @@ export default function PlanPage() {
         </div>
       </div>
 
-      {/* Stepper — 2 étapes réelles (cf. plan) : "Rythme & Convives" vit sur l'Accueil, pas ici */}
+      {/* Stepper — 2 étapes réelles */}
       <div className="bg-[var(--kkb-bg)] border-b border-[var(--kkb-border)] px-4 py-2.5">
         <div className="flex items-center justify-center gap-1.5">
           <div className="flex items-center gap-1.5">
@@ -889,13 +749,15 @@ export default function PlanPage() {
           <button
             type="button"
             onClick={() => { void generateMenu() }}
-            className="mx-4 flex items-center gap-3 bg-[var(--kkb-warning-light)] rounded-[var(--kkb-radius-sm)] px-4 py-3 text-left"
+            className="mx-4 flex items-center gap-3 bg-gradient-to-r from-amber-50 via-orange-50 to-emerald-50 border border-[var(--kkb-border)] rounded-[var(--kkb-radius-sm)] px-4 py-3 text-left"
           >
-            <Zap className="h-5 w-5 text-[var(--kkb-warning)] shrink-0" />
+            <span className="h-7 w-7 rounded-lg bg-white/70 flex items-center justify-center shrink-0">
+              <Sparkles className="h-4 w-4 text-amber-700" />
+            </span>
             <div className="flex-1 min-w-0">
-              <p className="font-quicksand font-bold text-sm text-[var(--kkb-text-primary)]">Génération magique 1-clic</p>
+              <p className="font-quicksand font-bold text-sm text-[var(--kkb-text-primary)]">⚡ Génération magique 1-clic</p>
               <p className="text-xs font-quicksand text-[var(--kkb-text-secondary)] truncate">
-                Remplir automatiquement le reste de la semaine
+                Remplir automatiquement le reste de la semaine sans stress
               </p>
             </div>
             <ChevronRight className="h-4 w-4 text-[var(--kkb-text-tertiary)] shrink-0" />
@@ -937,80 +799,68 @@ export default function PlanPage() {
                 </div>
               )}
 
-              {/* ── Mobile : jour par jour ── */}
-              <div className="lg:hidden space-y-5">
-              {/* Tabs jours */}
-              {plan && (
-                <DayTabs
-                  weekStart={selectedWeek}
-                  selectedDay={selectedDay}
-                  onSelect={setSelectedDay}
-                  configs={activeConfigs}
-                  items={plan.meal_plan_items}
-                />
-              )}
+              {/* ── Mobile : jour par jour, 4 repas empilés ── */}
+              <div className="lg:hidden space-y-4">
+                {plan && (
+                  <DayTabs
+                    weekStart={selectedWeek}
+                    selectedDay={selectedDay}
+                    onSelect={setSelectedDay}
+                    configs={activeConfigs}
+                    items={plan.meal_plan_items}
+                  />
+                )}
 
-              {/* Résumé des jours précédents déjà complets */}
-              {completedDaysBefore.length > 0 && (
-                <div className="mx-4 bg-white border border-[var(--kkb-border)] rounded-[var(--kkb-radius-sm)] overflow-hidden">
-                  <button
-                    type="button"
-                    onClick={() => setShowCompletedSummary(s => !s)}
-                    className="w-full flex items-center justify-between px-4 py-3"
-                  >
-                    <span className="text-sm font-quicksand font-semibold text-[var(--kkb-text-primary)]">
-                      Ce qui est déjà prêt pour la semaine
-                    </span>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-quicksand font-bold uppercase px-2 py-0.5 rounded-full bg-[var(--kkb-success-light)] text-[var(--kkb-success)]">
-                        {completedDaysBefore.length} validé{completedDaysBefore.length > 1 ? 's' : ''}
+                {completedDaysBefore.length > 0 && (
+                  <div className="mx-4 bg-white border border-[var(--kkb-border)] rounded-[var(--kkb-radius-sm)] overflow-hidden">
+                    <button
+                      type="button"
+                      onClick={() => setShowCompletedSummary(s => !s)}
+                      className="w-full flex items-center justify-between px-4 py-3"
+                    >
+                      <span className="text-sm font-quicksand font-semibold text-[var(--kkb-text-primary)]">
+                        Ce qui est déjà prêt pour la semaine
                       </span>
-                      {showCompletedSummary ? <ChevronUp className="h-4 w-4 text-[var(--kkb-text-tertiary)]" /> : <ChevronDown className="h-4 w-4 text-[var(--kkb-text-tertiary)]" />}
-                    </div>
-                  </button>
-                  {showCompletedSummary && (
-                    <div className="px-4 pb-3 space-y-1.5">
-                      {completedDaysBefore.map(d => (
-                        <button
-                          key={d.val}
-                          type="button"
-                          onClick={() => setSelectedDay(d.val)}
-                          className="w-full flex items-center justify-between text-sm font-quicksand text-[var(--kkb-text-secondary)] hover:text-[var(--kkb-coral)]"
-                        >
-                          {d.full}
-                          <span className="text-[var(--kkb-success)]">✓</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-quicksand font-bold uppercase px-2 py-0.5 rounded-full bg-[var(--kkb-success-light)] text-[var(--kkb-success)]">
+                          {completedDaysBefore.length} validé{completedDaysBefore.length > 1 ? 's' : ''}
+                        </span>
+                        {showCompletedSummary ? <ChevronUp className="h-4 w-4 text-[var(--kkb-text-tertiary)]" /> : <ChevronDown className="h-4 w-4 text-[var(--kkb-text-tertiary)]" />}
+                      </div>
+                    </button>
+                    {showCompletedSummary && (
+                      <div className="px-4 pb-3 space-y-1.5">
+                        {completedDaysBefore.map(d => (
+                          <button
+                            key={d.val}
+                            type="button"
+                            onClick={() => setSelectedDay(d.val)}
+                            className="w-full flex items-center justify-between text-sm font-quicksand text-[var(--kkb-text-secondary)] hover:text-[var(--kkb-coral)]"
+                          >
+                            {d.full}
+                            <span className="text-[var(--kkb-success)]">✓</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
 
-              {/* Header du jour */}
-              <div className="px-4 flex items-center justify-between">
-                <div>
-                  <span className="inline-block mb-1 text-[10px] font-quicksand font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-[var(--kkb-coral)] text-white">
-                    {dayOpt.full}
+                <div className="px-4 flex items-center justify-between">
+                  <div>
+                    <span className="inline-block mb-1 text-[10px] font-quicksand font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-[var(--kkb-coral)] text-white">
+                      {dayOpt.full}
+                    </span>
+                    <h2 className="text-h1 text-[var(--kkb-text-primary)] text-xl">Les {activeConfigs.length} repas du jour</h2>
+                  </div>
+                  <span className="text-xs font-quicksand text-[var(--kkb-text-tertiary)]">
+                    {dayFilled}/{activeConfigs.length} repas choisis
                   </span>
-                  <h2 className="text-h1 text-[var(--kkb-text-primary)] text-xl">Les repas du jour</h2>
                 </div>
-                <span className="text-xs font-quicksand text-[var(--kkb-text-tertiary)]">
-                  {dayFilled}/{activeConfigs.length}
-                </span>
-              </div>
 
-              {/* Tabs type de repas */}
-              {selectedMealType && (
-                <MealTypeTabs
-                  mealTypes={activeConfigs.map(c => c.meal_type)}
-                  selected={selectedMealType}
-                  onSelect={setSelectedMealType}
-                  isFilled={mt => !!getItemFor(mt, selectedDay)?.recipes}
-                />
-              )}
-
-              {/* Carte du repas sélectionné */}
-              {mealDetailCardEl}
+                <div className="space-y-3">
+                  {renderMealCards(false)}
+                </div>
               </div>
 
               {/* ── Desktop : vue d'ensemble / vue focus par jour ── */}
@@ -1037,29 +887,37 @@ export default function PlanPage() {
                 </div>
 
                 {plan && desktopView === 'week' && (
-                  <WeekGrid
-                    weekStart={selectedWeek}
-                    configs={activeConfigs}
-                    items={plan.meal_plan_items}
-                    onCellClick={(mealType, day, isTemplate) => {
-                      setSelectedMealType(mealType)
-                      if (!isTemplate) setSelectedDay(day)
-                      setDesktopView('day')
-                    }}
-                  />
+                  <div className="flex gap-4">
+                    <div className="flex-1">
+                      <WeekGrid
+                        weekStart={selectedWeek}
+                        configs={activeConfigs}
+                        items={plan.meal_plan_items}
+                        onCellClick={(mealType, day, isTemplate) => {
+                          const item = isTemplate ? getTemplateItem(mealType) : getDailyItem(mealType, day)
+                          openEdit(item ?? null, mealType, day, isTemplate)
+                        }}
+                      />
+                    </div>
+                    {editTarget && (
+                      <div className="w-[380px] shrink-0 bg-white border border-[var(--kkb-border)] rounded-[var(--kkb-radius-card)] max-h-[calc(100vh-200px)] sticky top-28">
+                        {renderPickerPanel()}
+                      </div>
+                    )}
+                  </div>
                 )}
 
-                {plan && desktopView === 'day' && selectedMealType && (
+                {plan && desktopView === 'day' && (
                   <DayFocusView
                     weekStart={selectedWeek}
                     selectedDay={selectedDay}
                     onSelectDay={setSelectedDay}
                     configs={activeConfigs}
                     items={plan.meal_plan_items}
-                    selectedMealType={selectedMealType}
-                    onSelectMealType={setSelectedMealType}
-                    isFilled={mt => !!getItemFor(mt, selectedDay)?.recipes}
-                    card={mealDetailCardEl}
+                    cards={<div className="space-y-3">{renderMealCards(true)}</div>}
+                    weekFilled={filled}
+                    weekTotal={total}
+                    serviceStats={serviceStats}
                   />
                 )}
               </div>
@@ -1068,17 +926,15 @@ export default function PlanPage() {
         </div>
       )}
 
-      {/* ── Bouton de validation du jour (sticky) ── */}
+      {/* ── Bouton de passage au jour suivant (sticky) ── */}
       {viewState === 'review' && plan && activeConfigs.length > 0 && (
-        <div className="fixed bottom-[72px] left-0 right-0 z-30 bg-white shadow-[0_-2px_12px_rgba(0,0,0,0.06)] px-4 py-3 space-y-1.5">
+        <div className="fixed bottom-[72px] left-0 right-0 z-30 bg-white shadow-[0_-2px_12px_rgba(0,0,0,0.06)] px-4 py-3 space-y-1.5 lg:hidden">
           <button
             type="button"
             onClick={goToNextDay}
             className="w-full flex items-center justify-center gap-2 rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-coral)] hover:bg-[var(--kkb-coral-hover)] text-white font-quicksand font-bold text-[15px] py-3.5"
           >
-            {isLastDay
-              ? 'Terminer et aller à la synthèse'
-              : `Valider ${dayOpt.full} (${dayFilled} repas) & passer à ${DAY_OPTIONS[selectedDayIdx + 1].full}`}
+            {isLastDay ? 'Terminer et aller à la synthèse' : `Passer à ${DAY_OPTIONS[selectedDayIdx + 1].full}`}
             <ArrowRight className="h-4 w-4" />
           </button>
           <p className="text-center text-[11px] font-quicksand text-[var(--kkb-text-tertiary)]">
@@ -1087,300 +943,17 @@ export default function PlanPage() {
         </div>
       )}
 
-      {/* ── Bottom sheet : choisir une recette ── */}
+      {/* ── Bottom sheet mobile : choisir une recette ── */}
       {editTarget && (
-        <>
+        <div className="lg:hidden">
           <div className="fixed inset-0 z-40 bg-black/30" onClick={closeEdit} aria-hidden="true" />
           <div className="fixed bottom-0 left-0 right-0 z-50 bg-[var(--kkb-bg)] rounded-t-2xl shadow-xl flex flex-col max-h-[85vh]">
-            {/* Handle */}
             <div className="flex justify-center pt-2.5 pb-1 flex-shrink-0">
               <div className="w-10 h-1 rounded-full bg-[var(--kkb-border)]" />
             </div>
-
-            {/* Header */}
-            <div className="flex items-start justify-between px-4 pb-2 flex-shrink-0">
-              <div className="flex items-center gap-1">
-                {compositionMode !== null && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setCompositionMode(null)
-                      setSuggestedRecipes([])
-                      void loadPickerRecipes('all', null, editSearch, 'main')
-                    }}
-                    className="p-1 -ml-1 mr-0.5 text-[var(--kkb-text-secondary)] hover:text-[var(--kkb-coral)] transition-colors"
-                    aria-label="Retour"
-                  >
-                    <ChevronLeft className="h-5 w-5" />
-                  </button>
-                )}
-                <div>
-                  <p className="font-dosis font-bold text-base text-[var(--kkb-text-primary)]">
-                    {compositionMode === 'side'  ? 'Choisir un accompagnement'
-                     : compositionMode === 'drink' ? 'Choisir une boisson'
-                     : editTarget.itemId ? 'Changer ce repas' : 'Choisir une recette'}
-                  </p>
-                  <p className="text-xs font-quicksand text-[var(--kkb-text-secondary)] mt-0.5">
-                    {MEAL_EMOJI[editTarget.mealType]}&nbsp;
-                    {MEAL_LABEL[editTarget.mealType]} — {editTarget.dayLabel}
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={closeEdit}
-                className="p-1.5 -mr-1 text-[var(--kkb-text-tertiary)] hover:text-[var(--kkb-text-primary)] transition-colors"
-                aria-label="Fermer"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            {/* Search */}
-            <div className="px-4 pb-2 flex-shrink-0">
-              <div className="flex items-center gap-2 bg-[var(--kkb-coral-light)] border border-[var(--kkb-border)] rounded-xl px-3 py-2">
-                <Search className="h-4 w-4 text-[var(--kkb-text-tertiary)] flex-shrink-0" />
-                <input
-                  type="search"
-                  placeholder="Chercher une recette…"
-                  aria-label="Chercher une recette"
-                  value={editSearch}
-                  onChange={e => handlePickerSearch(e.target.value)}
-                  className="flex-1 bg-transparent text-sm font-quicksand text-[var(--kkb-text-primary)] placeholder:text-[var(--kkb-text-tertiary)] outline-none"
-                  autoFocus
-                />
-              </div>
-            </div>
-
-            {/* Pills scope */}
-            <div className="flex gap-1.5 px-4 pb-2 overflow-x-auto hide-scrollbar flex-shrink-0">
-              {SCOPE_OPTIONS.map(opt => (
-                <button
-                  key={opt.val}
-                  type="button"
-                  onClick={() => handleScopeChange(opt.val)}
-                  className={`flex-shrink-0 px-3 py-1 rounded-full text-[11px] font-quicksand font-bold transition-colors ${
-                    pickerScope === opt.val
-                      ? 'bg-[var(--kkb-coral)] text-white'
-                      : 'bg-[var(--kkb-coral-light)] text-[var(--kkb-text-secondary)] border border-[var(--kkb-border)]'
-                  }`}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Pills catégorie */}
-            {pickerCategories.length > 0 && (
-              <div className="flex gap-1.5 px-4 pb-2 overflow-x-auto hide-scrollbar flex-shrink-0">
-                <button
-                  type="button"
-                  onClick={() => handleCategoryChange(null)}
-                  className={`flex-shrink-0 px-3 py-1 rounded-full text-[11px] font-quicksand font-bold transition-colors ${
-                    pickerCategory === null
-                      ? 'bg-[var(--kkb-coral)] text-white'
-                      : 'bg-[var(--kkb-coral-light)] text-[var(--kkb-text-secondary)] border border-[var(--kkb-border)]'
-                  }`}
-                >
-                  Tous
-                </button>
-                {pickerCategories.map(cat => (
-                  <button
-                    key={cat.id}
-                    type="button"
-                    onClick={() => handleCategoryChange(cat.id)}
-                    className={`flex-shrink-0 px-3 py-1 rounded-full text-[11px] font-quicksand font-bold transition-colors ${
-                      pickerCategory === cat.id
-                        ? 'bg-[var(--kkb-coral)] text-white'
-                        : 'bg-[var(--kkb-coral-light)] text-[var(--kkb-text-secondary)] border border-[var(--kkb-border)]'
-                    }`}
-                  >
-                    {cat.icon} {cat.name}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            <div className="border-t border-[var(--kkb-border)] flex-shrink-0" />
-
-            {/* Suggestions personnalisées — uniquement en mode accompagnement/boisson */}
-            {compositionMode !== null && suggestedRecipes.length > 0 && (
-              <div className="px-4 py-3 flex-shrink-0 border-b border-[var(--kkb-border)]/60">
-                <p className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--kkb-text-secondary)] mb-2">
-                  Suggéré pour vous
-                </p>
-                <div className="flex gap-2 overflow-x-auto pb-1 hide-scrollbar">
-                  {suggestedRecipes.map(s => (
-                    <button key={s.id} type="button" onClick={() => { void changeRecipe(s) }}
-                      disabled={changingRecipe || addingComposition}
-                      className="flex-shrink-0 flex items-center gap-1.5 bg-[var(--kkb-coral-light)] border border-[var(--kkb-border)] rounded-full px-3 py-1.5 text-xs font-quicksand font-medium text-[var(--kkb-text-primary)] disabled:opacity-50">
-                      <span>{s.category?.icon ?? '🍴'}</span>
-                      {s.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Liste de recettes */}
-            <div className="overflow-y-auto flex-1">
-              {pickerLoading ? (
-                <div className="flex justify-center py-8">
-                  <Loader2 className="h-5 w-5 text-[var(--kkb-coral)] animate-spin" />
-                </div>
-              ) : editRecipes.length === 0 ? (
-                <p className="text-sm font-quicksand text-[var(--kkb-text-tertiary)] text-center py-8">
-                  {editSearch ? 'Aucune recette trouvée' : 'Aucune recette disponible'}
-                </p>
-              ) : (
-                editRecipes.map(recipe => (
-                  <button
-                    key={recipe.id}
-                    type="button"
-                    disabled={changingRecipe || addingComposition}
-                    onClick={() => { void changeRecipe(recipe) }}
-                    className="w-full flex items-center gap-3 px-4 py-3 border-b border-[var(--kkb-border)]/40 last:border-0 hover:bg-[var(--kkb-coral-light)] transition-colors disabled:opacity-50"
-                  >
-                    <span className="text-xl flex-shrink-0">
-                      {recipe.categories?.icon ?? '🍴'}
-                    </span>
-                    <div className="flex-1 min-w-0 text-left">
-                      <p className="text-sm font-quicksand font-medium text-[var(--kkb-text-primary)] truncate">
-                        {recipe.name}
-                      </p>
-                      {recipe.prep_time_min && (
-                        <div className="flex items-center gap-1 mt-0.5">
-                          <Clock className="h-3 w-3 text-[var(--kkb-text-tertiary)]" />
-                          <span className="text-[11px] font-quicksand text-[var(--kkb-text-secondary)]">
-                            {recipe.prep_time_min} min
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                    {recipe.visibility !== 'private' && (
-                      <span className={`text-[10px] font-quicksand font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full flex-shrink-0 ${
-                        recipe.visibility === 'circle'
-                          ? 'bg-[var(--kkb-warning-light)] text-[var(--kkb-warning)]'
-                          : 'bg-emerald-50 text-emerald-600'
-                      }`}>
-                        {recipe.visibility === 'circle' ? 'Cercle' : 'Commun.'}
-                      </span>
-                    )}
-                    {(changingRecipe || addingComposition) && (
-                      <Loader2 className="h-4 w-4 text-[var(--kkb-coral)] animate-spin flex-shrink-0" />
-                    )}
-                  </button>
-                ))
-              )}
-
-              {/* Section accompagnement — visible si sauce ET item existant ET pas en mode composition */}
-              {editTarget.itemId && sheetDetails !== null && compositionMode === null && (
-                <div className="px-4 py-3 border-t border-[var(--kkb-border)]/60">
-                  <p className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--kkb-text-secondary)] mb-2">
-                    Accompagnement
-                  </p>
-                  {sheetDetails.meal_compositions.filter(c => c.role === 'side').map(comp => (
-                    <div key={comp.id} className="flex items-center gap-2 py-1.5">
-                      <span className="flex-1 text-sm font-quicksand text-[var(--kkb-text-primary)] truncate">
-                        {comp.recipes?.name ?? '?'}
-                      </span>
-                      <button
-                        type="button"
-                        disabled={!!removingCompId}
-                        onClick={() => { if (editTarget.itemId) void removeComposition(editTarget.itemId, comp.id) }}
-                        className="p-1 text-[var(--kkb-text-tertiary)] hover:text-red-500 transition-colors disabled:opacity-40"
-                        aria-label="Supprimer l'accompagnement"
-                      >
-                        {removingCompId === comp.id
-                          ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                          : <Trash2 className="h-3.5 w-3.5" />}
-                      </button>
-                    </div>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setCompositionMode('side')
-                      void loadPickerRecipes(pickerScope, pickerCategory, editSearch, 'side')
-                      if (sheetDetails.mainRecipeId) void loadSuggestions(sheetDetails.mainRecipeId, 'side')
-                    }}
-                    className="mt-1 flex items-center gap-1 text-xs font-quicksand text-[var(--kkb-coral)] hover:underline"
-                  >
-                    <Plus className="h-3 w-3" />
-                    Ajouter un accompagnement
-                  </button>
-                </div>
-              )}
-
-              {/* Section boisson — visible si item existant ET détails chargés ET pas en mode composition */}
-              {editTarget.itemId && sheetDetails !== null && compositionMode === null && (
-                <div className="px-4 py-3 border-t border-[var(--kkb-border)]/60">
-                  <p className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--kkb-text-secondary)] mb-2">
-                    Boisson
-                  </p>
-                  {sheetDetails.meal_compositions.filter(c => c.role === 'drink').map(comp => (
-                    <div key={comp.id} className="flex items-center gap-2 py-1.5">
-                      <span className="flex-1 text-sm font-quicksand text-[var(--kkb-text-primary)] truncate">
-                        {comp.recipes?.name ?? '?'}
-                      </span>
-                      <button
-                        type="button"
-                        disabled={!!removingCompId}
-                        onClick={() => { if (editTarget.itemId) void removeComposition(editTarget.itemId, comp.id) }}
-                        className="p-1 text-[var(--kkb-text-tertiary)] hover:text-red-500 transition-colors disabled:opacity-40"
-                        aria-label="Supprimer la boisson"
-                      >
-                        {removingCompId === comp.id
-                          ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                          : <Trash2 className="h-3.5 w-3.5" />}
-                      </button>
-                    </div>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setCompositionMode('drink')
-                      void loadPickerRecipes('all', null, '', 'drink')
-                      if (sheetDetails.mainRecipeId) void loadSuggestions(sheetDetails.mainRecipeId, 'drink')
-                    }}
-                    className="mt-1 flex items-center gap-1 text-xs font-quicksand text-[var(--kkb-coral)] hover:underline"
-                  >
-                    <Plus className="h-3 w-3" />
-                    Ajouter une boisson
-                  </button>
-                </div>
-              )}
-
-              {/* Créer un repas personnalisé — masqué en mode composition */}
-              {compositionMode === null && (
-              <div className="px-4 py-3 pb-6">
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (!plan?.id || !editTarget) return
-                    const params = new URLSearchParams({
-                      plan_id:     plan.id,
-                      meal_type:   editTarget.mealType,
-                      day_of_week: editTarget.dayOfWeek,
-                      applies_all: String(editTarget.isTemplate),
-                      day_label:   editTarget.dayLabel,
-                    })
-                    if (editTarget.itemId) params.set('item_id', editTarget.itemId)
-                    closeEdit()
-                    router.push(`/recipes/add?${params}`)
-                  }}
-                  className="w-full flex items-center gap-3 px-4 py-3 border-2 border-dashed border-[var(--kkb-coral)]/40 rounded-xl hover:bg-[var(--kkb-coral-light)] transition-colors group"
-                >
-                  <PlusCircle className="h-5 w-5 text-[var(--kkb-text-tertiary)] group-hover:text-[var(--kkb-coral)] transition-colors" />
-                  <span className="text-sm font-quicksand text-[var(--kkb-text-tertiary)] group-hover:text-[var(--kkb-coral)] transition-colors">
-                    Créer un repas personnalisé…
-                  </span>
-                </button>
-              </div>
-              )}
-            </div>
+            {renderPickerPanel()}
           </div>
-        </>
+        </div>
       )}
     </>
   )

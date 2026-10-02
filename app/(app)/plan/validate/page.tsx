@@ -5,14 +5,15 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import {
   AlertTriangle,
   BarChart3,
+  CalendarDays,
   CheckCircle2,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
   Clock,
   Copy,
+  ListChecks,
   Loader2,
-  MessageCircle,
   Share2,
   Users,
   Utensils,
@@ -22,6 +23,7 @@ import { MEAL_LABEL, MEAL_EMOJI, type MealType } from '@/lib/constants/meal-type
 import { DAY_OPTIONS, formatWeekRange, type DayOfWeek } from '@/lib/utils/week'
 import { sortByMealType } from '@/lib/utils/sort-meal-configs'
 import { countFilledSlots, isDayComplete } from '@/lib/utils/plan-progress'
+import { FramedPhoto } from '@/components/home/framed-photo'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -34,6 +36,7 @@ interface MealConfig {
 
 interface PlanRecipe {
   name:          string
+  photo_url:     string | null
   prep_time_min: number | null
   categories:    { icon: string | null } | null
 }
@@ -68,7 +71,7 @@ interface Plan {
   meal_plan_items: PlanItem[]
 }
 
-// ─── Sous-composant : ligne recette ──────────────────────────────────────────
+// ─── Sous-composant : ligne recette (accordéon par type de repas) ───────────
 
 function RecipeRow({ recipe, label, displayName, warnings }: {
   recipe:       PlanRecipe | null
@@ -120,7 +123,7 @@ function RecipeRow({ recipe, label, displayName, warnings }: {
   )
 }
 
-// ─── Sous-composant : section accordéon d'un type de repas ──────────────────
+// ─── Sous-composant : accordéon "Par type de repas" ──────────────────────────
 
 function MealAccordionSection({ config, plan, open, onToggle }: {
   config: MealConfig
@@ -198,6 +201,82 @@ function MealAccordionSection({ config, plan, open, onToggle }: {
   )
 }
 
+// ─── Sous-composant : accordéon "Par jour" ───────────────────────────────────
+
+function DayAccordionSection({ day, dateLabel, configs, plan, open, onToggle }: {
+  day:       DayOfWeek
+  dateLabel: string
+  configs:   MealConfig[]
+  plan:      Plan
+  open:      boolean
+  onToggle:  () => void
+}) {
+  function itemFor(config: MealConfig): PlanItem | null {
+    return config.mode === 'template'
+      ? plan.meal_plan_items.find(i => i.meal_type === config.meal_type && i.applies_all_days) ?? null
+      : plan.meal_plan_items.find(i => i.meal_type === config.meal_type && i.day_of_week === day && !i.applies_all_days) ?? null
+  }
+
+  const rows = configs.map(config => ({ config, item: itemFor(config) }))
+  const filledCount   = rows.filter(r => r.item?.recipes).length
+  const complete      = filledCount === configs.length
+  const warningsCount = rows.reduce((acc, r) => acc + (r.item?.allergy_warnings?.length ?? 0), 0)
+
+  return (
+    <div className={`mx-4 bg-white border rounded-[var(--kkb-radius-card)] overflow-hidden ${complete ? 'border-[var(--kkb-border)]' : 'border-[var(--kkb-warning)]/60'}`}>
+      <button
+        type="button"
+        onClick={onToggle}
+        className="w-full flex items-center gap-2 px-3 py-3 text-left"
+      >
+        <span className="font-dosis font-semibold text-sm text-[var(--kkb-text-primary)] uppercase">
+          {dateLabel}
+        </span>
+        <span className={`text-[10px] font-quicksand font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full ${
+          complete ? 'bg-[var(--kkb-success-light)] text-[var(--kkb-success)]' : 'bg-[var(--kkb-warning-light)] text-[var(--kkb-warning)]'
+        }`}>
+          {complete ? `✓ ${filledCount} repas complets` : `${filledCount}/${configs.length} repas choisis`}
+        </span>
+        {warningsCount > 0 && (
+          <span className="flex items-center gap-0.5 text-[10px] font-quicksand font-bold text-red-600">
+            <AlertTriangle className="h-3 w-3" /> {warningsCount}
+          </span>
+        )}
+        <ChevronDown className={`ml-auto h-4 w-4 text-[var(--kkb-text-tertiary)] transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+
+      {open && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-3 border-t border-[var(--kkb-border)]/50">
+          {rows.map(({ config, item }) => (
+            <div key={config.meal_type} className="rounded-xl border border-[var(--kkb-border)]/60 overflow-hidden bg-[var(--kkb-bg)]">
+              <div className="relative h-20 bg-[var(--kkb-coral-light)]">
+                {item?.recipes?.photo_url ? (
+                  <FramedPhoto src={item.recipes.photo_url} alt={item.recipes.name} />
+                ) : (
+                  <div className="h-full w-full flex items-center justify-center text-2xl">
+                    {item?.recipes ? (item.recipes.categories?.icon ?? '🍴') : '➕'}
+                  </div>
+                )}
+                <span className="absolute top-1 left-1 text-[8px] font-quicksand font-bold uppercase bg-black/55 text-white px-1 py-0.5 rounded">
+                  {MEAL_EMOJI[config.meal_type]} {MEAL_LABEL[config.meal_type]}
+                </span>
+              </div>
+              <div className="p-1.5">
+                <p className="text-[11px] font-quicksand font-medium text-[var(--kkb-text-primary)] truncate">
+                  {item?.recipes ? composedName(item.recipes.name, item.meal_compositions) : 'Non planifié'}
+                </p>
+                {item?.allergy_warnings && item.allergy_warnings.length > 0 && (
+                  <span className="text-[9px] text-red-600 font-quicksand font-semibold">⚠ allergène</span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ─── Composant interne (useSearchParams) ─────────────────────────────────────
 
 function ValidateInner() {
@@ -217,6 +296,8 @@ function ValidateInner() {
   const [surveyCount,  setSurveyCount]  = useState<number | null>(null)
   const [canNativeShare, setCanNativeShare] = useState(false)
   const [openMealType, setOpenMealType] = useState<MealType | null>(null)
+  const [openDay,      setOpenDay]      = useState<DayOfWeek | null>(DAY_OPTIONS[0].val)
+  const [viewMode,     setViewMode]     = useState<'day' | 'type'>('day')
 
   useEffect(() => {
     if (!week) { router.replace('/plan'); return }
@@ -281,37 +362,44 @@ function ValidateInner() {
     } catch { /* silent */ }
   }
 
-  async function share() {
-    if (!plan || sharing) return
+  // Genere le lien de partage a la demande s'il n'existe pas encore — ni
+  // Partager ni Copier n'attendent que "Valider" ait ete clique.
+  async function ensureShareToken(): Promise<string | null> {
+    if (shareToken) return shareToken
+    if (!plan) return null
     setSharing(true)
     try {
       const res = await fetch(`/api/meal-plans/${plan.id}/share`, { method: 'POST' })
-      if (res.ok) {
-        const data = await res.json() as { share_token: string }
-        setShareToken(data.share_token)
-        void fetchSurveyCount(plan.id)
-      }
-    } catch { /* silent */ } finally {
+      if (!res.ok) return null
+      const data = await res.json() as { share_token: string }
+      setShareToken(data.share_token)
+      void fetchSurveyCount(plan.id)
+      return data.share_token
+    } catch {
+      return null
+    } finally {
       setSharing(false)
     }
   }
 
   async function copyLink() {
-    if (!shareToken) return
+    const token = await ensureShareToken()
+    if (!token) return
     try {
-      await navigator.clipboard.writeText(`${window.location.origin}/s/${shareToken}`)
+      await navigator.clipboard.writeText(`${window.location.origin}/s/${token}`)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch { /* silent */ }
   }
 
   async function shareNative() {
-    if (!shareToken) return
+    const token = await ensureShareToken()
+    if (!token) return
     try {
       await navigator.share({
         title: 'Menu de la semaine — KeskonBouf',
         text:  'Donne ton avis sur notre menu de la semaine !',
-        url:   `${window.location.origin}/s/${shareToken}`,
+        url:   `${window.location.origin}/s/${token}`,
       })
     } catch {
       /* utilisateur a annulé la feuille de partage — rien à faire */
@@ -346,21 +434,16 @@ function ValidateInner() {
   const activeConfigs = configs.filter(c => c.is_active)
   const { filled: filledSlots, total: totalSlots } = countFilledSlots(activeConfigs, plan.meal_plan_items)
   const daysComplete = DAY_OPTIONS.filter(d => isDayComplete(activeConfigs, plan.meal_plan_items, d.val)).length
-  const allergyAlerts = plan.meal_plan_items.reduce((acc, i) => acc + (i.allergy_warnings?.length ?? 0), 0)
   const servings = plan.meal_plan_items[0]?.servings ?? 4
 
-  const shareUrl = shareToken ? `${window.location.origin}/s/${shareToken}` : ''
-  const whatsappText = encodeURIComponent(
-    `Notre menu de la semaine est prêt ! Donne ton avis : ${shareUrl}`
-  )
+  const monday = new Date(plan.week_start + 'T00:00:00')
 
   const statsRow = (
-    <div className="grid grid-cols-4 gap-2 mx-4">
+    <div className="grid grid-cols-3 gap-2 mx-4">
       {[
         { icon: Users,        value: servings,                      label: 'Convives' },
         { icon: CheckCircle2, value: `${daysComplete}/7`,            label: 'Jours'    },
         { icon: Utensils,     value: `${filledSlots}/${totalSlots}`, label: 'Repas'    },
-        { icon: AlertTriangle, value: allergyAlerts,                 label: 'Alertes'  },
       ].map(stat => (
         <div key={stat.label} className="bg-white border border-[var(--kkb-border)] rounded-[var(--kkb-radius-sm)] py-2.5 flex flex-col items-center gap-0.5">
           <stat.icon className="h-3.5 w-3.5 text-[var(--kkb-coral)]" />
@@ -371,115 +454,125 @@ function ValidateInner() {
     </div>
   )
 
+  const viewToggle = (
+    <div className="flex items-center gap-2 mx-4">
+      <button
+        type="button"
+        onClick={() => setViewMode('day')}
+        className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-quicksand font-bold transition-colors ${
+          viewMode === 'day' ? 'bg-[var(--kkb-coral)] text-white' : 'bg-white border border-[var(--kkb-border)] text-[var(--kkb-text-secondary)]'
+        }`}
+      >
+        <CalendarDays className="h-3.5 w-3.5" /> Par jour
+      </button>
+      <button
+        type="button"
+        onClick={() => setViewMode('type')}
+        className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-quicksand font-bold transition-colors ${
+          viewMode === 'type' ? 'bg-[var(--kkb-coral)] text-white' : 'bg-white border border-[var(--kkb-border)] text-[var(--kkb-text-secondary)]'
+        }`}
+      >
+        <ListChecks className="h-3.5 w-3.5" /> Par type de repas
+      </button>
+    </div>
+  )
+
   const accordion = (
     <div className="space-y-2.5">
-      {activeConfigs.map(config => (
-        <MealAccordionSection
-          key={config.meal_type}
-          config={config}
-          plan={plan}
-          open={openMealType === config.meal_type}
-          onToggle={() => setOpenMealType(prev => prev === config.meal_type ? null : config.meal_type)}
-        />
-      ))}
+      {viewMode === 'day'
+        ? DAY_OPTIONS.map((d, i) => {
+            const date = new Date(monday)
+            date.setDate(monday.getDate() + i)
+            const dateLabel = `${d.full} ${date.getDate()} ${date.toLocaleDateString('fr-FR', { month: 'long' })}`
+            return (
+              <DayAccordionSection
+                key={d.val}
+                day={d.val}
+                dateLabel={dateLabel}
+                configs={activeConfigs}
+                plan={plan}
+                open={openDay === d.val}
+                onToggle={() => setOpenDay(prev => prev === d.val ? null : d.val)}
+              />
+            )
+          })
+        : activeConfigs.map(config => (
+            <MealAccordionSection
+              key={config.meal_type}
+              config={config}
+              plan={plan}
+              open={openMealType === config.meal_type}
+              onToggle={() => setOpenMealType(prev => prev === config.meal_type ? null : config.meal_type)}
+            />
+          ))}
     </div>
   )
 
   const ctaSection = (
     <div className="mx-4 space-y-3">
-      {!validated ? (
+      {validated && (
+        <div className="bg-emerald-50 border border-emerald-200 rounded-2xl px-4 py-3.5 flex items-center gap-3">
+          <CheckCircle2 className="h-5 w-5 text-emerald-600 flex-shrink-0" />
+          <div>
+            <p className="font-dosis font-bold text-sm text-emerald-800">Menu validé !</p>
+            <p className="text-[11px] font-quicksand text-emerald-700 mt-0.5">
+              Ce menu est confirmé pour la semaine.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {shareToken && (
+        <p className="text-[11px] font-quicksand text-[var(--kkb-text-tertiary)] text-center">
+          Lien valable 7 jours · {shareToken ? `${window.location.origin}/s/${shareToken}`.replace(/^https?:\/\//, '') : ''}
+        </p>
+      )}
+
+      <div className="flex items-center gap-2">
+        {canNativeShare && (
+          <button
+            type="button"
+            onClick={() => { void shareNative() }}
+            disabled={sharing}
+            className="flex-1 flex items-center justify-center gap-1.5 border border-[var(--kkb-coral)] text-[var(--kkb-coral)] rounded-2xl py-3 font-dosis font-bold text-sm disabled:opacity-60 hover:bg-[var(--kkb-coral)]/5 transition-colors"
+          >
+            {sharing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Share2 className="h-4 w-4" />}
+            Partager
+          </button>
+        )}
         <button
           type="button"
-          onClick={() => { void validate() }}
-          disabled={validating}
-          className="w-full bg-[var(--kkb-coral)] text-white rounded-2xl py-3.5 font-dosis font-bold text-base flex items-center justify-center gap-2 disabled:opacity-60 transition-opacity"
+          onClick={() => { void copyLink() }}
+          disabled={sharing}
+          className="flex-1 flex items-center justify-center gap-1.5 rounded-2xl py-3 font-dosis font-bold text-sm border border-[var(--kkb-border)] text-[var(--kkb-text-secondary)] hover:border-[var(--kkb-coral)] hover:text-[var(--kkb-coral)] transition-colors disabled:opacity-60"
         >
-          {validating
-            ? <Loader2 className="h-5 w-5 animate-spin" />
-            : <CheckCircle2 className="h-5 w-5" />
-          }
-          {validating ? 'Validation…' : 'Valider le menu'}
+          <Copy className="h-4 w-4" />
+          {copied ? 'Copié !' : 'Copier le lien'}
         </button>
-      ) : (
-        <>
-          <div className="bg-emerald-50 border border-emerald-200 rounded-2xl px-4 py-3.5 flex items-center gap-3">
-            <CheckCircle2 className="h-5 w-5 text-emerald-600 flex-shrink-0" />
-            <div>
-              <p className="font-dosis font-bold text-sm text-emerald-800">Menu validé !</p>
-              <p className="text-[11px] font-quicksand text-emerald-700 mt-0.5">
-                Ce menu est confirmé pour la semaine.
-              </p>
-            </div>
-          </div>
+      </div>
 
-          {!shareToken ? (
-            <button
-              type="button"
-              onClick={() => { void share() }}
-              disabled={sharing}
-              className="w-full border border-[var(--kkb-coral)] text-[var(--kkb-coral)] rounded-2xl py-3 font-dosis font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-60 hover:bg-[var(--kkb-coral)]/5 transition-colors"
-            >
-              {sharing
-                ? <Loader2 className="h-4 w-4 animate-spin" />
-                : <Share2 className="h-4 w-4" />
-              }
-              {sharing ? 'Génération du lien…' : 'Partager ce menu'}
-            </button>
-          ) : (
-            <div className="bg-[var(--kkb-coral-light)] border border-[var(--kkb-border)] rounded-2xl px-4 py-3 space-y-2.5">
-              <p className="text-[11px] font-quicksand font-semibold text-[var(--kkb-text-secondary)] uppercase tracking-wider">
-                Lien de partage
-              </p>
-              <p className="text-xs font-quicksand text-[var(--kkb-text-primary)] truncate">
-                {shareUrl}
-              </p>
-              <div className="flex items-center gap-2">
-                <a
-                  href={`https://wa.me/?text=${whatsappText}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex-1 flex items-center justify-center gap-1.5 bg-emerald-500 text-white rounded-lg px-3 py-2 text-[11px] font-quicksand font-semibold hover:opacity-90 transition-opacity"
-                >
-                  <MessageCircle className="h-3 w-3" />
-                  WhatsApp
-                </a>
-                {canNativeShare && (
-                  <button
-                    type="button"
-                    onClick={() => { void shareNative() }}
-                    className="flex-1 flex items-center justify-center gap-1.5 bg-[var(--kkb-coral)] text-white rounded-lg px-3 py-2 text-[11px] font-quicksand font-semibold hover:opacity-80 transition-opacity"
-                  >
-                    <Share2 className="h-3 w-3" />
-                    Partager
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={() => { void copyLink() }}
-                  className="flex-shrink-0 flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-[11px] font-quicksand font-semibold border border-[var(--kkb-border)] text-[var(--kkb-text-secondary)] hover:border-[var(--kkb-coral)] hover:text-[var(--kkb-coral)] transition-colors"
-                >
-                  <Copy className="h-3 w-3" />
-                  {copied ? 'Copié !' : 'Copier'}
-                </button>
-              </div>
-              <p className="text-[10px] font-quicksand text-[var(--kkb-text-tertiary)]">
-                Ce lien est valable 30 jours.
-              </p>
-            </div>
-          )}
+      <button
+        type="button"
+        onClick={() => { void validate() }}
+        disabled={validating || validated}
+        className="w-full bg-[var(--kkb-coral)] text-white rounded-2xl py-3.5 font-dosis font-bold text-base flex items-center justify-center gap-2 disabled:opacity-60 transition-opacity"
+      >
+        {validating
+          ? <Loader2 className="h-5 w-5 animate-spin" />
+          : <CheckCircle2 className="h-5 w-5" />
+        }
+        {validating ? 'Validation…' : validated ? 'Menu validé' : 'Valider le menu'}
+      </button>
 
-          {/* Bouton résultats sondage — visible dès qu'un répondant existe */}
-          {plan && surveyCount !== null && surveyCount > 0 && (
-            <button
-              type="button"
-              onClick={() => router.push(`/plan/${plan.id}/survey`)}
-              className="w-full border border-[var(--kkb-success)] text-[var(--kkb-success)] rounded-2xl py-3 font-dosis font-bold text-sm flex items-center justify-center gap-2 hover:bg-[var(--kkb-success-light)] transition-colors"
-            >
-              <BarChart3 className="h-4 w-4" />
-              Voir les résultats du sondage ({surveyCount})
-            </button>
-          )}
-        </>
+      {plan && surveyCount !== null && surveyCount > 0 && (
+        <button
+          type="button"
+          onClick={() => router.push(`/plan/${plan.id}/survey`)}
+          className="w-full border border-[var(--kkb-success)] text-[var(--kkb-success)] rounded-2xl py-3 font-dosis font-bold text-sm flex items-center justify-center gap-2 hover:bg-[var(--kkb-success-light)] transition-colors"
+        >
+          <BarChart3 className="h-4 w-4" />
+          Voir les résultats du sondage ({surveyCount})
+        </button>
       )}
     </div>
   )
@@ -515,6 +608,7 @@ function ValidateInner() {
       {/* ── Mobile ── */}
       <div className="lg:hidden space-y-4 py-4">
         {statsRow}
+        {viewToggle}
         <div className="px-4">{accordion}</div>
         {ctaSection}
       </div>
@@ -550,6 +644,7 @@ function ValidateInner() {
         </div>
 
         {statsRow}
+        {viewToggle}
 
         <div className="space-y-2.5">{accordion}</div>
       </div>
@@ -558,7 +653,7 @@ function ValidateInner() {
       <div className="hidden lg:block fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-[var(--kkb-border)] px-6 py-4">
         <div className="max-w-4xl mx-auto">{ctaSection}</div>
       </div>
-      <div className="hidden lg:block h-24" aria-hidden="true" />
+      <div className="hidden lg:block h-32" aria-hidden="true" />
     </div>
   )
 }

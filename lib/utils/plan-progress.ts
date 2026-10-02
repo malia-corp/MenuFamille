@@ -53,3 +53,26 @@ export function dayFilledCount(configs: ProgressConfig[], items: ProgressItem[],
       : items.some(i => i.meal_type === config.meal_type && i.day_of_week === day && !i.applies_all_days)
   ).length
 }
+
+// Meme calcul que countFilledSlots mais groupe par type de repas plutot
+// qu'agrege — pour la sidebar "Statut par service" (desktop vue-jour), qui
+// affiche une barre par type de repas sur toute la semaine.
+export function countFilledByMealType(
+  configs: ProgressConfig[], items: ProgressItem[]
+): Record<MealType, { filled: number; total: number }> {
+  const result = {} as Record<MealType, { filled: number; total: number }>
+  for (const config of configs) {
+    if (config.mode === 'template') {
+      result[config.meal_type] = {
+        total: 1,
+        filled: items.some(i => i.meal_type === config.meal_type && i.applies_all_days) ? 1 : 0,
+      }
+    } else {
+      const filled = DAY_OPTIONS.filter(d =>
+        items.some(i => i.meal_type === config.meal_type && i.day_of_week === d.val && !i.applies_all_days)
+      ).length
+      result[config.meal_type] = { total: 7, filled }
+    }
+  }
+  return result
+}

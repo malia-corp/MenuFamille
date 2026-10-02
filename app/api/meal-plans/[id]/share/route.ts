@@ -17,7 +17,7 @@ export async function POST(_: Request, { params }: { params: { id: string } }) {
   if (plan.share_token) return Response.json({ share_token: plan.share_token })
 
   const token   = crypto.randomUUID().replace(/-/g, '')
-  const expires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+  const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
 
   const { error } = await supabase
     .from('meal_plans')

@@ -18,6 +18,15 @@ export const MEAL_LABEL: Record<MealType, string> = {
   diner:          'Dîner',
 }
 
+// Forme complete (non abregee) — pour les endroits ou "Petit-déj." serait
+// trop coupe (ex. "+ Ajouter un petit-déjeuner").
+export const MEAL_FULL_LABEL: Record<MealType, string> = {
+  petit_dejeuner: 'petit-déjeuner',
+  dejeuner:       'déjeuner',
+  gouter:         'goûter',
+  diner:          'dîner',
+}
+
 export const MEAL_EMOJI: Record<MealType, string> = {
   petit_dejeuner: '☕',
   dejeuner:       '🍽',
