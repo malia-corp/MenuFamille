@@ -65,9 +65,19 @@ export function MealVoteCard({
       {/* Header carte */}
       <div className="flex items-center justify-between gap-2 px-3 pt-3">
         {compactHeader ? (
-          <span className="text-base leading-none" title={dayLabel} aria-label={dayLabel}>
-            {MEAL_EMOJI[mealType]}
-          </span>
+          <>
+            {/* Mobile/tablette : pas de survol possible au tactile, texte complet */}
+            <p className="md:hidden font-quicksand font-bold text-xs text-[var(--kkb-text-secondary)]">{dayLabel}</p>
+            {/* Desktop : juste l'emoji, texte révélé + emoji animé au survol */}
+            <span className="hidden md:inline-flex items-center gap-1.5 group cursor-default" aria-label={dayLabel}>
+              <span className="text-base leading-none transition-transform duration-200 group-hover:scale-125 group-hover:-rotate-6">
+                {MEAL_EMOJI[mealType]}
+              </span>
+              <span className="max-w-0 overflow-hidden whitespace-nowrap opacity-0 group-hover:max-w-[160px] group-hover:opacity-100 transition-all duration-200 font-quicksand font-bold text-xs text-[var(--kkb-text-secondary)]">
+                {dayLabel}
+              </span>
+            </span>
+          </>
         ) : (
           <p className="font-quicksand font-bold text-xs text-[var(--kkb-text-secondary)]">{dayLabel}</p>
         )}
