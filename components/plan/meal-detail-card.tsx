@@ -1,6 +1,8 @@
 'use client'
 
-import { Clock, Loader2, Lock, LockOpen, Pencil, Plus } from 'lucide-react'
+import { Clock, Loader2, Lock, LockOpen, Pencil, Plus, UtensilsCrossed } from 'lucide-react'
+import type { MealType } from '@/lib/constants/meal-type'
+import { MealTypeIcon } from '@/components/ui/meal-type-icon'
 import { CompositionChipsRow } from '@/components/plan/composition-chips-row'
 
 export interface CompositionChip {
@@ -17,7 +19,8 @@ interface PlanRecipeLike {
 }
 
 interface MealDetailCardProps {
-  eyebrow:      string // "☕ PETIT-DÉJEUNER · 07H00"
+  eyebrow:      string // "PETIT-DÉJEUNER · 07H00"
+  mealType?:    MealType // icône affichée devant l'eyebrow
   emptyLabel:   string // "petit-déjeuner" — pour "+ Ajouter un petit-déjeuner"
   recipe:       PlanRecipeLike | null
   sideChips:    CompositionChip[]
@@ -32,7 +35,7 @@ interface MealDetailCardProps {
 }
 
 export function MealDetailCard({
-  eyebrow, emptyLabel, recipe, sideChips, drinkChip, servings,
+  eyebrow, mealType, emptyLabel, recipe, sideChips, drinkChip, servings,
   isLocked, locking, onToggleLock, onEdit, dimmed, expanded,
 }: MealDetailCardProps) {
   if (expanded) {
@@ -48,14 +51,15 @@ export function MealDetailCard({
               // eslint-disable-next-line @next/next/no-img-element
               <img src={recipe.photo_url} alt={recipe.name} className="absolute inset-0 h-full w-full object-cover" />
             ) : (
-              <div className="absolute inset-0 flex items-center justify-center text-3xl">🍴</div>
+              <div className="absolute inset-0 flex items-center justify-center"><UtensilsCrossed className="h-8 w-8 text-[var(--kkb-coral)]" /></div>
             )}
           </div>
 
           <div className="min-w-0 flex-1 p-3 flex flex-col justify-between">
             <div>
-              <p className="text-[10px] font-quicksand font-bold uppercase text-[var(--kkb-coral)] tracking-wide truncate">
-                {eyebrow}
+              <p className="flex items-center gap-1 text-[10px] font-quicksand font-bold uppercase text-[var(--kkb-coral)] tracking-wide">
+                {mealType && <MealTypeIcon type={mealType} className="h-3 w-3 shrink-0" />}
+                <span className="truncate">{eyebrow}</span>
               </p>
               <p className="font-dosis font-bold text-[15px] text-[var(--kkb-text-primary)] leading-tight truncate">
                 {recipe.name}
@@ -114,7 +118,8 @@ export function MealDetailCard({
           onClick={onEdit}
           className="w-full flex flex-col items-center justify-center gap-2 p-4 text-center border-2 border-dashed border-[var(--kkb-border)] rounded-[var(--kkb-radius-card)]"
         >
-          <p className="text-[10px] font-quicksand font-bold uppercase text-[var(--kkb-text-tertiary)] tracking-wide">
+          <p className="flex items-center gap-1 text-[10px] font-quicksand font-bold uppercase text-[var(--kkb-text-tertiary)] tracking-wide">
+            {mealType && <MealTypeIcon type={mealType} className="h-3 w-3 shrink-0" />}
             {eyebrow}
           </p>
           <span className="inline-block bg-[var(--kkb-bg)] text-[var(--kkb-text-tertiary)] rounded-full px-2 py-0.5 text-[10px] font-quicksand font-semibold">

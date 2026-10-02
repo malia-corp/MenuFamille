@@ -1,9 +1,10 @@
 'use client'
 
 import { Fragment } from 'react'
-import { Lock } from 'lucide-react'
+import { AlertTriangle, Check, Lock, UtensilsCrossed } from 'lucide-react'
 import { DAY_OPTIONS, type DayOfWeek } from '@/lib/utils/week'
-import { MEAL_EMOJI, MEAL_LABEL, type MealType } from '@/lib/constants/meal-type'
+import { MEAL_LABEL, type MealType } from '@/lib/constants/meal-type'
+import { MealTypeIcon } from '@/components/ui/meal-type-icon'
 import { dayFilledCount, type ProgressConfig, type ProgressItem } from '@/lib/utils/plan-progress'
 
 export interface WeekGridConfig extends ProgressConfig {
@@ -56,8 +57,8 @@ export function WeekGrid({ weekStart, configs, items, onCellClick }: WeekGridPro
             <p className="text-[11px] font-quicksand font-bold uppercase tracking-wide text-[var(--kkb-text-tertiary)]">
               {d.label} {date.getDate()}
             </p>
-            <p className={`text-[11px] font-quicksand font-bold ${complete ? 'text-[var(--kkb-success)]' : 'text-[var(--kkb-warning)]'}`}>
-              {filled}/{configs.length} {complete ? '✓' : '⚠️'}
+            <p className={`flex items-center justify-center gap-0.5 text-[11px] font-quicksand font-bold ${complete ? 'text-[var(--kkb-success)]' : 'text-[var(--kkb-warning)]'}`}>
+              {filled}/{configs.length} {complete ? <Check className="h-3 w-3" /> : <AlertTriangle className="h-3 w-3" />}
             </p>
           </div>
         )
@@ -66,7 +67,7 @@ export function WeekGrid({ weekStart, configs, items, onCellClick }: WeekGridPro
       {configs.map(config => (
         <Fragment key={config.meal_type}>
           <div className="flex items-center gap-1.5 pt-2">
-            <span className="text-base">{MEAL_EMOJI[config.meal_type]}</span>
+            <MealTypeIcon type={config.meal_type} className="h-4 w-4 text-[var(--kkb-coral)]" />
             <span className="text-xs font-quicksand font-semibold text-[var(--kkb-text-secondary)]">
               {MEAL_LABEL[config.meal_type]}
             </span>
@@ -126,7 +127,7 @@ export function WeekGrid({ weekStart, configs, items, onCellClick }: WeekGridPro
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={item.recipes.photo_url} alt="" className="absolute inset-0 h-full w-full object-cover" />
                       ) : (
-                        <div className="absolute inset-0 bg-[var(--kkb-coral-light)] flex items-center justify-center text-2xl">🍴</div>
+                        <div className="absolute inset-0 bg-[var(--kkb-coral-light)] flex items-center justify-center"><UtensilsCrossed className="h-6 w-6 text-[var(--kkb-coral)]" /></div>
                       )}
                       <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/45 to-transparent pt-5 pb-1.5 px-1.5">
                         <p className="text-[10px] font-quicksand font-semibold text-white leading-tight line-clamp-2 drop-shadow text-center">

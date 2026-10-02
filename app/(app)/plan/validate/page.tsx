@@ -6,6 +6,7 @@ import {
   AlertTriangle,
   BarChart3,
   CalendarDays,
+  Check,
   CheckCircle2,
   ChevronDown,
   ChevronLeft,
@@ -14,11 +15,14 @@ import {
   Copy,
   ListChecks,
   Loader2,
+  Plus,
   Share2,
   Users,
   Utensils,
+  UtensilsCrossed,
 } from 'lucide-react'
-import { MEAL_LABEL, MEAL_EMOJI, type MealType } from '@/lib/constants/meal-type'
+import { MEAL_LABEL, type MealType } from '@/lib/constants/meal-type'
+import { MealTypeIcon } from '@/components/ui/meal-type-icon'
 import { DAY_OPTIONS, formatWeekRange, type DayOfWeek } from '@/lib/utils/week'
 import { sortByMealType } from '@/lib/utils/sort-meal-configs'
 import { countFilledSlots, isDayComplete } from '@/lib/utils/plan-progress'
@@ -96,7 +100,7 @@ function RecipeRow({ recipe, label, compositions, warnings }: {
               // eslint-disable-next-line @next/next/no-img-element
               <img src={recipe.photo_url} alt={recipe.name} className="absolute inset-0 h-full w-full object-cover" />
             ) : (
-              <div className="h-full w-full flex items-center justify-center text-xl">{recipe.categories?.icon ?? '🍴'}</div>
+              <div className="h-full w-full flex items-center justify-center"><UtensilsCrossed className="h-6 w-6 text-[var(--kkb-coral)]" /></div>
             )}
           </div>
           <div className="flex-1 min-w-0">
@@ -168,7 +172,7 @@ function MealAccordionSection({ config, plan, open, onToggle }: {
         onClick={onToggle}
         className="w-full flex items-center gap-2 px-3 py-3 text-left"
       >
-        <span className="text-base">{MEAL_EMOJI[config.meal_type]}</span>
+        <MealTypeIcon type={config.meal_type} className="h-4 w-4 text-[var(--kkb-coral)]" />
         <span className="font-dosis font-semibold text-sm text-[var(--kkb-text-primary)]">
           {MEAL_LABEL[config.meal_type]}
         </span>
@@ -250,7 +254,9 @@ function DayAccordionSection({ day, dateLabel, configs, plan, open, onToggle }: 
         <span className={`text-[10px] font-quicksand font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full ${
           complete ? 'bg-[var(--kkb-success-light)] text-[var(--kkb-success)]' : 'bg-[var(--kkb-warning-light)] text-[var(--kkb-warning)]'
         }`}>
-          {complete ? `✓ ${filledCount} repas complets` : `${filledCount}/${configs.length} repas choisis`}
+          {complete
+            ? <span className="inline-flex items-center gap-0.5"><Check className="h-3 w-3" /> {filledCount} repas complets</span>
+            : `${filledCount}/${configs.length} repas choisis`}
         </span>
         {warningsCount > 0 && (
           <span className="flex items-center gap-0.5 text-[10px] font-quicksand font-bold text-red-600">
@@ -268,13 +274,15 @@ function DayAccordionSection({ day, dateLabel, configs, plan, open, onToggle }: 
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={item.recipes.photo_url} alt="" className="absolute inset-0 h-full w-full object-cover" />
               ) : (
-                <div className="absolute inset-0 bg-[var(--kkb-coral-light)] flex items-center justify-center text-2xl">
-                  {item?.recipes ? (item.recipes.categories?.icon ?? '🍴') : '➕'}
+                <div className="absolute inset-0 bg-[var(--kkb-coral-light)] flex items-center justify-center">
+                  {item?.recipes
+                    ? <UtensilsCrossed className="h-6 w-6 text-[var(--kkb-coral)]" />
+                    : <Plus className="h-6 w-6 text-[var(--kkb-coral)]" />}
                 </div>
               )}
 
-              <span className="absolute top-1.5 left-1.5 z-10 text-[8px] font-quicksand font-bold uppercase bg-black/55 text-white px-1.5 py-0.5 rounded">
-                {MEAL_EMOJI[config.meal_type]} {MEAL_LABEL[config.meal_type]}
+              <span className="absolute top-1.5 left-1.5 z-10 inline-flex items-center gap-0.5 text-[8px] font-quicksand font-bold uppercase bg-black/55 text-white px-1.5 py-0.5 rounded">
+                <MealTypeIcon type={config.meal_type} className="h-2.5 w-2.5" /> {MEAL_LABEL[config.meal_type]}
               </span>
               {item?.allergy_warnings && item.allergy_warnings.length > 0 && (
                 <span className="absolute top-1.5 right-1.5 z-10 flex items-center gap-0.5 text-[8px] font-quicksand font-bold text-white bg-red-600/90 px-1.5 py-0.5 rounded">
@@ -657,7 +665,7 @@ function ValidateInner() {
         <div className="flex items-center justify-center gap-1.5">
           <div className="flex items-center gap-1.5">
             <button type="button" onClick={() => router.push('/plan')} className="w-5 h-5 rounded-full bg-[var(--kkb-success)] flex items-center justify-center">
-              <span className="text-white text-[10px] font-bold">✓</span>
+              <Check className="h-3 w-3 text-white" />
             </button>
             <span className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--kkb-text-tertiary)]">Planifier</span>
           </div>

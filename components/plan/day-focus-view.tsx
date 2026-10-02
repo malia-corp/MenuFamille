@@ -2,7 +2,8 @@
 
 import type { ReactNode } from 'react'
 import { DAY_OPTIONS, type DayOfWeek } from '@/lib/utils/week'
-import { MEAL_EMOJI, MEAL_LABEL, type MealType } from '@/lib/constants/meal-type'
+import { MEAL_LABEL, type MealType } from '@/lib/constants/meal-type'
+import { MealTypeIcon } from '@/components/ui/meal-type-icon'
 import { DayTabs } from '@/components/plan/day-tabs'
 import type { ProgressConfig, ProgressItem } from '@/lib/utils/plan-progress'
 
@@ -70,8 +71,8 @@ export function DayFocusView({
             return (
               <div key={stat.mealType} className="space-y-0.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-quicksand font-medium text-[var(--kkb-text-secondary)]">
-                    {MEAL_EMOJI[stat.mealType]} {MEAL_LABEL[stat.mealType]}
+                  <span className="flex items-center gap-1 text-[11px] font-quicksand font-medium text-[var(--kkb-text-secondary)]">
+                    <MealTypeIcon type={stat.mealType} className="h-3 w-3 text-[var(--kkb-coral)]" /> {MEAL_LABEL[stat.mealType]}
                   </span>
                   <span className="text-[11px] font-quicksand font-bold text-[var(--kkb-text-tertiary)]">
                     {stat.filled}/{stat.total}
