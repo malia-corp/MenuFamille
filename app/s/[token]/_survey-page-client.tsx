@@ -282,6 +282,16 @@ export function SurveyPageClient({ token }: { token: string }) {
     return `${DAY_OPTIONS.find(d => d.val === item.day_of_week)?.full ?? ''} ${dateNumFor(item.day_of_week)} · ${MOMENT_BY_MEAL_TYPE[item.meal_type]}`
   }
 
+  // Vue "Par Jour" : jusqu'à 4 repas (un par type) alignés sur la même ligne,
+  // comme la maquette desktop — classes Tailwind littérales (pas de template
+  // string dynamique, non détecté par le scanner CSS).
+  function dayGridClass(count: number): string {
+    if (count >= 4) return 'md:grid-cols-2 lg:grid-cols-4'
+    if (count === 3) return 'md:grid-cols-2 lg:grid-cols-3'
+    if (count === 2) return 'md:grid-cols-2'
+    return ''
+  }
+
   // Chips : uniquement sur les repas journaliers (la section "Toute la semaine"
   // reste affichée une fois en tête, jamais filtrée par ce toggle).
   const typeChips = activeMealTypes.map(mt => ({
@@ -348,11 +358,14 @@ export function SurveyPageClient({ token }: { token: string }) {
 
   const plannerFirstName = data.plan.planner_name?.trim().split(/\s+/)[0] ?? 'votre famille'
 
-  function renderCard(item: SurveyItem) {
+  function renderCard(item: SurveyItem, compact: boolean = false) {
     return (
       <MealVoteCard
         key={item.id}
-        dayLabel={item.applies_all_days ? `${MEAL_EMOJI[item.meal_type]} ${MEAL_LABEL[item.meal_type]} · Toute la semaine` : dayLabelFor(item)}
+        dayLabel={item.applies_all_days
+          ? `${MEAL_EMOJI[item.meal_type]} ${MEAL_LABEL[item.meal_type]} · Toute la semaine`
+          : compact ? `${MEAL_LABEL[item.meal_type]} · ${MOMENT_BY_MEAL_TYPE[item.meal_type]}` : dayLabelFor(item)}
+        compactHeader={compact}
         mealType={item.meal_type}
         recipe={item.recipe}
         compositions={item.compositions}
@@ -430,7 +443,7 @@ export function SurveyPageClient({ token }: { token: string }) {
             <>
               <SectionSeparator label="Toute la semaine" />
               <div className="space-y-3 md:space-y-0 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-4 md:items-start mb-2">
-                {templateItems.map(renderCard)}
+                {templateItems.map(item => renderCard(item))}
               </div>
             </>
           )}
@@ -482,8 +495,8 @@ export function SurveyPageClient({ token }: { token: string }) {
                   <ChevronDown className={`hidden lg:block h-5 w-5 text-[var(--kkb-text-tertiary)] transition-transform ${collapsed ? '-rotate-90' : ''}`} />
                 </button>
                 <div className={`lg:overflow-hidden lg:transition-[max-height] lg:duration-300 ${collapsed ? 'lg:max-h-0' : 'lg:max-h-[6000px]'}`}>
-                  <div className="space-y-3 md:space-y-0 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-4 md:items-start">
-                    {section.items.map(renderCard)}
+                  <div className={`space-y-3 md:space-y-0 md:grid md:gap-4 md:items-start ${viewMode === 'day' ? dayGridClass(section.items.length) : 'md:grid-cols-2 lg:grid-cols-3'}`}>
+                    {section.items.map(item => renderCard(item, viewMode === 'day'))}
                   </div>
                 </div>
               </section>

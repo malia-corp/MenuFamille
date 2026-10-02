@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Clock, Loader2, MessageCircle } from 'lucide-react'
+import { Loader2, MessageCircle } from 'lucide-react'
 import { FramedPhoto } from '@/components/home/framed-photo'
 import { MEAL_EMOJI, type MealType } from '@/lib/constants/meal-type'
 
@@ -35,7 +35,8 @@ interface MealComposition {
 }
 
 interface MealVoteCardProps {
-  dayLabel:        string // "Lundi · Midi" ou "Toute la semaine"
+  dayLabel:        string // "Lundi · Midi" ou "Toute la semaine" (aussi utilisé en tooltip si compactHeader)
+  compactHeader?:  boolean // vue "Par Jour" : juste l'emoji du type de repas + dayLabel en hover, pour tenir sur 4 colonnes sans déformation
   mealType:        MealType
   recipe:          MealRecipe | null
   compositions:    MealComposition[]
@@ -50,7 +51,7 @@ interface MealVoteCardProps {
 }
 
 export function MealVoteCard({
-  dayLabel, mealType, recipe, compositions, reaction, comment,
+  dayLabel, compactHeader, mealType, recipe, compositions, reaction, comment,
   onSelectReaction, onCommentChange, onSaveComment, savingComment, justSaved, disabled,
 }: MealVoteCardProps) {
   const [commentOpen, setCommentOpen] = useState(false)
@@ -63,7 +64,13 @@ export function MealVoteCard({
     <div className="bg-white border border-[var(--kkb-border)] rounded-[var(--kkb-radius-card)] overflow-hidden h-full flex flex-col">
       {/* Header carte */}
       <div className="flex items-center justify-between gap-2 px-3 pt-3">
-        <p className="font-quicksand font-bold text-xs text-[var(--kkb-text-secondary)]">{dayLabel}</p>
+        {compactHeader ? (
+          <span className="text-base leading-none" title={dayLabel} aria-label={dayLabel}>
+            {MEAL_EMOJI[mealType]}
+          </span>
+        ) : (
+          <p className="font-quicksand font-bold text-xs text-[var(--kkb-text-secondary)]">{dayLabel}</p>
+        )}
         {recipe?.category && (
           <span className="inline-flex items-center gap-1 text-[10px] font-quicksand font-bold uppercase tracking-wide px-2 py-0.5 rounded-full bg-[var(--kkb-teal-light)] text-[var(--kkb-teal)] shrink-0">
             {recipe.category.icon} {recipe.category.name}
@@ -87,30 +94,24 @@ export function MealVoteCard({
         <p className="font-dosis font-bold text-[17px] text-[var(--kkb-text-primary)] leading-tight">
           {recipe?.name ?? 'Repas non défini'}
         </p>
-        {(recipe?.description || recipe?.prep_time_min) && (
-          <p className="text-[13px] font-quicksand text-[var(--kkb-text-secondary)] mt-0.5">
-            {recipe?.description}
-            {recipe?.description && recipe?.prep_time_min && ' · '}
-            {recipe?.prep_time_min && (
-              <span className="inline-flex items-center gap-0.5">
-                <Clock className="h-3 w-3 inline" /> {recipe.prep_time_min} min
-              </span>
-            )}
-          </p>
-        )}
         {(sides.length > 0 || drink) && (
-          <div className="flex flex-wrap gap-1 mt-1.5">
+          <div className="flex flex-wrap gap-1.5 mt-1.5">
             {sides.map(s => (
-              <span key={s.id} className="inline-block bg-[var(--kkb-coral-light)] text-[var(--kkb-coral)] rounded-full px-2 py-0.5 text-[10px] font-quicksand font-medium">
-                {s.name}
+              <span key={s.id} className="inline-flex items-center gap-1 bg-[var(--kkb-coral-light)] text-[var(--kkb-coral)] rounded-full px-2.5 py-1 text-[11px] font-quicksand font-bold">
+                🥗 {s.name}
               </span>
             ))}
             {drink && (
-              <span className="inline-block bg-[var(--kkb-teal-light)] text-[var(--kkb-teal)] rounded-full px-2 py-0.5 text-[10px] font-quicksand font-medium">
-                {drink.name}
+              <span className="inline-flex items-center gap-1 bg-[var(--kkb-teal-light)] text-[var(--kkb-teal)] rounded-full px-2.5 py-1 text-[11px] font-quicksand font-bold">
+                🥤 {drink.name}
               </span>
             )}
           </div>
+        )}
+        {recipe?.description && (
+          <p className="text-[13px] font-quicksand text-[var(--kkb-text-secondary)] mt-1.5">
+            {recipe.description}
+          </p>
         )}
       </div>
 
