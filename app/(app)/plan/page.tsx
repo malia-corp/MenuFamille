@@ -198,8 +198,6 @@ export default function PlanPage() {
   const [lockingItemId,  setLockingItemId]  = useState<string | null>(null)
   const [removingCompId, setRemovingCompId] = useState<string | null>(null)
   const [addingCompId,   setAddingCompId]   = useState<string | null>(null)
-  const [sideOpen,       setSideOpen]       = useState(false)
-  const [drinkOpen,      setDrinkOpen]      = useState(false)
 
   const mainPicker  = useRecipePicker()
   const sidePicker  = useRecipePicker()
@@ -359,8 +357,6 @@ export default function PlanPage() {
     const dayOpt   = DAY_OPTIONS.find(d => d.val === dayOfWeek)
     const dayLabel = isTemplate ? 'Toute la semaine' : (dayOpt?.full ?? dayOfWeek)
     setEditTarget({ itemId: item?.id ?? null, mealType, dayLabel, dayOfWeek, isTemplate })
-    setSideOpen(false)
-    setDrinkOpen(false)
     mainPicker.reset({ excludeCategoryId: boissonCategoryId })
     sidePicker.reset({})
     drinkPicker.reset({ forceCategoryId: boissonCategoryId })
@@ -536,9 +532,11 @@ export default function PlanPage() {
 
     return (
       <RecipePickerPanel
+        key={`${editTarget.mealType}-${editTarget.dayOfWeek}-${itemId ?? 'new'}`}
         title={itemId ? 'Changer ce repas' : 'Choisir une recette'}
         subtitle={`${MEAL_EMOJI[editTarget.mealType]} ${MEAL_LABEL[editTarget.mealType]} — ${editTarget.dayLabel}`}
         onClose={closeEdit}
+        currentRecipeName={editingItem?.recipes?.name ?? null}
         search={mainPicker.search}
         onSearchChange={mainPicker.setSearch}
         scope={mainPicker.scope}
@@ -553,7 +551,6 @@ export default function PlanPage() {
         showCompositions={!!itemId}
         side={itemId ? {
           chips: sideChips, removingId: removingCompId, onRemove: compId => { void removeComposition(itemId, compId) },
-          open: sideOpen, onToggleOpen: () => setSideOpen(o => !o),
           search: sidePicker.search, onSearchChange: sidePicker.setSearch,
           scope: sidePicker.scope, onScopeChange: sidePicker.setScope,
           categories: pickerCategories, categoryId: sidePicker.categoryId, onCategoryChange: sidePicker.setCategoryId,
@@ -563,7 +560,6 @@ export default function PlanPage() {
         } : undefined}
         drink={itemId ? {
           chips: drinkChips, removingId: removingCompId, onRemove: compId => { void removeComposition(itemId, compId) },
-          open: drinkOpen, onToggleOpen: () => setDrinkOpen(o => !o),
           search: drinkPicker.search, onSearchChange: drinkPicker.setSearch,
           scope: drinkPicker.scope, onScopeChange: drinkPicker.setScope,
           categories: [], categoryId: drinkPicker.categoryId, onCategoryChange: drinkPicker.setCategoryId,
