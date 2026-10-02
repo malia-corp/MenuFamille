@@ -1,7 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { ChefHat, ChevronDown, Clock, Loader2, PlusCircle, Search, Utensils, Wine, X } from 'lucide-react'
+import { ChefHat, ChevronDown, Clock, Loader2, PlusCircle, Search, Utensils, UtensilsCrossed, Wine, X } from 'lucide-react'
+import type { MealType } from '@/lib/constants/meal-type'
+import { MealTypeIcon } from '@/components/ui/meal-type-icon'
 import { SCOPE_OPTIONS, type RecipeScope } from '@/lib/constants/recipe-scope'
 import { CompositionMultiSelect, type CompositionChip } from '@/components/plan/composition-multiselect'
 import { FramedPhoto } from '@/components/home/framed-photo'
@@ -41,6 +43,7 @@ interface MultiSelectBundle {
 interface RecipePickerPanelProps {
   title:    string
   subtitle: string
+  mealType?: MealType // icône affichée devant le sous-titre
   onClose:  () => void
 
   currentRecipeName: string | null
@@ -97,7 +100,7 @@ function PickerSection({ icon, title, summary, disabled, open, onToggle, childre
 }
 
 export function RecipePickerPanel({
-  title, subtitle, onClose, currentRecipeName,
+  title, subtitle, mealType, onClose, currentRecipeName,
   search, onSearchChange, scope, onScopeChange, categories, categoryId, onCategoryChange,
   recipes, loading, picking, onPick,
   showCompositions, side, drink, onCreateCustom,
@@ -121,7 +124,10 @@ export function RecipePickerPanel({
       <div className="flex items-start justify-between px-4 pt-4 pb-2 flex-shrink-0">
         <div>
           <p className="font-dosis font-bold text-base text-[var(--kkb-text-primary)]">{title}</p>
-          <p className="text-xs font-quicksand text-[var(--kkb-text-secondary)] mt-0.5">{subtitle}</p>
+          <p className="flex items-center gap-1 text-xs font-quicksand text-[var(--kkb-text-secondary)] mt-0.5">
+            {mealType && <MealTypeIcon type={mealType} className="h-3.5 w-3.5 text-[var(--kkb-coral)]" />}
+            {subtitle}
+          </p>
         </div>
         <button type="button" onClick={onClose} aria-label="Fermer le panneau" className="p-1.5 -mr-1 text-[var(--kkb-text-tertiary)] hover:text-[var(--kkb-text-primary)] transition-colors">
           <X className="h-5 w-5" />
@@ -211,7 +217,7 @@ export function RecipePickerPanel({
                     <div className="relative h-10 w-10 rounded-lg overflow-hidden shrink-0 bg-[var(--kkb-coral-light)]">
                       {recipe.photo_url
                         ? <FramedPhoto src={recipe.photo_url} alt={recipe.name} />
-                        : <div className="h-full w-full flex items-center justify-center text-lg">{recipe.categories?.icon ?? '🍴'}</div>}
+                        : <div className="h-full w-full flex items-center justify-center"><UtensilsCrossed className="h-5 w-5 text-[var(--kkb-coral)]" /></div>}
                     </div>
                     <div className="flex-1 min-w-0 text-left">
                       <p className="text-sm font-quicksand font-medium text-[var(--kkb-text-primary)] truncate">{recipe.name}</p>

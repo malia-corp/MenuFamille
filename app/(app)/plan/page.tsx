@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import {
   ArrowRight,
   CalendarDays,
+  Check,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -17,7 +18,7 @@ import {
   Timer,
   Users,
 } from 'lucide-react'
-import { MEAL_EMOJI, MEAL_FULL_LABEL, MEAL_LABEL, type MealType } from '@/lib/constants/meal-type'
+import { MEAL_FULL_LABEL, MEAL_LABEL, type MealType } from '@/lib/constants/meal-type'
 import { DAY_OPTIONS, getMondayISO, shiftWeek, formatWeekRange, dayOfWeekFromDate, type DayOfWeek } from '@/lib/utils/week'
 import { sortByMealType } from '@/lib/utils/sort-meal-configs'
 import { countFilledSlots, countFilledByMealType, dayFilledCount, isDayComplete } from '@/lib/utils/plan-progress'
@@ -558,7 +559,8 @@ export default function PlanPage() {
       <RecipePickerPanel
         key={`${editTarget.mealType}-${editTarget.dayOfWeek}-${itemId ?? 'new'}`}
         title={itemId ? 'Changer ce repas' : 'Choisir une recette'}
-        subtitle={`${MEAL_EMOJI[editTarget.mealType]} ${MEAL_LABEL[editTarget.mealType]} — ${editTarget.dayLabel}`}
+        subtitle={`${MEAL_LABEL[editTarget.mealType]} — ${editTarget.dayLabel}`}
+        mealType={editTarget.mealType}
         onClose={closeEdit}
         currentRecipeName={editingItem?.recipes?.name ?? null}
         search={mainPicker.search}
@@ -608,12 +610,13 @@ export default function PlanPage() {
       const item    = getItemFor(config.meal_type, selectedDay)
       const editing = isEditingSlot(config, item)
       const time    = config.default_time ? ` · ${config.default_time.replace(':', 'H')}` : ''
-      const eyebrow = `${MEAL_EMOJI[config.meal_type]} ${MEAL_LABEL[config.meal_type].toUpperCase()}${time}`
+      const eyebrow = `${MEAL_LABEL[config.meal_type].toUpperCase()}${time}`
 
       return (
         <MealDetailCard
           key={config.meal_type}
           eyebrow={eyebrow}
+          mealType={config.meal_type}
           emptyLabel={MEAL_FULL_LABEL[config.meal_type]}
           recipe={item?.recipes ?? null}
           sideChips={toChips(item?.meal_compositions ?? [], 'side')}
@@ -697,7 +700,7 @@ export default function PlanPage() {
                     ? 'text-white'
                     : 'text-[var(--kkb-text-tertiary)] group-hover:text-[var(--kkb-coral)]'
                 }`}>
-                  {plan.status === 'finalized' || plan.status === 'shared' ? '✓' : '2'}
+                  {plan.status === 'finalized' || plan.status === 'shared' ? <Check className="h-3 w-3" /> : '2'}
                 </span>
               </div>
               <span className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--kkb-text-tertiary)] group-hover:text-[var(--kkb-coral)] transition-colors">
@@ -844,7 +847,7 @@ export default function PlanPage() {
                             className="w-full flex items-center justify-between text-sm font-quicksand text-[var(--kkb-text-secondary)] hover:text-[var(--kkb-coral)]"
                           >
                             {d.full}
-                            <span className="text-[var(--kkb-success)]">✓</span>
+                            <Check className="h-4 w-4 text-[var(--kkb-success)]" />
                           </button>
                         ))}
                       </div>

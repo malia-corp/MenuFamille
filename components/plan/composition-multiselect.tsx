@@ -1,6 +1,6 @@
 'use client'
 
-import { Loader2, Search, X } from 'lucide-react'
+import { Loader2, Search, UtensilsCrossed, X } from 'lucide-react'
 import { SCOPE_OPTIONS, type RecipeScope } from '@/lib/constants/recipe-scope'
 import { FramedPhoto } from '@/components/home/framed-photo'
 
@@ -146,7 +146,7 @@ export function CompositionMultiSelect({
                 <div className="relative h-7 w-7 rounded-md overflow-hidden shrink-0 bg-white">
                   {recipe.photo_url
                     ? <FramedPhoto src={recipe.photo_url} alt={recipe.name} />
-                    : <div className="h-full w-full flex items-center justify-center text-xs">{recipe.categories?.icon ?? '🍴'}</div>}
+                    : <div className="h-full w-full flex items-center justify-center"><UtensilsCrossed className="h-3.5 w-3.5 text-[var(--kkb-coral)]" /></div>}
                 </div>
                 <span className="flex-1 min-w-0 text-left text-xs font-quicksand font-medium text-[var(--kkb-text-primary)] truncate">
                   {recipe.name}
