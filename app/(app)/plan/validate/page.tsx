@@ -613,7 +613,7 @@ function ValidateInner() {
       {plan && surveyCount !== null && surveyCount > 0 && (
         <button
           type="button"
-          onClick={() => router.push(`/plan/${plan.id}/survey`)}
+          onClick={() => router.push(`/votes/results?plan=${plan.id}`)}
           className="w-full border border-[var(--kkb-success)] text-[var(--kkb-success)] rounded-2xl py-3 font-dosis font-bold text-sm flex items-center justify-center gap-2 hover:bg-[var(--kkb-success-light)] transition-colors"
         >
           <BarChart3 className="h-4 w-4" />

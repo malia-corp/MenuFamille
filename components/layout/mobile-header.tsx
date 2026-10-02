@@ -2,8 +2,9 @@
 
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Bell } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { UserMenu } from './user-menu'
+import { NotificationBell } from './notification-bell'
 
 interface MobileHeaderProps {
   displayName?: string | null
@@ -16,7 +17,7 @@ export function MobileHeader({ displayName, title, showBack = false }: MobileHea
   const initial = (displayName ?? '?').trim().charAt(0).toUpperCase()
 
   return (
-    <header className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-white border-b border-[var(--kkb-border)]/50 h-14 flex items-center px-4">
+    <header className="lg:hidden print:hidden fixed top-0 left-0 right-0 z-40 bg-white border-b border-[var(--kkb-border)]/50 h-14 flex items-center px-4">
       <div className="flex items-center justify-between w-full max-w-sm mx-auto">
         <div className="flex items-center gap-1.5 -ml-1">
           {showBack && (
@@ -34,14 +35,7 @@ export function MobileHeader({ displayName, title, showBack = false }: MobileHea
         </div>
 
         <div className="flex items-center gap-2 -mr-1">
-          <button
-            type="button"
-            onClick={() => router.push('/notifications')}
-            className="p-1 text-[var(--kkb-text-secondary)]"
-            aria-label="Notifications"
-          >
-            <Bell className="h-5 w-5" />
-          </button>
+          <NotificationBell className="p-1" />
           <UserMenu
             trigger={
               <span

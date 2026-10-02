@@ -10,7 +10,7 @@ export function BottomNav({ role }: { role: Role }) {
 
   return (
     <nav
-      className="lg:hidden fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-fit rounded-full px-4 py-2 backdrop-blur-md"
+      className="lg:hidden print:hidden fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-fit rounded-full px-4 py-2 backdrop-blur-md"
       style={{ background: 'var(--kkb-teal)' }}
     >
       <div className="flex items-center gap-1">

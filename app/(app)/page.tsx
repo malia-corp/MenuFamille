@@ -7,6 +7,7 @@ import { DAY_OPTIONS, getMondayISO, formatWeekRange, dayOfWeekFromDate, type Day
 import { MEAL_LABEL, MEAL_COLOR, type MealType } from '@/lib/constants/meal-type'
 import { MEAL_ICON } from '@/lib/constants/meal-type-icon'
 import { sortByMealType } from '@/lib/utils/sort-meal-configs'
+import { agreementPct as agreementOf, sumCounts } from '@/lib/utils/survey-score'
 import { MealCardHero } from '@/components/home/meal-card-hero'
 import { MealCardCompact } from '@/components/home/meal-card-compact'
 import { WeekDayPicker } from '@/components/home/week-day-picker'
@@ -189,19 +190,13 @@ export default function HomePage() {
 
   function agreementForDay(day: DayOfWeek): number | null {
     if (!surveyResults) return null
-    const items = surveyResults.items.filter(i => i.day_of_week === day)
-    const total = items.reduce((s, i) => s + i.aime + i.bof + i.naime_pas, 0)
-    if (total === 0) return null
-    const aime = items.reduce((s, i) => s + i.aime, 0)
-    return Math.round((aime / total) * 100)
+    return agreementOf(sumCounts(surveyResults.items.filter(i => i.day_of_week === day)))
   }
 
   const agreementPct = useMemo(() => {
     if (!surveyResults || !heroItem) return null
     const match = surveyResults.items.find(i => i.id === heroItem.id)
-    if (!match) return null
-    const total = match.aime + match.bof + match.naime_pas
-    return total === 0 ? null : Math.round((match.aime / total) * 100)
+    return match ? agreementOf(match) : null
   }, [surveyResults, heroItem])
 
   const upcomingDays: UpcomingDay[] = useMemo(() => {

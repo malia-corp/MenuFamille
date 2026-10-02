@@ -1,8 +1,7 @@
 'use client'
 
-import { Bell } from 'lucide-react'
-import { useRouter } from 'next/navigation'
 import { UserMenu } from './user-menu'
+import { NotificationBell } from './notification-bell'
 import type { Role } from './nav-items'
 
 const ROLE_LABEL: Record<string, string> = {
@@ -17,24 +16,16 @@ interface DesktopHeaderProps {
 }
 
 export function DesktopHeader({ circleName, role, displayName }: DesktopHeaderProps) {
-  const router = useRouter()
   const initial = (displayName ?? '?').trim().charAt(0).toUpperCase()
 
   return (
-    <header className="hidden lg:flex fixed top-0 left-60 right-0 h-16 z-30 bg-white/85 backdrop-blur-xl border-b border-[var(--kkb-border)]/50 px-8 items-center justify-between">
+    <header className="hidden lg:flex print:hidden fixed top-0 left-60 right-0 h-16 z-30 bg-white/85 backdrop-blur-xl border-b border-[var(--kkb-border)]/50 px-8 items-center justify-between">
       <span className="font-quicksand text-sm text-[var(--kkb-text-secondary)]">
         Foyer · {circleName ?? 'Mon cercle'}
       </span>
 
       <div className="flex items-center gap-4">
-        <button
-          type="button"
-          onClick={() => router.push('/notifications')}
-          aria-label="Notifications"
-          className="h-10 w-10 rounded-full flex items-center justify-center text-[var(--kkb-text-secondary)] hover:bg-[var(--kkb-bg)] transition-colors"
-        >
-          <Bell className="h-5 w-5" />
-        </button>
+        <NotificationBell className="h-10 w-10 rounded-full flex items-center justify-center hover:bg-[var(--kkb-bg)] transition-colors" />
 
         <div className="h-6 w-px bg-[var(--kkb-border)]" />
 

@@ -1,7 +1,7 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import {
   ArrowRight,
   CalendarDays,
@@ -170,8 +170,36 @@ function useRecipePicker() {
 
 // ─── Composant principal ──────────────────────────────────────────────────────
 
+// Lien profond : /plan?week=AAAA-MM-JJ&day=lundi&meal=dejeuner ouvre la
+// semaine, le jour et l'éditeur du repas visé (ex. depuis /votes/results).
+function readDeepLink(params: URLSearchParams) {
+  const week = params.get('week')
+  const day  = params.get('day')
+  const meal = params.get('meal')
+  return {
+    week: week && /^\d{4}-\d{2}-\d{2}$/.test(week) ? week : null,
+    day:  DAY_OPTIONS.some(d => d.val === day) ? day as DayOfWeek : null,
+    meal: meal && meal in MEAL_LABEL ? meal as MealType : null,
+  }
+}
+
 export default function PlanPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <Loader2 className="h-6 w-6 text-[var(--kkb-coral)] animate-spin" />
+      </div>
+    }>
+      <PlanPageContent />
+    </Suspense>
+  )
+}
+
+function PlanPageContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const [deepLink] = useState(() => readDeepLink(searchParams))
+  const deepLinkOpened = useRef(false)
 
   const [viewState,    setViewState]    = useState<ViewState>('loading')
   const [plan,         setPlan]         = useState<Plan | null>(null)
@@ -180,11 +208,11 @@ export default function PlanPage() {
   const [genError,     setGenError]     = useState<string | null>(null)
   const [modCount,     setModCount]     = useState(0)
   const [sessionTime,  setSessionTime]  = useState(0)
-  const [selectedWeek, setSelectedWeek] = useState(getMondayISO())
+  const [selectedWeek, setSelectedWeek] = useState(() => deepLink.week ?? getMondayISO())
   const sessionStartRef  = useRef<number | null>(null)
   const autoGenTriggered = useRef(false)
 
-  const [selectedDay, setSelectedDay] = useState<DayOfWeek>(() => dayOfWeekFromDate(new Date()))
+  const [selectedDay, setSelectedDay] = useState<DayOfWeek>(() => deepLink.day ?? dayOfWeekFromDate(new Date()))
   const [showCompletedSummary, setShowCompletedSummary] = useState(false)
   const [desktopView, setDesktopView] = useState<'week' | 'day'>('week')
 
@@ -390,6 +418,14 @@ export default function PlanPage() {
   function closeEdit() {
     setEditTarget(null)
   }
+
+  useEffect(() => {
+    if (deepLinkOpened.current || viewState !== 'review' || !plan || !deepLink.meal || !deepLink.day) return
+    const config = activeConfigs.find(c => c.meal_type === deepLink.meal)
+    if (!config) return
+    deepLinkOpened.current = true
+    openEdit(getItemFor(config.meal_type, deepLink.day) ?? null, config.meal_type, deepLink.day, config.mode === 'template')
+  }, [viewState, plan]) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function changeRecipe(recipe: { id: string }) {
     if (!plan || !editTarget || changingRecipe) return
