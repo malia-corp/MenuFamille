@@ -73,18 +73,31 @@ export function FAB() {
     }
   }
 
+  // Sur /plan, le bouton d'ancrage (en haut de page) est plus discret —
+  // petit et aligne a gauche plutot que pleine largeur — et sa version
+  // flottante (apres defilement) se range a droite pour laisser la place,
+  // sur la meme ligne, au bouton "Passer a ..." de la page (aligne a
+  // gauche, meme bottom-[88px]) plutot que de se superposer dessus.
+  const isPlan = pathname === '/plan'
+
+  const dockedClass = isPlan
+    ? 'relative inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-white bg-[var(--kkb-coral)] shadow-[var(--kkb-shadow-fab)] transition-transform active:scale-[0.97]'
+    : 'relative w-full flex items-center justify-center gap-1.5 rounded-full px-4 py-2 text-white bg-[var(--kkb-coral)] shadow-[var(--kkb-shadow-fab)] transition-transform active:scale-[0.97]'
+
+  const floatingClass = isPlan
+    ? 'lg:hidden fixed z-[45] bottom-[88px] right-4 flex items-center gap-1.5 rounded-full px-4 py-2 text-white bg-[var(--kkb-coral)] shadow-[var(--kkb-shadow-fab)] transition-transform hover:scale-[1.03] active:scale-[0.97] whitespace-nowrap'
+    : 'lg:hidden fixed z-[45] bottom-[88px] left-1/2 -translate-x-1/2 flex items-center gap-1.5 rounded-full px-4 py-2 text-white bg-[var(--kkb-coral)] shadow-[var(--kkb-shadow-fab)] transition-transform hover:scale-[1.03] active:scale-[0.97] whitespace-nowrap'
+
   const button = (
     <button
       type="button"
       onClick={handleClick}
-      className={
-        docked
-          ? 'relative w-full flex items-center justify-center gap-1.5 rounded-full px-4 py-2 text-white bg-[var(--kkb-coral)] shadow-[var(--kkb-shadow-fab)] transition-transform active:scale-[0.97]'
-          : 'lg:hidden fixed z-[45] bottom-[88px] left-1/2 -translate-x-1/2 flex items-center gap-1.5 rounded-full px-4 py-2 text-white bg-[var(--kkb-coral)] shadow-[var(--kkb-shadow-fab)] transition-transform hover:scale-[1.03] active:scale-[0.97] whitespace-nowrap'
-      }
+      className={docked ? dockedClass : floatingClass}
     >
-      <Zap className="h-4 w-4 shrink-0" />
-      <span className="font-quicksand font-semibold text-[13px]">Générer ma semaine</span>
+      <Zap className={isPlan && docked ? 'h-3.5 w-3.5 shrink-0' : 'h-4 w-4 shrink-0'} />
+      <span className={`font-quicksand font-semibold ${isPlan && docked ? 'text-[12px]' : 'text-[13px]'}`}>
+        Générer ma semaine
+      </span>
     </button>
   )
 

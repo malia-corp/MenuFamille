@@ -915,20 +915,18 @@ export default function PlanPage() {
         </div>
       )}
 
-      {/* ── Bouton de passage au jour suivant (sticky) ── */}
+      {/* ── Bouton de passage au jour suivant (sticky, aligné à gauche — le
+          FAB "Générer ma semaine" flottant occupe la droite sur la même ligne) ── */}
       {viewState === 'review' && plan && activeConfigs.length > 0 && (
-        <div className="fixed bottom-[72px] left-0 right-0 z-30 bg-white shadow-[0_-2px_12px_rgba(0,0,0,0.06)] px-4 py-3 space-y-1.5 lg:hidden">
+        <div className="fixed bottom-[88px] left-4 z-30 lg:hidden">
           <button
             type="button"
             onClick={goToNextDay}
-            className="w-full flex items-center justify-center gap-2 rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-coral)] hover:bg-[var(--kkb-coral-hover)] text-white font-quicksand font-bold text-[15px] py-3.5"
+            className="flex items-center gap-1.5 rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-coral)] hover:bg-[var(--kkb-coral-hover)] text-white font-quicksand font-semibold text-[13px] px-4 py-2 shadow-[var(--kkb-shadow-fab)] whitespace-nowrap"
           >
-            {isLastDay ? 'Terminer et aller à la synthèse' : `Passer à ${DAY_OPTIONS[selectedDayIdx + 1].full}`}
-            <ArrowRight className="h-4 w-4" />
+            {isLastDay ? 'Terminer' : `Passer à ${DAY_OPTIONS[selectedDayIdx + 1].full}`}
+            <ArrowRight className="h-3.5 w-3.5" />
           </button>
-          <p className="text-center text-[11px] font-quicksand text-[var(--kkb-text-tertiary)]">
-            Ou terminer plus tard · Vos choix sont sauvegardés automatiquement
-          </p>
         </div>
       )}
 
