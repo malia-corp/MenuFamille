@@ -18,20 +18,13 @@ export const MEAL_LABEL: Record<MealType, string> = {
   diner:          'Dîner',
 }
 
-// Forme complete (non abregee) — pour les endroits ou "Petit-déj." serait
-// trop coupe (ex. "+ Ajouter un petit-déjeuner").
-export const MEAL_FULL_LABEL: Record<MealType, string> = {
-  petit_dejeuner: 'petit-déjeuner',
-  dejeuner:       'déjeuner',
-  gouter:         'goûter',
-  diner:          'dîner',
-}
-
+// Emojis en echappements unicode : les caracteres emoji litteraux ne sont pas
+// acceptes par la plateforme de deploiement.
 export const MEAL_EMOJI: Record<MealType, string> = {
-  petit_dejeuner: '☕',
-  dejeuner:       '🍽',
-  gouter:         '🍎',
-  diner:          '🌙',
+  petit_dejeuner: '\u2615',     // tasse
+  dejeuner:       '\u{1F37D}',  // assiette et couverts
+  gouter:         '\u{1F34E}',  // pomme
+  diner:          '\u{1F319}',  // croissant de lune
 }
 
 // Couleurs badge type de repas — palette KeskonBouf (hex litteral partout,
