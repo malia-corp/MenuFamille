@@ -71,6 +71,16 @@ Voir [`docs/decisions.md`](docs/decisions.md) pour le détail. Résumé :
 
 ---
 
+## Icônes — lucide-react, pas d'emojis
+
+- Toute icône d'interface utilise `lucide-react`. Ne jamais écrire d'emoji littéral dans le code : les caractères emoji ne sont pas acceptés par la plateforme de déploiement.
+- Types de repas : utiliser `MEAL_ICON` (`lib/constants/meal-type-icon.ts`) — `Coffee` (petit-déj.), `UtensilsCrossed` (déjeuner), `Cookie` (goûter), `Moon` (dîner).
+- Correspondances établies : accompagnement `Salad`, boisson `CupSoda`, catégorie `Tag`, jour/semaine `CalendarDays`, sauvegarde `Check`.
+- Seule exception : les emojis de réaction (vote du sondage 😊/😐/😕, feedback post-repas), écrits en échappements unicode (`'\u{1F60A}'`), jamais en caractère littéral. Idem pour les textes de notification push, où une icône React est impossible.
+- `MEAL_EMOJI` (`lib/constants/meal-type.ts`) est conservé pour ces seuls contextes texte (notifications) ; ne pas l'utiliser dans l'interface.
+
+---
+
 ## Format d'ouverture de session
 
 À chaque nouvelle session de travail, fournir à Claude :
