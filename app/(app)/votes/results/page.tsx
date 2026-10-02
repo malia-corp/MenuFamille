@@ -12,6 +12,7 @@ import { MEAL_LABEL, MEAL_TYPE_ORDER, type MealType } from '@/lib/constants/meal
 import { DAY_OPTIONS, formatWeekRange, type DayOfWeek } from '@/lib/utils/week'
 import { agreementPct, isRejected, totalReactions } from '@/lib/utils/survey-score'
 import { ConsensusGauge } from '@/components/votes/consensus-gauge'
+import { FridgePrintSheet } from '@/components/votes/fridge-print-sheet'
 import { NameAvatar } from '@/components/votes/name-avatar'
 import { ResultCard } from '@/components/votes/result-card'
 import { ResultsFilters, type ResultsSort, type ResultsViewMode } from '@/components/votes/results-filters'
@@ -196,7 +197,9 @@ function VotesResultsContent() {
   ].filter(Boolean).join('\n')
 
   return (
-    <div className="mx-auto max-w-lg px-4 pb-24 pt-2 lg:max-w-[1400px] lg:px-8 lg:py-8 lg:pb-12 space-y-5 lg:space-y-6">
+    <>
+    <FridgePrintSheet data={data} favoriteIds={favorites.map(f => f.id)} />
+    <div className="mx-auto max-w-lg px-4 pb-24 pt-2 lg:max-w-[1400px] lg:px-8 lg:py-8 lg:pb-12 space-y-5 lg:space-y-6 print:hidden">
 
       {/* ── Mobile : en-tête + synthèse ─────────────────────────────────── */}
       <div className="lg:hidden space-y-4">
@@ -407,6 +410,7 @@ function VotesResultsContent() {
         </div>
       </section>
     </div>
+    </>
   )
 }
 
