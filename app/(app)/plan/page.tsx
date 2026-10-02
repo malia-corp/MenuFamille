@@ -83,6 +83,7 @@ interface PickerRecipe {
   id:            string
   name:          string
   visibility:    string
+  photo_url:     string | null
   prep_time_min: number | null
   categories:    { icon: string | null } | null
 }

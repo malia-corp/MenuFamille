@@ -4,11 +4,13 @@ import { useState } from 'react'
 import { ChefHat, ChevronDown, Clock, Loader2, PlusCircle, Search, Utensils, Wine, X } from 'lucide-react'
 import { SCOPE_OPTIONS, type RecipeScope } from '@/lib/constants/recipe-scope'
 import { CompositionMultiSelect, type CompositionChip } from '@/components/plan/composition-multiselect'
+import { FramedPhoto } from '@/components/home/framed-photo'
 
 interface PickerRecipe {
   id:            string
   name:          string
   visibility:    string
+  photo_url:     string | null
   prep_time_min: number | null
   categories:    { icon: string | null } | null
 }
@@ -206,7 +208,11 @@ export function RecipePickerPanel({
                     onClick={() => handlePick(recipe)}
                     className="w-full flex items-center gap-3 px-2 py-3 border-b border-[var(--kkb-border)]/40 last:border-0 hover:bg-[var(--kkb-coral-light)] transition-colors disabled:opacity-50"
                   >
-                    <span className="text-xl flex-shrink-0">{recipe.categories?.icon ?? '🍴'}</span>
+                    <div className="relative h-10 w-10 rounded-lg overflow-hidden shrink-0 bg-[var(--kkb-coral-light)]">
+                      {recipe.photo_url
+                        ? <FramedPhoto src={recipe.photo_url} alt={recipe.name} />
+                        : <div className="h-full w-full flex items-center justify-center text-lg">{recipe.categories?.icon ?? '🍴'}</div>}
+                    </div>
                     <div className="flex-1 min-w-0 text-left">
                       <p className="text-sm font-quicksand font-medium text-[var(--kkb-text-primary)] truncate">{recipe.name}</p>
                       {recipe.prep_time_min && (

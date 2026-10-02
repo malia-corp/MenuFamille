@@ -2,6 +2,7 @@
 
 import { Clock, Loader2, Lock, LockOpen, Pencil, Plus } from 'lucide-react'
 import { FramedPhoto } from '@/components/home/framed-photo'
+import { CompositionChipsRow } from '@/components/plan/composition-chips-row'
 
 export interface CompositionChip {
   id:        string
@@ -58,17 +59,8 @@ export function MealDetailCard({
             </p>
 
             {(sideChips.length > 0 || drinkChip) && (
-              <div className="flex flex-wrap gap-1 mt-1">
-                {sideChips.map(chip => (
-                  <span key={chip.id} className="inline-block bg-[var(--kkb-coral-light)] text-[var(--kkb-coral)] rounded-full px-2 py-0.5 text-[10px] font-quicksand font-medium">
-                    {chip.name}
-                  </span>
-                ))}
-                {drinkChip && (
-                  <span className="inline-block bg-[var(--kkb-teal-light)] text-[var(--kkb-teal)] rounded-full px-2 py-0.5 text-[10px] font-quicksand font-medium">
-                    {drinkChip.name}
-                  </span>
-                )}
+              <div className="mt-1">
+                <CompositionChipsRow sides={sideChips} drink={drinkChip} />
               </div>
             )}
 

@@ -2,6 +2,7 @@
 
 import { Loader2, Search, X } from 'lucide-react'
 import { SCOPE_OPTIONS, type RecipeScope } from '@/lib/constants/recipe-scope'
+import { FramedPhoto } from '@/components/home/framed-photo'
 
 export interface CompositionChip {
   id:       string
@@ -13,6 +14,7 @@ interface MultiSelectRecipe {
   id:            string
   name:          string
   visibility:    string
+  photo_url:     string | null
   prep_time_min: number | null
   categories:    { icon: string | null } | null
 }
@@ -141,7 +143,11 @@ export function CompositionMultiSelect({
                 }`}>
                   {checked && <span className="h-1.5 w-1.5 rounded-sm bg-white" />}
                 </span>
-                <span className="text-sm shrink-0">{recipe.categories?.icon ?? '🍴'}</span>
+                <div className="relative h-7 w-7 rounded-md overflow-hidden shrink-0 bg-white">
+                  {recipe.photo_url
+                    ? <FramedPhoto src={recipe.photo_url} alt={recipe.name} />
+                    : <div className="h-full w-full flex items-center justify-center text-xs">{recipe.categories?.icon ?? '🍴'}</div>}
+                </div>
                 <span className="flex-1 min-w-0 text-left text-xs font-quicksand font-medium text-[var(--kkb-text-primary)] truncate">
                   {recipe.name}
                 </span>

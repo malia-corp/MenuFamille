@@ -5,6 +5,7 @@ import { Lock } from 'lucide-react'
 import { DAY_OPTIONS, type DayOfWeek } from '@/lib/utils/week'
 import { MEAL_EMOJI, MEAL_LABEL, type MealType } from '@/lib/constants/meal-type'
 import { dayFilledCount, type ProgressConfig, type ProgressItem } from '@/lib/utils/plan-progress'
+import { FramedPhoto } from '@/components/home/framed-photo'
 
 export interface WeekGridConfig extends ProgressConfig {
   meal_type: MealType
@@ -17,7 +18,7 @@ export interface WeekGridItem extends ProgressItem {
   day_of_week: DayOfWeek
   applies_all_days: boolean
   is_locked:  boolean
-  recipes:    { name: string } | null
+  recipes:    { name: string; photo_url: string | null } | null
   meal_compositions: { role: 'side' | 'drink'; recipes: { name: string } | null }[]
 }
 
@@ -81,9 +82,16 @@ export function WeekGrid({ weekStart, configs, items, onCellClick }: WeekGridPro
                   className="col-span-7 flex items-center gap-2 rounded-[var(--kkb-radius-sm)] border border-[var(--kkb-border)] bg-white px-3 py-2 text-left hover:border-[var(--kkb-coral)] transition-colors"
                 >
                   {item?.recipes ? (
-                    <span className="text-sm font-quicksand font-medium text-[var(--kkb-text-primary)] truncate">
-                      {item.recipes.name}
-                    </span>
+                    <>
+                      <div className="relative h-8 w-8 rounded-md overflow-hidden shrink-0 bg-[var(--kkb-coral-light)]">
+                        {item.recipes.photo_url
+                          ? <FramedPhoto src={item.recipes.photo_url} alt={item.recipes.name} />
+                          : <div className="h-full w-full flex items-center justify-center text-sm">🍴</div>}
+                      </div>
+                      <span className="text-sm font-quicksand font-medium text-[var(--kkb-text-primary)] truncate">
+                        {item.recipes.name}
+                      </span>
+                    </>
                   ) : (
                     <span className="text-sm font-quicksand text-[var(--kkb-text-tertiary)]">À choisir — toute la semaine</span>
                   )}
@@ -106,10 +114,15 @@ export function WeekGrid({ weekStart, configs, items, onCellClick }: WeekGridPro
                   }`}
                 >
                   {item?.is_locked && (
-                    <Lock className="absolute top-1 right-1 h-3 w-3 text-[var(--kkb-teal)]" />
+                    <Lock className="absolute top-1 right-1 h-3 w-3 text-[var(--kkb-teal)] z-10" />
                   )}
                   {item?.recipes ? (
                     <>
+                      <div className="relative h-7 w-7 rounded-md overflow-hidden shrink-0 bg-[var(--kkb-coral-light)]">
+                        {item.recipes.photo_url
+                          ? <FramedPhoto src={item.recipes.photo_url} alt={item.recipes.name} />
+                          : <div className="h-full w-full flex items-center justify-center text-xs">🍴</div>}
+                      </div>
                       <span className="text-[11px] font-quicksand font-medium text-[var(--kkb-text-primary)] text-center leading-tight line-clamp-2">
                         {item.recipes.name}
                       </span>

@@ -18,12 +18,12 @@ import {
   Users,
   Utensils,
 } from 'lucide-react'
-import { composedName } from '@/lib/utils/composed-name'
 import { MEAL_LABEL, MEAL_EMOJI, type MealType } from '@/lib/constants/meal-type'
 import { DAY_OPTIONS, formatWeekRange, type DayOfWeek } from '@/lib/utils/week'
 import { sortByMealType } from '@/lib/utils/sort-meal-configs'
 import { countFilledSlots, isDayComplete } from '@/lib/utils/plan-progress'
 import { FramedPhoto } from '@/components/home/framed-photo'
+import { CompositionChipsRow } from '@/components/plan/composition-chips-row'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -73,12 +73,18 @@ interface Plan {
 
 // ─── Sous-composant : ligne recette (accordéon par type de repas) ───────────
 
-function RecipeRow({ recipe, label, displayName, warnings }: {
+function RecipeRow({ recipe, label, compositions, warnings }: {
   recipe:       PlanRecipe | null
   label:        string
-  displayName?: string
+  compositions?: Composition[]
   warnings?:    AllergyWarning[]
 }) {
+  const sides = (compositions ?? [])
+    .filter(c => c.role === 'side' && c.recipes)
+    .map((c, i) => ({ id: `side-${i}`, name: c.recipes!.name }))
+  const drinkComp = (compositions ?? []).find(c => c.role === 'drink' && c.recipes)
+  const drink = drinkComp ? { id: 'drink', name: drinkComp.recipes!.name } : null
+
   return (
     <div className="flex items-center gap-3 px-3 py-2.5 border-b border-[var(--kkb-border)]/30 last:border-0">
       <p className="w-20 text-[10px] font-quicksand font-semibold text-[var(--kkb-text-tertiary)] flex-shrink-0">
@@ -86,12 +92,14 @@ function RecipeRow({ recipe, label, displayName, warnings }: {
       </p>
       {recipe ? (
         <>
-          <span className="text-base flex-shrink-0">
-            {recipe.categories?.icon ?? '🍴'}
-          </span>
+          <div className="relative h-10 w-10 rounded-lg overflow-hidden shrink-0 bg-[var(--kkb-coral-light)]">
+            {recipe.photo_url
+              ? <FramedPhoto src={recipe.photo_url} alt={recipe.name} />
+              : <div className="h-full w-full flex items-center justify-center text-base">{recipe.categories?.icon ?? '🍴'}</div>}
+          </div>
           <div className="flex-1 min-w-0">
             <p className="text-xs font-quicksand font-medium text-[var(--kkb-text-primary)] truncate">
-              {displayName ?? recipe.name}
+              {recipe.name}
             </p>
             {recipe.prep_time_min && (
               <div className="flex items-center gap-0.5 mt-0.5">
@@ -99,6 +107,11 @@ function RecipeRow({ recipe, label, displayName, warnings }: {
                 <span className="text-[10px] font-quicksand text-[var(--kkb-text-secondary)]">
                   {recipe.prep_time_min} min
                 </span>
+              </div>
+            )}
+            {(sides.length > 0 || drink) && (
+              <div className="mt-1">
+                <CompositionChipsRow sides={sides} drink={drink} size="xs" />
               </div>
             )}
             {warnings && warnings.length > 0 && (
@@ -178,7 +191,7 @@ function MealAccordionSection({ config, plan, open, onToggle }: {
             <RecipeRow
               recipe={templateItem?.recipes ?? null}
               label="Toute la semaine"
-              displayName={templateItem ? composedName(templateItem.recipes?.name, templateItem.meal_compositions) : undefined}
+              compositions={templateItem?.meal_compositions}
               warnings={templateItem?.allergy_warnings}
             />
           ) : (
@@ -189,7 +202,7 @@ function MealAccordionSection({ config, plan, open, onToggle }: {
                   key={d.val}
                   recipe={item?.recipes ?? null}
                   label={d.full}
-                  displayName={item ? composedName(item.recipes?.name, item.meal_compositions) : undefined}
+                  compositions={item?.meal_compositions}
                   warnings={item?.allergy_warnings}
                 />
               )
@@ -261,10 +274,20 @@ function DayAccordionSection({ day, dateLabel, configs, plan, open, onToggle }: 
                   {MEAL_EMOJI[config.meal_type]} {MEAL_LABEL[config.meal_type]}
                 </span>
               </div>
-              <div className="p-1.5">
+              <div className="p-1.5 space-y-1">
                 <p className="text-[11px] font-quicksand font-medium text-[var(--kkb-text-primary)] truncate">
-                  {item?.recipes ? composedName(item.recipes.name, item.meal_compositions) : 'Non planifié'}
+                  {item?.recipes ? item.recipes.name : 'Non planifié'}
                 </p>
+                {item && (
+                  <CompositionChipsRow
+                    sides={item.meal_compositions.filter(c => c.role === 'side' && c.recipes).map((c, i) => ({ id: `side-${i}`, name: c.recipes!.name }))}
+                    drink={(() => {
+                      const d = item.meal_compositions.find(c => c.role === 'drink' && c.recipes)
+                      return d ? { id: 'drink', name: d.recipes!.name } : null
+                    })()}
+                    size="xs"
+                  />
+                )}
                 {item?.allergy_warnings && item.allergy_warnings.length > 0 && (
                   <span className="text-[9px] text-red-600 font-quicksand font-semibold">⚠ allergène</span>
                 )}
