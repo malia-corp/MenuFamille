@@ -82,11 +82,14 @@ export async function GET(request: NextRequest) {
   if (!user) return Response.json({ error: 'Non authentifié' }, { status: 401 })
 
   // Retourne le plan le plus récent (toutes semaines confondues), sans créer de plan vide
+  // &shared=true : uniquement les plans dont le sondage a été partagé.
   if (request.nextUrl.searchParams.get('latest') === 'true') {
-    const { data, error } = await supabase
+    let query = supabase
       .from('meal_plans')
       .select(PLAN_SELECT)
       .eq('user_id', user.id)
+    if (request.nextUrl.searchParams.get('shared') === 'true') query = query.not('share_token', 'is', null)
+    const { data, error } = await query
       .order('week_start', { ascending: false })
       .limit(1)
       .maybeSingle()
