@@ -134,10 +134,19 @@
   .animate-shake {
     animation: kkb-shake 0.4s ease-in-out;
   }
+
+  .animate-kkb-pulse {
+    animation: kkb-pulse 1.5s ease-in-out infinite;
+  }
 }
 
 @keyframes kkb-shake {
   0%, 100% { transform: translateX(0); }
   20%, 60% { transform: translateX(-8px); }
   40%, 80% { transform: translateX(8px); }
+}
+
+@keyframes kkb-pulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.1); }
 }
