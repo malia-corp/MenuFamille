@@ -942,7 +942,7 @@ export default function PlanPage() {
             <button
               type="button"
               onClick={goToNextDay}
-              className={`absolute top-0 flex items-center justify-center rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-coral)] hover:bg-[var(--kkb-coral-hover)] text-white font-quicksand font-bold shadow-[var(--kkb-shadow-fab)] whitespace-nowrap transition-all duration-300 ease-out ${
+              className={`absolute bottom-0 flex items-center justify-center rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-coral)] hover:bg-[var(--kkb-coral-hover)] text-white font-quicksand font-bold shadow-[var(--kkb-shadow-fab)] whitespace-nowrap transition-all duration-300 ease-out ${
                 generatorFloating
                   ? 'left-[calc(100%-176px)] w-[176px] h-[40px] text-[12px] gap-1'
                   : 'left-0 w-full h-[52px] text-[15px] gap-2'

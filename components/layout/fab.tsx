@@ -28,9 +28,11 @@ export function FAB() {
     if (!show) return
 
     let intersectionObserver: IntersectionObserver | null = null
-    let mutationObserver: MutationObserver | null = null
+    let currentEl: HTMLElement | null = null
 
     function attach(el: HTMLElement) {
+      intersectionObserver?.disconnect()
+      currentEl = el
       setSlotEl(el)
       intersectionObserver = new IntersectionObserver(
         ([entry]) => setDocked(entry.isIntersecting),
@@ -39,25 +41,33 @@ export function FAB() {
       intersectionObserver.observe(el)
     }
 
-    const existing = document.getElementById('generate-slot')
-    if (existing) {
-      attach(existing)
-    } else {
-      // La page peut etre en etat "chargement" au montage du FAB (global,
-      // dans le layout) et ne poser le slot qu'une fois les donnees arrivees.
-      mutationObserver = new MutationObserver(() => {
-        const el = document.getElementById('generate-slot')
-        if (el) {
-          mutationObserver?.disconnect()
-          attach(el)
-        }
-      })
-      mutationObserver.observe(document.body, { childList: true, subtree: true })
+    function detach() {
+      intersectionObserver?.disconnect()
+      intersectionObserver = null
+      currentEl = null
+      setSlotEl(null)
+      setDocked(false)
     }
+
+    // Verifie en continu (pas juste au montage) que #generate-slot est
+    // toujours le MEME element DOM : une page comme /plan le demonte et le
+    // remonte (ex. overlay de generation, changement de semaine), ce qui
+    // laissait l'IntersectionObserver attache a un noeud detache — le FAB
+    // restait alors coince en mode flottant et ne se redockait plus jamais.
+    function checkSlot() {
+      const el = document.getElementById('generate-slot')
+      if (el && el !== currentEl) attach(el)
+      else if (!el && currentEl) detach()
+    }
+
+    checkSlot()
+    const mutationObserver = new MutationObserver(checkSlot)
+    mutationObserver.observe(document.body, { childList: true, subtree: true })
 
     return () => {
       intersectionObserver?.disconnect()
-      mutationObserver?.disconnect()
+      mutationObserver.disconnect()
+      currentEl = null
       setSlotEl(null)
       setDocked(false)
     }
