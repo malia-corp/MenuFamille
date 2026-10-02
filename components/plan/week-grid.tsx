@@ -5,7 +5,6 @@ import { Lock } from 'lucide-react'
 import { DAY_OPTIONS, type DayOfWeek } from '@/lib/utils/week'
 import { MEAL_EMOJI, MEAL_LABEL, type MealType } from '@/lib/constants/meal-type'
 import { dayFilledCount, type ProgressConfig, type ProgressItem } from '@/lib/utils/plan-progress'
-import { FramedPhoto } from '@/components/home/framed-photo'
 
 export interface WeekGridConfig extends ProgressConfig {
   meal_type: MealType
@@ -66,7 +65,7 @@ export function WeekGrid({ weekStart, configs, items, onCellClick }: WeekGridPro
 
       {configs.map(config => (
         <Fragment key={config.meal_type}>
-          <div className="flex items-center gap-1.5 py-1">
+          <div className="flex items-center gap-1.5 pt-2">
             <span className="text-base">{MEAL_EMOJI[config.meal_type]}</span>
             <span className="text-xs font-quicksand font-semibold text-[var(--kkb-text-secondary)]">
               {MEAL_LABEL[config.meal_type]}
@@ -79,21 +78,26 @@ export function WeekGrid({ weekStart, configs, items, onCellClick }: WeekGridPro
                 <button
                   type="button"
                   onClick={() => onCellClick(config.meal_type, DAY_OPTIONS[0].val, true)}
-                  className="col-span-7 flex items-center gap-2 rounded-[var(--kkb-radius-sm)] border border-[var(--kkb-border)] bg-white px-3 py-2 text-left hover:border-[var(--kkb-coral)] transition-colors"
+                  className="col-span-7 relative overflow-hidden rounded-[var(--kkb-radius-sm)] border border-[var(--kkb-border)] min-h-[60px] text-left hover:border-[var(--kkb-coral)] transition-colors"
                 >
                   {item?.recipes ? (
                     <>
-                      <div className="relative h-8 w-8 rounded-md overflow-hidden shrink-0 bg-[var(--kkb-coral-light)]">
-                        {item.recipes.photo_url
-                          ? <FramedPhoto src={item.recipes.photo_url} alt={item.recipes.name} />
-                          : <div className="h-full w-full flex items-center justify-center text-sm">🍴</div>}
+                      {item.recipes.photo_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={item.recipes.photo_url} alt="" className="absolute inset-0 h-full w-full object-cover" />
+                      ) : (
+                        <div className="absolute inset-0 bg-[var(--kkb-coral-light)]" />
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/35 to-transparent flex items-center px-3">
+                        <span className="text-sm font-quicksand font-semibold text-white drop-shadow truncate">
+                          {item.recipes.name}
+                        </span>
                       </div>
-                      <span className="text-sm font-quicksand font-medium text-[var(--kkb-text-primary)] truncate">
-                        {item.recipes.name}
-                      </span>
                     </>
                   ) : (
-                    <span className="text-sm font-quicksand text-[var(--kkb-text-tertiary)]">À choisir — toute la semaine</span>
+                    <div className="h-full min-h-[60px] flex items-center bg-white px-3">
+                      <span className="text-sm font-quicksand text-[var(--kkb-text-tertiary)]">À choisir — toute la semaine</span>
+                    </div>
                   )}
                 </button>
               )
@@ -107,30 +111,33 @@ export function WeekGrid({ weekStart, configs, items, onCellClick }: WeekGridPro
                   key={`${config.meal_type}-${d.val}`}
                   type="button"
                   onClick={() => onCellClick(config.meal_type, d.val, false)}
-                  className={`relative flex flex-col items-center justify-center gap-0.5 rounded-[var(--kkb-radius-sm)] border px-1.5 py-2 min-h-[64px] transition-colors ${
+                  className={`relative overflow-hidden rounded-[var(--kkb-radius-sm)] border min-h-[104px] transition-colors ${
                     item?.recipes
-                      ? 'border-[var(--kkb-border)] bg-white hover:border-[var(--kkb-coral)]'
-                      : 'border-dashed border-[var(--kkb-border)] bg-[var(--kkb-coral-light)]/40 hover:border-[var(--kkb-coral)]'
+                      ? 'border-[var(--kkb-border)] hover:border-[var(--kkb-coral)]'
+                      : 'border-dashed border-[var(--kkb-border)] bg-[var(--kkb-coral-light)]/40 hover:border-[var(--kkb-coral)] flex items-center justify-center'
                   }`}
                 >
                   {item?.is_locked && (
-                    <Lock className="absolute top-1 right-1 h-3 w-3 text-[var(--kkb-teal)] z-10" />
+                    <Lock className="absolute top-1.5 right-1.5 h-3.5 w-3.5 text-white drop-shadow z-20" />
                   )}
                   {item?.recipes ? (
                     <>
-                      <div className="relative h-7 w-7 rounded-md overflow-hidden shrink-0 bg-[var(--kkb-coral-light)]">
-                        {item.recipes.photo_url
-                          ? <FramedPhoto src={item.recipes.photo_url} alt={item.recipes.name} />
-                          : <div className="h-full w-full flex items-center justify-center text-xs">🍴</div>}
-                      </div>
-                      <span className="text-[11px] font-quicksand font-medium text-[var(--kkb-text-primary)] text-center leading-tight line-clamp-2">
-                        {item.recipes.name}
-                      </span>
-                      {sideDrink && (
-                        <span className="text-[9px] font-quicksand text-[var(--kkb-text-tertiary)] truncate">
-                          {sideDrink}
-                        </span>
+                      {item.recipes.photo_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={item.recipes.photo_url} alt="" className="absolute inset-0 h-full w-full object-cover" />
+                      ) : (
+                        <div className="absolute inset-0 bg-[var(--kkb-coral-light)] flex items-center justify-center text-2xl">🍴</div>
                       )}
+                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/45 to-transparent pt-5 pb-1.5 px-1.5">
+                        <p className="text-[10px] font-quicksand font-semibold text-white leading-tight line-clamp-2 drop-shadow text-center">
+                          {item.recipes.name}
+                        </p>
+                        {sideDrink && (
+                          <p className="text-[8px] font-quicksand text-white/85 truncate text-center mt-0.5">
+                            {sideDrink}
+                          </p>
+                        )}
+                      </div>
                     </>
                   ) : (
                     <span className="text-[11px] font-quicksand text-[var(--kkb-text-tertiary)]">+</span>
