@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Check, CupSoda, Loader2, MessageCircle, Salad, Tag } from 'lucide-react'
 import { FramedPhoto } from '@/components/home/framed-photo'
 import type { MealType } from '@/lib/constants/meal-type'
@@ -19,6 +19,20 @@ const REACTION_ACTIVE_CLASS: Record<Reaction, string> = {
   bof:       'bg-[var(--kkb-warning-light)] border-[var(--kkb-warning)] text-[#B07A12]',
   naime_pas: 'bg-[var(--kkb-danger-light)] border-[var(--kkb-danger)] text-[var(--kkb-danger)]',
 }
+
+const REACTION_COLOR: Record<Reaction, string> = {
+  aime:      'var(--kkb-success)',
+  bof:       'var(--kkb-warning)',
+  naime_pas: 'var(--kkb-danger)',
+}
+
+// 6 étincelles réparties sur un cercle de 26px autour de l'emoji
+const PARTICLES = Array.from({ length: 6 }, (_, i) => {
+  const angle = (i / 6) * 2 * Math.PI - Math.PI / 2
+  return { dx: `${Math.round(Math.cos(angle) * 26)}px`, dy: `${Math.round(Math.sin(angle) * 26)}px` }
+})
+
+const BURST_DURATION_MS = 900
 
 interface MealRecipe {
   id:            string
@@ -57,6 +71,19 @@ export function MealVoteCard({
 }: MealVoteCardProps) {
   const [commentOpen, setCommentOpen] = useState(false)
   const MealIcon = MEAL_ICON[mealType]
+
+  // id change à chaque clic : remonte les éléments animés pour relancer l'effet
+  const [burst, setBurst] = useState<{ value: Reaction; id: number } | null>(null)
+  const burstTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  useEffect(() => () => { if (burstTimer.current) clearTimeout(burstTimer.current) }, [])
+
+  function handleReaction(value: Reaction) {
+    setBurst({ value, id: Date.now() })
+    if (burstTimer.current) clearTimeout(burstTimer.current)
+    burstTimer.current = setTimeout(() => setBurst(null), BURST_DURATION_MS)
+    if (typeof navigator !== 'undefined' && 'vibrate' in navigator) navigator.vibrate(12)
+    onSelectReaction(value)
+  }
 
   const sides = compositions.filter(c => c.role === 'side' && c.name).map(c => ({ id: c.id, name: c.name! }))
   const drinkComp = compositions.find(c => c.role === 'drink' && c.name)
@@ -118,30 +145,59 @@ export function MealVoteCard({
       <div className="mt-auto">
         {/* Boutons réaction */}
         <div className="flex items-stretch gap-2 px-3 pt-3">
-          {REACTION_CONFIG.map(r => (
-            <button
-              key={r.value}
-              type="button"
-              disabled={disabled}
-              onClick={() => onSelectReaction(r.value)}
-              aria-label={r.label}
-              className={`group relative flex-1 flex flex-col items-center gap-0.5 py-2.5 rounded-[var(--kkb-radius-pill)] border-[1.5px] font-quicksand font-bold text-[13px] transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed ${
-                reaction === r.value
-                  ? `${REACTION_ACTIVE_CLASS[r.value]} scale-105`
-                  : 'bg-white border-[var(--kkb-border)] text-[var(--kkb-text-secondary)]'
-              }`}
-            >
-              <span className="text-lg leading-none transition-transform duration-200 md:group-hover:scale-125 md:group-hover:-rotate-12">
-                {r.emoji}
-              </span>
-              {/* Mobile : libellé toujours visible (pas de survol au tactile) */}
-              <span className="md:hidden">{r.label}</span>
-              {/* Desktop : libellé en bulle au survol, sans décaler la carte */}
-              <span className="hidden md:block pointer-events-none absolute -top-7 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-[var(--kkb-text-primary)] text-white text-[11px] px-2 py-0.5 opacity-0 translate-y-1 transition-all duration-200 group-hover:opacity-100 group-hover:translate-y-0">
-                {r.label}
-              </span>
-            </button>
-          ))}
+          {REACTION_CONFIG.map(r => {
+            const bursting = burst?.value === r.value
+            return (
+              <button
+                key={r.value}
+                type="button"
+                disabled={disabled}
+                onClick={() => handleReaction(r.value)}
+                aria-label={r.label}
+                className={`group relative flex-1 flex flex-col items-center gap-0.5 py-2.5 rounded-[var(--kkb-radius-pill)] border-[1.5px] font-quicksand font-bold text-[13px] transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed ${
+                  reaction === r.value
+                    ? `${REACTION_ACTIVE_CLASS[r.value]} scale-105`
+                    : 'bg-white border-[var(--kkb-border)] text-[var(--kkb-text-secondary)]'
+                }`}
+              >
+                {/* Deux couches : pop au clic (externe, remontée à chaque clic) + dandinement au survol (interne) */}
+                <span key={bursting ? burst.id : 'idle'} className={`relative z-10 inline-block ${bursting ? 'motion-safe:animate-kkb-react-pop' : ''}`}>
+                  <span className="inline-block text-lg leading-none md:motion-safe:group-hover:animate-kkb-react-wiggle">
+                    {r.emoji}
+                  </span>
+                </span>
+
+                {bursting && (
+                  <span key={burst.id} aria-hidden="true" className="motion-reduce:hidden pointer-events-none">
+                    {/* Anneau qui s'étend autour du bouton */}
+                    <span
+                      className="absolute inset-0 rounded-[var(--kkb-radius-pill)] border-2 animate-kkb-react-ring"
+                      style={{ borderColor: REACTION_COLOR[r.value] }}
+                    />
+                    {/* Étincelles */}
+                    {PARTICLES.map((p, i) => (
+                      <span
+                        key={i}
+                        className="absolute left-1/2 top-[18px] h-1.5 w-1.5 rounded-full animate-kkb-react-particle"
+                        style={{ backgroundColor: REACTION_COLOR[r.value], ['--dx' as string]: p.dx, ['--dy' as string]: p.dy }}
+                      />
+                    ))}
+                    {/* Grand emoji qui s'envole */}
+                    <span className="absolute left-1/2 top-0 z-20 text-2xl leading-none animate-kkb-react-float">
+                      {r.emoji}
+                    </span>
+                  </span>
+                )}
+
+                {/* Mobile : libellé toujours visible (pas de survol au tactile) */}
+                <span className="md:hidden">{r.label}</span>
+                {/* Desktop : libellé en bulle au survol, masqué pendant l'envol de l'emoji */}
+                <span className={`hidden md:block pointer-events-none absolute -top-7 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-[var(--kkb-text-primary)] text-white text-[11px] px-2 py-0.5 opacity-0 translate-y-1 transition-all duration-200 ${bursting ? '' : 'group-hover:opacity-100 group-hover:translate-y-0'}`}>
+                  {r.label}
+                </span>
+              </button>
+            )
+          })}
           <button
             type="button"
             disabled={disabled}
