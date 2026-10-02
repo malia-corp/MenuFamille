@@ -22,7 +22,6 @@ import { MEAL_LABEL, MEAL_EMOJI, type MealType } from '@/lib/constants/meal-type
 import { DAY_OPTIONS, formatWeekRange, type DayOfWeek } from '@/lib/utils/week'
 import { sortByMealType } from '@/lib/utils/sort-meal-configs'
 import { countFilledSlots, isDayComplete } from '@/lib/utils/plan-progress'
-import { FramedPhoto } from '@/components/home/framed-photo'
 import { CompositionChipsRow } from '@/components/plan/composition-chips-row'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -92,10 +91,13 @@ function RecipeRow({ recipe, label, compositions, warnings }: {
       </p>
       {recipe ? (
         <>
-          <div className="relative h-10 w-10 rounded-lg overflow-hidden shrink-0 bg-[var(--kkb-coral-light)]">
-            {recipe.photo_url
-              ? <FramedPhoto src={recipe.photo_url} alt={recipe.name} />
-              : <div className="h-full w-full flex items-center justify-center text-base">{recipe.categories?.icon ?? '🍴'}</div>}
+          <div className="relative h-16 w-16 rounded-lg overflow-hidden shrink-0 bg-[var(--kkb-coral-light)]">
+            {recipe.photo_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={recipe.photo_url} alt={recipe.name} className="absolute inset-0 h-full w-full object-cover" />
+            ) : (
+              <div className="h-full w-full flex items-center justify-center text-xl">{recipe.categories?.icon ?? '🍴'}</div>
+            )}
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-xs font-quicksand font-medium text-[var(--kkb-text-primary)] truncate">
@@ -261,24 +263,30 @@ function DayAccordionSection({ day, dateLabel, configs, plan, open, onToggle }: 
       {open && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-3 border-t border-[var(--kkb-border)]/50">
           {rows.map(({ config, item }) => (
-            <div key={config.meal_type} className="rounded-xl border border-[var(--kkb-border)]/60 overflow-hidden bg-[var(--kkb-bg)]">
-              <div className="relative h-20 bg-[var(--kkb-coral-light)]">
-                {item?.recipes?.photo_url ? (
-                  <FramedPhoto src={item.recipes.photo_url} alt={item.recipes.name} />
-                ) : (
-                  <div className="h-full w-full flex items-center justify-center text-2xl">
-                    {item?.recipes ? (item.recipes.categories?.icon ?? '🍴') : '➕'}
-                  </div>
-                )}
-                <span className="absolute top-1 left-1 text-[8px] font-quicksand font-bold uppercase bg-black/55 text-white px-1 py-0.5 rounded">
-                  {MEAL_EMOJI[config.meal_type]} {MEAL_LABEL[config.meal_type]}
+            <div key={config.meal_type} className="relative overflow-hidden rounded-xl border border-[var(--kkb-border)]/60 min-h-[132px]">
+              {item?.recipes?.photo_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={item.recipes.photo_url} alt="" className="absolute inset-0 h-full w-full object-cover" />
+              ) : (
+                <div className="absolute inset-0 bg-[var(--kkb-coral-light)] flex items-center justify-center text-2xl">
+                  {item?.recipes ? (item.recipes.categories?.icon ?? '🍴') : '➕'}
+                </div>
+              )}
+
+              <span className="absolute top-1.5 left-1.5 z-10 text-[8px] font-quicksand font-bold uppercase bg-black/55 text-white px-1.5 py-0.5 rounded">
+                {MEAL_EMOJI[config.meal_type]} {MEAL_LABEL[config.meal_type]}
+              </span>
+              {item?.allergy_warnings && item.allergy_warnings.length > 0 && (
+                <span className="absolute top-1.5 right-1.5 z-10 flex items-center gap-0.5 text-[8px] font-quicksand font-bold text-white bg-red-600/90 px-1.5 py-0.5 rounded">
+                  <AlertTriangle className="h-2.5 w-2.5" /> allergène
                 </span>
-              </div>
-              <div className="p-1.5 space-y-1">
-                <p className="text-[11px] font-quicksand font-medium text-[var(--kkb-text-primary)] truncate">
-                  {item?.recipes ? item.recipes.name : 'Non planifié'}
-                </p>
-                {item && (
+              )}
+
+              {item?.recipes ? (
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent px-1.5 pt-6 pb-1.5 space-y-1">
+                  <p className="text-[11px] font-quicksand font-semibold text-white leading-tight line-clamp-2 drop-shadow">
+                    {item.recipes.name}
+                  </p>
                   <CompositionChipsRow
                     sides={item.meal_compositions.filter(c => c.role === 'side' && c.recipes).map((c, i) => ({ id: `side-${i}`, name: c.recipes!.name }))}
                     drink={(() => {
@@ -287,11 +295,14 @@ function DayAccordionSection({ day, dateLabel, configs, plan, open, onToggle }: 
                     })()}
                     size="xs"
                   />
-                )}
-                {item?.allergy_warnings && item.allergy_warnings.length > 0 && (
-                  <span className="text-[9px] text-red-600 font-quicksand font-semibold">⚠ allergène</span>
-                )}
-              </div>
+                </div>
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-[10px] font-quicksand font-semibold text-[var(--kkb-text-tertiary)] bg-white/85 px-2 py-1 rounded-full">
+                    Non planifié
+                  </span>
+                </div>
+              )}
             </div>
           ))}
         </div>
