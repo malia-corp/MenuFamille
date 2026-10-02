@@ -1,0 +1,457 @@
+'use client'
+
+import { useEffect, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { Clock, Loader2, Send, UserCircle, XCircle } from 'lucide-react'
+import { PublicHeader } from '@/components/survey/public-header'
+import { MealVoteCard, type Reaction } from '@/components/survey/meal-vote-card'
+import { MEAL_EMOJI, MEAL_LABEL, MEAL_TYPE_ORDER, type MealType } from '@/lib/constants/meal-type'
+import { DAY_OPTIONS, formatWeekRange, type DayOfWeek } from '@/lib/utils/week'
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+interface SurveyRecipe {
+  id:            string
+  name:          string
+  photo_url:     string | null
+  description:   string | null
+  prep_time_min: number | null
+  category:      { icon: string | null; name: string } | null
+}
+
+interface SurveyComposition {
+  id:   string
+  role: string
+  name: string | null
+}
+
+interface SurveyItem {
+  id:                string
+  day_of_week:       DayOfWeek
+  meal_type:         MealType
+  applies_all_days:  boolean
+  servings:          number
+  recipe:            SurveyRecipe | null
+  compositions:      SurveyComposition[]
+}
+
+interface SurveyData {
+  plan: { id: string; week_start: string; planner_name: string | null; family_name: string | null }
+  items: SurveyItem[]
+  existing_response: {
+    id:              string
+    respondent_name: string
+    answers:         { item_id: string; reaction: string; comment: string | null }[]
+  } | null
+}
+
+type LoadState = 'loading' | 'not_found' | 'expired' | 'ready'
+
+interface AnswerState {
+  reaction: Reaction | null
+  comment:  string
+}
+
+const MOMENT_BY_MEAL_TYPE: Record<MealType, string> = {
+  petit_dejeuner: 'Matin',
+  dejeuner:       'Midi',
+  gouter:         'Après-midi',
+  diner:          'Soir',
+}
+
+const STORAGE_KEY_NAME    = 'kkb_respondent_name'
+const STORAGE_KEY_RESP_ID = (token: string) => `kkb_survey_resp_${token}`
+const STORAGE_KEY_DONE    = (token: string) => `kkb_survey_done_${token}`
+
+// ─── Composant ────────────────────────────────────────────────────────────────
+
+export function SurveyPageClient({ token }: { token: string }) {
+  const router = useRouter()
+
+  const [loadState, setLoadState] = useState<LoadState>('loading')
+  const [data,       setData]     = useState<SurveyData | null>(null)
+  const [name,       setName]     = useState('')
+  const [responseId, setResponseId] = useState<string | null>(null)
+  const [answers,    setAnswers]  = useState<Record<string, AnswerState>>({})
+  const [submitted,  setSubmitted]  = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [savingCommentId, setSavingCommentId] = useState<string | null>(null)
+  const [justSavedId,     setJustSavedId]     = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const justSavedTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    const storedName = localStorage.getItem(STORAGE_KEY_NAME)
+    if (storedName) setName(storedName)
+
+    const storedRespId = localStorage.getItem(STORAGE_KEY_RESP_ID(token))
+    const done = localStorage.getItem(STORAGE_KEY_DONE(token)) === '1'
+    setSubmitted(done)
+
+    void (async () => {
+      try {
+        const params = storedRespId ? `?response_id=${storedRespId}` : ''
+        const res = await fetch(`/api/surveys/${token}${params}`)
+        if (res.status === 404) { setLoadState('not_found'); return }
+        if (res.status === 410) { setLoadState('expired'); return }
+        if (!res.ok) { setLoadState('not_found'); return }
+
+        const json: SurveyData = await res.json()
+        setData(json)
+
+        if (json.existing_response) {
+          setResponseId(json.existing_response.id)
+          if (!storedName) setName(json.existing_response.respondent_name)
+          const hydrated: Record<string, AnswerState> = {}
+          for (const a of json.existing_response.answers) {
+            hydrated[a.item_id] = { reaction: a.reaction as Reaction, comment: a.comment ?? '' }
+          }
+          setAnswers(hydrated)
+        }
+
+        setLoadState('ready')
+      } catch {
+        setLoadState('not_found')
+      }
+    })()
+  }, [token])
+
+  const ratedCount = Object.values(answers).filter(a => a.reaction !== null).length
+  const totalCount = data?.items.length ?? 0
+
+  async function saveAnswer(itemId: string, reaction: Reaction, comment: string) {
+    if (!name.trim()) return
+    localStorage.setItem(STORAGE_KEY_NAME, name.trim())
+
+    const res = await fetch(`/api/surveys/${token}/answers/${itemId}`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        respondent_name: name.trim(),
+        reaction,
+        comment:         comment.trim() || undefined,
+        response_id:     responseId ?? undefined,
+      }),
+    })
+
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}))
+      setError(d.error ?? 'Erreur lors de la sauvegarde')
+      return false
+    }
+
+    const resData = await res.json()
+    if (!responseId && resData.response_id) {
+      setResponseId(resData.response_id)
+      localStorage.setItem(STORAGE_KEY_RESP_ID(token), resData.response_id)
+    }
+
+    if (justSavedTimer.current) clearTimeout(justSavedTimer.current)
+    setJustSavedId(itemId)
+    justSavedTimer.current = setTimeout(() => setJustSavedId(null), 1500)
+    return true
+  }
+
+  function selectReaction(itemId: string, reaction: Reaction) {
+    if (!name.trim()) return
+    setAnswers(prev => ({ ...prev, [itemId]: { reaction, comment: prev[itemId]?.comment ?? '' } }))
+    void saveAnswer(itemId, reaction, answers[itemId]?.comment ?? '')
+  }
+
+  function updateComment(itemId: string, comment: string) {
+    setAnswers(prev => ({ ...prev, [itemId]: { reaction: prev[itemId]?.reaction ?? null, comment } }))
+  }
+
+  async function saveComment(itemId: string) {
+    const a = answers[itemId]
+    if (!a?.reaction) return
+    setSavingCommentId(itemId)
+    await saveAnswer(itemId, a.reaction, a.comment)
+    setSavingCommentId(null)
+  }
+
+  async function handleSubmit() {
+    if (!responseId || ratedCount === 0) return
+    setSubmitting(true)
+    setError(null)
+
+    const res = await fetch(`/api/surveys/${token}/responses`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ response_id: responseId }),
+    })
+
+    setSubmitting(false)
+
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}))
+      setError(d.error ?? 'Erreur lors de l\'envoi')
+      return
+    }
+
+    localStorage.setItem(STORAGE_KEY_DONE(token), '1')
+    setSubmitted(true)
+  }
+
+  function handleModify() {
+    localStorage.removeItem(STORAGE_KEY_DONE(token))
+    setSubmitted(false)
+  }
+
+  // ── États de chargement / erreur ──────────────────────────────────────────
+
+  if (loadState === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[var(--kkb-bg)]">
+        <Loader2 className="h-6 w-6 text-[var(--kkb-coral)] animate-spin" />
+      </div>
+    )
+  }
+
+  if (loadState === 'expired') {
+    return (
+      <StatusScreen
+        icon={<Clock className="h-12 w-12 text-[var(--kkb-text-tertiary)]" />}
+        title="Ce lien a expiré"
+        message="Le menu de cette semaine n'est plus disponible."
+        onBack={() => router.push('/')}
+      />
+    )
+  }
+
+  if (loadState === 'not_found' || !data) {
+    return (
+      <StatusScreen
+        icon={<XCircle className="h-12 w-12 text-[var(--kkb-text-tertiary)]" />}
+        title="Lien introuvable"
+        message="Ce lien de sondage n'existe pas ou n'est plus valide."
+        onBack={() => router.push('/')}
+      />
+    )
+  }
+
+  // ── Contenu normal ─────────────────────────────────────────────────────────
+
+  const templateItems = data.items.filter(i => i.applies_all_days)
+  const dailyByType = new Map<MealType, SurveyItem[]>()
+  for (const item of data.items.filter(i => !i.applies_all_days)) {
+    const list = dailyByType.get(item.meal_type) ?? []
+    list.push(item)
+    dailyByType.set(item.meal_type, list)
+  }
+  const activeMealTypes = Object.keys(MEAL_TYPE_ORDER)
+    .map(k => k as MealType)
+    .sort((a, b) => MEAL_TYPE_ORDER[a] - MEAL_TYPE_ORDER[b])
+    .filter(mt => dailyByType.has(mt))
+
+  const monday = new Date(data.plan.week_start + 'T00:00:00')
+  function dayLabelFor(item: SurveyItem) {
+    if (item.applies_all_days) return 'Toute la semaine'
+    const idx = DAY_OPTIONS.findIndex(d => d.val === item.day_of_week)
+    const date = new Date(monday)
+    date.setDate(monday.getDate() + idx)
+    return `${DAY_OPTIONS[idx]?.full ?? ''} ${date.getDate()} · ${MOMENT_BY_MEAL_TYPE[item.meal_type]}`
+  }
+
+  const plannerFirstName = data.plan.planner_name?.trim().split(/\s+/)[0] ?? 'votre famille'
+  const progressPercent  = totalCount > 0 ? Math.round((ratedCount / totalCount) * 100) : 0
+
+  return (
+    <div className="min-h-screen bg-[var(--kkb-bg)] pb-32">
+      <PublicHeader plannerName={data.plan.planner_name} familyName={data.plan.family_name} />
+
+      <main className="max-w-[720px] mx-auto px-4 lg:px-6 py-5 lg:py-10">
+        {/* Hero */}
+        <section className="space-y-2 mb-6">
+          <span className="inline-block text-[11px] font-quicksand font-bold uppercase tracking-wide px-2.5 py-1 rounded-full bg-[var(--kkb-teal-light)] text-[var(--kkb-teal)]">
+            🗓 Semaine en cours · {formatWeekRange(data.plan.week_start)}
+          </span>
+          <h1 className="font-dosis font-extrabold text-2xl text-[var(--kkb-text-primary)]">
+            Le menu de {plannerFirstName}
+          </h1>
+          <p className="text-sm font-quicksand text-[var(--kkb-text-secondary)]">
+            Salut ! 👋 Dis-nous ce qui te fait envie pour les repas de cette semaine. Ton avis
+            compte beaucoup pour la cuisine de la maison !
+          </p>
+        </section>
+
+        {/* Champ prénom */}
+        <section className="mb-6">
+          <p className="text-[11px] font-quicksand font-bold uppercase tracking-wide text-[var(--kkb-text-tertiary)] mb-1.5">
+            Ton prénom ?
+          </p>
+          <div className="lg:max-w-[400px] lg:mx-auto flex items-center gap-2.5 bg-white border-[1.5px] border-[var(--kkb-border)] focus-within:border-[var(--kkb-coral)] rounded-[var(--kkb-radius-sm)] px-3.5 py-3 transition-colors">
+            <UserCircle className="h-4 w-4 text-[var(--kkb-text-tertiary)] shrink-0" />
+            <input
+              type="text"
+              value={name}
+              onChange={e => setName(e.target.value)}
+              onBlur={() => name.trim() && localStorage.setItem(STORAGE_KEY_NAME, name.trim())}
+              placeholder="Comment vous appelez-vous ?"
+              aria-label="Ton prénom"
+              className="flex-1 text-sm font-quicksand text-[var(--kkb-text-primary)] bg-transparent outline-none placeholder:text-[var(--kkb-text-tertiary)]"
+            />
+          </div>
+        </section>
+
+        {/* Section template */}
+        {templateItems.length > 0 && (
+          <>
+            <SectionSeparator label="Toute la semaine" />
+            <div className="space-y-3 mb-2">
+              {templateItems.map(item => (
+                <MealVoteCard
+                  key={item.id}
+                  dayLabel={`${MEAL_EMOJI[item.meal_type]} ${MEAL_LABEL[item.meal_type]} · Toute la semaine`}
+                  mealType={item.meal_type}
+                  recipe={item.recipe}
+                  compositions={item.compositions}
+                  reaction={answers[item.id]?.reaction ?? null}
+                  comment={answers[item.id]?.comment ?? ''}
+                  onSelectReaction={r => selectReaction(item.id, r)}
+                  onCommentChange={v => updateComment(item.id, v)}
+                  onSaveComment={() => saveComment(item.id)}
+                  savingComment={savingCommentId === item.id}
+                  justSaved={justSavedId === item.id}
+                  disabled={!name.trim()}
+                />
+              ))}
+            </div>
+          </>
+        )}
+
+        {activeMealTypes.length > 0 && <SectionSeparator label="Au programme" />}
+
+        {/* Sections par type de repas */}
+        {activeMealTypes.map(mealType => (
+          <section key={mealType} className="mb-5">
+            <h2 className="font-dosis font-bold text-xl text-[var(--kkb-text-primary)] mb-2">
+              {MEAL_EMOJI[mealType]} {MEAL_LABEL[mealType]}
+            </h2>
+            {dailyByType.get(mealType)!.map(item => (
+              <MealVoteCard
+                key={item.id}
+                dayLabel={dayLabelFor(item)}
+                mealType={item.meal_type}
+                recipe={item.recipe}
+                compositions={item.compositions}
+                reaction={answers[item.id]?.reaction ?? null}
+                comment={answers[item.id]?.comment ?? ''}
+                onSelectReaction={r => selectReaction(item.id, r)}
+                onCommentChange={v => updateComment(item.id, v)}
+                onSaveComment={() => saveComment(item.id)}
+                savingComment={savingCommentId === item.id}
+                justSaved={justSavedId === item.id}
+                disabled={!name.trim()}
+              />
+            ))}
+          </section>
+        ))}
+
+        {data.items.length === 0 && (
+          <p className="text-sm font-quicksand text-[var(--kkb-text-tertiary)] text-center py-8">
+            Ce menu ne contient aucun repas planifié pour le moment.
+          </p>
+        )}
+
+        {error && (
+          <p className="text-sm font-quicksand text-[var(--kkb-danger)] text-center mb-3">{error}</p>
+        )}
+
+        {/* Footer */}
+        <footer className="pt-6 text-center space-y-0.5">
+          <p className="text-[11px] font-quicksand text-[var(--kkb-text-tertiary)]">
+            Lien partagé par {data.plan.family_name ? `la Famille ${data.plan.family_name}` : plannerFirstName}
+            {' · '}Menu du {formatWeekRange(data.plan.week_start)}
+          </p>
+          <p className="text-[11px] font-quicksand text-[var(--kkb-text-tertiary)]">
+            Cuisine du cœur, sérénité &amp; partage
+          </p>
+        </footer>
+      </main>
+
+      {/* Barre sticky en bas */}
+      <div className="fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-[var(--kkb-border)] lg:rounded-t-[var(--kkb-radius-card)] lg:shadow-[0_-4px_20px_rgba(22,25,26,0.08)]">
+        <div className="max-w-[720px] mx-auto px-5 py-3 lg:flex lg:items-center lg:justify-between lg:gap-4" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
+          <div className="lg:flex-1">
+            <div className="flex items-center justify-between mb-1">
+              <p className="text-xs font-quicksand text-[var(--kkb-text-tertiary)]">
+                {ratedCount} / {totalCount} repas notés
+              </p>
+            </div>
+            <div className="h-1 w-full rounded-full bg-[var(--kkb-border)] overflow-hidden">
+              <div
+                className="h-full rounded-full bg-[var(--kkb-coral)] transition-all duration-300"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+          </div>
+
+          <div className="lg:w-auto lg:shrink-0">
+            {submitted ? (
+              <button
+                type="button"
+                onClick={handleModify}
+                className="w-full lg:w-auto mt-3 lg:mt-0 flex items-center justify-center gap-2 rounded-[var(--kkb-radius-pill)] bg-white border-[1.5px] border-[var(--kkb-coral)] text-[var(--kkb-coral)] font-quicksand font-bold text-[15px] px-6 py-3"
+              >
+                Modifier mes votes
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleSubmit}
+                disabled={ratedCount === 0 || !name.trim() || submitting}
+                className={`w-full lg:w-auto mt-3 lg:mt-0 flex items-center justify-center gap-2 rounded-[var(--kkb-radius-pill)] font-quicksand font-bold text-[15px] px-6 py-3 transition-opacity ${
+                  ratedCount === 0 || !name.trim() ? 'bg-[var(--kkb-coral)] text-white opacity-50 pointer-events-none' : 'bg-[var(--kkb-coral)] text-white'
+                }`}
+              >
+                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                Envoyer mes votes
+              </button>
+            )}
+          </div>
+
+          {!submitted && (
+            <p className="text-center lg:hidden text-[11px] font-quicksand text-[var(--kkb-text-tertiary)] mt-2">
+              Modifiable à tout moment avant vendredi soir · Zéro gaspillage alimentaire
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Sous-composants ──────────────────────────────────────────────────────────
+
+function SectionSeparator({ label }: { label: string }) {
+  return (
+    <p className="text-center text-[11px] font-quicksand font-bold uppercase tracking-wide text-[var(--kkb-text-tertiary)] my-4">
+      ── {label} ──
+    </p>
+  )
+}
+
+function StatusScreen({ icon, title, message, onBack }: {
+  icon:    React.ReactNode
+  title:   string
+  message: string
+  onBack:  () => void
+}) {
+  return (
+    <div className="min-h-screen bg-[var(--kkb-bg)] flex items-center justify-center px-6">
+      <div className="text-center space-y-3 max-w-xs">
+        {icon}
+        <h1 className="font-dosis font-bold text-[22px] text-[var(--kkb-text-primary)]">{title}</h1>
+        <p className="text-sm font-quicksand text-[var(--kkb-text-secondary)]">{message}</p>
+        <button
+          type="button"
+          onClick={onBack}
+          className="text-sm font-quicksand font-semibold text-[var(--kkb-coral)] underline"
+        >
+          Retour à l&apos;accueil
+        </button>
+      </div>
+    </div>
+  )
+}
