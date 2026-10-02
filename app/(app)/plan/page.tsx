@@ -187,6 +187,23 @@ export default function PlanPage() {
   const [showCompletedSummary, setShowCompletedSummary] = useState(false)
   const [desktopView, setDesktopView] = useState<'week' | 'day'>('week')
 
+  // Suit le meme ancrage (#generate-slot) que le FAB global (cf.
+  // components/layout/fab.tsx) pour savoir, independamment, quand celui-ci
+  // devient flottant — permet au bouton "Passer a ..." de se repositionner
+  // en miroir (grand et seul tant que le FAB est ancre en haut, puis
+  // compact et pousse a droite des que le FAB repasse flottant a gauche).
+  const [generatorFloating, setGeneratorFloating] = useState(false)
+  useEffect(() => {
+    const el = document.getElementById('generate-slot')
+    if (!el) return
+    const observer = new IntersectionObserver(
+      ([entry]) => setGeneratorFloating(!entry.isIntersecting),
+      { rootMargin: '0px 0px -88px 0px' }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [viewState])
+
   const [servings,         setServings]         = useState(4)
   const [updatingServings, setUpdatingServings] = useState(false)
   const [pickerCategories,       setPickerCategories]       = useState<Category[]>([])
@@ -915,18 +932,31 @@ export default function PlanPage() {
         </div>
       )}
 
-      {/* ── Bouton de passage au jour suivant (sticky, aligné à gauche — le
-          FAB "Générer ma semaine" flottant occupe la droite sur la même ligne) ── */}
+      {/* ── Bouton de passage au jour suivant (sticky) ── imposant et seul
+          tant que le FAB "Générer" reste ancré en haut de page ; dès qu'il
+          repasse flottant (à gauche), ce bouton se contracte et glisse à
+          droite pour partager la ligne — transition animée, pas de saut. ── */}
       {viewState === 'review' && plan && activeConfigs.length > 0 && (
-        <div className="fixed bottom-[88px] left-4 z-30 lg:hidden">
-          <button
-            type="button"
-            onClick={goToNextDay}
-            className="flex items-center gap-1.5 rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-coral)] hover:bg-[var(--kkb-coral-hover)] text-white font-quicksand font-semibold text-[13px] px-4 py-2 shadow-[var(--kkb-shadow-fab)] whitespace-nowrap"
-          >
-            {isLastDay ? 'Terminer' : `Passer à ${DAY_OPTIONS[selectedDayIdx + 1].full}`}
-            <ArrowRight className="h-3.5 w-3.5" />
-          </button>
+        <div className="fixed bottom-[88px] left-4 right-4 z-30 lg:hidden">
+          <div className="relative h-[52px]">
+            <button
+              type="button"
+              onClick={goToNextDay}
+              className={`absolute top-0 flex items-center justify-center rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-coral)] hover:bg-[var(--kkb-coral-hover)] text-white font-quicksand font-bold shadow-[var(--kkb-shadow-fab)] whitespace-nowrap transition-all duration-300 ease-out ${
+                generatorFloating
+                  ? 'left-[calc(100%-176px)] w-[176px] h-[40px] text-[12px] gap-1'
+                  : 'left-0 w-full h-[52px] text-[15px] gap-2'
+              }`}
+            >
+              {isLastDay ? 'Terminer' : `Passer à ${DAY_OPTIONS[selectedDayIdx + 1].full}`}
+              <ArrowRight className={`shrink-0 transition-all duration-300 ${generatorFloating ? 'h-3.5 w-3.5' : 'h-4 w-4'}`} />
+            </button>
+          </div>
+          {!generatorFloating && (
+            <p className="text-center text-[11px] font-quicksand text-[var(--kkb-text-tertiary)] mt-1.5">
+              Ou terminer plus tard · Vos choix sont sauvegardés automatiquement
+            </p>
+          )}
         </div>
       )}
 
