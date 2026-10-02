@@ -68,10 +68,19 @@ const config: Config = {
           from: { height: 'var(--radix-accordion-content-height)' },
           to: { height: '0' },
         },
+        // Réactions de vote (sondage) : pop élastique au clic
+        'kkb-react-pop': {
+          '0%':   { transform: 'scale(1) rotate(0deg)' },
+          '25%':  { transform: 'scale(1.9) rotate(-12deg)' },
+          '45%':  { transform: 'scale(0.85) rotate(8deg)' },
+          '65%':  { transform: 'scale(1.2) rotate(-4deg)' },
+          '100%': { transform: 'scale(1) rotate(0deg)' },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
+        'kkb-react-pop': 'kkb-react-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)',
       },
     },
   },

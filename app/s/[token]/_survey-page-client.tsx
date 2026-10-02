@@ -444,7 +444,7 @@ export function SurveyPageClient({ token }: { token: string }) {
           {templateItems.length > 0 && (
             <>
               <SectionSeparator label="Toute la semaine" />
-              <div className="space-y-3 md:space-y-0 md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 md:gap-4 md:items-start mb-2">
+              <div className="space-y-3 md:space-y-0 md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 md:gap-4 mb-2">
                 {templateItems.map(item => renderCard(item))}
               </div>
             </>
@@ -497,7 +497,7 @@ export function SurveyPageClient({ token }: { token: string }) {
                   <ChevronDown className={`hidden lg:block h-5 w-5 text-[var(--kkb-text-tertiary)] transition-transform ${collapsed ? '-rotate-90' : ''}`} />
                 </button>
                 <div className={`lg:overflow-hidden lg:transition-[max-height] lg:duration-300 ${collapsed ? 'lg:max-h-0' : 'lg:max-h-[6000px]'}`}>
-                  <div className={`space-y-3 md:space-y-0 md:grid md:gap-4 md:items-start ${viewMode === 'day' ? dayGridClass(section.items.length) : 'md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'}`}>
+                  <div className={`space-y-3 md:space-y-0 md:grid md:gap-4 ${viewMode === 'day' ? dayGridClass(section.items.length) : 'md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'}`}>
                     {section.items.map(item => renderCard(item, viewMode === 'day'))}
                   </div>
                 </div>
