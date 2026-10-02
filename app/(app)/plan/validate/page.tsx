@@ -12,17 +12,16 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock,
-  Copy,
   ListChecks,
   Loader2,
   Plus,
-  Share2,
   Users,
   Utensils,
   UtensilsCrossed,
 } from 'lucide-react'
 import { MEAL_LABEL, type MealType } from '@/lib/constants/meal-type'
 import { MealTypeIcon } from '@/components/ui/meal-type-icon'
+import { ShareActions, surveyLinkPayload } from '@/components/ui/share-actions'
 import { DAY_OPTIONS, formatWeekRange, type DayOfWeek } from '@/lib/utils/week'
 import { sortByMealType } from '@/lib/utils/sort-meal-configs'
 import { countFilledSlots, isDayComplete } from '@/lib/utils/plan-progress'
@@ -333,10 +332,7 @@ function ValidateInner() {
   const [validating, setValidating] = useState(false)
   const [validated,  setValidated]  = useState(false)
   const [shareToken, setShareToken] = useState<string | null>(null)
-  const [sharing,      setSharing]      = useState(false)
-  const [copied,       setCopied]       = useState(false)
   const [surveyCount,  setSurveyCount]  = useState<number | null>(null)
-  const [canNativeShare, setCanNativeShare] = useState(false)
   const [openMealType, setOpenMealType] = useState<MealType | null>(null)
   const [openDay,      setOpenDay]      = useState<DayOfWeek | null>(DAY_OPTIONS[0].val)
   const [viewMode,     setViewMode]     = useState<'day' | 'type'>('day')
@@ -345,10 +341,6 @@ function ValidateInner() {
     if (!week) { router.replace('/plan'); return }
     void load()
   }, [week]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    setCanNativeShare(typeof navigator !== 'undefined' && typeof navigator.share === 'function')
-  }, [])
 
   async function load() {
     setLoading(true)
@@ -413,7 +405,6 @@ function ValidateInner() {
   async function ensureShareToken(): Promise<string | null> {
     if (shareToken) return shareToken
     if (!plan) return null
-    setSharing(true)
     try {
       const res = await fetch(`/api/meal-plans/${plan.id}/share`, { method: 'POST' })
       if (!res.ok) return null
@@ -423,33 +414,12 @@ function ValidateInner() {
       return data.share_token
     } catch {
       return null
-    } finally {
-      setSharing(false)
     }
   }
 
-  async function copyLink() {
+  async function surveySharePayload() {
     const token = await ensureShareToken()
-    if (!token) return
-    try {
-      await navigator.clipboard.writeText(`${window.location.origin}/s/${token}`)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    } catch { /* silent */ }
-  }
-
-  async function shareNative() {
-    const token = await ensureShareToken()
-    if (!token) return
-    try {
-      await navigator.share({
-        title: 'Menu de la semaine — KeskonBouf',
-        text:  'Donne ton avis sur notre menu de la semaine !',
-        url:   `${window.location.origin}/s/${token}`,
-      })
-    } catch {
-      /* utilisateur a annulé la feuille de partage — rien à faire */
-    }
+    return token ? surveyLinkPayload(token) : null
   }
 
   if (loading) {
@@ -574,28 +544,10 @@ function ValidateInner() {
         </p>
       )}
 
-      <div className="flex items-center gap-2">
-        {canNativeShare && (
-          <button
-            type="button"
-            onClick={() => { void shareNative() }}
-            disabled={sharing}
-            className="flex-1 flex items-center justify-center gap-1.5 border border-[var(--kkb-coral)] text-[var(--kkb-coral)] rounded-2xl py-3 font-dosis font-bold text-sm disabled:opacity-60 hover:bg-[var(--kkb-coral)]/5 transition-colors"
-          >
-            {sharing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Share2 className="h-4 w-4" />}
-            Partager
-          </button>
-        )}
-        <button
-          type="button"
-          onClick={() => { void copyLink() }}
-          disabled={sharing}
-          className="flex-1 flex items-center justify-center gap-1.5 rounded-2xl py-3 font-dosis font-bold text-sm border border-[var(--kkb-border)] text-[var(--kkb-text-secondary)] hover:border-[var(--kkb-coral)] hover:text-[var(--kkb-coral)] transition-colors disabled:opacity-60"
-        >
-          <Copy className="h-4 w-4" />
-          {copied ? 'Copié !' : 'Copier le lien'}
-        </button>
-      </div>
+      <ShareActions
+        getPayload={surveySharePayload}
+        shareButtonClassName="flex-1 flex items-center justify-center gap-1.5 border border-[var(--kkb-coral)] text-[var(--kkb-coral)] rounded-2xl py-3 font-dosis font-bold text-sm disabled:opacity-60 hover:bg-[var(--kkb-coral)]/5 transition-colors"
+      />
 
       <button
         type="button"

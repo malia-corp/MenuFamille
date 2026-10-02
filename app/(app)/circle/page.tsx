@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { AlertTriangle, Check, Copy, Heart, Key, LogOut, MoreVertical, Plus, Share2, ThumbsDown, Users, X } from 'lucide-react'
+import { AlertTriangle, Check, Heart, Key, LogOut, MoreVertical, Plus, ThumbsDown, Users, X } from 'lucide-react'
+import { ShareActions, circleInvitePayload } from '@/components/ui/share-actions'
 import { Badge } from '@/components/ui/badge'
 
 const AVATAR_COLORS = ['var(--kkb-coral)', 'var(--kkb-success)', 'var(--kkb-warning)', 'var(--kkb-teal)', 'var(--kkb-text-secondary)']
@@ -56,7 +57,6 @@ export default function CirclePage() {
   const [circles, setCircles] = useState<Circle[]>([])
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
-  const [copied, setCopied] = useState(false)
   const [openMenu, setOpenMenu] = useState<string | null>(null)
   const menuRef = useRef<HTMLDivElement>(null)
 
@@ -88,19 +88,6 @@ export default function CirclePage() {
     document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
   }, [])
-
-  async function copyCode(code: string) {
-    await navigator.clipboard.writeText(code)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
-
-  function whatsappUrl(code: string, name: string) {
-    const text = encodeURIComponent(
-      `Rejoins notre cercle familial "${name}" sur KeskonBouf ! Code : ${code}`
-    )
-    return `https://wa.me/?text=${text}`
-  }
 
   async function removeMember(circleId: string, userId: string) {
     setOpenMenu(null)
@@ -259,27 +246,12 @@ export default function CirclePage() {
           <span className="font-dosis font-bold text-3xl text-[var(--kkb-coral)] tracking-widest">
             {circle.invite_code}
           </span>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => copyCode(circle.invite_code)}
-              className="flex items-center gap-1.5 text-sm text-[var(--kkb-text-secondary)] hover:text-[var(--kkb-coral-hover)] transition-colors px-2 py-1 rounded-lg hover:bg-white"
-              title="Copier le code"
-            >
-              <Copy className="h-4 w-4" />
-              {copied ? 'Copié !' : 'Copier'}
-            </button>
-            <a
-              href={whatsappUrl(circle.invite_code, circle.name)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 text-sm text-[var(--kkb-text-secondary)] hover:text-[var(--kkb-success)] transition-colors px-2 py-1 rounded-lg hover:bg-white"
-              title="Partager sur WhatsApp"
-            >
-              <Share2 className="h-4 w-4" />
-              WhatsApp
-            </a>
-          </div>
+          <ShareActions
+            getPayload={() => circleInvitePayload(circle.name, circle.invite_code)}
+            copyLabel="Copier"
+            className="flex items-center gap-2"
+            buttonClassName="flex items-center gap-1.5 text-sm text-[var(--kkb-text-secondary)] hover:text-[var(--kkb-coral-hover)] transition-colors px-2 py-1 rounded-lg hover:bg-white disabled:opacity-60"
+          />
         </div>
       </section>
 

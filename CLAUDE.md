@@ -81,6 +81,15 @@ Voir [`docs/decisions.md`](docs/decisions.md) pour le détail. Résumé :
 
 ---
 
+## Partage — un seul modèle
+
+Tout partage (lien de sondage, récap, invitation au cercle…) passe par `<ShareActions>` (`components/ui/share-actions.tsx`) : bouton « Partager » qui ouvre la feuille de partage native de l'appareil (WhatsApp, SMS, mail…, affiché seulement si `navigator.share` existe) + bouton « Copier ». Jamais de lien `wa.me` ni de bouton dédié à une application.
+
+- Contenus réutilisables : `surveyLinkPayload(token)` (lien du sondage), `circleInvitePayload(nom, code)` (invitation, « Copier » copie le code seul).
+- Un nouveau type de partage = une nouvelle fonction `...Payload` dans ce même fichier.
+
+---
+
 ## Format d'ouverture de session
 
 À chaque nouvelle session de travail, fournir à Claude :

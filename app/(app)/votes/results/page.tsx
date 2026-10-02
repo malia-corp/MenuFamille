@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import {
-  ArrowLeft, ArrowRight, CheckCircle2, Copy, Loader2, MailOpen, Printer,
+  ArrowLeft, ArrowRight, CalendarPlus, CheckCircle2, Loader2, MailOpen, Printer,
   Settings2, Share2, Smile, Sparkles, Star, UserPlus, Users,
 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
@@ -13,6 +13,7 @@ import { DAY_OPTIONS, formatWeekRange, type DayOfWeek } from '@/lib/utils/week'
 import { agreementPct, isRejected, totalReactions } from '@/lib/utils/survey-score'
 import { ConsensusGauge } from '@/components/votes/consensus-gauge'
 import { FridgePrintSheet } from '@/components/votes/fridge-print-sheet'
+import { ShareActions, surveyLinkPayload } from '@/components/ui/share-actions'
 import { NameAvatar } from '@/components/votes/name-avatar'
 import { ResultCard } from '@/components/votes/result-card'
 import { ResultsFilters, type ResultsSort, type ResultsViewMode } from '@/components/votes/results-filters'
@@ -62,15 +63,16 @@ function VotesResultsContent() {
   const [viewMode,  setViewMode]  = useState<ResultsViewMode>('day')
   const [activeChip, setActiveChip] = useState<string | null>(null)
   const [sort,      setSort]      = useState<ResultsSort>('approval')
-  const [copied,    setCopied]    = useState(false)
 
   useEffect(() => {
     void (async () => {
       try {
         let id = planParam
         if (!id) {
-          // Sans ?plan=, on affiche les résultats du plan le plus récent.
-          const latest = await fetch('/api/meal-plans?latest=true').then(r => (r.ok ? r.json() : null))
+          // Sans ?plan= : dernier plan partagé (celui qui a pu recevoir des votes),
+          // sinon dernier plan tout court pour guider vers la planification.
+          const getLatest = (q: string) => fetch(`/api/meal-plans?latest=true${q}`).then(r => (r.ok ? r.json() : null))
+          const latest = (await getLatest('&shared=true')) ?? (await getLatest(''))
           id = latest?.id ?? null
         }
         if (!id) { setLoadState('no_plan'); return }
@@ -105,13 +107,6 @@ function VotesResultsContent() {
     router.push(`/plan?week=${data.week_start}&day=${item.day_of_week}&meal=${item.meal_type}`)
   }
 
-  async function copyShareLink() {
-    if (!data?.share_token) return
-    await navigator.clipboard.writeText(`${window.location.origin}/s/${data.share_token}`)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
-
   if (loadState === 'loading') return <PageLoader />
 
   if (loadState === 'no_plan' || loadState === 'error' || !data || !derived) {
@@ -130,30 +125,39 @@ function VotesResultsContent() {
   const participation = Math.min(100, Math.round((data.total_respondents / memberCount) * 100))
   const harmony       = harmonyOf(data.global_score)
 
-  // 0 répondant : rien à analyser, on aide à relancer la famille.
+  // 0 répondant : selon l'avancement du menu, on guide vers l'étape suivante.
   if (data.total_respondents === 0) {
-    const shareUrl = data.share_token ? `${typeof window !== 'undefined' ? window.location.origin : ''}/s/${data.share_token}` : null
+    const token = data.share_token
+
+    if (data.items.length === 0) {
+      return (
+        <EmptyState
+          icon={<CalendarPlus className="h-8 w-8 text-[var(--kkb-text-tertiary)]" />}
+          title="Menu à planifier"
+          message={`Aucun repas n'est planifié pour la semaine du ${weekRange}. Planifie d'abord ton menu, puis partage-le à ta famille pour recueillir leurs votes.`}
+          action={{ label: 'Planifier le menu', onClick: () => router.push(`/plan?week=${data.week_start}`) }}
+        />
+      )
+    }
+
+    if (!token) {
+      return (
+        <EmptyState
+          icon={<Share2 className="h-8 w-8 text-[var(--kkb-text-tertiary)]" />}
+          title="Menu pas encore partagé"
+          message={`Ton menu de la semaine du ${weekRange} est planifié mais pas encore partagé. Partage-le à ta famille pour recueillir leurs votes.`}
+          action={{ label: 'Partager le menu', onClick: () => router.push(`/plan/validate?week=${data.week_start}`) }}
+        />
+      )
+    }
+
     return (
       <EmptyState
         icon={<MailOpen className="h-8 w-8 text-[var(--kkb-text-tertiary)]" />}
         title="En attente des votes"
         message={`Personne n'a encore voté pour la semaine du ${weekRange}. Partage le lien du sondage avec ta famille.`}
-        action={shareUrl ? undefined : { label: 'Partager le menu', onClick: () => router.push(`/plan/validate?week=${data.week_start}`) }}
       >
-        {shareUrl && (
-          <div className="flex gap-2">
-            <button type="button" onClick={copyShareLink} className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-[var(--kkb-radius-sm)] bg-[var(--kkb-warning-light)] text-[#B07A12] text-sm font-quicksand font-semibold">
-              <Copy className="h-4 w-4" /> {copied ? 'Copié !' : 'Copier le lien'}
-            </button>
-            <a
-              href={`https://wa.me/?text=${encodeURIComponent(`Donne ton avis sur notre menu de la semaine : ${shareUrl}`)}`}
-              target="_blank" rel="noreferrer"
-              className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-[var(--kkb-radius-sm)] bg-[var(--kkb-success-light)] text-[var(--kkb-success)] text-sm font-quicksand font-semibold"
-            >
-              <Share2 className="h-4 w-4" /> WhatsApp
-            </a>
-          </div>
-        )}
+        <ShareActions getPayload={() => surveyLinkPayload(token)} />
       </EmptyState>
     )
   }
@@ -394,13 +398,13 @@ function VotesResultsContent() {
           </div>
         </div>
         <div className="flex shrink-0 gap-3 print:hidden">
-          <a
-            href={`https://wa.me/?text=${encodeURIComponent(recapText)}`}
-            target="_blank" rel="noreferrer"
-            className="flex items-center gap-2 rounded-[var(--kkb-radius-sm)] border border-[var(--kkb-border)] px-4 py-2.5 text-sm font-quicksand font-semibold text-[var(--kkb-text-secondary)] hover:border-[var(--kkb-success)] hover:text-[var(--kkb-success)]"
-          >
-            <Share2 className="h-4 w-4" /> Partager le récap par WhatsApp
-          </a>
+          <ShareActions
+            getPayload={() => ({ title: 'Résultats des votes — KeskonBouf', text: recapText })}
+            shareLabel="Partager le récap"
+            copyLabel="Copier le récap"
+            className="contents"
+            buttonClassName="flex items-center gap-2 rounded-[var(--kkb-radius-sm)] border border-[var(--kkb-border)] px-4 py-2.5 text-sm font-quicksand font-semibold text-[var(--kkb-text-secondary)] hover:border-[var(--kkb-coral)] hover:text-[var(--kkb-coral)] disabled:opacity-60"
+          />
           <button
             type="button" onClick={() => window.print()}
             className="flex items-center gap-2 rounded-[var(--kkb-radius-sm)] border border-[var(--kkb-border)] px-4 py-2.5 text-sm font-quicksand font-semibold text-[var(--kkb-text-secondary)] hover:border-[var(--kkb-coral)] hover:text-[var(--kkb-coral)]"
