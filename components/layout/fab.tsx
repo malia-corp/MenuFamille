@@ -12,10 +12,10 @@ import { Zap } from 'lucide-react'
 // plutot qu'un contexte partage — la page ecoute 'kkb:generate-week'.
 //
 // Bouton flottant sticky : reste fixe par-dessus le contenu jusqu'a ce que son
-// emplacement d'ancrage (<div id="generate-slot">, pose par la page elle-meme)
-// defile a l'ecran, puis s'emboite a cet endroit (position: relative, dans le
-// flux). Si une page n'a pas de #generate-slot (ex. /plan), le FAB reste fixe
-// en permanence — comportement inchange.
+// emplacement d'ancrage (<div id="generate-slot">, pose par la page elle-meme
+// — present sur "/" et "/plan") defile a l'ecran, puis s'emboite a cet endroit
+// (position: relative, dans le flux). Si une page n'a pas de #generate-slot,
+// le FAB reste fixe en permanence.
 export function FAB() {
   const pathname = usePathname()
   const router = useRouter()

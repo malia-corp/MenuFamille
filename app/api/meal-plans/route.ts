@@ -97,14 +97,20 @@ export async function GET(request: NextRequest) {
 
   const week = request.nextUrl.searchParams.get('week') ?? getMondayISO()
 
-  const { data: existing, error: selectError } = await supabase
+  // .limit(1) plutot que .maybeSingle() : s'il existe par accident plus
+  // d'une ligne pour ce (user_id, week_start) — ne devrait plus arriver
+  // depuis la contrainte unique posee en migration 0020, mais .maybeSingle()
+  // aurait renvoye une erreur Postgrest (PGRST116) et 500 au client.
+  const { data: existingRows, error: selectError } = await supabase
     .from('meal_plans')
     .select(PLAN_SELECT)
     .eq('user_id', user.id)
     .eq('week_start', week)
-    .maybeSingle()
+    .order('created_at', { ascending: false })
+    .limit(1)
 
   if (selectError) return Response.json({ error: selectError.message }, { status: 500 })
+  const existing = existingRows?.[0] ?? null
   if (existing) {
     console.log(`[meal-plans:GET existing] ${(performance.now() - start).toFixed(1)}ms`)
     return Response.json(await withAllergyWarnings(supabase, user.id, existing))

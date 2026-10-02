@@ -14,7 +14,6 @@ import {
   Minus,
   Plus,
   Settings,
-  Sparkles,
   Timer,
   Users,
 } from 'lucide-react'
@@ -224,11 +223,15 @@ export default function PlanPage() {
       )
 
       setConfigs(active)
-      setPlan(planData?.id ? planData : null)
-      setServings(planData?.meal_plan_items?.[0]?.servings ?? 4)
-
-      if ((planData?.meal_plan_items?.length ?? 0) > 0 && !sessionStartRef.current) {
-        sessionStartRef.current = Date.now()
+      if (planRes.ok && planData?.id && Array.isArray(planData.meal_plan_items)) {
+        setPlan(planData)
+        setServings(planData.meal_plan_items[0]?.servings ?? 4)
+        if (planData.meal_plan_items.length > 0 && !sessionStartRef.current) {
+          sessionStartRef.current = Date.now()
+        }
+      } else {
+        setPlan(null)
+        if (!planRes.ok) setGenError('Impossible de charger le planning de cette semaine')
       }
       setViewState('review')
     } catch {
@@ -278,8 +281,11 @@ export default function PlanPage() {
 
       const planRes  = await fetch(`/api/meal-plans?week=${selectedWeek}`)
       const planData: Plan = await planRes.json()
+      if (!planRes.ok || !planData?.id || !Array.isArray(planData.meal_plan_items)) {
+        throw new Error('Génération terminée mais le menu n\'a pas pu être rechargé')
+      }
       setPlan(planData)
-      setServings(planData?.meal_plan_items?.[0]?.servings ?? 4)
+      setServings(planData.meal_plan_items[0]?.servings ?? 4)
       sessionStartRef.current = Date.now()
       setModCount(0)
       setSessionTime(0)
@@ -742,23 +748,9 @@ export default function PlanPage() {
             </span>
           </div>
 
-          {/* Bannière génération magique */}
-          <button
-            type="button"
-            onClick={() => { void generateMenu() }}
-            className="mx-4 flex items-center gap-3 bg-gradient-to-r from-amber-50 via-orange-50 to-emerald-50 border border-[var(--kkb-border)] rounded-[var(--kkb-radius-sm)] px-4 py-3 text-left"
-          >
-            <span className="h-7 w-7 rounded-lg bg-white/70 flex items-center justify-center shrink-0">
-              <Sparkles className="h-4 w-4 text-amber-700" />
-            </span>
-            <div className="flex-1 min-w-0">
-              <p className="font-quicksand font-bold text-sm text-[var(--kkb-text-primary)]">⚡ Génération magique 1-clic</p>
-              <p className="text-xs font-quicksand text-[var(--kkb-text-secondary)] truncate">
-                Remplir automatiquement le reste de la semaine sans stress
-              </p>
-            </div>
-            <ChevronRight className="h-4 w-4 text-[var(--kkb-text-tertiary)] shrink-0" />
-          </button>
+          {/* Emplacement d'ancrage du FAB (cf. components/layout/fab.tsx) — un
+              seul bouton "Générer ma semaine", pas un deuxième dupliqué ici */}
+          <div id="generate-slot" className="mx-4 min-h-[52px]" />
 
           {activeConfigs.length === 0 ? (
             <div className="mx-4 flex flex-col items-center gap-3 py-8 text-center">

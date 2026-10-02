@@ -63,12 +63,23 @@ export async function POST(request: NextRequest) {
     ? requestedWeek
     : getMondayISO()
 
-  const { data: existingPlan } = await service
+  // .limit(1) plutot que .maybeSingle() : sur un (user_id, week_start) qui
+  // aurait plus d'une ligne, .maybeSingle() renvoie une erreur Postgrest
+  // (PGRST116) qui etait ignoree ci-dessous (seul `data` etait destructure)
+  // — `existingPlan` devenait alors `undefined`, le code croyait qu'aucun
+  // plan n'existait et en recreait un complet a CHAQUE appel, aggravant le
+  // doublon un peu plus a chaque generation. Contrainte unique posee en
+  // migration 0020 pour empecher que ça se reproduise.
+  const { data: existingRows, error: existingError } = await service
     .from('meal_plans')
     .select('id, status')
     .eq('user_id', user.id)
     .eq('week_start', weekStart)
-    .maybeSingle()
+    .order('created_at', { ascending: false })
+    .limit(1)
+
+  if (existingError) return Response.json({ error: existingError.message }, { status: 500 })
+  const existingPlan = existingRows?.[0] ?? null
 
   let planId: string
 

@@ -16,6 +16,7 @@ export interface ProgressItem {
 // tous les jours), un type "quotidien" compte une fois par jour (7) — meme
 // convention que le compteur global deja utilise sur /plan/validate.
 export function countFilledSlots(configs: ProgressConfig[], items: ProgressItem[]): { filled: number; total: number } {
+  items = Array.isArray(items) ? items : []
   let filled = 0
   let total = 0
   for (const config of configs) {
@@ -36,6 +37,7 @@ export function countFilledSlots(configs: ProgressConfig[], items: ProgressItem[
 // un type "modele semaine" compte pour tous les jours des qu'il a sa seule
 // recette (meme repas chaque jour).
 export function isDayComplete(configs: ProgressConfig[], items: ProgressItem[], day: DayOfWeek): boolean {
+  items = Array.isArray(items) ? items : []
   if (configs.length === 0) return false
   return configs.every(config =>
     config.mode === 'template'
@@ -47,6 +49,7 @@ export function isDayComplete(configs: ProgressConfig[], items: ProgressItem[], 
 // Nombre de types de repas actifs qui ont une recette pour ce jour (pour
 // l'affichage "2/4" sur un tab jour partiellement rempli).
 export function dayFilledCount(configs: ProgressConfig[], items: ProgressItem[], day: DayOfWeek): number {
+  items = Array.isArray(items) ? items : []
   return configs.filter(config =>
     config.mode === 'template'
       ? items.some(i => i.meal_type === config.meal_type && i.applies_all_days)
@@ -60,6 +63,7 @@ export function dayFilledCount(configs: ProgressConfig[], items: ProgressItem[],
 export function countFilledByMealType(
   configs: ProgressConfig[], items: ProgressItem[]
 ): Record<MealType, { filled: number; total: number }> {
+  items = Array.isArray(items) ? items : []
   const result = {} as Record<MealType, { filled: number; total: number }>
   for (const config of configs) {
     if (config.mode === 'template') {

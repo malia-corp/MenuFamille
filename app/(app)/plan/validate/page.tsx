@@ -344,15 +344,19 @@ function ValidateInner() {
       const active = sortByMealType(
         (Array.isArray(configData) ? configData as MealConfig[] : []).filter(c => c.is_active)
       )
-
-      setPlan(planData?.id ? planData : null)
       setConfigs(active)
       setOpenMealType(active[0]?.meal_type ?? null)
 
-      if (planData?.status === 'finalized' || planData?.status === 'shared') setValidated(true)
-      if (planData?.share_token) {
-        setShareToken(planData.share_token)
-        void fetchSurveyCount(planData.id)
+      if (planRes.ok && planData?.id && Array.isArray(planData.meal_plan_items)) {
+        setPlan(planData)
+        if (planData.status === 'finalized' || planData.status === 'shared') setValidated(true)
+        if (planData.share_token) {
+          setShareToken(planData.share_token)
+          void fetchSurveyCount(planData.id)
+        }
+      } else {
+        setPlan(null)
+        if (!planRes.ok) setApiError('Impossible de charger le planning de cette semaine')
       }
     } catch {
       setApiError('Impossible de charger le planning')
