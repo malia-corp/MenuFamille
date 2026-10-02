@@ -28,8 +28,8 @@ Plus aucun commit n'est poussé directement sur `main`. Pour chaque tâche logiq
    - `<slug>` : description courte en kebab-case
    - Exemples : `feat/sprint0-jour3-seed-data` → `feat/sprint0-jour3-connexion-supabase` (créée depuis la première, pas depuis `main`)
    - Une fois une branche mergée sur `main` par la développeuse, la branche suivante peut repartir d'un `main` à jour (`git checkout main && git pull`) si la chaîne n'a plus de raison d'être maintenue
-2. Committer sur cette branche (convention habituelle `feat(ID-story): ...`)
-3. Pousser la branche : `git push -u origin <branche>`
+2. Committer sur cette branche (convention habituelle `feat(ID-story): ...`) — automatique, pas besoin de validation préalable
+3. **Attendre une validation explicite de la développeuse avant de pousser** (ex. "tu peux pusher"). Ne jamais enchaîner commit et push automatiquement, et ne pas interpréter l'approbation d'un commit comme une approbation du push qui suit. Une fois validé : `git push -u origin <branche>`
 4. Ouvrir la Pull Request manuellement sur GitHub (lien de comparaison fourni à chaque push) — la PR d'une branche enfant cible sa branche parente tant que celle-ci n'est pas mergée, pour refléter la chaîne réelle
 5. Revue et merge effectués par la développeuse via l'interface GitHub — jamais de merge automatique
 
