@@ -78,6 +78,14 @@ export async function POST(
     )
   }
 
+  // Votant connecté : le nom affiché est celui de son profil, quel que soit
+  // ce qu'envoie le client (le champ est verrouillé côté page).
+  let displayName = respondent_name.trim()
+  if (user) {
+    const { data: profile } = await supabase.from('users').select('display_name').eq('id', user.id).maybeSingle()
+    if (profile?.display_name?.trim()) displayName = profile.display_name.trim()
+  }
+
   let responseId: string | undefined
 
   if (response_id) {
@@ -113,7 +121,7 @@ export async function POST(
       .from('survey_responses')
       .insert({
         meal_plan_id:    plan.id,
-        respondent_name: respondent_name.trim(),
+        respondent_name: displayName,
         ip_address:      ip,
         user_id:         user?.id ?? null,
       })

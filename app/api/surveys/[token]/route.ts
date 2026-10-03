@@ -110,16 +110,19 @@ export async function GET(
     answers:        { item_id: string; reaction: string; comment: string | null }[]
   } | null = null
 
-  const RESPONSE_SELECT = 'id, respondent_name, survey_answers ( meal_plan_item_id, reaction, comment )'
-  const responseId = new URL(request.url).searchParams.get('response_id')
-  let response = responseId
-    ? (await supabase.from('survey_responses').select(RESPONSE_SELECT).eq('id', responseId).eq('meal_plan_id', plan.id).maybeSingle()).data
-    : null
+  const RESPONSE_SELECT = 'id, respondent_name, user_id, survey_answers ( meal_plan_item_id, reaction, comment )'
+  const { data: { user } } = await (await createClient()).auth.getUser()
 
-  if (!response) {
-    const { data: { user } } = await (await createClient()).auth.getUser()
-    if (user) {
-      response = (await supabase
+  // Visiteur connecté : son nom vient de son profil (plus de saisie), et sa
+  // réponse est celle rattachée à son compte en priorité.
+  let viewer: { display_name: string } | null = null
+  if (user) {
+    const { data: profile } = await supabase.from('users').select('display_name').eq('id', user.id).maybeSingle()
+    viewer = { display_name: profile?.display_name?.trim() || user.email?.split('@')[0] || '' }
+  }
+
+  let response = user
+    ? (await supabase
         .from('survey_responses')
         .select(RESPONSE_SELECT)
         .eq('meal_plan_id', plan.id)
@@ -127,7 +130,13 @@ export async function GET(
         .order('created_at')
         .limit(1)
         .maybeSingle()).data
-    }
+    : null
+
+  const responseId = new URL(request.url).searchParams.get('response_id')
+  if (!response && responseId) {
+    const byId = (await supabase.from('survey_responses').select(RESPONSE_SELECT).eq('id', responseId).eq('meal_plan_id', plan.id).maybeSingle()).data
+    // Réponse d'un autre compte (appareil partagé) : on ne la reprend pas.
+    if (byId && (!byId.user_id || byId.user_id === user?.id)) response = byId
   }
 
   if (response) {
@@ -147,5 +156,6 @@ export async function GET(
     plan: { id: planData.id, week_start: planData.week_start, planner_name, family_name },
     items,
     existing_response,
+    viewer,
   })
 }

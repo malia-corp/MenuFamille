@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowRight, CalendarDays, ChevronDown, Clock, Hand, Loader2, Send, UnfoldHorizontal, UserCircle, XCircle, type LucideIcon } from 'lucide-react'
+import { ArrowRight, CalendarDays, ChevronDown, Clock, Hand, Loader2, Lock, Send, UnfoldHorizontal, UserCircle, XCircle, type LucideIcon } from 'lucide-react'
 import { PublicHeader } from '@/components/survey/public-header'
 import { MealVoteCard, type Reaction } from '@/components/survey/meal-vote-card'
 import { ViewToggle, type SurveyViewMode } from '@/components/survey/view-toggle'
@@ -47,6 +47,8 @@ interface SurveyData {
     respondent_name: string
     answers:         { item_id: string; reaction: string; comment: string | null }[]
   } | null
+  // Visiteur connecté : son nom vient de son profil (champ verrouillé).
+  viewer: { display_name: string } | null
 }
 
 type LoadState = 'loading' | 'not_found' | 'expired' | 'ready'
@@ -115,10 +117,11 @@ export function SurveyPageClient({ token }: { token: string }) {
 
         const json: SurveyData = await res.json()
         setData(json)
+        if (json.viewer?.display_name) setName(json.viewer.display_name)
 
         if (json.existing_response) {
           setResponseId(json.existing_response.id)
-          if (!storedName) setName(json.existing_response.respondent_name)
+          if (!storedName && !json.viewer) setName(json.existing_response.respondent_name)
           const hydrated: Record<string, AnswerState> = {}
           for (const a of json.existing_response.answers) {
             hydrated[a.item_id] = { reaction: a.reaction as Reaction, comment: a.comment ?? '' }
@@ -222,8 +225,11 @@ export function SurveyPageClient({ token }: { token: string }) {
     setActiveFilter(null)
   }
 
+  // Connecté : nom du profil, non modifiable (et pas mémorisé localement).
+  const nameLocked = !!data?.viewer
+
   function handleNameBlur() {
-    if (name.trim()) localStorage.setItem(STORAGE_KEY_NAME, name.trim())
+    if (!nameLocked && name.trim()) localStorage.setItem(STORAGE_KEY_NAME, name.trim())
   }
 
   // ── États de chargement / erreur ──────────────────────────────────────────
@@ -388,7 +394,7 @@ export function SurveyPageClient({ token }: { token: string }) {
 
   return (
     <div className="min-h-screen bg-[var(--kkb-bg)] pb-32">
-      <PublicHeader plannerName={data.plan.planner_name} familyName={data.plan.family_name} />
+      <PublicHeader plannerName={data.plan.planner_name} familyName={data.plan.family_name} viewer={data.viewer} />
 
       <div className="max-w-7xl mx-auto px-4 lg:px-6 xl:px-10 py-5 lg:py-10">
         <main className="max-w-[720px] mx-auto xl:max-w-none">
@@ -419,6 +425,7 @@ export function SurveyPageClient({ token }: { token: string }) {
                   ratedCount={ratedCount}
                   totalCount={totalCount}
                   submitted={submitted}
+                  locked={nameLocked}
                 />
               </div>
             </div>
@@ -429,18 +436,25 @@ export function SurveyPageClient({ token }: { token: string }) {
             <p className="text-[11px] font-quicksand font-bold uppercase tracking-wide text-[var(--kkb-text-tertiary)] mb-1.5">
               Ton prénom ?
             </p>
-            <div className="lg:max-w-[400px] flex items-center gap-2.5 bg-white border-[1.5px] border-[var(--kkb-border)] focus-within:border-[var(--kkb-coral)] rounded-[var(--kkb-radius-sm)] px-3.5 py-3 transition-colors">
+            <div className={`lg:max-w-[400px] flex items-center gap-2.5 border-[1.5px] border-[var(--kkb-border)] rounded-[var(--kkb-radius-sm)] px-3.5 py-3 transition-colors ${
+              nameLocked ? 'bg-[var(--kkb-border-light)]' : 'bg-white focus-within:border-[var(--kkb-coral)]'
+            }`}>
               <UserCircle className="h-4 w-4 text-[var(--kkb-text-tertiary)] shrink-0" />
               <input
                 type="text"
                 value={name}
                 onChange={e => setName(e.target.value)}
                 onBlur={handleNameBlur}
+                disabled={nameLocked}
                 placeholder="Comment vous appelez-vous ?"
                 aria-label="Ton prénom"
-                className="flex-1 text-sm font-quicksand text-[var(--kkb-text-primary)] bg-transparent outline-none placeholder:text-[var(--kkb-text-tertiary)]"
+                className="flex-1 text-sm font-quicksand text-[var(--kkb-text-primary)] bg-transparent outline-none placeholder:text-[var(--kkb-text-tertiary)] disabled:cursor-not-allowed disabled:text-[var(--kkb-text-secondary)]"
               />
+              {nameLocked && <Lock className="h-3.5 w-3.5 text-[var(--kkb-text-tertiary)] shrink-0" />}
             </div>
+            {nameLocked && (
+              <p className="mt-1 text-[11px] font-quicksand text-[var(--kkb-text-tertiary)]">Connecté(e) : ton nom vient de ton profil.</p>
+            )}
           </section>
 
           {/* Section template — jamais filtrée par le toggle */}
