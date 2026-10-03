@@ -14,7 +14,7 @@ import { WeekDayPicker } from '@/components/home/week-day-picker'
 import { UpcomingCarousel, type UpcomingDay } from '@/components/home/upcoming-carousel'
 import { UpcomingGrid, type UpcomingGridDay } from '@/components/home/upcoming-grid'
 import { HarmonyWidget } from '@/components/home/harmony-widget'
-import { MemberResultsCard } from '@/components/home/member-results-card'
+import { MemberHome } from '@/components/home/member-home'
 import { TipCard } from '@/components/home/tip-card'
 import type { ChipItem } from '@/components/home/composition-carousel'
 import { EmptyState } from '@/components/ui/empty-state'
@@ -361,6 +361,9 @@ export default function HomePage() {
     )
   }
 
+  // Membre (ne planifie pas) : accueil dédié sur le menu de la famille.
+  if (isMember) return <MemberHome firstName={firstName} />
+
   return (
     <>
     <div className="max-w-sm mx-auto px-4 pb-40 space-y-6 lg:hidden">
@@ -371,8 +374,6 @@ export default function HomePage() {
         </h1>
         <p className="text-kkb-body text-[var(--kkb-text-secondary)]">Prête pour une nouvelle semaine de délices ?</p>
       </section>
-
-      {isMember && <MemberResultsCard />}
 
       {/* Sélecteur de semaine */}
       <section className="space-y-2">
@@ -473,7 +474,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {isMember && <div className="pb-8 max-w-xl"><MemberResultsCard /></div>}
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         <div className="lg:col-span-8 flex flex-col gap-10 min-w-0">

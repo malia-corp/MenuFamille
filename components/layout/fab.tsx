@@ -16,13 +16,14 @@ import { Zap } from 'lucide-react'
 // — present sur "/" et "/plan") defile a l'ecran, puis s'emboite a cet endroit
 // (position: relative, dans le flux). Si une page n'a pas de #generate-slot,
 // le FAB reste fixe en permanence.
-export function FAB() {
+// Jamais pour un membre (il ne planifie pas).
+export function FAB({ role }: { role?: string | null }) {
   const pathname = usePathname()
   const router = useRouter()
   const [slotEl, setSlotEl] = useState<HTMLElement | null>(null)
   const [docked, setDocked] = useState(false)
 
-  const show = pathname === '/' || pathname === '/plan'
+  const show = role !== 'membre' && (pathname === '/' || pathname === '/plan')
 
   useEffect(() => {
     if (!show) return

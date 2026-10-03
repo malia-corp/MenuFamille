@@ -55,7 +55,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         {children}
       </main>
       <BottomNav role={role} />
-      <FAB />
+      <FAB role={role} />
     </>
   )
 }

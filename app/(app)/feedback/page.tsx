@@ -99,6 +99,8 @@ const CHIP_TONE: Record<Rating, { idle: string; active: string }> = {
   },
 }
 
+const CATCH_UP_SHOWN = 4
+
 const SECTION_LABEL = 'font-quicksand text-[11px] font-bold uppercase tracking-wider'
 
 function mondayISO(): string {
@@ -172,6 +174,7 @@ export default function FeedbackPage() {
   const [selectedTpl, setSelectedTpl] = useState<string | null>(null)
   const [customMsg,   setCustomMsg]   = useState('')
   const [submitting,  setSubmitting]  = useState(false)
+  const [showAllCatchUp, setShowAllCatchUp] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -533,7 +536,7 @@ export default function FeedbackPage() {
           {catchUp.length > 0 && (
             <section className="space-y-2">
               <p className={`${SECTION_LABEL} text-[var(--kkb-text-tertiary)]`}>À rattraper</p>
-              {catchUp.map(item => (
+              {(showAllCatchUp ? catchUp : catchUp.slice(0, CATCH_UP_SHOWN)).map(item => (
                 <button
                   key={item.id}
                   type="button"
@@ -548,6 +551,15 @@ export default function FeedbackPage() {
                   <span className="shrink-0 rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-coral)] px-3 py-1 font-quicksand text-[11px] font-bold text-white">Noter</span>
                 </button>
               ))}
+              {catchUp.length > CATCH_UP_SHOWN && (
+                <button
+                  type="button"
+                  onClick={() => setShowAllCatchUp(v => !v)}
+                  className="w-full py-2 font-quicksand text-sm font-bold text-[var(--kkb-teal)]"
+                >
+                  {showAllCatchUp ? 'Réduire' : `Voir les ${catchUp.length - CATCH_UP_SHOWN} autres`}
+                </button>
+              )}
             </section>
           )}
         </div>

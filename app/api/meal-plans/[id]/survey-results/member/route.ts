@@ -21,7 +21,7 @@ export async function GET(
   const service = createServiceClient()
   const { data: plan } = await service
     .from('meal_plans')
-    .select('id, user_id, week_start, share_token')
+    .select('id, user_id, week_start, share_token, status')
     .eq('id', params.id)
     .maybeSingle()
 
@@ -33,7 +33,7 @@ export async function GET(
   const [{ data: responses }, { data: items }, { count: memberCount }, { data: planner }] = await Promise.all([
     service.from('survey_responses').select(RESULT_RESPONSES_SELECT).eq('meal_plan_id', plan.id),
     service.from('meal_plan_items').select(RESULT_ITEMS_SELECT).eq('meal_plan_id', plan.id),
-    service.from('family_circle_members').select('id', { count: 'exact', head: true }).eq('circle_id', circleId),
+    service.from('family_circle_members').select('id', { count: 'exact', head: true }).eq('circle_id', circleId).eq('is_active', true),
     service.from('users').select('display_name').eq('id', plan.user_id).maybeSingle(),
   ])
 
@@ -62,7 +62,8 @@ export async function GET(
     week_start:   plan.week_start,
     member_count: memberCount ?? 1,
     voter_names:  voterNames,
-    planner_name: planner?.display_name?.trim().split(/s+/)[0] ?? null,
+    planner_name: planner?.display_name?.trim().split(/\s+/)[0] ?? null,
+    status:       plan.status,
     has_voted:    myReactions.size > 0,
     share_token:  plan.share_token,
     items:        agg.itemResults.map(i => ({ ...i, comments: [] })),
