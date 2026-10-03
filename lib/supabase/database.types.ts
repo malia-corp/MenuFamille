@@ -42,6 +42,7 @@ export type Database = {
         Row: {
           circle_id: string
           id: string
+          is_active: boolean
           joined_at: string
           role: Database["public"]["Enums"]["circle_role_enum"]
           user_id: string
@@ -49,6 +50,7 @@ export type Database = {
         Insert: {
           circle_id: string
           id?: string
+          is_active?: boolean
           joined_at?: string
           role?: Database["public"]["Enums"]["circle_role_enum"]
           user_id: string
@@ -56,6 +58,7 @@ export type Database = {
         Update: {
           circle_id?: string
           id?: string
+          is_active?: boolean
           joined_at?: string
           role?: Database["public"]["Enums"]["circle_role_enum"]
           user_id?: string
@@ -1068,6 +1071,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      is_active_circle_member: {
+        Args: { p_circle_id: string; p_user_id: string }
+        Returns: boolean
+      }
       is_circle_member: {
         Args: { p_circle_id: string; p_user_id: string }
         Returns: boolean
