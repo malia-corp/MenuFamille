@@ -1,15 +1,17 @@
 {
+  "id": "/",
   "name": "KeskonBouf",
   "short_name": "KeskonBouf",
   "description": "Planification de repas familiaux — Saveurs & Partage",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
   "background_color": "#F4F2EF",
   "theme_color": "#F2664A",
   "icons": [
     { "src": "/logo.ico", "sizes": "48x48", "type": "image/x-icon" },
-    { "src": "/logo-icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/logo-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
     { "src": "/logo-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
   ],
   "categories": ["food", "lifestyle", "productivity"],

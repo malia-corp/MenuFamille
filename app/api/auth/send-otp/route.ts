@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
 import { NextRequest } from 'next/server'
+import { publicOrigin } from '@/lib/utils/public-origin'
 
 export async function POST(request: NextRequest) {
   const { email } = await request.json()
@@ -10,7 +11,7 @@ export async function POST(request: NextRequest) {
   }
 
   const supabase = await createClient()
-  const { origin } = request.nextUrl
+  const origin = publicOrigin(request)
 
   const { error } = await supabase.auth.signInWithOtp({
     email,
