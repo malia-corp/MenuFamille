@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { AlertTriangle, Check, Heart, Key, LogOut, MoreVertical, Plus, ThumbsDown, Users, X } from 'lucide-react'
 import { ShareActions, circleInvitePayload } from '@/components/ui/share-actions'
 import { Badge } from '@/components/ui/badge'
+import { EmptyState } from '@/components/ui/empty-state'
 
 const AVATAR_COLORS = ['var(--kkb-coral)', 'var(--kkb-success)', 'var(--kkb-warning)', 'var(--kkb-teal)', 'var(--kkb-text-secondary)']
 
@@ -258,6 +259,17 @@ export default function CirclePage() {
       {/* Section MEMBRES DU CERCLE */}
       <section className="space-y-2">
         <p className="text-xs text-[var(--kkb-text-tertiary)] uppercase tracking-widest font-medium">Membres du cercle</p>
+        {members.length <= 1 && (
+          <div className="rounded-[var(--kkb-radius-card)] border border-dashed border-[var(--kkb-border)] bg-white">
+            {/* Pas de bouton : le code d'invitation et le partage sont juste au-dessus */}
+            <EmptyState
+              icon={Users}
+              title="Tu es seul(e) dans ce cercle pour l'instant"
+              description="Invite ta famille avec le code ou le lien à partager ci-dessus."
+              className="py-8"
+            />
+          </div>
+        )}
         <div className="space-y-2" ref={menuRef}>
           {members.map((member, index) => {
             const u = member.users

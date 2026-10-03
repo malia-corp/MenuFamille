@@ -6,6 +6,7 @@ import { AlertTriangle, ArrowLeft, BookOpen, Link2, Loader2, ScanLine, Sparkles,
 import { MEAL_LABEL, type MealType } from '@/lib/constants/meal-type'
 import type { SimilarRecipe } from '@/lib/utils/recipe-similarity'
 import { DuplicateDialog } from '@/components/recipes/duplicate-dialog'
+import { toast } from '@/lib/stores/toast-store'
 import { RecipeForm, clearRecipeDraft, emptyStep, uid, type IngredientRow, type RecipeFormValues, type StepRow } from '../_recipe-form'
 
 const DRAFT_KEY = 'kkb_recipe_draft_new'
@@ -30,7 +31,6 @@ function RecipeAddInner() {
   const [error,      setError]      = useState<string | null>(null)
   const [lastValues, setLastValues] = useState<RecipeFormValues | null>(null)
   const [duplicate,  setDuplicate]  = useState<SimilarRecipe | null>(null)
-  const [notice,     setNotice]     = useState<string | null>(null)
 
   const [importUrl,      setImportUrl]      = useState('')
   const [importing,      setImporting]      = useState(false)
@@ -47,11 +47,6 @@ function RecipeAddInner() {
       urlInputRef.current?.scrollIntoView({ block: 'center' })
     }
   }, [focusImport])
-
-  function showNotice(message: string) {
-    setNotice(message)
-    setTimeout(() => setNotice(null), 3000)
-  }
 
   async function handleImport() {
     setImporting(true)
@@ -218,7 +213,7 @@ function RecipeAddInner() {
             {importWarning && <p className="flex items-center gap-1 text-[11px] font-quicksand text-[#B07A12]"><AlertTriangle className="h-3.5 w-3.5" /> {importWarning}</p>}
             {importError && <p className="text-xs font-quicksand text-[var(--kkb-danger)]">{importError}</p>}
             <p className="text-center text-[10px] font-quicksand font-bold uppercase tracking-widest text-[var(--kkb-text-tertiary)]">Ou bien</p>
-            <button type="button" onClick={() => showNotice('Numérisation de carnet : bientôt disponible')}
+            <button type="button" onClick={() => toast.info('Bientôt disponible')}
               className="flex w-full items-center justify-center gap-2 rounded-[var(--kkb-radius-sm)] border border-[var(--kkb-border)] bg-white py-2.5 text-sm font-quicksand font-semibold text-[var(--kkb-text-secondary)]">
               <ScanLine className="h-4 w-4" /> Numériser un carnet de notes ou une photo
             </button>
@@ -249,11 +244,6 @@ function RecipeAddInner() {
         />
       )}
 
-      {notice && (
-        <div role="status" className="fixed bottom-40 left-1/2 z-[70] -translate-x-1/2 rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-text-primary)] px-4 py-2.5 text-sm font-quicksand font-semibold text-white shadow-lg lg:bottom-24">
-          {notice}
-        </div>
-      )}
     </div>
   )
 }

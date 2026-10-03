@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { ArrowRight, Inbox, PartyPopper, Shield, Vote } from 'lucide-react'
+import { ArrowRight, Inbox, PartyPopper, Shield, Vote, WifiOff } from 'lucide-react'
 import { formatWeekRange } from '@/lib/utils/week'
 import { totalReactions } from '@/lib/utils/survey-score'
 import { ConsensusGauge } from '@/components/votes/consensus-gauge'
@@ -21,6 +21,7 @@ interface MemberResultsData {
   week_start:        string
   member_count:      number
   voter_names:       string[]
+  planner_name:      string | null
   has_voted:         boolean
   share_token:       string
   items:             ResultItem[]
@@ -88,7 +89,7 @@ function MemberResultsContent() {
   if (loadState !== 'ready' || !data) {
     return (
       <EmptyState
-        icon={<Inbox className="h-8 w-8 text-[var(--kkb-text-tertiary)]" />}
+        icon={loadState === 'error' ? WifiOff : Inbox}
         title={loadState === 'error' ? 'Impossible de charger les résultats' : 'Aucun sondage en cours'}
         message={loadState === 'error'
           ? 'Réessaie dans un instant.'
@@ -101,6 +102,18 @@ function MemberResultsContent() {
   const myReactionOf = new Map(data.per_item.map(p => [p.meal_plan_item_id, p.my_reaction]))
   const harmony      = harmonyOf(data.global_score)
   const surveyUrl    = `/s/${data.share_token}`
+
+  // Pas encore voté : on invite d'abord à donner son avis
+  if (!data.has_voted) {
+    return (
+      <EmptyState
+        icon={Vote}
+        title="Tu n'as pas encore donné ton avis"
+        message={`${data.planner_name ?? 'Ta famille'} attend ta contribution pour finaliser la semaine.`}
+        action={{ label: 'Voter maintenant', icon: ArrowRight, onClick: () => router.push(surveyUrl) }}
+      />
+    )
+  }
 
   return (
     <div className="mx-auto max-w-lg space-y-5 px-4 pb-24 pt-2 lg:max-w-3xl lg:py-8">
@@ -133,22 +146,6 @@ function MemberResultsContent() {
           </div>
         </div>
       </section>
-
-      {!data.has_voted && (
-        <section className="flex items-center gap-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white p-4">
-          <Vote className="h-5 w-5 shrink-0 text-[var(--kkb-coral)]" />
-          <p className="flex-1 text-[13px] font-quicksand text-[var(--kkb-text-secondary)]">
-            Tu n’as pas encore donné ton avis sur ce menu.
-          </p>
-          <button
-            type="button"
-            onClick={() => router.push(surveyUrl)}
-            className="shrink-0 rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-coral)] px-4 py-2 text-xs font-quicksand font-bold text-white"
-          >
-            Voter
-          </button>
-        </section>
-      )}
 
       {/* Résultats par repas : agrégats seulement, aucun commentaire nommé */}
       {groups.map(g => {

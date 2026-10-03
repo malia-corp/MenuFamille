@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { Check, Copy, Loader2, Share2 } from 'lucide-react'
+import { toast } from '@/lib/stores/toast-store'
 
 export interface SharePayload {
   title: string
@@ -80,9 +81,12 @@ export function ShareActions({
     if (!payload) return
     try {
       await navigator.clipboard.writeText(payload.copy ?? payload.url ?? payload.text)
+      toast.info(payload.copy ? 'Copié !' : payload.url ? 'Lien copié !' : 'Texte copié !')
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
-    } catch { /* presse-papiers indisponible */ }
+    } catch {
+      toast.error('Impossible de copier')
+    }
   }
 
   return (

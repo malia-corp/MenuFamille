@@ -4,7 +4,7 @@ import { Suspense, useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import {
   ArrowLeft, ArrowRight, CalendarPlus, CheckCircle2, MailOpen, Printer,
-  Settings2, Share2, Smile, Sparkles, Star, UserPlus, Users,
+  Settings2, Share2, Smile, Sparkles, Star, UserPlus, Users, WifiOff,
 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { fr } from 'date-fns/locale'
@@ -14,6 +14,7 @@ import { agreementPct, isRejected, totalReactions } from '@/lib/utils/survey-sco
 import { ConsensusGauge } from '@/components/votes/consensus-gauge'
 import { FridgePrintSheet } from '@/components/votes/fridge-print-sheet'
 import { ShareActions, surveyLinkPayload } from '@/components/ui/share-actions'
+import { toast } from '@/lib/stores/toast-store'
 import { NameAvatar } from '@/components/votes/name-avatar'
 import { ResultCard } from '@/components/votes/result-card'
 import { ResultsFilters, type ResultsSort, type ResultsViewMode } from '@/components/votes/results-filters'
@@ -60,6 +61,7 @@ function VotesResultsContent() {
         setLoadState('ready')
       } catch {
         setLoadState('error')
+        toast.error('Erreur de connexion')
       }
     })()
   }, [planParam])
@@ -90,6 +92,7 @@ function VotesResultsContent() {
   if (loadState === 'no_plan' || loadState === 'error' || !data || !derived) {
     return (
       <EmptyState
+        icon={loadState === 'error' ? WifiOff : CalendarPlus}
         title={loadState === 'error' ? 'Impossible de charger les résultats' : 'Aucun menu à afficher'}
         message={loadState === 'error' ? 'Réessaie dans un instant.' : 'Planifie un menu puis partage-le à ta famille pour recueillir leurs votes.'}
         action={{ label: 'Aller au menu', onClick: () => router.push('/plan') }}
@@ -110,7 +113,7 @@ function VotesResultsContent() {
     if (data.items.length === 0) {
       return (
         <EmptyState
-          icon={<CalendarPlus className="h-8 w-8 text-[var(--kkb-text-tertiary)]" />}
+          icon={CalendarPlus}
           title="Menu à planifier"
           message={`Aucun repas n'est planifié pour la semaine du ${weekRange}. Planifie d'abord ton menu, puis partage-le à ta famille pour recueillir leurs votes.`}
           action={{ label: 'Planifier le menu', onClick: () => router.push(`/plan?week=${data.week_start}`) }}
@@ -121,7 +124,7 @@ function VotesResultsContent() {
     if (!token) {
       return (
         <EmptyState
-          icon={<Share2 className="h-8 w-8 text-[var(--kkb-text-tertiary)]" />}
+          icon={Share2}
           title="Menu pas encore partagé"
           message={`Ton menu de la semaine du ${weekRange} est planifié mais pas encore partagé. Partage-le à ta famille pour recueillir leurs votes.`}
           action={{ label: 'Partager le menu', onClick: () => router.push(`/plan/validate?week=${data.week_start}`) }}
@@ -131,11 +134,11 @@ function VotesResultsContent() {
 
     return (
       <EmptyState
-        icon={<MailOpen className="h-8 w-8 text-[var(--kkb-text-tertiary)]" />}
-        title="En attente des votes"
-        message={`Personne n'a encore voté pour la semaine du ${weekRange}. Partage le lien du sondage avec ta famille.`}
+        icon={MailOpen}
+        title="En attente des avis de la famille"
+        message="Partage le lien du menu pour recueillir les votes."
       >
-        <ShareActions getPayload={() => surveyLinkPayload(token)} />
+        <ShareActions getPayload={() => surveyLinkPayload(token)} shareLabel="Renvoyer le lien" />
       </EmptyState>
     )
   }
