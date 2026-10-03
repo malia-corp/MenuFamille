@@ -1,4 +1,5 @@
 import { createServiceClient } from '@/lib/supabase/service'
+import { createClient } from '@/lib/supabase/server'
 import { resolveSurveyPlan } from '@/lib/utils/survey-token'
 
 interface RawComposition {
@@ -100,35 +101,45 @@ export async function GET(
     })),
   }))
 
-  // Reponse existante — resolue uniquement si le client fournit un
-  // response_id qu'il connait (localStorage), puisque cette page publique
-  // n'a aucune notion d'authentification pour savoir "qui" demande.
+  // Reponse existante : via le response_id connu du navigateur (localStorage),
+  // sinon, si le visiteur est connecte, via sa reponse rattachee a son compte
+  // (meme membre sur un autre appareil).
   let existing_response: {
     id:             string
     respondent_name: string
     answers:        { item_id: string; reaction: string; comment: string | null }[]
   } | null = null
 
+  const RESPONSE_SELECT = 'id, respondent_name, survey_answers ( meal_plan_item_id, reaction, comment )'
   const responseId = new URL(request.url).searchParams.get('response_id')
-  if (responseId) {
-    const { data: response } = await supabase
-      .from('survey_responses')
-      .select('id, respondent_name, survey_answers ( meal_plan_item_id, reaction, comment )')
-      .eq('id', responseId)
-      .eq('meal_plan_id', plan.id)
-      .maybeSingle()
+  let response = responseId
+    ? (await supabase.from('survey_responses').select(RESPONSE_SELECT).eq('id', responseId).eq('meal_plan_id', plan.id).maybeSingle()).data
+    : null
 
-    if (response) {
-      type RawAnswer = { meal_plan_item_id: string; reaction: string; comment: string | null }
-      existing_response = {
-        id:              response.id,
-        respondent_name: response.respondent_name,
-        answers: ((response.survey_answers ?? []) as unknown as RawAnswer[]).map(a => ({
-          item_id:  a.meal_plan_item_id,
-          reaction: a.reaction,
-          comment:  a.comment,
-        })),
-      }
+  if (!response) {
+    const { data: { user } } = await (await createClient()).auth.getUser()
+    if (user) {
+      response = (await supabase
+        .from('survey_responses')
+        .select(RESPONSE_SELECT)
+        .eq('meal_plan_id', plan.id)
+        .eq('user_id', user.id)
+        .order('created_at')
+        .limit(1)
+        .maybeSingle()).data
+    }
+  }
+
+  if (response) {
+    type RawAnswer = { meal_plan_item_id: string; reaction: string; comment: string | null }
+    existing_response = {
+      id:              response.id,
+      respondent_name: response.respondent_name,
+      answers: ((response.survey_answers ?? []) as unknown as RawAnswer[]).map(a => ({
+        item_id:  a.meal_plan_item_id,
+        reaction: a.reaction,
+        comment:  a.comment,
+      })),
     }
   }
 
