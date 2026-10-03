@@ -12,15 +12,19 @@ interface MobileHeaderProps {
   showBack?: boolean
 }
 
-// Pages à en-tête immersif (photo bord à bord) : pas d'en-tête global sur mobile.
-const IMMERSIVE_ROUTES = [/^\/recipes\/(?!add$)[^/]+$/]
+// Pages de détail : flèche retour + titre de la section.
+const BACK_ROUTES: { re: RegExp; title: string }[] = [
+  { re: /^\/recipes\/(?!add$)[^/]+$/, title: 'Recettes' },
+]
 
-export function MobileHeader({ displayName, title, showBack = false }: MobileHeaderProps) {
+export function MobileHeader({ displayName, title: titleProp, showBack: showBackProp = false }: MobileHeaderProps) {
   const router = useRouter()
   const pathname = usePathname()
   const initial = (displayName ?? '?').trim().charAt(0).toUpperCase()
 
-  if (IMMERSIVE_ROUTES.some(re => re.test(pathname))) return null
+  const backRoute = BACK_ROUTES.find(r => r.re.test(pathname))
+  const showBack  = showBackProp || !!backRoute
+  const title     = titleProp ?? backRoute?.title
 
   return (
     <header className="lg:hidden print:hidden fixed top-0 left-0 right-0 z-40 bg-white border-b border-[var(--kkb-border)]/50 h-14 flex items-center px-4">

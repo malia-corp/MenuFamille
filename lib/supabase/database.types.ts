@@ -690,7 +690,6 @@ export type Database = {
           id: string
           recipe_id: string
           step_number: number
-          title: string | null
         }
         Insert: {
           description: string
@@ -698,7 +697,6 @@ export type Database = {
           id?: string
           recipe_id: string
           step_number: number
-          title?: string | null
         }
         Update: {
           description?: string
@@ -706,7 +704,6 @@ export type Database = {
           id?: string
           recipe_id?: string
           step_number?: number
-          title?: string | null
         }
         Relationships: [
           {
@@ -737,7 +734,6 @@ export type Database = {
           servings: number
           slug: string
           source_url: string | null
-          tip: string | null
           user_id: string | null
           variant_label: string | null
           visibility: Database["public"]["Enums"]["recipe_visibility_enum"]
@@ -760,7 +756,6 @@ export type Database = {
           servings?: number
           slug: string
           source_url?: string | null
-          tip?: string | null
           user_id?: string | null
           variant_label?: string | null
           visibility?: Database["public"]["Enums"]["recipe_visibility_enum"]
@@ -783,7 +778,6 @@ export type Database = {
           servings?: number
           slug?: string
           source_url?: string | null
-          tip?: string | null
           user_id?: string | null
           variant_label?: string | null
           visibility?: Database["public"]["Enums"]["recipe_visibility_enum"]

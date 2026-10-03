@@ -30,7 +30,7 @@ export async function GET(
       *,
       categories(*),
       recipe_ingredients(id, name, quantity, unit, sort_order),
-      recipe_steps(id, step_number, title, description, duration_min)
+      recipe_steps(id, step_number, description, duration_min)
     `)
     .eq('id', params.id)
     .single()

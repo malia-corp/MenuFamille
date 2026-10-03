@@ -14,13 +14,12 @@ import { ShareActions } from '@/components/ui/share-actions'
 import { formatDuration, type RecipeCategory } from '@/components/recipes/types'
 
 interface Ingredient { id: string; name: string; quantity: number | null; unit: string | null; sort_order: number }
-interface Step { id: string; step_number: number; title: string | null; description: string; duration_min: number | null }
+interface Step { id: string; step_number: number; description: string }
 
 interface Recipe {
   id: string
   name: string
   description: string | null
-  tip: string | null
   prep_time_min: number | null
   cook_time_min: number | null
   servings: number
@@ -138,7 +137,6 @@ function RecipeDetail() {
   if (!recipe) return <Centered><Loader2 className="h-6 w-6 animate-spin text-[var(--kkb-coral)]" /></Centered>
 
   const totalTime  = (recipe.prep_time_min ?? 0) + (recipe.cook_time_min ?? 0)
-  const stepsTime  = recipe.recipe_steps.reduce((s, st) => s + (st.duration_min ?? 0), 0)
   const CatIcon    = categoryIcon(recipe.categories?.slug)
   const allChecked = recipe.recipe_ingredients.length > 0 && checked.size === recipe.recipe_ingredients.length
   const shareUrl   = typeof window !== 'undefined' ? `${window.location.origin}/recipes/${recipe.id}` : ''
@@ -178,12 +176,12 @@ function RecipeDetail() {
   )
   const hasMenuItems = recipe.is_owner || recipe.visibility !== 'private'
 
-  const tipCard = recipe.tip && (
+  const tipCard = recipe.description && (
     <section className="space-y-2 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-warning)] bg-[var(--kkb-warning-light)] p-4 lg:p-5">
       <p className="flex items-center gap-2 text-[10px] font-quicksand font-bold uppercase tracking-wider text-[#B07A12]">
         <BookHeart className="h-4 w-4" /> Astuces de Maman · Transmission
       </p>
-      <p className="text-sm font-quicksand italic leading-relaxed text-[var(--kkb-text-secondary)]">« {recipe.tip} »</p>
+      <p className="text-sm font-quicksand italic leading-relaxed text-[var(--kkb-text-secondary)]">« {recipe.description} »</p>
     </section>
   )
 
@@ -195,15 +193,7 @@ function RecipeDetail() {
       {recipe.recipe_steps.map(step => (
         <li key={step.id} className="flex gap-3">
           <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--kkb-coral)] font-dosis font-bold text-sm text-white">{step.step_number}</span>
-          <div className="min-w-0 flex-1 space-y-1">
-            <div className="flex items-start justify-between gap-2">
-              {step.title && <p className="text-sm font-quicksand font-bold text-[var(--kkb-coral)]">{step.title}</p>}
-              {step.duration_min ? (
-                <span className="ml-auto hidden shrink-0 rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-teal-light)] px-2 py-0.5 text-[11px] font-quicksand font-bold text-[var(--kkb-teal)] lg:inline">{step.duration_min} min</span>
-              ) : null}
-            </div>
-            <p className="text-sm font-quicksand leading-relaxed text-[var(--kkb-text-secondary)]">{step.description}</p>
-          </div>
+          <p className="min-w-0 flex-1 pt-0.5 text-sm font-quicksand leading-relaxed text-[var(--kkb-text-secondary)]">{step.description}</p>
         </li>
       ))}
     </ol>
@@ -212,13 +202,10 @@ function RecipeDetail() {
   return (
     <>
       {/* ── Mobile ─────────────────────────────────────────────────────── */}
-      <div className="-mt-14 pb-40 lg:hidden print:mt-0">
+      <div className="pb-40 lg:hidden">
         <div className="relative">
           {visual('h-[260px] w-full', 'h-16 w-16')}
           <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/60" />
-          <button type="button" onClick={() => router.push('/recipes')} aria-label="Retour au carnet" className="absolute left-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-black/25 text-white print:hidden">
-            <ArrowLeft className="h-6 w-6" />
-          </button>
           {hasMenuItems && (
             <div ref={mobileMenuRef} className="absolute right-4 top-4 print:hidden">
               <button type="button" onClick={() => setMenuOpen(o => !o)} aria-label="Options de la recette" aria-expanded={menuOpen} className="flex h-10 w-10 items-center justify-center rounded-full bg-black/25 text-white">
@@ -251,7 +238,6 @@ function RecipeDetail() {
         </div>
 
         <div className="space-y-7 px-4 pt-5">
-          {recipe.description && <p className="text-sm font-quicksand leading-relaxed text-[var(--kkb-text-secondary)]">{recipe.description}</p>}
 
           {recipe.recipe_ingredients.length > 0 && (
             <section className="space-y-2">
@@ -350,7 +336,6 @@ function RecipeDetail() {
             <span className="rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-teal-light)] px-2 py-0.5 text-[10px] font-quicksand font-bold uppercase tracking-wide text-[var(--kkb-teal)]">{VISIBILITY_TAG[recipe.visibility]}</span>
           </div>
           <h1 className="font-dosis font-extrabold text-[32px] leading-tight text-[var(--kkb-text-primary)]">{recipe.name}</h1>
-          {recipe.description && <p className="max-w-3xl text-base font-quicksand leading-relaxed text-[var(--kkb-text-secondary)]">{recipe.description}</p>}
         </div>
 
         <div className="grid grid-cols-4 gap-4">
@@ -445,7 +430,7 @@ function RecipeDetail() {
                     <h2 className="font-dosis font-bold text-lg text-[var(--kkb-text-primary)]">Étapes simples pas-à-pas</h2>
                   </div>
                   <span className="text-xs font-quicksand text-[var(--kkb-text-tertiary)]">
-                    {recipe.recipe_steps.length} étape{recipe.recipe_steps.length > 1 ? 's' : ''}{(stepsTime || totalTime) ? ` · ${formatDuration(stepsTime || totalTime)}` : ''}
+                    {recipe.recipe_steps.length} étape{recipe.recipe_steps.length > 1 ? 's' : ''}{totalTime ? ` · ${formatDuration(totalTime)}` : ''}
                   </span>
                 </div>
                 {steps}
