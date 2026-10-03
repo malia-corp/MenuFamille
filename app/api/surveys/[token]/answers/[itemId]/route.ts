@@ -1,4 +1,5 @@
 import { createServiceClient } from '@/lib/supabase/service'
+import { createClient } from '@/lib/supabase/server'
 import { resolveSurveyPlan } from '@/lib/utils/survey-token'
 import { NextRequest } from 'next/server'
 
@@ -64,9 +65,40 @@ export async function POST(
     return Response.json({ error: 'respondent_name et reaction sont requis' }, { status: 400 })
   }
 
-  let responseId = response_id
+  // Lien public : le répondant peut être anonyme. S'il est connecté (membre
+  // du cercle), sa réponse est rattachée à son compte pour la vue Membre.
+  const { data: { user } } = await (await createClient()).auth.getUser()
 
-  // Créer une survey_response si elle n'existe pas encore
+  let responseId: string | undefined
+
+  if (response_id) {
+    const { data: existing } = await supabase
+      .from('survey_responses')
+      .select('id, user_id')
+      .eq('id', response_id)
+      .eq('meal_plan_id', plan.id)
+      .maybeSingle()
+    // Réponse d'un autre compte : on ne la réutilise pas.
+    if (existing && (!existing.user_id || !user || existing.user_id === user.id)) {
+      responseId = existing.id
+      if (user && !existing.user_id) {
+        await supabase.from('survey_responses').update({ user_id: user.id }).eq('id', existing.id)
+      }
+    }
+  }
+
+  if (!responseId && user) {
+    const { data: mine } = await supabase
+      .from('survey_responses')
+      .select('id')
+      .eq('meal_plan_id', plan.id)
+      .eq('user_id', user.id)
+      .order('created_at')
+      .limit(1)
+      .maybeSingle()
+    responseId = mine?.id
+  }
+
   if (!responseId) {
     const { data: created, error: e } = await supabase
       .from('survey_responses')
@@ -74,6 +106,7 @@ export async function POST(
         meal_plan_id:    plan.id,
         respondent_name: respondent_name.trim(),
         ip_address:      ip,
+        user_id:         user?.id ?? null,
       })
       .select('id')
       .single()

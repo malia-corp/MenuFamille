@@ -1,6 +1,6 @@
 'use client'
 
-import { CupSoda, Inbox, Pencil, Salad, ThumbsUp } from 'lucide-react'
+import { CupSoda, Inbox, Lock, Pencil, Salad, ThumbsUp } from 'lucide-react'
 import { MEAL_COLOR, MEAL_LABEL } from '@/lib/constants/meal-type'
 import { MealTypeIcon } from '@/components/ui/meal-type-icon'
 import { agreementPct, totalReactions } from '@/lib/utils/survey-score'
@@ -8,13 +8,23 @@ import { ReactionBars } from './reaction-bars'
 import { NameAvatar } from './name-avatar'
 import type { ResultItem } from './types'
 
-interface ResultCardProps {
-  item:     ResultItem
-  dayLabel: string // "Lundi" ou "Toute la semaine"
-  onEdit:   () => void
+type Reaction = 'aime' | 'bof' | 'naime_pas'
+
+const MY_REACTION_LABEL: Record<Reaction, { emoji: string; label: string }> = {
+  aime:      { emoji: '\u{1F60A}', label: "J'adore"  },
+  bof:       { emoji: '\u{1F610}', label: 'Ça passe' },
+  naime_pas: { emoji: '\u{1F615}', label: 'Pas trop' },
 }
 
-export function ResultCard({ item, dayLabel, onEdit }: ResultCardProps) {
+interface ResultCardProps {
+  item:      ResultItem
+  dayLabel:  string // "Lundi" ou "Toute la semaine"
+  onEdit?:   () => void // absent = pas d'édition (vue Membre)
+  // Vue Membre : sa propre réaction, visible de lui seul (undefined = non affiché)
+  myReaction?: Reaction | null
+}
+
+export function ResultCard({ item, dayLabel, onEdit, myReaction }: ResultCardProps) {
   const counts   = { aime: item.aime, bof: item.bof, naime_pas: item.naime_pas }
   const total    = totalReactions(counts)
   const adhesion = agreementPct(counts)
@@ -36,14 +46,16 @@ export function ResultCard({ item, dayLabel, onEdit }: ResultCardProps) {
             <ThumbsUp className="h-3 w-3" /> {adhesion}% Adhésion
           </span>
         )}
-        <button
-          type="button"
-          onClick={onEdit}
-          aria-label={`Modifier ${item.main_name ?? 'ce repas'}`}
-          className="ml-auto p-1.5 -mr-1.5 rounded-full text-[var(--kkb-text-tertiary)] hover:text-[var(--kkb-coral)] hover:bg-[var(--kkb-coral-light)] transition-colors print:hidden"
-        >
-          <Pencil className="h-4 w-4" />
-        </button>
+        {onEdit && (
+          <button
+            type="button"
+            onClick={onEdit}
+            aria-label={`Modifier ${item.main_name ?? 'ce repas'}`}
+            className="ml-auto p-1.5 -mr-1.5 rounded-full text-[var(--kkb-text-tertiary)] hover:text-[var(--kkb-coral)] hover:bg-[var(--kkb-coral-light)] transition-colors print:hidden"
+          >
+            <Pencil className="h-4 w-4" />
+          </button>
+        )}
       </div>
 
       {/* Photo | nom (+ barres à droite sur desktop) */}
@@ -92,6 +104,24 @@ export function ResultCard({ item, dayLabel, onEdit }: ResultCardProps) {
           )}
         </div>
       </div>
+
+      {/* Repère personnel (vue Membre) */}
+      {myReaction !== undefined && (
+        <p className="mt-auto flex items-center gap-1.5 rounded-[var(--kkb-radius-sm)] bg-[var(--kkb-bg)] px-3 py-2 text-xs font-quicksand font-semibold text-[var(--kkb-text-tertiary)]">
+          {myReaction ? (
+            <>
+              Ton repère :
+              <span className="text-sm leading-none" aria-hidden="true">{MY_REACTION_LABEL[myReaction].emoji}</span>
+              <span className="text-[var(--kkb-text-primary)]">{MY_REACTION_LABEL[myReaction].label}</span>
+            </>
+          ) : (
+            'Tu n’as pas voté pour ce repas'
+          )}
+          <span className="ml-auto inline-flex items-center gap-1 rounded-[var(--kkb-radius-pill)] bg-white px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide">
+            <Lock className="h-3 w-3" /> Privé
+          </span>
+        </p>
+      )}
 
       {/* Commentaires nommés (vue Planificatrice) */}
       {item.comments.length > 0 && (

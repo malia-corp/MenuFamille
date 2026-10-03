@@ -14,6 +14,7 @@ import { WeekDayPicker } from '@/components/home/week-day-picker'
 import { UpcomingCarousel, type UpcomingDay } from '@/components/home/upcoming-carousel'
 import { UpcomingGrid, type UpcomingGridDay } from '@/components/home/upcoming-grid'
 import { HarmonyWidget } from '@/components/home/harmony-widget'
+import { MemberResultsCard } from '@/components/home/member-results-card'
 import { TipCard } from '@/components/home/tip-card'
 import type { ChipItem } from '@/components/home/composition-carousel'
 
@@ -112,6 +113,7 @@ export default function HomePage() {
   const [configs, setConfigs]             = useState<MealConfig[]>([])
   const [plan, setPlan]                   = useState<Plan | null>(null)
   const [memberCount, setMemberCount]     = useState(1)
+  const [isMember, setIsMember]           = useState(false)
   const [surveyResults, setSurveyResults] = useState<SurveyResults | null>(null)
   const [communityTip, setCommunityTip]   = useState<CommunityTip | null>(null)
   const [loading, setLoading]             = useState(true)
@@ -139,6 +141,7 @@ export default function HomePage() {
 
       const circle = circlesRes?.data?.[0]
       setMemberCount(circle?.family_circle_members?.length ?? 1)
+      setIsMember(circle?.my_role === 'membre')
 
       // Astuce du jour : piochee parmi les recettes communautaires avec une
       // description, rotation deterministe par jour (pas de contenu invente).
@@ -355,6 +358,8 @@ export default function HomePage() {
         <p className="text-kkb-body text-[var(--kkb-text-secondary)]">Prête pour une nouvelle semaine de délices ?</p>
       </section>
 
+      {isMember && <MemberResultsCard />}
+
       {/* Sélecteur de semaine */}
       <section className="space-y-2">
         <div className="flex items-center justify-between">
@@ -453,6 +458,8 @@ export default function HomePage() {
           </button>
         </div>
       </section>
+
+      {isMember && <div className="pb-8 max-w-xl"><MemberResultsCard /></div>}
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         <div className="lg:col-span-8 flex flex-col gap-10 min-w-0">

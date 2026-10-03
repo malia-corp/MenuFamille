@@ -3,13 +3,13 @@
 import { Suspense, useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import {
-  ArrowLeft, ArrowRight, CalendarPlus, CheckCircle2, Loader2, MailOpen, Printer,
+  ArrowLeft, ArrowRight, CalendarPlus, CheckCircle2, MailOpen, Printer,
   Settings2, Share2, Smile, Sparkles, Star, UserPlus, Users,
 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { MEAL_LABEL, MEAL_TYPE_ORDER, type MealType } from '@/lib/constants/meal-type'
-import { DAY_OPTIONS, formatWeekRange, type DayOfWeek } from '@/lib/utils/week'
+import { DAY_OPTIONS, formatWeekRange } from '@/lib/utils/week'
 import { agreementPct, isRejected, totalReactions } from '@/lib/utils/survey-score'
 import { ConsensusGauge } from '@/components/votes/consensus-gauge'
 import { FridgePrintSheet } from '@/components/votes/fridge-print-sheet'
@@ -18,32 +18,10 @@ import { NameAvatar } from '@/components/votes/name-avatar'
 import { ResultCard } from '@/components/votes/result-card'
 import { ResultsFilters, type ResultsSort, type ResultsViewMode } from '@/components/votes/results-filters'
 import type { ResultItem, SurveyResultsData } from '@/components/votes/types'
+import { TEMPLATE_KEY, chronoCompare, countsOf, dayLabelOf, harmonyOf } from '@/components/votes/result-helpers'
+import { EmptyState, PageLoader } from '@/components/votes/page-states'
 
 type LoadState = 'loading' | 'ready' | 'no_plan' | 'error'
-
-const TEMPLATE_KEY = 'semaine'
-const DAY_INDEX = Object.fromEntries(DAY_OPTIONS.map((d, i) => [d.val, i])) as Record<DayOfWeek, number>
-
-function dayLabelOf(item: ResultItem): string {
-  return item.applies_all_days ? 'Toute la semaine' : (DAY_OPTIONS[DAY_INDEX[item.day_of_week]]?.full ?? item.day_of_week)
-}
-
-// Ordre chronologique : "toute la semaine" d'abord, puis jour, puis type de repas.
-function chronoCompare(a: ResultItem, b: ResultItem): number {
-  if (a.applies_all_days !== b.applies_all_days) return a.applies_all_days ? -1 : 1
-  return (DAY_INDEX[a.day_of_week] - DAY_INDEX[b.day_of_week]) || (MEAL_TYPE_ORDER[a.meal_type] - MEAL_TYPE_ORDER[b.meal_type])
-}
-
-function countsOf(i: ResultItem) {
-  return { aime: i.aime, bof: i.bof, naime_pas: i.naime_pas }
-}
-
-function harmonyOf(score: number | null): { label: string; color: string } {
-  if (score === null) return { label: 'En attente des votes', color: 'var(--kkb-text-tertiary)' }
-  if (score >= 80)    return { label: 'Excellente harmonie', color: 'var(--kkb-success)' }
-  if (score >= 60)    return { label: 'Bonne entente', color: 'var(--kkb-teal)' }
-  return { label: 'Avis partagés', color: 'var(--kkb-warning)' }
-}
 
 export default function VotesResultsPage() {
   return (
@@ -449,38 +427,6 @@ function StatColumn({ eyebrow, title, icon, children, footer }: {
       </div>
       <div className="flex-1 space-y-2">{children}</div>
       <div className="mt-4 flex items-center border-t border-[var(--kkb-border)] pt-3">{footer}</div>
-    </div>
-  )
-}
-
-function PageLoader() {
-  return (
-    <div className="flex min-h-[50vh] items-center justify-center">
-      <Loader2 className="h-6 w-6 animate-spin text-[var(--kkb-coral)]" />
-    </div>
-  )
-}
-
-function EmptyState({ icon, title, message, action, children }: {
-  icon?: React.ReactNode
-  title: string
-  message: string
-  action?: { label: string; onClick: () => void }
-  children?: React.ReactNode
-}) {
-  return (
-    <div className="mx-auto max-w-md px-4 py-12">
-      <div className="space-y-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white p-6 text-center">
-        {icon && <div className="flex justify-center">{icon}</div>}
-        <p className="font-dosis font-semibold text-lg text-[var(--kkb-text-primary)]">{title}</p>
-        <p className="text-sm font-quicksand text-[var(--kkb-text-secondary)]">{message}</p>
-        {children}
-        {action && (
-          <button type="button" onClick={action.onClick} className="mt-1 rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-coral)] px-5 py-2.5 text-sm font-quicksand font-bold text-white">
-            {action.label}
-          </button>
-        )}
-      </div>
     </div>
   )
 }

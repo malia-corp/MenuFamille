@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { CalendarDays, ChevronDown, Clock, Hand, Loader2, Send, UnfoldHorizontal, UserCircle, XCircle, type LucideIcon } from 'lucide-react'
+import { ArrowRight, CalendarDays, ChevronDown, Clock, Hand, Loader2, Send, UnfoldHorizontal, UserCircle, XCircle, type LucideIcon } from 'lucide-react'
 import { PublicHeader } from '@/components/survey/public-header'
 import { MealVoteCard, type Reaction } from '@/components/survey/meal-vote-card'
 import { ViewToggle, type SurveyViewMode } from '@/components/survey/view-toggle'
@@ -574,6 +574,16 @@ export function SurveyPageClient({ token }: { token: string }) {
             <p className="text-center text-[11px] font-quicksand text-[var(--kkb-text-tertiary)] mt-2 lg:mt-0">
               Modifiable à tout moment avant vendredi soir · Zéro gaspillage alimentaire
             </p>
+          )}
+          {/* Membres du cercle : résultats agrégés (connexion requise) */}
+          {submitted && (
+            <button
+              type="button"
+              onClick={() => router.push('/votes/results/member')}
+              className="mx-auto mt-2 lg:mt-0 flex items-center gap-1 text-xs font-quicksand font-bold text-[var(--kkb-teal)]"
+            >
+              Voir les résultats de la famille <ArrowRight className="h-3.5 w-3.5" />
+            </button>
           )}
         </div>
       </div>
