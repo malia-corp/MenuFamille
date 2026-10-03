@@ -131,6 +131,18 @@ export async function GET(request: NextRequest) {
     return Response.json(await withAllergyWarnings(supabase, user.id, existing, circleId))
   }
 
+  // Simple membre du cercle actif : pas de menu vide créé à son nom — le menu
+  // de la famille passe par GET /api/meal-plans/family.
+  if (circleId) {
+    const { data: membership } = await supabase
+      .from('family_circle_members')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('circle_id', circleId)
+      .maybeSingle()
+    if (membership?.role !== 'planificatrice') return Response.json(null)
+  }
+
   const { data: created, error } = await supabase
     .from('meal_plans')
     .insert({ user_id: user.id, week_start: week, circle_id: circleId })

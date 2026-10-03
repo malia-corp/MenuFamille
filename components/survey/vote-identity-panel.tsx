@@ -1,6 +1,6 @@
 'use client'
 
-import { UserCircle } from 'lucide-react'
+import { Lock, UserCircle } from 'lucide-react'
 
 interface VoteIdentityPanelProps {
   name:            string
@@ -9,6 +9,7 @@ interface VoteIdentityPanelProps {
   ratedCount:      number
   totalCount:      number
   submitted:       boolean
+  locked?:         boolean   // connecté : nom du profil, non modifiable
 }
 
 // Panneau "Identité de vote" — desktop uniquement (xl: et plus), regroupe le
@@ -16,7 +17,7 @@ interface VoteIdentityPanelProps {
 // champ prenom reste sous le hero et la progression dans la barre sticky du
 // bas (pas assez de place pour un panneau separe).
 export function VoteIdentityPanel({
-  name, onNameChange, onNameBlur, ratedCount, totalCount, submitted,
+  name, onNameChange, onNameBlur, ratedCount, totalCount, submitted, locked = false,
 }: VoteIdentityPanelProps) {
   const percent = totalCount > 0 ? Math.round((ratedCount / totalCount) * 100) : 0
 
@@ -37,18 +38,21 @@ export function VoteIdentityPanel({
         <p className="text-[10px] font-quicksand font-bold uppercase tracking-wide text-[var(--kkb-text-tertiary)] mb-1">
           Ton prénom
         </p>
-        <div className="flex items-center gap-2 bg-[var(--kkb-bg)] border-[1.5px] border-[var(--kkb-border)] focus-within:border-[var(--kkb-coral)] rounded-[var(--kkb-radius-sm)] px-3 py-2.5 transition-colors">
+        <div className={`flex items-center gap-2 border-[1.5px] border-[var(--kkb-border)] rounded-[var(--kkb-radius-sm)] px-3 py-2.5 transition-colors ${locked ? 'bg-[var(--kkb-border-light)]' : 'bg-[var(--kkb-bg)] focus-within:border-[var(--kkb-coral)]'}`}>
           <UserCircle className="h-4 w-4 text-[var(--kkb-text-tertiary)] shrink-0" />
           <input
             type="text"
             value={name}
             onChange={e => onNameChange(e.target.value)}
             onBlur={onNameBlur}
+            disabled={locked}
             placeholder="Ex: Koffi, Bénédicte..."
             aria-label="Ton prénom"
-            className="flex-1 text-sm font-quicksand text-[var(--kkb-text-primary)] bg-transparent outline-none placeholder:text-[var(--kkb-text-tertiary)]"
+            className="flex-1 text-sm font-quicksand text-[var(--kkb-text-primary)] bg-transparent outline-none placeholder:text-[var(--kkb-text-tertiary)] disabled:cursor-not-allowed disabled:text-[var(--kkb-text-secondary)]"
           />
+          {locked && <Lock className="h-3.5 w-3.5 shrink-0 text-[var(--kkb-text-tertiary)]" />}
         </div>
+        {locked && <p className="mt-1 text-[11px] font-quicksand text-[var(--kkb-text-tertiary)]">Connecté(e) : ton nom vient de ton profil.</p>}
       </div>
 
       <div>
