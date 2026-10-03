@@ -61,7 +61,7 @@ const config: Config = {
       },
       keyframes: {
         // Squelettes de chargement : 0.5 -> 1 -> 0.5
-        'kkb-pulse': {
+        'kkb-skeleton': {
           '0%, 100%': { opacity: '0.5' },
           '50%':      { opacity: '1' },
         },
@@ -88,7 +88,7 @@ const config: Config = {
         },
       },
       animation: {
-        'kkb-pulse': 'kkb-pulse 1.5s ease-in-out infinite',
+        'kkb-skeleton': 'kkb-skeleton 1.5s ease-in-out infinite',
         'kkb-toast-in': 'kkb-toast-in 0.25s ease-out',
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
