@@ -2,6 +2,8 @@
 
 import { Suspense, useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { ArrowRight, Inbox, PartyPopper, Shield, Vote, WifiOff } from 'lucide-react'
+import { ArrowRight, Inbox, PartyPopper, Shield, Vote } from 'lucide-react'
 import { ArrowRight, CheckCircle, Inbox, PartyPopper, Shield, Vote, WifiOff } from 'lucide-react'
 import { formatWeekRange } from '@/lib/utils/week'
 import { totalReactions } from '@/lib/utils/survey-score'
