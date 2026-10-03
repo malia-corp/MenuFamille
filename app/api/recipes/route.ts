@@ -170,6 +170,10 @@ export async function GET(request: NextRequest) {
     .eq('user_id', user.id)
   const favSet = new Set((favs ?? []).map((f) => f.recipe_id as string))
 
+  if (searchParams.has('page')) {
+    return paginatedList(service, user.id, circleIds, favSet, searchParams)
+  }
+
   const exclude_category_id = searchParams.get('exclude_category_id') ?? ''
 
   let query = service
@@ -204,4 +208,149 @@ export async function GET(request: NextRequest) {
   return Response.json(
     (data ?? []).map((r) => ({ ...r, is_favorited: favSet.has(r.id) }))
   )
+}
+
+// ─── Liste paginée du carnet (/recipes) ──────────────────────────────────────
+// Filtres, tri et pagination en mémoire : le volume de recettes accessibles
+// reste modeste (MVP), et cela permet la recherche dans les ingrédients et le
+// tri par temps total, non exprimables simplement en PostgREST.
+
+const MAX_RECIPES = 1000
+const DEFAULT_PAGE_SIZE = 12
+
+type Origin = 'all' | 'famille' | 'communaute' | 'mes' | 'favoris'
+type Sort = 'recent' | 'planned' | 'fastest' | 'alpha'
+
+interface ListRecipe {
+  id: string
+  name: string
+  description: string | null
+  prep_time_min: number | null
+  cook_time_min: number | null
+  servings: number
+  difficulty: string | null
+  photo_url: string | null
+  visibility: string
+  user_id: string | null
+  circle_id: string | null
+  created_at: string
+  categories: { id: string; name: string; slug: string; icon: string | null; color: string | null } | null
+}
+
+async function paginatedList(
+  service: ReturnType<typeof createServiceClient>,
+  userId: string,
+  circleIds: string[],
+  favSet: Set<string>,
+  params: URLSearchParams,
+) {
+  const origin      = (params.get('scope') ?? 'all') as Origin
+  const search      = (params.get('search') ?? '').trim()
+  const categoryIds = (params.get('category_ids') ?? '').split(',').filter(Boolean)
+  const under30     = params.get('under30') === '1'
+  const sort        = (params.get('sort') ?? 'recent') as Sort
+  const page        = Math.max(1, Number(params.get('page')) || 1)
+  const pageSize    = Math.min(48, Math.max(1, Number(params.get('page_size')) || DEFAULT_PAGE_SIZE))
+
+  const circleClause = circleIds.length > 0
+    ? `,and(visibility.eq.circle,circle_id.in.(${circleIds.join(',')}))`
+    : ''
+  const { data, error } = await service
+    .from('recipes')
+    .select('id, name, description, prep_time_min, cook_time_min, servings, difficulty, photo_url, visibility, user_id, circle_id, created_at, categories(id, name, slug, icon, color)')
+    .or(`visibility.eq.community,user_id.eq.${userId}${circleClause}`)
+    .order('created_at', { ascending: false })
+    .limit(MAX_RECIPES)
+  if (error) return Response.json({ error: error.message }, { status: 500 })
+
+  const all = (data ?? []) as unknown as ListRecipe[]
+  const isMine      = (r: ListRecipe) => r.user_id === userId
+  const isFamily    = (r: ListRecipe) => r.visibility === 'circle' && !!r.circle_id && circleIds.includes(r.circle_id)
+  const isCommunity = (r: ListRecipe) => r.visibility === 'community'
+  const totalTime   = (r: ListRecipe) => (r.prep_time_min ?? 0) + (r.cook_time_min ?? 0)
+
+  // Recherche : nom de la recette ou d'un de ses ingrédients
+  let searchIds: Set<string> | null = null
+  if (search) {
+    const needle = search.toLowerCase()
+    // Pas de .in(ids) ici (URL trop longue) : l'intersection avec les
+    // recettes accessibles se fait via `base` ci-dessous.
+    const { data: ings } = await service
+      .from('recipe_ingredients')
+      .select('recipe_id')
+      .ilike('name', `%${search.replace(/[%_]/g, '')}%`)
+      .limit(5000)
+    searchIds = new Set((ings ?? []).map(i => i.recipe_id as string))
+    for (const r of all) if (r.name.toLowerCase().includes(needle)) searchIds.add(r.id)
+  }
+
+  // Filtres hors origine : servent aussi aux compteurs par origine
+  const base = all.filter(r =>
+    (!searchIds || searchIds.has(r.id)) &&
+    (categoryIds.length === 0 || (r.categories && categoryIds.includes(r.categories.id))) &&
+    (!under30 || (totalTime(r) > 0 && totalTime(r) <= 30))
+  )
+
+  const byOrigin: Record<Origin, (r: ListRecipe) => boolean> = {
+    all:        () => true,
+    famille:    isFamily,
+    communaute: isCommunity,
+    mes:        isMine,
+    favoris:    r => favSet.has(r.id),
+  }
+  const counts = Object.fromEntries(
+    (Object.keys(byOrigin) as Origin[]).map(o => [o, base.filter(byOrigin[o]).length])
+  ) as Record<Origin, number>
+
+  let filtered = base.filter(byOrigin[origin] ?? byOrigin.all)
+
+  if (sort === 'alpha') {
+    filtered = [...filtered].sort((a, b) => a.name.localeCompare(b.name, 'fr'))
+  } else if (sort === 'fastest') {
+    // Temps inconnu (0) en dernier
+    filtered = [...filtered].sort((a, b) => (totalTime(a) || Infinity) - (totalTime(b) || Infinity))
+  } else if (sort === 'planned') {
+    const { data: myPlans } = await service.from('meal_plans').select('id').eq('user_id', userId)
+    const planIds = (myPlans ?? []).map(p => p.id as string)
+    const usage = new Map<string, number>()
+    if (planIds.length > 0) {
+      const { data: planned } = await service.from('meal_plan_items').select('recipe_id').in('meal_plan_id', planIds)
+      for (const p of planned ?? []) if (p.recipe_id) usage.set(p.recipe_id, (usage.get(p.recipe_id) ?? 0) + 1)
+    }
+    filtered = [...filtered].sort((a, b) => (usage.get(b.id) ?? 0) - (usage.get(a.id) ?? 0))
+  }
+
+  const total     = filtered.length
+  const pageItems = filtered.slice((page - 1) * pageSize, page * pageSize)
+
+  // Favoris du foyer (membres de mes cercles, moi compris) pour la page affichée
+  const foyerFavs = new Map<string, number>()
+  if (pageItems.length > 0) {
+    let mateIds = [userId]
+    if (circleIds.length > 0) {
+      const { data: mates } = await service.from('family_circle_members').select('user_id').in('circle_id', circleIds)
+      mateIds = Array.from(new Set([userId, ...(mates ?? []).map(m => m.user_id as string)]))
+    }
+    const { data: favRows } = await service
+      .from('recipe_favorites')
+      .select('recipe_id')
+      .in('user_id', mateIds)
+      .in('recipe_id', pageItems.map(r => r.id))
+    for (const f of favRows ?? []) foyerFavs.set(f.recipe_id, (foyerFavs.get(f.recipe_id) ?? 0) + 1)
+  }
+
+  return Response.json({
+    items: pageItems.map(r => ({
+      ...r,
+      is_favorited:    favSet.has(r.id),
+      foyer_favorites: foyerFavs.get(r.id) ?? 0,
+      total_time_min:  totalTime(r) || null,
+      origin:          isMine(r) ? 'mes' : isFamily(r) ? 'famille' : 'communaute',
+    })),
+    total,
+    page,
+    page_size: pageSize,
+    page_count: Math.max(1, Math.ceil(total / pageSize)),
+    counts,
+  })
 }
