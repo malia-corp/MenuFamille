@@ -13,3 +13,6 @@ Fonctionnalités identifiées comme utiles mais hors scope du MVP (CDC section 5
 | Numérisation d'un carnet manuscrit / photo (scan) | Bloc « Magie Express » de l'ajout de recette (sprint 4). Bouton présent en « Bientôt disponible » ; fonctionnalité exclue du MVP (décision de cadrage n°4). |
 | Archiver une recette | Menu options du détail mobile (sprint 4). Pas de colonne d'archivage ; seuls Modifier / Partager / Supprimer sont proposés. |
 | Aperçu de la recette avant enregistrement (desktop) | Bouton « Aperçu » de la maquette d'ajout desktop (sprint 4). |
+| Langue & unités culinaires (mesures locales : sodabi, oloko…, sélecteur métrique/local) | Page Paramètres (sprint 4). Aucun modèle de données pour la langue ni les unités ; lignes présentes en « Bientôt disponible ». |
+| « Menu du jour sur WhatsApp » (envoi automatique quotidien à la famille) | Maquette du profil (sprint 4). Nécessite une intégration WhatsApp Business ; non implémenté. |
+| Indicateur « X kg de denrées économisées » | Maquette du profil (sprint 4). Aucune donnée de quantités achetées/gaspillées pour le calculer. |

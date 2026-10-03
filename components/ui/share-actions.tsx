@@ -29,6 +29,15 @@ export function circleInvitePayload(circleName: string, code: string): SharePayl
   }
 }
 
+// Recommander l'application (Paramètres > Partager KeskonBouf).
+export function appSharePayload(): SharePayload {
+  return {
+    title: 'KeskonBouf',
+    text:  'Je planifie les repas de la famille avec KeskonBouf. Essaie-le !',
+    url:   window.location.origin,
+  }
+}
+
 interface ShareActionsProps {
   // Appelé au clic (peut générer un lien à la volée) ; null = rien à partager.
   getPayload:       () => Promise<SharePayload | null> | SharePayload | null

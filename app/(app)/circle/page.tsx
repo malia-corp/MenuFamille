@@ -2,40 +2,14 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { AlertTriangle, Check, Heart, Key, LogOut, MoreVertical, Plus, ThumbsDown, Users, X } from 'lucide-react'
+import { Check, Key, LogOut, MoreVertical, Plus, Users, X } from 'lucide-react'
 import { ShareActions, circleInvitePayload } from '@/components/ui/share-actions'
 import { Badge } from '@/components/ui/badge'
 import { EmptyState } from '@/components/ui/empty-state'
+import { PREF_TYPE_OPTIONS, prefChipStyle, type Pref, type PrefType, type Severity } from '@/lib/constants/dietary-pref'
 
 const AVATAR_COLORS = ['var(--kkb-coral)', 'var(--kkb-success)', 'var(--kkb-warning)', 'var(--kkb-teal)', 'var(--kkb-text-secondary)']
 
-type PrefType = 'allergy' | 'dislike' | 'preference' | 'favorite'
-type Severity = 'strict' | 'light'
-
-interface Pref {
-  id:        string
-  pref_type: PrefType
-  value:     string
-  severity:  Severity | null
-}
-
-const PREF_TYPE_OPTIONS: { value: PrefType; label: string }[] = [
-  { value: 'allergy',    label: 'Allergie'    },
-  { value: 'dislike',    label: 'N\'aime pas' },
-  { value: 'preference', label: 'Préfère'     },
-  { value: 'favorite',   label: 'Coup de cœur' },
-]
-
-function prefChipStyle(pref: Pref): { className: string; Icon: React.ElementType | null } {
-  if (pref.pref_type === 'allergy') {
-    return pref.severity === 'strict'
-      ? { className: 'bg-red-50 text-red-700 border-red-200', Icon: AlertTriangle }
-      : { className: 'bg-orange-50 text-orange-700 border-orange-200', Icon: AlertTriangle }
-  }
-  if (pref.pref_type === 'dislike')  return { className: 'bg-gray-100 text-gray-600 border-gray-200', Icon: ThumbsDown }
-  if (pref.pref_type === 'favorite') return { className: 'bg-emerald-50 text-emerald-700 border-emerald-200', Icon: Heart }
-  return { className: 'bg-[var(--kkb-bg)] text-[var(--kkb-text-secondary)] border-[var(--kkb-border)]', Icon: null }
-}
 
 interface Member {
   id: string

@@ -411,7 +411,7 @@ export default function HomePage() {
         </button>
         <button
           type="button"
-          onClick={() => router.push('/plan/configure')}
+          onClick={() => router.push('/settings/meal-config')}
           className="border border-[var(--kkb-border)] bg-[var(--kkb-bg)]/70 hover:bg-[var(--kkb-bg)] text-[var(--kkb-text-secondary)] py-3 px-3 rounded-xl text-btn-secondary flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all"
         >
           <Settings className="h-4 w-4" /> Ajuster mes préférences
@@ -457,7 +457,7 @@ export default function HomePage() {
         <div className="flex items-center gap-3 shrink-0">
           <button
             type="button"
-            onClick={() => router.push('/plan/configure')}
+            onClick={() => router.push('/settings/meal-config')}
             className="h-12 px-4 rounded-lg bg-white hover:bg-[var(--kkb-bg)] text-[var(--kkb-text-primary)] text-btn-secondary flex items-center gap-2 shadow-sm transition-colors"
           >
             <Settings className="h-5 w-5 text-[var(--kkb-teal)]" /> Ajuster préférences

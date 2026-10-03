@@ -22,7 +22,7 @@ export function NotificationBell({ className }: { className: string }) {
   return (
     <button
       type="button"
-      onClick={() => router.push(hasNew ? '/votes/results' : '/notifications')}
+      onClick={() => router.push(hasNew ? '/votes/results' : '/settings/notifications')}
       aria-label={hasNew ? `${count} nouveaux avis` : 'Notifications'}
       className={`relative ${className} ${hasNew ? 'text-[var(--kkb-coral)]' : 'text-[var(--kkb-text-secondary)]'}`}
     >
