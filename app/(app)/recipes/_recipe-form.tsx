@@ -531,8 +531,8 @@ export function RecipeForm({
 
       {apiError && <p className="mt-4 text-sm font-quicksand text-[var(--kkb-danger)]">{apiError}</p>}
 
-      {/* Barre d'enregistrement : au-dessus de la bottom nav (mobile), pleine largeur (desktop) */}
-      <div className="fixed inset-x-0 bottom-[72px] z-30 border-t border-[var(--kkb-border)] bg-white px-5 py-3 lg:bottom-0 lg:left-60 lg:px-8">
+      {/* Enregistrer : pastille compacte centrée au-dessus de la bottom nav (mobile), barre pleine largeur (desktop) */}
+      <div className="fixed bottom-[88px] left-1/2 z-30 -translate-x-1/2 lg:inset-x-0 lg:bottom-0 lg:left-60 lg:translate-x-0 lg:border-t lg:border-[var(--kkb-border)] lg:bg-white lg:px-8 lg:py-3">
         <div className="mx-auto flex max-w-[1300px] items-center gap-4">
           {draftKey && (
             <p className="hidden flex-1 items-center gap-1.5 text-xs font-quicksand text-[var(--kkb-success)] lg:flex" aria-live="polite">
@@ -541,9 +541,14 @@ export function RecipeForm({
             </p>
           )}
           <button type="button" onClick={() => void handleSubmit()} disabled={busy}
-            className="flex w-full items-center justify-center gap-2 rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-coral)] py-3.5 text-[15px] font-quicksand font-bold text-white hover:bg-[var(--kkb-coral-hover)] disabled:opacity-60 lg:ml-auto lg:w-auto lg:px-8">
+            className="flex items-center justify-center gap-1.5 whitespace-nowrap rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-coral)] px-6 py-2.5 text-sm font-quicksand font-bold text-white shadow-[var(--kkb-shadow-fab)] hover:bg-[var(--kkb-coral-hover)] disabled:opacity-60 lg:ml-auto lg:gap-2 lg:px-8 lg:py-3.5 lg:text-[15px] lg:shadow-none">
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-            {photoUploading ? 'Envoi de la photo…' : submitLabel}
+            {photoUploading ? 'Envoi de la photo…' : (
+              <>
+                <span className="lg:hidden">Enregistrer</span>
+                <span className="hidden lg:inline">{submitLabel}</span>
+              </>
+            )}
           </button>
         </div>
       </div>

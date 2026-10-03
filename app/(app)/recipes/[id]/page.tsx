@@ -4,13 +4,14 @@ import { Suspense, useEffect, useRef, useState } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import {
   ArrowLeft, BookHeart, CalendarPlus, Check, ChefHat, ChevronRight, Clock, CupSoda, Heart,
-  Loader2, Menu, Pencil, PlusCircle, Printer, Salad, Smile, Timer, Trash2, Users,
+  Loader2, Menu, Pencil, Printer, Salad, Smile, Timer, Trash2, Users,
 } from 'lucide-react'
 import { categoryIcon } from '@/lib/constants/category-icon'
 import { CategoryBadge } from '@/components/recipes/category-badge'
 import { AddToMenuSheet } from '@/components/recipes/add-to-menu-sheet'
 import { ServingsControl, scaleQuantity } from '@/components/recipes/servings-control'
 import { ShareActions } from '@/components/ui/share-actions'
+import { RecipePrintSheet } from '@/components/recipes/recipe-print-sheet'
 import { formatDuration, type RecipeCategory } from '@/components/recipes/types'
 
 interface Ingredient { id: string; name: string; quantity: number | null; unit: string | null; sort_order: number }
@@ -67,6 +68,7 @@ function RecipeDetail() {
   const [addOpen,     setAddOpen]     = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleting,    setDeleting]    = useState(false)
+  const [favPop,      setFavPop]      = useState(0)
   const mobileMenuRef  = useRef<HTMLDivElement>(null)
   const desktopMenuRef = useRef<HTMLDivElement>(null)
 
@@ -100,6 +102,7 @@ function RecipeDetail() {
   }, [menuOpen])
 
   async function toggleFavorite() {
+    setFavPop(n => n + 1)
     const res = await fetch(`/api/recipes/${id}/favorite`, { method: 'POST' })
     if (!res.ok) return
     const { is_favorited } = await res.json()
@@ -167,6 +170,9 @@ function RecipeDetail() {
           buttonClassName="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm font-quicksand text-[var(--kkb-text-primary)] hover:bg-[var(--kkb-bg)] disabled:opacity-60"
         />
       )}
+      <button type="button" onClick={() => { setMenuOpen(false); setTimeout(() => window.print(), 50) }} className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm font-quicksand text-[var(--kkb-text-primary)] hover:bg-[var(--kkb-bg)]">
+        <Printer className="h-4 w-4 text-[var(--kkb-coral)]" /> Imprimer la fiche
+      </button>
       {recipe.is_owner && (
         <button type="button" onClick={() => { setMenuOpen(false); setConfirmDelete(true) }} className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm font-quicksand text-[var(--kkb-danger)] hover:bg-[var(--kkb-danger-light)]">
           <Trash2 className="h-4 w-4" /> Supprimer
@@ -174,7 +180,6 @@ function RecipeDetail() {
       )}
     </div>
   )
-  const hasMenuItems = recipe.is_owner || recipe.visibility !== 'private'
 
   const tipCard = recipe.description && (
     <section className="space-y-2 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-warning)] bg-[var(--kkb-warning-light)] p-4 lg:p-5">
@@ -201,12 +206,28 @@ function RecipeDetail() {
 
   return (
     <>
+      <RecipePrintSheet
+        name={recipe.name}
+        categoryName={recipe.categories?.name ?? null}
+        difficulty={recipe.difficulty}
+        prepTime={recipe.prep_time_min}
+        cookTime={recipe.cook_time_min}
+        servings={servings}
+        photoUrl={recipe.photo_url}
+        description={recipe.description}
+        ingredients={recipe.recipe_ingredients.map(i => ({ id: i.id, name: i.name, qty: qtyOf(i) }))}
+        steps={recipe.recipe_steps}
+        sides={suggestions.filter(s => s.role === 'side').map(s => s.name)}
+        drinks={suggestions.filter(s => s.role === 'drink').map(s => s.name)}
+      />
+
+      <div className="print:hidden">
       {/* ── Mobile ─────────────────────────────────────────────────────── */}
       <div className="pb-40 lg:hidden">
         <div className="relative">
           {visual('h-[260px] w-full', 'h-16 w-16')}
           <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/60" />
-          {hasMenuItems && (
+          {(
             <div ref={mobileMenuRef} className="absolute right-4 top-4 print:hidden">
               <button type="button" onClick={() => setMenuOpen(o => !o)} aria-label="Options de la recette" aria-expanded={menuOpen} className="flex h-10 w-10 items-center justify-center rounded-full bg-black/25 text-white">
                 <Menu className="h-6 w-6" />
@@ -285,14 +306,19 @@ function RecipeDetail() {
           )}
         </div>
 
-        <div className="fixed inset-x-0 bottom-[72px] z-30 flex gap-3 border-t border-[var(--kkb-border)] bg-white px-5 py-3 print:hidden">
+        <div className="fixed bottom-[88px] left-1/2 z-30 flex -translate-x-1/2 items-center gap-1.5 rounded-[var(--kkb-radius-pill)] border border-[var(--kkb-border)] bg-white p-1.5 shadow-[var(--kkb-shadow-fab)]">
           <button type="button" onClick={() => void toggleFavorite()} aria-label={recipe.is_favorited ? 'Retirer des favoris' : 'Ajouter aux favoris'} aria-pressed={recipe.is_favorited}
-            className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-full border border-[var(--kkb-border)]">
-            <Heart className={`h-5 w-5 ${recipe.is_favorited ? 'fill-[var(--kkb-coral)] text-[var(--kkb-coral)]' : 'text-[var(--kkb-text-secondary)]'}`} />
+            className={`relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors ${recipe.is_favorited ? 'bg-[var(--kkb-coral-light)]' : 'bg-[var(--kkb-bg)]'}`}>
+            <Heart key={favPop} className={`h-5 w-5 ${favPop ? 'motion-safe:animate-kkb-react-pop' : ''} ${recipe.is_favorited ? 'fill-[var(--kkb-coral)] text-[var(--kkb-coral)]' : 'text-[var(--kkb-text-secondary)]'}`} />
+            {recipe.foyer_favorites > 0 && (
+              <span className="absolute -right-1 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[var(--kkb-coral)] px-1 text-[10px] font-quicksand font-bold text-white" aria-label={`${recipe.foyer_favorites} favori(s) dans le foyer`}>
+                {recipe.foyer_favorites}
+              </span>
+            )}
           </button>
           <button type="button" onClick={() => setAddOpen(true)}
-            className="flex flex-1 items-center justify-center gap-2 rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-coral)] text-sm font-quicksand font-bold uppercase tracking-wide text-white">
-            <PlusCircle className="h-5 w-5" /> Ajouter à mon menu
+            className="flex h-10 items-center gap-1.5 whitespace-nowrap rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-coral)] px-5 text-sm font-quicksand font-bold text-white active:scale-[0.97]">
+            <CalendarPlus className="h-4 w-4" /> Ajouter au menu
           </button>
         </div>
       </div>
@@ -315,7 +341,7 @@ function RecipeDetail() {
             Favori du foyer
             <span className="rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-coral-light)] px-2 py-0.5 text-xs font-bold text-[var(--kkb-coral)]">{recipe.foyer_favorites}/{recipe.foyer_size}</span>
           </button>
-          {hasMenuItems && (
+          {(
             <div ref={desktopMenuRef} className="relative">
               <button type="button" onClick={() => setMenuOpen(o => !o)} aria-expanded={menuOpen}
                 className="flex items-center gap-2 rounded-[var(--kkb-radius-pill)] border border-[var(--kkb-border)] bg-white px-4 py-2 text-sm font-quicksand font-semibold text-[var(--kkb-text-secondary)] hover:border-[var(--kkb-coral)]">
@@ -456,6 +482,8 @@ function RecipeDetail() {
             </button>
           </div>
         </section>
+      </div>
+
       </div>
 
       <AddToMenuSheet recipeId={recipe.id} open={addOpen} onClose={() => setAddOpen(false)} />
