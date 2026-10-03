@@ -93,7 +93,6 @@ function MemberResultsContent() {
     return (
       <EmptyState
         icon={loadState === 'error' ? WifiOff : Inbox}
-        icon={<Inbox className="h-8 w-8 text-[var(--kkb-text-tertiary)]" />}
         title={loadState === 'error' ? 'Impossible de charger les résultats' : 'Aucun sondage en cours'}
         message={loadState === 'error'
           ? 'Réessaie dans un instant.'
@@ -165,22 +164,6 @@ function MemberResultsContent() {
           </div>
         </div>
       </section>
-
-      {!data.has_voted && (
-        <section className="flex items-center gap-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white p-4">
-          <Vote className="h-5 w-5 shrink-0 text-[var(--kkb-coral)]" />
-          <p className="flex-1 text-[13px] font-quicksand text-[var(--kkb-text-secondary)]">
-            Tu n’as pas encore donné ton avis sur ce menu.
-          </p>
-          <button
-            type="button"
-            onClick={() => router.push(surveyUrl)}
-            className="shrink-0 rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-coral)] px-4 py-2 text-xs font-quicksand font-bold text-white"
-          >
-            Voter
-          </button>
-        </section>
-      )}
 
       {/* Résultats par repas : agrégats seulement, aucun commentaire nommé */}
       {groups.map(g => {
