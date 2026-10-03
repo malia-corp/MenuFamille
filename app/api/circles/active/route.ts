@@ -13,11 +13,14 @@ export async function PUT(request: Request) {
 
   const { data: membership } = await supabase
     .from('family_circle_members')
-    .select('id')
+    .select('id, is_active')
     .eq('circle_id', circle_id)
     .eq('user_id', user.id)
     .maybeSingle()
   if (!membership) return Response.json({ error: 'Tu n\'es pas membre de ce cercle' }, { status: 403 })
+  if (!membership.is_active) {
+    return Response.json({ error: 'Ton accès à ce cercle est désactivé' }, { status: 403 })
+  }
 
   const { error } = await supabase
     .from('users')

@@ -11,9 +11,12 @@ import {
   Heart,
   Key,
   KeyRound,
+  Loader2,
+  Lock,
   LogOut,
   Pencil,
   Plus,
+  Power,
   Printer,
   QrCode,
   ThumbsUp,
@@ -24,6 +27,7 @@ import {
 } from 'lucide-react'
 import { ShareActions, circleInvitePayload, circleJoinLinkPayload, circleJoinUrl } from '@/components/ui/share-actions'
 import { EmptyState } from '@/components/ui/empty-state'
+import { Switch } from '@/components/ui/switch'
 import { SkeletonCard } from '@/components/ui/skeleton-card'
 import { MealTypeIcon } from '@/components/ui/meal-type-icon'
 import { MEAL_LABEL, type MealType } from '@/lib/constants/meal-type'
@@ -48,16 +52,18 @@ interface Member {
   id: string
   role: string
   joined_at: string
+  is_active?: boolean
   users: { id: string; display_name: string; email: string; member_dietary_prefs: Pref[] } | null
 }
 
 interface Circle {
   id: string
   name: string
-  invite_code: string
+  invite_code: string | null   // null si l'on est désactivé dans ce cercle
   created_by: string
   family_circle_members: Member[]
   my_role: string
+  my_is_active: boolean
 }
 
 interface MealConfig {
@@ -85,7 +91,11 @@ export default function CirclePage() {
   const [circles, setCircles] = useState<Circle[]>([])
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  // activeId : cercle actif (users.active_circle_id, action explicite) ;
+  // viewedId : cercle sélectionné pour consultation (sans l'activer).
   const [activeId, setActiveId] = useState<string | null>(null)
+  const [viewedId, setViewedId] = useState<string | null>(null)
+  const [activating, setActivating] = useState(false)
   const [mealConfigs, setMealConfigs] = useState<MealConfig[]>([])
   const [plannerName, setPlannerName] = useState<string | null>(null)
   const [stats, setStats] = useState<CircleStats | null>(null)
@@ -114,31 +124,72 @@ export default function CirclePage() {
       .catch(() => {})
   }, [])
 
-  // Moments de repas du cercle affiché (configuration de sa planificatrice,
-  // lisible par tous les membres).
+  const shownId = viewedId ?? activeId
+  const shown   = circles.find((c) => c.id === shownId) ?? circles[0]
+
+  // Moments de repas du cercle consulté (configuration de sa planificatrice,
+  // lisible par ses membres actifs).
   useEffect(() => {
-    if (!activeId) return
     setMealConfigs([])
-    fetch(`/api/circles/${activeId}/meal-config`)
+    setPlannerName(null)
+    if (!shown?.id || !shown.my_is_active) return
+    fetch(`/api/circles/${shown.id}/meal-config`)
       .then((r) => (r.ok ? r.json() : null))
       .then((res) => {
         setMealConfigs(Array.isArray(res?.configs) ? res.configs : [])
         setPlannerName(res?.planner_name ?? null)
       })
       .catch(() => {})
-  }, [activeId])
+  }, [shown?.id, shown?.my_is_active])
 
-  async function switchCircle(id: string) {
-    const res = await fetch('/api/circles/active', {
-      method:  'PUT',
+  // Sélection : on consulte le cercle, sans l'activer.
+  async function selectCircle(id: string) {
+    setViewedId(id)
+  }
+
+  // Activation explicite du cercle consulté.
+  async function activateCircle(id: string) {
+    setActivating(true)
+    try {
+      const res = await fetch('/api/circles/active', {
+        method:  'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ circle_id: id }),
+      })
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}))
+        toast.error(d.error ?? 'Impossible d\'activer ce cercle')
+        return
+      }
+      setActiveId(id)
+      toast.success(`Cercle actif : ${circles.find((c) => c.id === id)?.name ?? ''}`)
+      // En-tête, rôle et navigation sont rendus côté serveur.
+      router.refresh()
+    } finally {
+      setActivating(false)
+    }
+  }
+
+  // Planificatrice : activer / désactiver un membre (il garde son historique).
+  async function setMemberActive(circleId: string, userId: string, isActive: boolean) {
+    const res = await fetch(`/api/circles/${circleId}/members/${userId}`, {
+      method:  'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ circle_id: id }),
+      body:    JSON.stringify({ is_active: isActive }),
     })
-    if (!res.ok) { toast.error('Impossible de changer de cercle'); return }
-    setActiveId(id)
-    toast.success(`Cercle actif : ${circles.find((c) => c.id === id)?.name ?? ''}`)
-    // En-tête, rôle et navigation sont rendus côté serveur.
-    router.refresh()
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}))
+      toast.error(d.error ?? 'Impossible de changer le statut')
+      return
+    }
+    setCircles((prev) =>
+      prev.map((c) =>
+        c.id === circleId
+          ? { ...c, family_circle_members: c.family_circle_members.map((m) => (m.users?.id === userId ? { ...m, is_active: isActive } : m)) }
+          : c
+      )
+    )
+    toast.success(isActive ? 'Membre réactivé' : 'Membre désactivé')
   }
 
   async function removeMember(circleId: string, userId: string) {
@@ -161,6 +212,7 @@ export default function CirclePage() {
       const remaining = circles.filter((c) => c.id !== circleId)
       setCircles(remaining)
       if (activeId === circleId) setActiveId(remaining[0]?.id ?? null)
+      if (viewedId === circleId) setViewedId(null)
       router.refresh()
     }
   }
@@ -285,8 +337,9 @@ export default function CirclePage() {
     )
   }
 
-  // Afficher le premier cercle (MVP : un seul cercle à la fois)
-  const circle = circles.find((c) => c.id === activeId) ?? circles[0]
+  // Cercle consulté (sélection), par défaut le cercle actif.
+  const circle = shown
+  const isActiveCircle = circle.id === activeId
   const members = (circle.family_circle_members ?? []).filter((m) => m.users)
   const isPlanificatrice = circle.my_role === 'planificatrice'
   const me = members.find((m) => m.users!.id === currentUserId)
@@ -354,15 +407,34 @@ export default function CirclePage() {
     )
   }
 
+  // Planificatrice : statut (actif / désactivé) et retrait d'un membre.
   const removeButton = (m: Member) =>
     isPlanificatrice && m.users!.id !== currentUserId ? (
-      <button
-        type="button"
-        onClick={() => void removeMember(circle.id, m.users!.id)}
-        className="shrink-0 rounded-[var(--kkb-radius-pill)] px-2.5 py-1 font-quicksand text-xs font-semibold text-[var(--kkb-danger)] transition-colors hover:bg-[var(--kkb-danger-light)]"
-      >
-        Retirer
-      </button>
+      <div className="flex shrink-0 flex-col items-end gap-1">
+        {m.role === 'membre' && (
+          <label className="flex items-center gap-1.5 font-quicksand text-[11px] font-semibold text-[var(--kkb-text-tertiary)]">
+            {m.is_active === false ? 'Désactivé' : 'Actif'}
+            <Switch
+              checked={m.is_active !== false}
+              onCheckedChange={(on) => void setMemberActive(circle.id, m.users!.id, on)}
+              aria-label={`Statut de ${m.users!.display_name || m.users!.email}`}
+              className="data-[state=checked]:bg-[var(--kkb-success)] data-[state=unchecked]:bg-[var(--kkb-border)]"
+            />
+          </label>
+        )}
+        <button
+          type="button"
+          onClick={() => void removeMember(circle.id, m.users!.id)}
+          className="rounded-[var(--kkb-radius-pill)] px-2.5 py-1 font-quicksand text-xs font-semibold text-[var(--kkb-danger)] transition-colors hover:bg-[var(--kkb-danger-light)]"
+        >
+          Retirer
+        </button>
+      </div>
+    ) : null
+
+  const inactiveBadge = (m: Member) =>
+    m.is_active === false ? (
+      <span className="rounded-[var(--kkb-radius-pill)] border border-[var(--kkb-border)] bg-[var(--kkb-bg)] px-2 py-0.5 font-quicksand text-[10px] font-bold uppercase text-[var(--kkb-text-tertiary)]">Désactivé</span>
     ) : null
 
   const aloneState = members.length <= 1 && (
@@ -400,15 +472,69 @@ export default function CirclePage() {
     </div>
   )
 
-  // Le cercle affiché est le cercle actif (users.active_circle_id).
+  // Statut du cercle consulté : actif, à activer, ou accès désactivé.
   const statusRow = (
-    <div className="flex items-center justify-between rounded-[var(--kkb-radius-sm)] border border-[var(--kkb-border-light)] px-3 py-2">
+    <div className="flex items-center justify-between gap-2 rounded-[var(--kkb-radius-sm)] border border-[var(--kkb-border-light)] px-3 py-2">
       <span className="font-quicksand text-xs font-semibold text-[var(--kkb-text-secondary)]">Statut cercle</span>
-      <span className="inline-flex items-center gap-1.5 rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-success-light)] px-2.5 py-1 font-quicksand text-xs font-bold text-[var(--kkb-success)]">
-        <span className="h-1.5 w-1.5 rounded-full bg-[var(--kkb-success)]" /> Actif
-      </span>
+      {!circle.my_is_active ? (
+        <span className="inline-flex items-center gap-1.5 rounded-[var(--kkb-radius-pill)] border border-[var(--kkb-border)] bg-[var(--kkb-bg)] px-2.5 py-1 font-quicksand text-xs font-bold text-[var(--kkb-text-tertiary)]">
+          <Lock className="h-3 w-3" /> Accès désactivé
+        </span>
+      ) : isActiveCircle ? (
+        <span className="inline-flex items-center gap-1.5 rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-success-light)] px-2.5 py-1 font-quicksand text-xs font-bold text-[var(--kkb-success)]">
+          <span className="h-1.5 w-1.5 rounded-full bg-[var(--kkb-success)]" /> Actif
+        </span>
+      ) : (
+        <button
+          type="button"
+          onClick={() => void activateCircle(circle.id)}
+          disabled={activating}
+          className="inline-flex items-center gap-1.5 rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-coral)] px-3 py-1 font-quicksand text-xs font-bold text-white transition-colors hover:bg-[var(--kkb-coral-hover)] disabled:opacity-60"
+        >
+          {activating ? <Loader2 className="h-3 w-3 animate-spin" /> : <Power className="h-3 w-3" />}
+          Activer ce cercle
+        </button>
+      )}
     </div>
   )
+
+  const switcherProps = { circles, selectedId: circle.id, activeId, onSelect: selectCircle }
+
+  // Accès désactivé par la planificatrice : ni membres, ni code, ni menu ;
+  // seulement ses propres informations et l'historique de ses avis.
+  if (!circle.my_is_active) {
+    return (
+      <div className="mx-auto max-w-lg space-y-5 px-4 pb-8 pt-4 lg:pt-8">
+        <section className="space-y-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white p-4">
+          <CircleSwitcher {...switcherProps}>
+            <span className="block truncate font-dosis text-lg font-bold text-[var(--kkb-text-primary)]">{circle.name}</span>
+            <span className="block font-quicksand text-xs text-[var(--kkb-text-tertiary)]">{circles.length > 1 ? `${circles.length} cercles` : 'Mon cercle'}</span>
+          </CircleSwitcher>
+          {statusRow}
+        </section>
+        <section className="rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white">
+          <EmptyState
+            icon={Lock}
+            title="Ton accès à ce cercle est désactivé"
+            description="La planificatrice a désactivé ta participation : tu ne vois plus le menu, les votes ni les membres. Tu gardes l'historique de tes avis."
+            ctaLabel="Voir mes avis"
+            ctaHref="/feedback"
+            className="py-8"
+          />
+        </section>
+        {me && (
+          <section className="space-y-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white p-4">
+            <p className="font-dosis text-base font-bold text-[var(--kkb-text-primary)]">Mon assiette personnalisée</p>
+            {prefChips(me, 'md')}
+          </section>
+        )}
+        {otherActions}
+      </div>
+    )
+  }
+
+  // Membre actif : le code d'invitation est toujours renvoyé par l'API.
+  const inviteCode = circle.invite_code ?? ''
 
   return (
     <>
@@ -416,7 +542,7 @@ export default function CirclePage() {
       <div className="mx-auto max-w-lg space-y-5 px-4 pb-6 pt-4 lg:hidden print:hidden">
         {/* Statut du cercle */}
         <section className="space-y-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white p-4">
-          <CircleSwitcher circles={circles} activeId={circle.id} onSelect={switchCircle}>
+          <CircleSwitcher {...switcherProps}>
             <span className="flex items-center gap-3">
               <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--kkb-coral-light)]">
                 <Users className="h-5 w-5 text-[var(--kkb-coral)]" />
@@ -445,19 +571,19 @@ export default function CirclePage() {
           <p className="flex items-center gap-1.5 font-quicksand text-[10px] font-bold uppercase tracking-wider text-[var(--kkb-text-tertiary)]">
             <KeyRound className="h-3.5 w-3.5 text-[var(--kkb-coral)]" /> Code d&apos;invitation au cercle
           </p>
-          <p className="font-dosis text-[28px] font-extrabold tracking-wider text-[var(--kkb-coral)]">{circle.invite_code}</p>
+          <p className="font-dosis text-[28px] font-extrabold tracking-wider text-[var(--kkb-coral)]">{inviteCode}</p>
           <p className="font-quicksand text-[13px] text-[var(--kkb-text-secondary)]">
             Partage ce code avec un proche ou un invité du dimanche pour qu&apos;il vote et donne son avis sur les repas.
           </p>
           <ShareActions
-            getPayload={() => circleInvitePayload(circle.name, circle.invite_code)}
+            getPayload={() => circleInvitePayload(circle.name, inviteCode)}
             copyLabel="Copier"
             className="flex flex-row-reverse items-center gap-2"
             buttonClassName={SHARE_GHOST}
             shareButtonClassName={SHARE_TEAL}
           />
           <ShareActions
-            getPayload={() => circleJoinLinkPayload(circle.name, circle.invite_code)}
+            getPayload={() => circleJoinLinkPayload(circle.name, inviteCode)}
             copyLabel="Copier le lien d'accès"
             className="flex items-center gap-2"
             buttonClassName={SHARE_GHOST}
@@ -494,6 +620,7 @@ export default function CirclePage() {
                         {isCurrentUser && (
                           <span className="rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-coral-light)] px-2 py-0.5 font-quicksand text-[10px] font-bold text-[var(--kkb-coral)]">Moi</span>
                         )}
+                        {inactiveBadge(m)}
                       </p>
                       <div className="mt-0.5 flex items-center gap-1.5">
                         {roleBadge(m.role)}
@@ -592,7 +719,7 @@ export default function CirclePage() {
           </p>
           </div>
           <div className="w-72 shrink-0 space-y-2 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white p-3">
-            <CircleSwitcher circles={circles} activeId={circle.id} onSelect={switchCircle}>
+            <CircleSwitcher {...switcherProps}>
               <span className="block truncate font-dosis text-base font-bold text-[var(--kkb-text-primary)]">{circle.name}</span>
               <span className="block font-quicksand text-xs text-[var(--kkb-text-tertiary)]">
                 {members.length} {members.length > 1 ? 'convives' : 'convive'}
@@ -608,12 +735,12 @@ export default function CirclePage() {
           <aside className="space-y-4">
             <section className="space-y-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-coral)] bg-[var(--kkb-coral-light)] p-5 print:hidden">
               <p className="font-quicksand text-[10px] font-bold uppercase tracking-wider text-[var(--kkb-text-tertiary)]">Code unique du foyer</p>
-              <p className="font-dosis text-[32px] font-extrabold leading-none tracking-wider text-[var(--kkb-coral)]">{circle.invite_code}</p>
+              <p className="font-dosis text-[32px] font-extrabold leading-none tracking-wider text-[var(--kkb-coral)]">{inviteCode}</p>
               <p className="font-quicksand text-xs text-[var(--kkb-text-secondary)]">
                 Partage ce code avec les enfants ou ton conjoint(e) pour rejoindre la tablée.
               </p>
               <ShareActions
-                getPayload={() => circleInvitePayload(circle.name, circle.invite_code)}
+                getPayload={() => circleInvitePayload(circle.name, inviteCode)}
                 copyLabel="Copier"
                 className="flex flex-col gap-2"
                 buttonClassName={SHARE_GHOST + ' w-full flex-none'}
@@ -635,9 +762,9 @@ export default function CirclePage() {
                 </button>
               </div>
               <div className="mx-auto w-fit rounded-[var(--kkb-radius-sm)] bg-white p-3">
-                <QRCodeSVG value={circleJoinUrl(circle.invite_code)} size={160} fgColor="#0E5A5E" />
+                <QRCodeSVG value={circleJoinUrl(inviteCode)} size={160} fgColor="#0E5A5E" />
               </div>
-              <p className="hidden font-dosis text-2xl font-extrabold text-[var(--kkb-coral)] print:block">{circle.invite_code}</p>
+              <p className="hidden font-dosis text-2xl font-extrabold text-[var(--kkb-coral)] print:block">{inviteCode}</p>
               <p className="font-quicksand text-xs text-[var(--kkb-text-secondary)]">
                 Scanner avec l&apos;appareil photo pour rejoindre la tablée en 10 secondes.
               </p>
@@ -668,6 +795,7 @@ export default function CirclePage() {
                           {isCurrentUser && (
                             <span className="rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-coral-light)] px-2 py-0.5 font-quicksand text-[10px] font-bold uppercase text-[var(--kkb-coral)]">Vous</span>
                           )}
+                          {inactiveBadge(m)}
                         </p>
                         <p className="font-quicksand text-sm text-[var(--kkb-coral)]">{m.role === 'planificatrice' ? 'Cheffe du foyer' : 'Membre votant'}</p>
                       </div>
