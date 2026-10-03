@@ -414,9 +414,9 @@ export default function CirclePage() {
           <ShareActions
             getPayload={() => circleJoinLinkPayload(circle.name, circle.invite_code)}
             copyLabel="Copier le lien d'accès"
-            shareLabel="Partager le lien"
             className="flex items-center gap-2"
             buttonClassName={SHARE_GHOST}
+            shareButtonClassName="hidden"
           />
         </section>
 
