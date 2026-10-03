@@ -7,8 +7,9 @@ type Client = SupabaseClient<Database>
 // en est toujours membre, sinon le premier rejoint (comportement historique,
 // cf. docs/ecarts-implementation.md #1). null = aucun cercle.
 //
-// Ne concerne que l'affichage (page cercle, en-tête, accueil, profil) : la
-// génération et les allergènes agrègent toujours tous les cercles.
+// Pilote toute l'app : page cercle, en-tête, accueil, profil, et les menus
+// (meal_plans.circle_id, migration w) — menu de la semaine, menu du jour,
+// planification, génération et allergènes pris en compte.
 export async function resolveActiveCircleId(supabase: Client, userId: string): Promise<string | null> {
   const [{ data: profile }, { data: memberships }] = await Promise.all([
     supabase.from('users').select('active_circle_id').eq('id', userId).maybeSingle(),
