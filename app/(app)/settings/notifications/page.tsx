@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { ArrowLeft, Bell, Check, Info, Save } from 'lucide-react'
 import { MEAL_LABEL, type MealType } from '@/lib/constants/meal-type'
 import { MealTypeIcon } from '@/components/ui/meal-type-icon'
+import { registerServiceWorker } from '@/lib/utils/service-worker'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -61,18 +62,8 @@ function urlBase64ToUint8Array(base64: string) {
   return Uint8Array.from(raw, c => c.charCodeAt(0))
 }
 
-async function registerServiceWorker() {
-  if (!('serviceWorker' in navigator)) return null
-  try {
-    const reg = await navigator.serviceWorker.register('/sw.js')
-    return reg
-  } catch {
-    return null
-  }
-}
-
 async function subscribePush(): Promise<PushSubscription | null> {
-  const reg = await registerServiceWorker()
+  const reg = await registerServiceWorker()?.catch(() => null)
   if (!reg) return null
   try {
     const existing = await reg.pushManager.getSubscription()

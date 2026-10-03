@@ -162,7 +162,7 @@ export async function POST(request: Request) {
   try {
     const res = await fetch(url, {
       signal: AbortSignal.timeout(8000),
-      headers: { 'User-Agent': 'MenuFamille-Bot/1.0' },
+      headers: { 'User-Agent': 'KeskonBouf-Bot/1.0' },
     })
     if (!res.ok) {
       return Response.json({ error: `Site inaccessible (HTTP ${res.status})` }, { status: 422 })
