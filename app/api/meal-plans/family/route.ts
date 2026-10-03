@@ -45,6 +45,7 @@ export async function GET(request: NextRequest) {
       .from('meal_plans')
       .select(FAMILY_PLAN_SELECT)
       .eq('user_id', ctx.plannerId)
+      .eq('circle_id', ctx.circleId!)
       .eq('week_start', week)
       .order('created_at', { ascending: false })
       .limit(1),
