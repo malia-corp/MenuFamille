@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
+import { isDeactivatedForPlanner } from '@/lib/utils/circle-access'
 import { NextRequest } from 'next/server'
 
 const DAY_ORDER = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche']
@@ -19,16 +20,22 @@ export async function POST(
     .from('meal_plan_items')
     .select(`
       id, day_of_week, applies_all_days,
-      meal_plans ( week_start )
+      meal_plans ( week_start, user_id )
     `)
     .eq('id', params.id)
     .maybeSingle()
 
   if (!item) return Response.json({ error: 'Item introuvable' }, { status: 404 })
 
-  type RawPlan = { week_start: string } | null
-  const weekStart = (item.meal_plans as unknown as RawPlan)?.week_start
+  type RawPlan = { week_start: string; user_id: string } | null
+  const rawPlan   = item.meal_plans as unknown as RawPlan
+  const weekStart = rawPlan?.week_start
   if (!weekStart) return Response.json({ error: 'Plan introuvable' }, { status: 404 })
+
+  // Membre désactivé par la planificatrice : ne donne plus d'avis.
+  if (user && rawPlan && await isDeactivatedForPlanner(service, user.id, rawPlan.user_id)) {
+    return Response.json({ error: 'Ton accès à ce cercle est désactivé : tu ne peux plus donner d\'avis.' }, { status: 403 })
+  }
 
   // Validation : le repas doit être passé ou aujourd'hui
   const dayIndex = DAY_ORDER.indexOf(item.day_of_week)

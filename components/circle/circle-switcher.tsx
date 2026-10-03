@@ -8,20 +8,23 @@ export interface SwitcherCircle {
   id:                     string
   name:                   string
   family_circle_members?: unknown[]
+  my_is_active?:          boolean
 }
 
 interface CircleSwitcherProps {
-  circles:  SwitcherCircle[]
-  activeId: string
-  onSelect: (id: string) => Promise<void>
+  circles:    SwitcherCircle[]
+  selectedId: string          // cercle consulté
+  activeId:   string | null   // cercle actif (activation explicite, ailleurs)
+  onSelect:   (id: string) => Promise<void>
   // Contenu du bouton (nom du cercle + méta), propre à chaque mise en page.
   children: React.ReactNode
   className?: string
 }
 
-// Sélecteur du cercle actif : liste déroulante avec recherche par nom,
-// « Actuel » sur le cercle affiché, liens créer / rejoindre en pied.
-export function CircleSwitcher({ circles, activeId, onSelect, children, className = '' }: CircleSwitcherProps) {
+// Sélection du cercle à consulter : liste déroulante (uniquement les cercles
+// de l'utilisateur, cf. GET /api/circles) avec recherche par nom. Choisir un
+// cercle l'affiche sans l'activer ; l'activation est une action à part.
+export function CircleSwitcher({ circles, selectedId, activeId, onSelect, children, className = '' }: CircleSwitcherProps) {
   const [open,     setOpen]     = useState(false)
   const [query,    setQuery]    = useState('')
   const [pending,  setPending]  = useState<string | null>(null)
@@ -39,7 +42,7 @@ export function CircleSwitcher({ circles, activeId, onSelect, children, classNam
   const visible = q ? circles.filter((c) => c.name.toLowerCase().includes(q)) : circles
 
   async function choose(id: string) {
-    if (id === activeId) { setOpen(false); return }
+    if (id === selectedId) { setOpen(false); return }
     setPending(id)
     try {
       await onSelect(id)
@@ -82,32 +85,42 @@ export function CircleSwitcher({ circles, activeId, onSelect, children, classNam
           <p className="px-4 pb-1 pt-3 font-quicksand text-[10px] font-bold uppercase tracking-wider text-[var(--kkb-text-tertiary)]">Mes cercles</p>
           <ul role="listbox" className="max-h-64 overflow-y-auto pb-1">
             {visible.map((c) => {
-              const active = c.id === activeId
-              const count  = c.family_circle_members?.length ?? 0
+              const selected = c.id === selectedId
+              const active   = c.id === activeId
+              const disabled = c.my_is_active === false
+              const count    = c.family_circle_members?.length ?? 0
               return (
                 <li key={c.id}>
                   <button
                     type="button"
                     role="option"
-                    aria-selected={active}
+                    aria-selected={selected}
                     onClick={() => void choose(c.id)}
                     disabled={pending !== null}
-                    className={`flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-[var(--kkb-bg)] ${active ? 'bg-[var(--kkb-coral-light)]/50' : ''}`}
+                    className={`flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-[var(--kkb-bg)] ${selected ? 'bg-[var(--kkb-coral-light)]/50' : ''}`}
                   >
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--kkb-teal-light)]">
                       <Users className="h-4 w-4 text-[var(--kkb-teal)]" />
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block truncate font-quicksand text-sm font-bold text-[var(--kkb-text-primary)]">{c.name}</span>
-                      <span className="block font-quicksand text-xs text-[var(--kkb-text-tertiary)]">{count} {count > 1 ? 'membres' : 'membre'}</span>
+                      <span className="block font-quicksand text-xs text-[var(--kkb-text-tertiary)]">
+                        {disabled ? 'Accès désactivé' : `${count} ${count > 1 ? 'membres' : 'membre'}`}
+                      </span>
                     </span>
                     {pending === c.id ? (
                       <Loader2 className="h-4 w-4 animate-spin text-[var(--kkb-coral)]" />
-                    ) : active ? (
-                      <span className="inline-flex items-center gap-1 rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-success-light)] px-2 py-0.5 font-quicksand text-[10px] font-bold text-[var(--kkb-success)]">
-                        <Check className="h-3 w-3" /> Actuel
+                    ) : (
+                      <span className="flex shrink-0 items-center gap-1.5">
+                        {active && (
+                          <span className="rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-success-light)] px-2 py-0.5 font-quicksand text-[10px] font-bold text-[var(--kkb-success)]">Actif</span>
+                        )}
+                        {disabled && (
+                          <span className="rounded-[var(--kkb-radius-pill)] border border-[var(--kkb-border)] bg-[var(--kkb-bg)] px-2 py-0.5 font-quicksand text-[10px] font-bold text-[var(--kkb-text-tertiary)]">Désactivé</span>
+                        )}
+                        {selected && <Check className="h-4 w-4 text-[var(--kkb-coral)]" aria-label="Consulté" />}
                       </span>
-                    ) : null}
+                    )}
                   </button>
                 </li>
               )

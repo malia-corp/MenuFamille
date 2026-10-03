@@ -1,6 +1,7 @@
 import { createServiceClient } from '@/lib/supabase/service'
 import { createClient } from '@/lib/supabase/server'
 import { resolveSurveyPlan } from '@/lib/utils/survey-token'
+import { isDeactivatedForPlanner } from '@/lib/utils/circle-access'
 import { NextRequest } from 'next/server'
 
 export async function POST(
@@ -68,6 +69,14 @@ export async function POST(
   // Lien public : le répondant peut être anonyme. S'il est connecté (membre
   // du cercle), sa réponse est rattachée à son compte pour la vue Membre.
   const { data: { user } } = await (await createClient()).auth.getUser()
+
+  // Membre désactivé par la planificatrice : ne vote plus sur ses menus.
+  if (user && await isDeactivatedForPlanner(supabase, user.id, plan.user_id)) {
+    return Response.json(
+      { error: 'Ton accès à ce cercle est désactivé : tu ne peux plus voter.' },
+      { status: 403 }
+    )
+  }
 
   let responseId: string | undefined
 
