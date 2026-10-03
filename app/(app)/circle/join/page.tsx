@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { CheckCircle, Key, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -15,6 +15,12 @@ export default function JoinCirclePage() {
   const [state, setState] = useState<State>('idle')
   const [circleName, setCircleName] = useState('')
   const [error, setError] = useState<string | null>(null)
+
+  // Lien d'accès / QR code du cercle : ?code=… pré-remplit le champ.
+  useEffect(() => {
+    const fromLink = new URLSearchParams(window.location.search).get('code')
+    if (fromLink) setCode(fromLink.toUpperCase())
+  }, [])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()

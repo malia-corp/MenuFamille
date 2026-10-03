@@ -22,10 +22,10 @@ export const PREF_TYPE_OPTIONS: { value: PrefType; label: string }[] = [
 export function prefChipStyle(pref: Pref): { className: string; Icon: LucideIcon | null } {
   if (pref.pref_type === 'allergy') {
     return pref.severity === 'strict'
-      ? { className: 'bg-red-50 text-red-700 border-red-200', Icon: AlertTriangle }
-      : { className: 'bg-orange-50 text-orange-700 border-orange-200', Icon: AlertTriangle }
+      ? { className: 'bg-[var(--kkb-danger-light)] text-[var(--kkb-danger)] border-[var(--kkb-danger)]', Icon: AlertTriangle }
+      : { className: 'bg-[var(--kkb-warning-light)] text-[var(--kkb-text-secondary)] border-[var(--kkb-warning)]', Icon: AlertTriangle }
   }
-  if (pref.pref_type === 'dislike')  return { className: 'bg-gray-100 text-gray-600 border-gray-200', Icon: ThumbsDown }
-  if (pref.pref_type === 'favorite') return { className: 'bg-emerald-50 text-emerald-700 border-emerald-200', Icon: Heart }
+  if (pref.pref_type === 'dislike')  return { className: 'bg-[var(--kkb-bg)] text-[var(--kkb-text-secondary)] border-[var(--kkb-border)]', Icon: ThumbsDown }
+  if (pref.pref_type === 'favorite') return { className: 'bg-[var(--kkb-success-light)] text-[var(--kkb-success)] border-[var(--kkb-success)]', Icon: Heart }
   return { className: 'bg-[var(--kkb-bg)] text-[var(--kkb-text-secondary)] border-[var(--kkb-border)]', Icon: null }
 }
