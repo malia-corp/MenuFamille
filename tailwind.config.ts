@@ -60,6 +60,16 @@ const config: Config = {
         sm: 'calc(var(--radius) - 4px)',
       },
       keyframes: {
+        // Squelettes de chargement : 0.5 -> 1 -> 0.5
+        'kkb-pulse': {
+          '0%, 100%': { opacity: '0.5' },
+          '50%':      { opacity: '1' },
+        },
+        // Toasts : glisse depuis le haut en apparaissant
+        'kkb-toast-in': {
+          from: { opacity: '0', transform: 'translateY(-12px)' },
+          to:   { opacity: '1', transform: 'translateY(0)' },
+        },
         'accordion-down': {
           from: { height: '0' },
           to: { height: 'var(--radix-accordion-content-height)' },
@@ -78,6 +88,8 @@ const config: Config = {
         },
       },
       animation: {
+        'kkb-pulse': 'kkb-pulse 1.5s ease-in-out infinite',
+        'kkb-toast-in': 'kkb-toast-in 0.25s ease-out',
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
         'kkb-react-pop': 'kkb-react-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)',

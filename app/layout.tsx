@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Bricolage_Grotesque, Nunito_Sans } from 'next/font/google'
 import './globals.css'
+import { Toaster } from '@/components/ui/toaster'
 
 const bricolageGrotesque = Bricolage_Grotesque({
   subsets: ['latin'],
@@ -40,6 +41,7 @@ export default function RootLayout({
     <html lang="fr">
       <body className={`${bricolageGrotesque.variable} ${nunitoSans.variable} font-quicksand antialiased`}>
         {children}
+        <Toaster />
       </body>
     </html>
   )
