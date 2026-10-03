@@ -12,9 +12,11 @@ interface MobileHeaderProps {
   showBack?: boolean
 }
 
-// Pages de détail : flèche retour + titre de la section.
+// Pages de détail et de saisie : flèche retour + titre de la section.
 const BACK_ROUTES: { re: RegExp; title: string }[] = [
-  { re: /^\/recipes\/(?!add$)[^/]+$/, title: 'Recettes' },
+  { re: /^\/recipes\/add$/,            title: 'Recettes' },
+  { re: /^\/recipes\/[^/]+\/edit$/,    title: 'Recettes' },
+  { re: /^\/recipes\/(?!add$)[^/]+$/,  title: 'Recettes' },
 ]
 
 export function MobileHeader({ displayName, title: titleProp, showBack: showBackProp = false }: MobileHeaderProps) {

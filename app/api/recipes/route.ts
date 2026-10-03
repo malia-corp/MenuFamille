@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
 import { upsertSuggestedAssociations } from '@/lib/utils/recipe-associations'
+import { findSimilarRecipe } from '@/lib/utils/recipe-similarity'
 import { NextRequest } from 'next/server'
 
 const DIACRITICS_RE = /[̀-ͯ]/g
@@ -29,6 +30,7 @@ export async function POST(request: NextRequest) {
   const {
     name,
     description,
+    tip,
     category_id,
     prep_time_min,
     cook_time_min,
@@ -58,17 +60,15 @@ export async function POST(request: NextRequest) {
   const service = createServiceClient()
   const fingerprint = makeFingerprint(name)
 
-  if (!force && !parent_recipe_id) {
-    const { data: similars } = await service
-      .from('recipes')
-      .select('id, name')
-      .eq('name_fingerprint', fingerprint)
-      .or(`user_id.eq.${user.id},visibility.eq.community`)
-      .limit(1)
-    const similar = similars?.[0] ?? null
-    if (similar) {
-      return Response.json({ conflict: true, existing: { id: similar.id, name: similar.name } }, { status: 409 })
-    }
+  // Doublon : uniquement pour une recette partagée (cercle / communauté) — le
+  // client fait normalement ce contrôle avant via /api/recipes/check-duplicate.
+  if (!force && !parent_recipe_id && visibility !== 'private') {
+    const similar = await findSimilarRecipe(service, {
+      name: name.trim(),
+      userId: user.id,
+      circleId: visibility === 'circle' ? circle_id : null,
+    })
+    if (similar) return Response.json({ conflict: true, existing: similar }, { status: 409 })
   }
 
   let slug = makeSlug(name.trim()) || 'recette'
@@ -87,6 +87,7 @@ export async function POST(request: NextRequest) {
       slug,
       name_fingerprint: fingerprint,
       description: (description as string | undefined)?.trim() || null,
+      tip: (tip as string | undefined)?.trim() || null,
       prep_time_min: prep_time_min ? Number(prep_time_min) : null,
       cook_time_min: cook_time_min ? Number(cook_time_min) : null,
       servings: Math.max(1, Number(servings) || 4),
@@ -116,12 +117,13 @@ export async function POST(request: NextRequest) {
     if (ingErr) return Response.json({ error: ingErr.message }, { status: 500 })
   }
 
-  type StepRow = { description?: string; duration_min?: string | number }
+  type StepRow = { title?: string; description?: string; duration_min?: string | number }
   const validSteps = (steps as StepRow[])
     .filter((s) => s.description?.trim())
     .map((s, idx) => ({
       recipe_id: recipe.id,
       step_number: idx + 1,
+      title: s.title?.trim() || null,
       description: s.description!.trim(),
       duration_min: s.duration_min ? Number(s.duration_min) : null,
     }))

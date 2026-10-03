@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { ArrowLeft } from 'lucide-react'
-import { RecipeForm, RecipeFormValues, IngredientRow, StepRow, uid } from '../../_recipe-form'
+import { ArrowLeft, Loader2 } from 'lucide-react'
+import { RecipeForm, emptyIngredient, emptyStep, uid, type RecipeFormValues } from '../../_recipe-form'
 
 interface ApiRecipe {
   id: string
   name: string
   description: string | null
+  tip: string | null
   category_id: string | null
   prep_time_min: number | null
   cook_time_min: number | null
@@ -18,63 +19,53 @@ interface ApiRecipe {
   circle_id: string | null
   photo_url: string | null
   recipe_ingredients: { id: string; name: string; quantity: number | null; unit: string | null; sort_order: number }[]
-  recipe_steps: { id: string; step_number: number; description: string }[]
+  recipe_steps: { id: string; step_number: number; title: string | null; description: string; duration_min: number | null }[]
 }
 
 export default function RecipeEditPage() {
   const router = useRouter()
-  const params = useParams()
-  const id = params.id as string
+  const id = useParams().id as string
 
   const [defaultValues, setDefaultValues] = useState<Partial<RecipeFormValues>>()
-  const [initialLoading, setInitialLoading] = useState(true)
-  const [initError, setInitError]           = useState<string | null>(null)
-  const [loading, setLoading]               = useState(false)
-  const [error, setError]                   = useState<string | null>(null)
+  const [initError, setInitError] = useState<string | null>(null)
+  const [loading,   setLoading]   = useState(false)
+  const [error,     setError]     = useState<string | null>(null)
 
   useEffect(() => {
     fetch(`/api/recipes/${id}`)
       .then(async r => {
         const data: ApiRecipe = await r.json()
-        if (!r.ok) { setInitError('Recette introuvable ou accès refusé'); setInitialLoading(false); return }
-
-        const ingredients: IngredientRow[] = data.recipe_ingredients.map(i => ({
-          _id: uid(),
-          name: i.name,
-          quantity: i.quantity != null ? String(i.quantity) : '',
-          unit: i.unit ?? '',
-        }))
-        const steps: StepRow[] = data.recipe_steps.map(s => ({
-          _id: uid(),
-          description: s.description,
-        }))
-
+        if (!r.ok) { setInitError('Recette introuvable ou accès refusé'); return }
         setDefaultValues({
           name:        data.name,
           description: data.description ?? '',
+          tip:         data.tip ?? '',
           categoryId:  data.category_id ?? '',
           prepTime:    data.prep_time_min != null ? String(data.prep_time_min) : '',
           cookTime:    data.cook_time_min != null ? String(data.cook_time_min) : '',
           servings:    data.servings,
           difficulty:  (data.difficulty ?? '') as RecipeFormValues['difficulty'],
-          visibility:   data.visibility as RecipeFormValues['visibility'],
-          circleId:     data.circle_id ?? '',
-          photo_url:    data.photo_url ?? undefined,
-          ingredients: ingredients.length > 0 ? ingredients : [{ _id: uid(), name: '', quantity: '', unit: '' }],
-          steps:       steps.length > 0 ? steps : [{ _id: uid(), description: '' }],
+          visibility:  data.visibility as RecipeFormValues['visibility'],
+          circleId:    data.circle_id ?? '',
+          photo_url:   data.photo_url ?? undefined,
+          ingredients: data.recipe_ingredients.length
+            ? data.recipe_ingredients.map(i => ({ _id: uid(), name: i.name, quantity: i.quantity != null ? String(i.quantity) : '', unit: i.unit ?? '' }))
+            : [emptyIngredient()],
+          steps: data.recipe_steps.length
+            ? data.recipe_steps.map(s => ({ _id: uid(), title: s.title ?? '', description: s.description, duration: s.duration_min != null ? String(s.duration_min) : '' }))
+            : [emptyStep()],
         })
-        setInitialLoading(false)
       })
-      .catch(() => { setInitError('Impossible de charger la recette'); setInitialLoading(false) })
+      .catch(() => setInitError('Impossible de charger la recette'))
   }, [id])
 
   async function handleSubmit(values: RecipeFormValues) {
     setError(null)
     setLoading(true)
-
     const body = {
       name:          values.name.trim(),
       description:   values.description.trim() || null,
+      tip:           values.tip.trim() || null,
       category_id:   values.categoryId || null,
       prep_time_min: values.prepTime ? Number(values.prepTime) : null,
       cook_time_min: values.cookTime ? Number(values.cookTime) : null,
@@ -83,58 +74,44 @@ export default function RecipeEditPage() {
       visibility:    values.visibility,
       circle_id:     values.visibility === 'circle' ? values.circleId : null,
       ingredients:   values.ingredients.filter(i => i.name.trim()),
-      steps:         values.steps.filter(s => s.description.trim()),
+      steps:         values.steps.filter(s => s.description.trim()).map(s => ({ title: s.title, description: s.description, duration_min: s.duration || null })),
       photo_url:     values.photo_url ?? null,
-      suggested_sides:  values.suggestedSides,
-      suggested_drinks: values.suggestedDrinks,
+      // N'écrase les associations existantes que si l'utilisateur en a choisi
+      ...(values.sideItems.length || values.drinkItems.length
+        ? { suggested_sides: values.sideItems.map(i => i.id), suggested_drinks: values.drinkItems.map(i => i.id) }
+        : {}),
     }
-
     const res  = await fetch(`/api/recipes/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
     const data = await res.json()
     setLoading(false)
-
     if (!res.ok) { setError(data?.error ?? 'Erreur lors de la modification'); return }
     router.push(`/recipes/${id}`)
   }
 
-  if (initialLoading) {
+  if (initError) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <p className="text-sm text-[var(--kkb-text-tertiary)] font-quicksand">Chargement…</p>
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 px-4">
+        <p className="text-center text-sm font-quicksand text-[var(--kkb-danger)]">{initError}</p>
+        <button type="button" onClick={() => router.back()} className="text-xs font-quicksand font-bold text-[var(--kkb-coral)] underline">Retour</button>
       </div>
     )
   }
-
-  if (initError) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 px-4">
-        <p className="text-sm text-red-600 font-quicksand text-center">{initError}</p>
-        <button type="button" onClick={() => router.back()}
-          className="text-xs text-[var(--kkb-coral)] underline font-quicksand">
-          Retour
-        </button>
-      </div>
-    )
+  if (!defaultValues) {
+    return <div className="flex min-h-[60vh] items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-[var(--kkb-coral)]" /></div>
   }
 
   return (
-    <>
-      {/* Sub-header */}
-      <div className="sticky top-14 z-30 bg-[var(--kkb-bg)] border-b border-[var(--kkb-border)] px-4 h-10 flex items-center gap-2.5">
-        <button type="button" onClick={() => router.back()}
-          className="p-1 -ml-1 text-[var(--kkb-text-secondary)] hover:text-[var(--kkb-coral)]" aria-label="Retour">
-          <ArrowLeft className="h-4 w-4" />
+    <div className="mx-auto max-w-[1300px] px-4 pb-44 pt-3 lg:px-8 lg:pb-28 lg:pt-6">
+      <div className="mb-5 space-y-1">
+        <button type="button" onClick={() => router.push(`/recipes/${id}`)}
+          className="hidden items-center gap-1.5 text-sm font-quicksand text-[var(--kkb-text-tertiary)] hover:text-[var(--kkb-coral)] lg:flex">
+          <ArrowLeft className="h-4 w-4" /> Recette <span>/</span> <span className="font-bold text-[var(--kkb-coral)]">Modifier</span>
         </button>
-        <p className="font-dosis font-semibold text-sm text-[var(--kkb-text-primary)]">Modifier la recette</p>
+        <h1 className="font-dosis font-extrabold text-[22px] leading-tight text-[var(--kkb-text-primary)] lg:text-[28px]">Modifier la recette</h1>
+        <p className="text-sm font-quicksand text-[var(--kkb-text-secondary)]">{defaultValues.name}</p>
       </div>
 
-      <RecipeForm
-        defaultValues={defaultValues}
-        onSubmit={handleSubmit}
-        loading={loading}
-        apiError={error}
-        submitLabel="Enregistrer les modifications"
-      />
-    </>
+      <RecipeForm defaultValues={defaultValues} onSubmit={handleSubmit} loading={loading} apiError={error} submitLabel="Enregistrer les modifications" />
+    </div>
   )
 }

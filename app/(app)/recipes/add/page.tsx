@@ -1,54 +1,57 @@
 'use client'
 
-import { Suspense, useState } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { AlertTriangle, ArrowLeft, BookmarkPlus, Download, Link as LinkIcon, Loader2 } from 'lucide-react'
-import { RecipeForm, RecipeFormValues, uid, IngredientRow, StepRow } from '../_recipe-form'
+import { AlertTriangle, ArrowLeft, BookOpen, Link2, Loader2, ScanLine, Sparkles, Wand2 } from 'lucide-react'
+import { MEAL_LABEL, type MealType } from '@/lib/constants/meal-type'
+import type { SimilarRecipe } from '@/lib/utils/recipe-similarity'
+import { DuplicateDialog } from '@/components/recipes/duplicate-dialog'
+import { RecipeForm, clearRecipeDraft, emptyStep, uid, type IngredientRow, type RecipeFormValues, type StepRow } from '../_recipe-form'
 
-type ConflictChoice = 'use' | 'variant' | 'independent'
+const DRAFT_KEY = 'kkb_recipe_draft_new'
 
-const MEAL_LABEL: Record<string, string> = {
-  petit_dejeuner: 'Petit-déj.',
-  dejeuner:       'Déjeuner',
-  gouter:         'Goûter',
-  diner:          'Dîner',
-}
-
-const INPUT = 'w-full px-3 py-2.5 rounded-xl border border-[var(--kkb-border)] bg-[var(--kkb-surface)] text-sm font-quicksand text-[var(--kkb-text-primary)] placeholder:text-[var(--kkb-text-tertiary)] focus:outline-none focus:border-[var(--kkb-coral)]'
+type SaveOpts = { force?: boolean; parentId?: string; variantLabel?: string }
 
 function RecipeAddInner() {
   const router       = useRouter()
   const searchParams = useSearchParams()
 
-  // ── Contexte plan (optionnel) ─────────────────────────────
+  // Contexte plan : création depuis une case du planning puis affectation
   const planId     = searchParams.get('plan_id')
-  const itemId     = searchParams.get('item_id')        // null = nouvelle case
-  const mealType   = searchParams.get('meal_type')
+  const itemId     = searchParams.get('item_id')
+  const mealType   = searchParams.get('meal_type') as MealType | null
   const dayOfWeek  = searchParams.get('day_of_week')
-  const appliesAll     = searchParams.get('applies_all') === 'true'
-  const dayLabel       = searchParams.get('day_label')
-  const isPlanCtx      = !!planId
+  const appliesAll = searchParams.get('applies_all') === 'true'
+  const dayLabel   = searchParams.get('day_label')
+  const isPlanCtx  = !!planId
+  const focusImport = searchParams.get('import') === '1'
 
-  const planHeader = isPlanCtx && mealType
-    ? `${MEAL_LABEL[mealType] ?? mealType}${dayLabel ? ` · ${dayLabel}` : ''}`
-    : null
-
-  // ── État du formulaire ────────────────────────────────────
   const [loading,    setLoading]    = useState(false)
   const [error,      setError]      = useState<string | null>(null)
   const [lastValues, setLastValues] = useState<RecipeFormValues | null>(null)
-  const [conflict,   setConflict]   = useState<{ id: string; name: string } | null>(null)
-  const [conflictChoice,  setConflictChoice]  = useState<ConflictChoice>('use')
-  const [variantLabel,    setVariantLabel]    = useState('')
+  const [duplicate,  setDuplicate]  = useState<SimilarRecipe | null>(null)
+  const [notice,     setNotice]     = useState<string | null>(null)
 
-  // ── Import URL (masqué en contexte plan) ─────────────────
-  const [importUrl,     setImportUrl]     = useState('')
-  const [importing,     setImporting]     = useState(false)
-  const [importError,   setImportError]   = useState<string | null>(null)
-  const [importWarning, setImportWarning] = useState<string | null>(null)
-  const [importDomain,  setImportDomain]  = useState<string | null>(null)
+  const [importUrl,      setImportUrl]      = useState('')
+  const [importing,      setImporting]      = useState(false)
+  const [importError,    setImportError]    = useState<string | null>(null)
+  const [importWarning,  setImportWarning]  = useState<string | null>(null)
+  const [importDomain,   setImportDomain]   = useState<string | null>(null)
   const [formKey,        setFormKey]        = useState(0)
   const [importedValues, setImportedValues] = useState<Partial<RecipeFormValues>>({})
+  const urlInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (focusImport) {
+      urlInputRef.current?.focus()
+      urlInputRef.current?.scrollIntoView({ block: 'center' })
+    }
+  }, [focusImport])
+
+  function showNotice(message: string) {
+    setNotice(message)
+    setTimeout(() => setNotice(null), 3000)
+  }
 
   async function handleImport() {
     setImporting(true)
@@ -56,40 +59,26 @@ function RecipeAddInner() {
     setImportWarning(null)
     try {
       const res = await fetch('/api/recipes/import-url', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: importUrl }),
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: importUrl }),
       })
       const data = await res.json()
-      if (!res.ok) { setImportError(data.error ?? 'Erreur import'); return }
+      if (!res.ok) { setImportError(data.error ?? 'Import impossible'); return }
 
-      const rawIngredients = (data.partial.ingredients ?? []) as unknown[]
-      const rawSteps       = (data.partial.steps       ?? []) as unknown[]
-
-      const mappedIngredients: IngredientRow[] = rawIngredients.map((ing: unknown) => ({
-        _id:      uid(),
-        name:     typeof ing === 'string' ? ing : String(ing),
-        quantity: '',
-        unit:     '',
-      }))
-      const mappedSteps: StepRow[] = rawSteps.map((s: unknown) => ({
-        _id:         uid(),
-        description: typeof s === 'string' ? s : String(s),
-      }))
+      const ingredients: IngredientRow[] = ((data.partial.ingredients ?? []) as unknown[])
+        .map(ing => ({ _id: uid(), name: String(ing), quantity: '', unit: '' }))
+      const steps: StepRow[] = ((data.partial.steps ?? []) as unknown[])
+        .map(s => ({ ...emptyStep(), description: String(s) }))
 
       setImportedValues({
         ...data.partial,
-        ingredients:   mappedIngredients.length ? mappedIngredients : undefined,
-        steps:         mappedSteps.length       ? mappedSteps       : undefined,
+        ingredients:   ingredients.length ? ingredients : undefined,
+        steps:         steps.length ? steps : undefined,
         source_url:    data.source_url,
         raw_html_hash: data.raw_html_hash,
       })
       setImportDomain(new URL(importUrl).hostname.replace('www.', ''))
       setFormKey(k => k + 1)
-
-      if (!data.success) {
-        setImportWarning('Ingrédients non détectés — vérifiez et complétez manuellement')
-      }
+      if (!data.success) setImportWarning('Ingrédients non détectés : vérifie et complète à la main.')
     } catch {
       setImportError('Erreur réseau')
     } finally {
@@ -97,16 +86,13 @@ function RecipeAddInner() {
     }
   }
 
-  async function callApi(
-    values: RecipeFormValues,
-    opts: { force?: boolean; parentId?: string; variantLabelVal?: string } = {},
-  ) {
+  async function save(values: RecipeFormValues, opts: SaveOpts) {
     setError(null)
     setLoading(true)
-
     const body: Record<string, unknown> = {
       name:          values.name.trim(),
       description:   values.description.trim() || null,
+      tip:           values.tip.trim() || null,
       category_id:   values.categoryId || null,
       prep_time_min: values.prepTime ? Number(values.prepTime) : null,
       cook_time_min: values.cookTime ? Number(values.cookTime) : null,
@@ -115,137 +101,131 @@ function RecipeAddInner() {
       visibility:    isPlanCtx ? 'private' : values.visibility,
       circle_id:     values.visibility === 'circle' ? values.circleId : null,
       ingredients:   values.ingredients.filter(i => i.name.trim()),
-      steps:         values.steps.filter(s => s.description.trim()),
-      suggested_sides:  values.suggestedSides,
-      suggested_drinks: values.suggestedDrinks,
+      steps:         values.steps.filter(s => s.description.trim()).map(s => ({ title: s.title, description: s.description, duration_min: s.duration || null })),
+      suggested_sides:  values.sideItems.map(i => i.id),
+      suggested_drinks: values.drinkItems.map(i => i.id),
       photo_url:     values.photo_url ?? null,
       source_url:    values.source_url ?? null,
       raw_html_hash: values.raw_html_hash ?? null,
+      force:         isPlanCtx || !!opts.force,
     }
-
-    // En contexte plan, on force la création sans doublon
-    if (isPlanCtx || opts.force) body.force = true
     if (opts.parentId) {
       body.parent_recipe_id = opts.parentId
-      body.variant_label    = opts.variantLabelVal?.trim() || null
+      body.variant_label    = opts.variantLabel ?? null
     }
 
     const res  = await fetch('/api/recipes', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
     const data = await res.json()
     setLoading(false)
 
-    // En contexte plan, on ne montre pas le dialogue doublon (force=true → jamais 409)
-    if (!isPlanCtx && res.status === 409 && data.conflict) {
-      setConflict(data.existing)
-      setConflictChoice('use')
-      return
-    }
-    if (!res.ok) {
-      setError(data?.error ?? 'Erreur lors de la création')
-      return
-    }
+    if (res.status === 409 && data.conflict && !isPlanCtx) { setDuplicate(data.existing); return }
+    if (!res.ok) { setError(data?.error ?? 'Erreur lors de l’enregistrement'); return }
+
+    clearRecipeDraft(DRAFT_KEY)
 
     if (isPlanCtx) {
-      // Assigner la recette créée à la case du plan
       const recipeId = data.id as string
       if (itemId) {
         await fetch(`/api/meal-plans/${planId}/items/${itemId}`, {
-          method:  'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body:    JSON.stringify({ recipe_id: recipeId }),
+          method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ recipe_id: recipeId }),
         })
       } else {
         await fetch(`/api/meal-plans/${planId}/items`, {
-          method:  'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body:    JSON.stringify({
-            day_of_week:      dayOfWeek,
-            meal_type:        mealType,
-            applies_all_days: appliesAll,
-            recipe_id:        recipeId,
-          }),
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ day_of_week: dayOfWeek, meal_type: mealType, applies_all_days: appliesAll, recipe_id: recipeId }),
         })
       }
       router.push('/plan')
       return
     }
-
     router.push(`/recipes/${data.id}`)
   }
 
   async function handleFormSubmit(values: RecipeFormValues) {
     setLastValues(values)
-    await callApi(values)
+    // Contrôle de doublon : seulement pour une recette partagée (cercle / communauté)
+    if (!isPlanCtx && values.visibility !== 'private') {
+      setLoading(true)
+      try {
+        const res = await fetch('/api/recipes/check-duplicate', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: values.name, visibility: values.visibility, circle_id: values.circleId || null }),
+        })
+        const data = await res.json()
+        if (res.ok && data.duplicate) { setDuplicate(data.duplicate); return }
+      } finally {
+        setLoading(false)
+      }
+    }
+    await save(values, { force: true })
   }
 
-  async function confirmConflict() {
-    if (!conflict || !lastValues) return
-    if (conflictChoice === 'use') {
-      await fetch(`/api/recipes/${conflict.id}/favorite`, { method: 'POST' })
-      router.push(`/recipes/${conflict.id}`)
-      return
-    }
-    if (conflictChoice === 'variant') {
-      if (!variantLabel.trim()) { setError('Indique un nom pour cette variante'); return }
-      await callApi(lastValues, { parentId: conflict.id, variantLabelVal: variantLabel })
-      return
-    }
-    await callApi(lastValues, { force: true })
+  async function openExisting() {
+    if (!duplicate) return
+    setLoading(true)
+    const res = await fetch(`/api/recipes/${duplicate.id}`).then(r => r.json()).catch(() => null)
+    if (!res?.is_favorited) await fetch(`/api/recipes/${duplicate.id}/favorite`, { method: 'POST' })
+    clearRecipeDraft(DRAFT_KEY)
+    router.push(`/recipes/${duplicate.id}`)
   }
+
+  const planHeader = isPlanCtx && mealType ? `${MEAL_LABEL[mealType] ?? mealType}${dayLabel ? ` · ${dayLabel}` : ''}` : null
 
   return (
-    <>
-      {/* Sub-header */}
-      <div className="sticky top-14 z-30 bg-[var(--kkb-bg)] border-b border-[var(--kkb-border)] px-4 h-10 flex items-center gap-2.5">
-        <button type="button" onClick={() => router.back()}
-          className="p-1 -ml-1 text-[var(--kkb-text-secondary)] hover:text-[var(--kkb-coral)]" aria-label="Retour">
-          <ArrowLeft className="h-4 w-4" />
-        </button>
-        <p className="font-dosis font-semibold text-sm text-[var(--kkb-text-primary)]">
-          {isPlanCtx && planHeader ? `Nouveau repas — ${planHeader}` : 'Nouvelle recette'}
-        </p>
-      </div>
-
-      {/* Bloc import URL — masqué en contexte plan */}
-      {!isPlanCtx && (
-        <div className="max-w-sm mx-auto px-4 pt-4 space-y-2">
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--kkb-text-tertiary)]" />
-              <input
-                type="url"
-                placeholder="Coller un lien de recette…"
-                aria-label="Lien de la recette à importer"
-                value={importUrl}
-                onChange={e => { setImportUrl(e.target.value); setImportError(null); setImportWarning(null) }}
-                className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-[var(--kkb-border)] bg-[var(--kkb-surface)] text-sm font-quicksand text-[var(--kkb-text-primary)] placeholder:text-[var(--kkb-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--kkb-coral)]/30"
-              />
-            </div>
-            <button
-              type="button"
-              onClick={handleImport}
-              disabled={!importUrl.trim() || importing}
-              className="bg-[var(--kkb-coral)] text-white rounded-xl px-3 disabled:opacity-50 flex items-center hover:bg-[var(--kkb-coral-hover)] transition-colors"
-              aria-label="Importer la recette"
-            >
-              {importing
-                ? <span className="text-xs font-quicksand px-1">…</span>
-                : <Download className="h-4 w-4" />}
-            </button>
-          </div>
-          {importDomain && (
-            <p className="text-[11px] font-quicksand text-[var(--kkb-text-tertiary)]">
-              Importée depuis {importDomain} — vérifiez et complétez si nécessaire
-            </p>
-          )}
-          {importWarning && (
-            <p className="text-[11px] font-quicksand text-amber-700 bg-amber-50 px-2 py-1.5 rounded-lg">
-              <AlertTriangle className="inline h-3.5 w-3.5 -mt-0.5 mr-1" />{importWarning}
-            </p>
-          )}
-          {importError && <p className="text-xs text-red-600 font-quicksand">{importError}</p>}
+    <div className="mx-auto max-w-[1300px] px-4 pb-44 pt-3 lg:px-8 lg:pb-28 lg:pt-6">
+      <div className="mb-5 flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+        <div className="space-y-1">
+          <button type="button" onClick={() => router.push(isPlanCtx ? '/plan' : '/recipes')}
+            className="hidden items-center gap-1.5 text-sm font-quicksand text-[var(--kkb-text-tertiary)] hover:text-[var(--kkb-coral)] lg:flex">
+            <ArrowLeft className="h-4 w-4" /> {isPlanCtx ? 'Menu' : 'Carnet'} <span className="text-[var(--kkb-text-tertiary)]">/</span>
+            <span className="font-bold text-[var(--kkb-coral)]">Nouvelle recette</span>
+          </button>
+          <p className="flex items-center gap-1.5 text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--kkb-coral)] lg:hidden">
+            <BookOpen className="h-3.5 w-3.5" /> {planHeader ? `Nouveau repas · ${planHeader}` : 'Transmission culinaire'}
+          </p>
+          <h1 className="font-dosis font-extrabold text-[22px] leading-tight text-[var(--kkb-text-primary)] lg:text-[28px]">
+            <span className="lg:hidden">Nouvelle création culinaire</span>
+            <span className="hidden lg:inline">{planHeader ? `Nouveau repas — ${planHeader}` : 'Nouvelle recette'}</span>
+          </h1>
+          <p className="text-sm font-quicksand text-[var(--kkb-text-secondary)]">
+            Enregistre tes secrets de cuisine pas à pas, avec douceur et à ton rythme.
+          </p>
         </div>
-      )}
+
+        {!isPlanCtx && (
+          <section className="space-y-3 rounded-[var(--kkb-radius-sm)] border border-[var(--kkb-warning)] bg-[var(--kkb-warning-light)] p-3.5 lg:w-[440px] lg:shrink-0">
+            <div className="flex items-center gap-2">
+              <Wand2 className="h-4 w-4 text-[#B07A12]" />
+              <p className="flex-1 text-sm font-quicksand font-bold text-[var(--kkb-text-primary)]">Magie Express</p>
+              <span className="rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-success-light)] px-2 py-0.5 text-[10px] font-quicksand font-bold uppercase tracking-wide text-[var(--kkb-success)]">Gain de temps</span>
+            </div>
+            <p className="text-[13px] font-quicksand text-[var(--kkb-text-secondary)]">
+              Importe automatiquement une recette depuis un lien web, ou numérise une page de ton carnet manuscrit.
+            </p>
+            <div className="flex gap-2">
+              <div className="flex min-w-0 flex-1 items-center gap-2 rounded-[var(--kkb-radius-sm)] border border-[var(--kkb-border)] bg-white px-3 focus-within:border-[var(--kkb-coral)]">
+                <Link2 className="h-4 w-4 shrink-0 text-[var(--kkb-text-tertiary)]" />
+                <input ref={urlInputRef} type="url" value={importUrl} placeholder="Lien Instagram, TikTok, Marmiton..." aria-label="Lien de la recette à importer"
+                  onChange={e => { setImportUrl(e.target.value); setImportError(null); setImportWarning(null) }}
+                  onKeyDown={e => { if (e.key === 'Enter' && importUrl.trim()) void handleImport() }}
+                  className="min-w-0 flex-1 bg-transparent py-2.5 text-sm font-quicksand outline-none placeholder:text-[var(--kkb-text-tertiary)]" />
+              </div>
+              <button type="button" onClick={() => void handleImport()} disabled={!importUrl.trim() || importing}
+                className="flex shrink-0 items-center gap-1.5 rounded-[var(--kkb-radius-sm)] bg-[var(--kkb-coral)] px-3.5 text-[13px] font-quicksand font-bold text-white disabled:opacity-50">
+                {importing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Importer
+              </button>
+            </div>
+            {importDomain && <p className="text-[11px] font-quicksand text-[var(--kkb-text-tertiary)]">Importée depuis {importDomain} : vérifie et complète si nécessaire.</p>}
+            {importWarning && <p className="flex items-center gap-1 text-[11px] font-quicksand text-[#B07A12]"><AlertTriangle className="h-3.5 w-3.5" /> {importWarning}</p>}
+            {importError && <p className="text-xs font-quicksand text-[var(--kkb-danger)]">{importError}</p>}
+            <p className="text-center text-[10px] font-quicksand font-bold uppercase tracking-widest text-[var(--kkb-text-tertiary)]">Ou bien</p>
+            <button type="button" onClick={() => showNotice('Numérisation de carnet : bientôt disponible')}
+              className="flex w-full items-center justify-center gap-2 rounded-[var(--kkb-radius-sm)] border border-[var(--kkb-border)] bg-white py-2.5 text-sm font-quicksand font-semibold text-[var(--kkb-text-secondary)]">
+              <ScanLine className="h-4 w-4" /> Numériser un carnet de notes ou une photo
+            </button>
+          </section>
+        )}
+      </div>
 
       <RecipeForm
         key={formKey}
@@ -253,70 +233,35 @@ function RecipeAddInner() {
         onSubmit={handleFormSubmit}
         loading={loading}
         apiError={error}
-        submitLabel={isPlanCtx ? 'Enregistrer et assigner' : 'Créer la recette'}
-        submitIcon={isPlanCtx ? BookmarkPlus : undefined}
-        hideSubmit={!isPlanCtx && !!conflict}
+        submitLabel={isPlanCtx ? 'Enregistrer et assigner' : 'Enregistrer la recette'}
         hideVisibility={isPlanCtx}
-        onNameChange={() => setConflict(null)}
-      >
-        {/* Dialogue doublon (décision CDC 5.3.2) — masqué en contexte plan */}
-        {!isPlanCtx && conflict && (
-          <div className="bg-[var(--kkb-warning-light)] border border-[var(--kkb-warning)]/40 rounded-xl p-4 space-y-3">
-            <p className="text-sm font-quicksand font-medium text-[var(--kkb-text-primary)]">
-              Une recette similaire existe déjà :{' '}
-              <span className="font-semibold">&ldquo;{conflict.name}&rdquo;</span>
-            </p>
+        draftKey={isPlanCtx ? undefined : DRAFT_KEY}
+      />
 
-            <div className="space-y-2">
-              {[
-                { val: 'use' as ConflictChoice,         label: 'Utiliser cette recette', sub: 'Ouvrir la recette existante' },
-                { val: 'variant' as ConflictChoice,     label: 'Créer comme variante',   sub: 'Liée à la recette originale' },
-                { val: 'independent' as ConflictChoice, label: 'Créer indépendamment',   sub: 'Ignorer la similarité' },
-              ].map(opt => (
-                <button key={opt.val} type="button" onClick={() => setConflictChoice(opt.val)}
-                  className={`w-full flex items-start gap-3 px-3 py-2.5 rounded-xl border text-left transition-colors ${
-                    conflictChoice === opt.val
-                      ? 'border-[var(--kkb-coral)] bg-white'
-                      : 'border-[var(--kkb-border)] bg-white/60'
-                  }`}>
-                  <div className={`mt-0.5 w-3.5 h-3.5 rounded-full border-2 flex-shrink-0 transition-colors ${
-                    conflictChoice === opt.val
-                      ? 'border-[var(--kkb-coral)] bg-[var(--kkb-coral)]'
-                      : 'border-[var(--kkb-border)]'
-                  }`} />
-                  <div>
-                    <p className="text-xs font-quicksand font-semibold text-[var(--kkb-text-primary)]">{opt.label}</p>
-                    <p className="text-xs font-quicksand text-[var(--kkb-text-tertiary)]">{opt.sub}</p>
-                  </div>
-                </button>
-              ))}
-            </div>
+      {duplicate && lastValues && (
+        <DuplicateDialog
+          duplicate={duplicate}
+          busy={loading}
+          error={error}
+          onUseExisting={() => void openExisting()}
+          onVariant={label => void save(lastValues, { parentId: duplicate.id, variantLabel: label })}
+          onCreateAnyway={() => void save(lastValues, { force: true })}
+          onClose={() => setDuplicate(null)}
+        />
+      )}
 
-            {conflictChoice === 'variant' && (
-              <input type="text" placeholder="Nom de votre variante (ex : version légère)"
-                aria-label="Nom de votre variante"
-                value={variantLabel} onChange={e => setVariantLabel(e.target.value)}
-                className={INPUT} />
-            )}
-
-            <button type="button" onClick={confirmConflict} disabled={loading}
-              className="w-full py-3 rounded-xl bg-[var(--kkb-coral)] text-white font-quicksand font-semibold text-sm hover:bg-[var(--kkb-coral-hover)] disabled:opacity-60 transition-colors">
-              {loading ? 'En cours…' : 'Confirmer'}
-            </button>
-          </div>
-        )}
-      </RecipeForm>
-    </>
+      {notice && (
+        <div role="status" className="fixed bottom-40 left-1/2 z-[70] -translate-x-1/2 rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-text-primary)] px-4 py-2.5 text-sm font-quicksand font-semibold text-white shadow-lg lg:bottom-24">
+          {notice}
+        </div>
+      )}
+    </div>
   )
 }
 
 export default function RecipeAddPage() {
   return (
-    <Suspense fallback={
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="h-6 w-6 text-[var(--kkb-coral)] animate-spin" />
-      </div>
-    }>
+    <Suspense fallback={<div className="flex min-h-[60vh] items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-[var(--kkb-coral)]" /></div>}>
       <RecipeAddInner />
     </Suspense>
   )
