@@ -4,6 +4,7 @@ import { MobileHeader } from '@/components/layout/mobile-header'
 import { DesktopHeader } from '@/components/layout/desktop-header'
 import { BottomNav } from '@/components/layout/bottom-nav'
 import { FAB } from '@/components/layout/fab'
+import { OfflineBanner } from '@/components/layout/offline-banner'
 import type { Role } from '@/components/layout/nav-items'
 
 interface Viewer {
@@ -47,6 +48,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <Sidebar role={role} displayName={displayName} />
       <MobileHeader displayName={displayName} />
       <DesktopHeader role={role} displayName={displayName} circleName={circleName} />
+      <OfflineBanner />
       <main className="lg:ml-60 pt-14 pb-24 lg:pt-24 lg:pb-8 print:ml-0 print:p-0 print:min-h-0 print:bg-white min-h-screen bg-[var(--kkb-bg)]">
         {children}
       </main>

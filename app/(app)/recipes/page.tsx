@@ -4,13 +4,16 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   BookOpen, Check, ChevronDown, Globe, Heart, LayoutGrid, Link2, List, Loader2,
-  PenLine, Plus, Search, SlidersHorizontal, Timer, Users,
+  PenLine, Plus, Search, SlidersHorizontal, Timer, Users, WifiOff,
   type LucideIcon,
 } from 'lucide-react'
 import { categoryIcon } from '@/lib/constants/category-icon'
 import { RecipeCard } from '@/components/recipes/recipe-card'
 import { Pagination } from '@/components/recipes/pagination'
 import type { RecipeCategory, RecipeListItem, RecipeOrigin, RecipePage, RecipeSort } from '@/components/recipes/types'
+import { EmptyState } from '@/components/ui/empty-state'
+import { SkeletonCard } from '@/components/ui/skeleton-card'
+import { toast } from '@/lib/stores/toast-store'
 
 const ORIGINS: { value: RecipeOrigin; label: string; desktopLabel: string; icon: LucideIcon }[] = [
   { value: 'all',        label: 'Tous',          desktopLabel: 'Toutes les recettes', icon: BookOpen },
@@ -85,7 +88,10 @@ export default function RecipesPage() {
       setData(json)
       setItems(prev => (append ? [...prev, ...json.items] : json.items))
     } catch {
-      if (id === requestId.current) setError('Impossible de charger les recettes')
+      if (id === requestId.current) {
+        setError('Impossible de charger les recettes')
+        toast.error('Erreur de connexion')
+      }
     } finally {
       if (id === requestId.current) { setLoading(false); setLoadingMore(false) }
     }
@@ -94,9 +100,11 @@ export default function RecipesPage() {
   useEffect(() => { void load(1, false) }, [load])
 
   async function toggleFavorite(recipe: RecipeListItem) {
-    const res = await fetch(`/api/recipes/${recipe.id}/favorite`, { method: 'POST' })
-    if (!res.ok) return
+    const res = await fetch(`/api/recipes/${recipe.id}/favorite`, { method: 'POST' }).catch(() => null)
+    if (!res?.ok) { toast.error('Erreur de connexion'); return }
     const { is_favorited } = await res.json()
+    if (is_favorited) toast.success('Recette ajoutée aux favoris')
+    else toast.info('Recette retirée des favoris')
     setItems(prev => prev.map(r => r.id === recipe.id
       ? { ...r, is_favorited, foyer_favorites: Math.max(0, r.foyer_favorites + (is_favorited ? 1 : -1)) }
       : r))
@@ -118,16 +126,21 @@ export default function RecipesPage() {
         : 'border border-[var(--kkb-border)] bg-white text-[var(--kkb-text-secondary)]'
     }`
 
+  const filtersActive = origin !== 'all' || !!search.trim() || categoryIds.length > 0 || under30
+  function resetFilters() {
+    setOrigin('all'); setSearch(''); setCategoryIds([]); setUnder30(false)
+  }
+
   const emptyOrError = error ? (
-    <div className="space-y-2 py-10 text-center">
-      <p className="text-sm font-quicksand text-[var(--kkb-danger)]">{error}</p>
-      <button type="button" onClick={() => void load(1, false)} className="text-xs font-quicksand font-bold text-[var(--kkb-coral)] underline">Réessayer</button>
-    </div>
+    <EmptyState icon={WifiOff} title="Impossible de charger les recettes" description="Vérifie ta connexion puis réessaie."
+      ctaLabel="Réessayer" ctaAction={() => void load(1, false)} />
+  ) : filtersActive ? (
+    <EmptyState icon={Search} title="Aucune recette trouvée" description="Essaie un autre mot-clé ou explore d'autres catégories.">
+      <button type="button" onClick={resetFilters} className="text-sm font-quicksand font-bold text-[var(--kkb-coral)] underline">Réinitialiser les filtres</button>
+    </EmptyState>
   ) : (
-    <div className="space-y-2 py-12 text-center">
-      <p className="text-sm font-quicksand text-[var(--kkb-text-tertiary)]">Aucune recette ne correspond à ta recherche.</p>
-      <button type="button" onClick={() => router.push('/recipes/add')} className="text-xs font-quicksand font-bold text-[var(--kkb-coral)] underline">Ajouter une recette</button>
-    </div>
+    <EmptyState icon={BookOpen} title="Ton carnet est vide pour l'instant" description="Ajoute ta première recette ou explore les plats de la communauté."
+      ctaLabel="Ajouter une recette" ctaIcon={Plus} ctaHref="/recipes/add" />
   )
 
   return (
@@ -191,7 +204,9 @@ export default function RecipesPage() {
         )}
 
         {loading ? (
-          <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-[var(--kkb-coral)]" /></div>
+          <div className="grid grid-cols-2 gap-3" aria-busy="true" aria-label="Chargement des recettes">
+            {Array.from({ length: 4 }, (_, i) => <SkeletonCard key={i} variant="recipe" />)}
+          </div>
         ) : error || items.length === 0 ? emptyOrError : (
           <>
             <div className="grid grid-cols-2 gap-3">
@@ -333,7 +348,9 @@ export default function RecipesPage() {
             </div>
 
             {loading ? (
-              <div className="flex justify-center py-20"><Loader2 className="h-7 w-7 animate-spin text-[var(--kkb-coral)]" /></div>
+              <div className="grid grid-cols-2 gap-5 xl:grid-cols-3" aria-busy="true" aria-label="Chargement des recettes">
+                {Array.from({ length: 6 }, (_, i) => <SkeletonCard key={i} variant="recipe" />)}
+              </div>
             ) : error || items.length === 0 ? emptyOrError : view === 'grid' ? (
               <div className="grid grid-cols-2 gap-5 xl:grid-cols-3">
                 {items.map(r => (

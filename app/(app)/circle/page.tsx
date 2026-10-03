@@ -2,39 +2,14 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { AlertTriangle, Check, Heart, Key, LogOut, MoreVertical, Plus, ThumbsDown, Users, X } from 'lucide-react'
+import { Check, Key, LogOut, MoreVertical, Plus, Users, X } from 'lucide-react'
 import { ShareActions, circleInvitePayload } from '@/components/ui/share-actions'
 import { Badge } from '@/components/ui/badge'
+import { EmptyState } from '@/components/ui/empty-state'
+import { PREF_TYPE_OPTIONS, prefChipStyle, type Pref, type PrefType, type Severity } from '@/lib/constants/dietary-pref'
 
 const AVATAR_COLORS = ['var(--kkb-coral)', 'var(--kkb-success)', 'var(--kkb-warning)', 'var(--kkb-teal)', 'var(--kkb-text-secondary)']
 
-type PrefType = 'allergy' | 'dislike' | 'preference' | 'favorite'
-type Severity = 'strict' | 'light'
-
-interface Pref {
-  id:        string
-  pref_type: PrefType
-  value:     string
-  severity:  Severity | null
-}
-
-const PREF_TYPE_OPTIONS: { value: PrefType; label: string }[] = [
-  { value: 'allergy',    label: 'Allergie'    },
-  { value: 'dislike',    label: 'N\'aime pas' },
-  { value: 'preference', label: 'Préfère'     },
-  { value: 'favorite',   label: 'Coup de cœur' },
-]
-
-function prefChipStyle(pref: Pref): { className: string; Icon: React.ElementType | null } {
-  if (pref.pref_type === 'allergy') {
-    return pref.severity === 'strict'
-      ? { className: 'bg-red-50 text-red-700 border-red-200', Icon: AlertTriangle }
-      : { className: 'bg-orange-50 text-orange-700 border-orange-200', Icon: AlertTriangle }
-  }
-  if (pref.pref_type === 'dislike')  return { className: 'bg-gray-100 text-gray-600 border-gray-200', Icon: ThumbsDown }
-  if (pref.pref_type === 'favorite') return { className: 'bg-emerald-50 text-emerald-700 border-emerald-200', Icon: Heart }
-  return { className: 'bg-[var(--kkb-bg)] text-[var(--kkb-text-secondary)] border-[var(--kkb-border)]', Icon: null }
-}
 
 interface Member {
   id: string
@@ -258,6 +233,17 @@ export default function CirclePage() {
       {/* Section MEMBRES DU CERCLE */}
       <section className="space-y-2">
         <p className="text-xs text-[var(--kkb-text-tertiary)] uppercase tracking-widest font-medium">Membres du cercle</p>
+        {members.length <= 1 && (
+          <div className="rounded-[var(--kkb-radius-card)] border border-dashed border-[var(--kkb-border)] bg-white">
+            {/* Pas de bouton : le code d'invitation et le partage sont juste au-dessus */}
+            <EmptyState
+              icon={Users}
+              title="Tu es seul(e) dans ce cercle pour l'instant"
+              description="Invite ta famille avec le code ou le lien à partager ci-dessus."
+              className="py-8"
+            />
+          </div>
+        )}
         <div className="space-y-2" ref={menuRef}>
           {members.map((member, index) => {
             const u = member.users

@@ -7,6 +7,7 @@ import { PublicHeader } from '@/components/survey/public-header'
 import { MealVoteCard, type Reaction } from '@/components/survey/meal-vote-card'
 import { ViewToggle, type SurveyViewMode } from '@/components/survey/view-toggle'
 import { VoteIdentityPanel } from '@/components/survey/vote-identity-panel'
+import { toast } from '@/lib/stores/toast-store'
 import { MEAL_LABEL, MEAL_TYPE_ORDER, type MealType } from '@/lib/constants/meal-type'
 import { MEAL_ICON } from '@/lib/constants/meal-type-icon'
 import { DAY_OPTIONS, formatWeekRange, type DayOfWeek } from '@/lib/utils/week'
@@ -207,6 +208,8 @@ export function SurveyPageClient({ token }: { token: string }) {
 
     localStorage.setItem(STORAGE_KEY_DONE(token), '1')
     setSubmitted(true)
+    const planner = data?.plan.planner_name?.trim().split(/\s+/)[0]
+    toast.success(planner ? `Avis envoyé à ${planner}` : 'Avis envoyé !')
   }
 
   function handleModify() {

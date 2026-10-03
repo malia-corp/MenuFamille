@@ -21,6 +21,7 @@ import {
 import { MEAL_FULL_LABEL, MEAL_LABEL, type MealType } from '@/lib/constants/meal-type'
 import { DAY_OPTIONS, getMondayISO, shiftWeek, formatWeekRange, dayOfWeekFromDate, type DayOfWeek } from '@/lib/utils/week'
 import { sortByMealType } from '@/lib/utils/sort-meal-configs'
+import { toast } from '@/lib/stores/toast-store'
 import { countFilledSlots, countFilledByMealType, dayFilledCount, isDayComplete } from '@/lib/utils/plan-progress'
 import { type RecipeScope } from '@/lib/constants/recipe-scope'
 import { GeneratingOverlay } from '@/components/plan/generating-overlay'
@@ -332,6 +333,7 @@ function PlanPageContent() {
       }
       setPlan(planData)
       setServings(planData.meal_plan_items[0]?.servings ?? 4)
+      toast.success('Menu généré avec succès !')
       sessionStartRef.current = Date.now()
       setModCount(0)
       setSessionTime(0)
@@ -697,7 +699,7 @@ function PlanPageContent() {
           </button>
           <button
             type="button"
-            onClick={() => router.push('/plan/configure')}
+            onClick={() => router.push('/settings/meal-config')}
             className="p-1.5 text-[var(--kkb-text-secondary)] hover:text-[var(--kkb-coral)] transition-colors"
             aria-label="Configurer les repas"
           >
@@ -815,7 +817,7 @@ function PlanPageContent() {
               </p>
               <button
                 type="button"
-                onClick={() => router.push('/plan/configure')}
+                onClick={() => router.push('/settings/meal-config')}
                 className="text-sm text-[var(--kkb-coral)] underline font-quicksand"
               >
                 Configurer les repas

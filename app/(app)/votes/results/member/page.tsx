@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { ArrowRight, Inbox, PartyPopper, Shield, Vote } from 'lucide-react'
+import { ArrowRight, Inbox, PartyPopper, Shield, Vote, WifiOff } from 'lucide-react'
 import { formatWeekRange } from '@/lib/utils/week'
 import { totalReactions } from '@/lib/utils/survey-score'
 import { ConsensusGauge } from '@/components/votes/consensus-gauge'
@@ -21,6 +21,7 @@ interface MemberResultsData {
   week_start:        string
   member_count:      number
   voter_names:       string[]
+  planner_name:      string | null
   has_voted:         boolean
   share_token:       string
   items:             ResultItem[]
@@ -88,6 +89,7 @@ function MemberResultsContent() {
   if (loadState !== 'ready' || !data) {
     return (
       <EmptyState
+        icon={loadState === 'error' ? WifiOff : Inbox}
         icon={<Inbox className="h-8 w-8 text-[var(--kkb-text-tertiary)]" />}
         title={loadState === 'error' ? 'Impossible de charger les résultats' : 'Aucun sondage en cours'}
         message={loadState === 'error'
@@ -101,6 +103,18 @@ function MemberResultsContent() {
   const myReactionOf = new Map(data.per_item.map(p => [p.meal_plan_item_id, p.my_reaction]))
   const harmony      = harmonyOf(data.global_score)
   const surveyUrl    = `/s/${data.share_token}`
+
+  // Pas encore voté : on invite d'abord à donner son avis
+  if (!data.has_voted) {
+    return (
+      <EmptyState
+        icon={Vote}
+        title="Tu n'as pas encore donné ton avis"
+        message={`${data.planner_name ?? 'Ta famille'} attend ta contribution pour finaliser la semaine.`}
+        action={{ label: 'Voter maintenant', icon: ArrowRight, onClick: () => router.push(surveyUrl) }}
+      />
+    )
+  }
 
   return (
     <div className="mx-auto max-w-lg space-y-5 px-4 pb-24 pt-2 lg:max-w-3xl lg:py-8">

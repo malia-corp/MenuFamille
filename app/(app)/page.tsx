@@ -17,6 +17,8 @@ import { HarmonyWidget } from '@/components/home/harmony-widget'
 import { MemberResultsCard } from '@/components/home/member-results-card'
 import { TipCard } from '@/components/home/tip-card'
 import type { ChipItem } from '@/components/home/composition-carousel'
+import { EmptyState } from '@/components/ui/empty-state'
+import { SkeletonCard } from '@/components/ui/skeleton-card'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -256,19 +258,28 @@ export default function HomePage() {
   const hasAnyItem = (plan?.meal_plan_items.length ?? 0) > 0
 
   const mealCardsContent = !hasAnyItem ? (
-    <div className="bg-white border border-dashed border-[var(--kkb-border)] rounded-xl p-6 text-center">
-      <p className="text-sm font-quicksand text-[var(--kkb-text-secondary)]">
-        Pas encore de menu cette semaine. Génère le tien !
-      </p>
+    <div className="rounded-[var(--kkb-radius-card)] border border-dashed border-[var(--kkb-border)] bg-white">
+      {/* Génération via le parcours existant de /plan (écran d'attente + affichage du résultat) */}
+      <EmptyState
+        icon={UtensilsCrossed}
+        title="Pas encore de menu cette semaine"
+        description="Génère ton menu en un clic et régale ta famille !"
+        ctaLabel="Générer ma semaine"
+        ctaIcon={Zap}
+        ctaAction={() => router.push('/plan?generate=1')}
+        className="py-8"
+      />
     </div>
   ) : activeConfigs.length === 0 ? (
-    <div className="bg-white border border-dashed border-[var(--kkb-border)] rounded-xl p-6 text-center">
-      <p className="text-sm font-quicksand text-[var(--kkb-text-secondary)]">
-        Aucun type de repas actif.{' '}
-        <button type="button" onClick={() => router.push('/plan/configure')} className="text-[var(--kkb-coral)] underline">
-          Configurer
-        </button>
-      </p>
+    <div className="rounded-[var(--kkb-radius-card)] border border-dashed border-[var(--kkb-border)] bg-white">
+      <EmptyState
+        icon={Settings}
+        title="Aucun repas activé"
+        description="Choisis les repas à planifier pour ta famille."
+        ctaLabel="Régler le rythme des repas"
+        ctaHref="/settings/meal-config"
+        className="py-8"
+      />
     </div>
   ) : (
     <div className="space-y-4">
@@ -341,8 +352,10 @@ export default function HomePage() {
 
   if (loading) {
     return (
-      <div className="px-4 py-10 text-center">
-        <p className="text-sm font-quicksand text-[var(--kkb-text-tertiary)]">Chargement…</p>
+      <div className="mx-auto max-w-sm space-y-4 px-4 pt-4 lg:grid lg:max-w-[1400px] lg:grid-cols-3 lg:gap-6 lg:space-y-0 lg:px-8 lg:py-8" aria-busy="true" aria-label="Chargement de l'accueil">
+        <SkeletonCard variant="list" />
+        <SkeletonCard variant="meal" />
+        <SkeletonCard variant="meal" />
       </div>
     )
   }
@@ -398,7 +411,7 @@ export default function HomePage() {
         </button>
         <button
           type="button"
-          onClick={() => router.push('/plan/configure')}
+          onClick={() => router.push('/settings/meal-config')}
           className="border border-[var(--kkb-border)] bg-[var(--kkb-bg)]/70 hover:bg-[var(--kkb-bg)] text-[var(--kkb-text-secondary)] py-3 px-3 rounded-xl text-btn-secondary flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all"
         >
           <Settings className="h-4 w-4" /> Ajuster mes préférences
@@ -444,7 +457,7 @@ export default function HomePage() {
         <div className="flex items-center gap-3 shrink-0">
           <button
             type="button"
-            onClick={() => router.push('/plan/configure')}
+            onClick={() => router.push('/settings/meal-config')}
             className="h-12 px-4 rounded-lg bg-white hover:bg-[var(--kkb-bg)] text-[var(--kkb-text-primary)] text-btn-secondary flex items-center gap-2 shadow-sm transition-colors"
           >
             <Settings className="h-5 w-5 text-[var(--kkb-teal)]" /> Ajuster préférences

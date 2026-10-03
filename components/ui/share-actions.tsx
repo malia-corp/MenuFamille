@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { Check, Copy, Loader2, Share2 } from 'lucide-react'
+import { toast } from '@/lib/stores/toast-store'
 
 export interface SharePayload {
   title: string
@@ -25,6 +26,15 @@ export function circleInvitePayload(circleName: string, code: string): SharePayl
     title: 'Rejoins notre cercle familial — KeskonBouf',
     text:  `Rejoins notre cercle familial "${circleName}" sur KeskonBouf ! Code : ${code}`,
     copy:  code,
+  }
+}
+
+// Recommander l'application (Paramètres > Partager KeskonBouf).
+export function appSharePayload(): SharePayload {
+  return {
+    title: 'KeskonBouf',
+    text:  'Je planifie les repas de la famille avec KeskonBouf. Essaie-le !',
+    url:   window.location.origin,
   }
 }
 
@@ -80,9 +90,12 @@ export function ShareActions({
     if (!payload) return
     try {
       await navigator.clipboard.writeText(payload.copy ?? payload.url ?? payload.text)
+      toast.info(payload.copy ? 'Copié !' : payload.url ? 'Lien copié !' : 'Texte copié !')
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
-    } catch { /* presse-papiers indisponible */ }
+    } catch {
+      toast.error('Impossible de copier')
+    }
   }
 
   return (

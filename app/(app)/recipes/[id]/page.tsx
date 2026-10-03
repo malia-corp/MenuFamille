@@ -12,6 +12,7 @@ import { AddToMenuSheet } from '@/components/recipes/add-to-menu-sheet'
 import { ServingsControl, scaleQuantity } from '@/components/recipes/servings-control'
 import { ShareActions } from '@/components/ui/share-actions'
 import { RecipePrintSheet } from '@/components/recipes/recipe-print-sheet'
+import { toast } from '@/lib/stores/toast-store'
 import { formatDuration, type RecipeCategory } from '@/components/recipes/types'
 
 interface Ingredient { id: string; name: string; quantity: number | null; unit: string | null; sort_order: number }
@@ -103,9 +104,11 @@ function RecipeDetail() {
 
   async function toggleFavorite() {
     setFavPop(n => n + 1)
-    const res = await fetch(`/api/recipes/${id}/favorite`, { method: 'POST' })
-    if (!res.ok) return
+    const res = await fetch(`/api/recipes/${id}/favorite`, { method: 'POST' }).catch(() => null)
+    if (!res?.ok) { toast.error('Erreur de connexion'); return }
     const { is_favorited } = await res.json()
+    if (is_favorited) toast.success('Recette ajoutée aux favoris')
+    else toast.info('Recette retirée des favoris')
     setRecipe(prev => prev && {
       ...prev,
       is_favorited,

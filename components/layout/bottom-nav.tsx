@@ -8,6 +8,9 @@ export function BottomNav({ role }: { role: Role }) {
   const pathname = usePathname()
   const items = navItemsForRole(role)
 
+  // Pages de réglages : écran plein, action principale fixée en bas.
+  if (pathname.startsWith('/settings')) return null
+
   return (
     <nav
       className="lg:hidden print:hidden fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-fit rounded-full px-4 py-2 backdrop-blur-md"

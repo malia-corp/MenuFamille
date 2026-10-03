@@ -1,32 +1,46 @@
-import { Loader2 } from 'lucide-react'
+import { Inbox, type LucideIcon } from 'lucide-react'
+import { EmptyState as BaseEmptyState } from '@/components/ui/empty-state'
+import { SkeletonCard } from '@/components/ui/skeleton-card'
 
+// Chargement des résultats : squelettes aux proportions de la page.
 export function PageLoader() {
   return (
-    <div className="flex min-h-[50vh] items-center justify-center">
-      <Loader2 className="h-6 w-6 animate-spin text-[var(--kkb-coral)]" />
+    <div className="mx-auto max-w-lg space-y-4 px-4 pt-4 lg:max-w-[1400px] lg:px-8 lg:py-8" aria-busy="true" aria-label="Chargement des résultats">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
+        <SkeletonCard variant="stat" />
+        <SkeletonCard variant="stat" />
+        <SkeletonCard variant="stat" className="hidden lg:flex" />
+      </div>
+      <div className="space-y-4 lg:grid lg:grid-cols-2 lg:gap-5 lg:space-y-0">
+        <SkeletonCard variant="meal" />
+        <SkeletonCard variant="meal" />
+      </div>
     </div>
   )
 }
 
-export function EmptyState({ icon, title, message, action, children }: {
-  icon?: React.ReactNode
+// État vide des pages de résultats, dans une carte centrée.
+export function EmptyState({ icon = Inbox, title, message, action, children }: {
+  icon?: LucideIcon
   title: string
   message: string
-  action?: { label: string; onClick: () => void }
+  action?: { label: string; onClick: () => void; icon?: LucideIcon }
   children?: React.ReactNode
 }) {
   return (
-    <div className="mx-auto max-w-md px-4 py-12">
-      <div className="space-y-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white p-6 text-center">
-        {icon && <div className="flex justify-center">{icon}</div>}
-        <p className="font-dosis font-semibold text-lg text-[var(--kkb-text-primary)]">{title}</p>
-        <p className="text-sm font-quicksand text-[var(--kkb-text-secondary)]">{message}</p>
-        {children}
-        {action && (
-          <button type="button" onClick={action.onClick} className="mt-1 rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-coral)] px-5 py-2.5 text-sm font-quicksand font-bold text-white">
-            {action.label}
-          </button>
-        )}
+    <div className="mx-auto max-w-md px-4 py-8">
+      <div className="rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white">
+        <BaseEmptyState
+          icon={icon}
+          title={title}
+          description={message}
+          ctaLabel={action?.label}
+          ctaIcon={action?.icon}
+          ctaAction={action?.onClick}
+          className="py-10"
+        >
+          {children}
+        </BaseEmptyState>
       </div>
     </div>
   )

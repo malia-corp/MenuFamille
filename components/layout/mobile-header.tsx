@@ -17,6 +17,10 @@ const BACK_ROUTES: { re: RegExp; title: string }[] = [
   { re: /^\/recipes\/add$/,            title: 'Recettes' },
   { re: /^\/recipes\/[^/]+\/edit$/,    title: 'Recettes' },
   { re: /^\/recipes\/(?!add$)[^/]+$/,  title: 'Recettes' },
+  { re: /^\/settings$/,                title: 'Paramètres' },
+  { re: /^\/settings\/meal-config$/,   title: 'Rythme des repas' },
+  { re: /^\/settings\/notifications$/, title: 'Notifications' },
+  { re: /^\/profile$/,                 title: 'Mon profil' },
 ]
 
 export function MobileHeader({ displayName, title: titleProp, showBack: showBackProp = false }: MobileHeaderProps) {
