@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { resolveActiveCircleId } from '@/lib/utils/active-circle'
 import { loadStrictAllergens, findAllergenMatches } from '@/lib/utils/allergen-exclusion'
 import { NextRequest } from 'next/server'
 
@@ -31,12 +32,16 @@ type RawPlanItem = {
 // pour le badge de synthese sur /plan/validate. Meme helper que le
 // generateur (lib/utils/allergen-exclusion.ts), jamais duplique.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function withAllergyWarnings(supabase: any, userId: string, plan: any) {
+async function withAllergyWarnings(supabase: any, userId: string, plan: any, circleId: string | null) {
   const items = (plan?.meal_plan_items ?? []) as RawPlanItem[]
   if (!plan || items.length === 0) return plan
 
-  const { data: circles } = await supabase.from('family_circle_members').select('circle_id').eq('user_id', userId)
-  const circleIds = (circles ?? []).map((c: { circle_id: string }) => c.circle_id)
+  // Allergènes des membres du cercle du menu ; sans cercle, ceux de tous ses cercles.
+  let circleIds: string[] = circleId ? [circleId] : []
+  if (!circleId) {
+    const { data: circles } = await supabase.from('family_circle_members').select('circle_id').eq('user_id', userId)
+    circleIds = (circles ?? []).map((c: { circle_id: string }) => c.circle_id)
+  }
 
   let memberUserIds = [userId]
   if (circleIds.length > 0) {
@@ -81,6 +86,10 @@ export async function GET(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return Response.json({ error: 'Non authentifié' }, { status: 401 })
 
+  // Menus du cercle actif uniquement : activer un autre cercle bascule
+  // l'accueil, le menu de la semaine et la planification sur ses menus.
+  const circleId = await resolveActiveCircleId(supabase, user.id)
+
   // Retourne le plan le plus récent (toutes semaines confondues), sans créer de plan vide
   // &shared=true : uniquement les plans dont le sondage a été partagé.
   if (request.nextUrl.searchParams.get('latest') === 'true') {
@@ -88,6 +97,7 @@ export async function GET(request: NextRequest) {
       .from('meal_plans')
       .select(PLAN_SELECT)
       .eq('user_id', user.id)
+    query = circleId ? query.eq('circle_id', circleId) : query.is('circle_id', null)
     if (request.nextUrl.searchParams.get('shared') === 'true') query = query.not('share_token', 'is', null)
     const { data, error } = await query
       .order('week_start', { ascending: false })
@@ -95,7 +105,7 @@ export async function GET(request: NextRequest) {
       .maybeSingle()
     console.log(`[meal-plans:GET latest] ${(performance.now() - start).toFixed(1)}ms`)
     if (error) return Response.json({ error: error.message }, { status: 500 })
-    return Response.json(await withAllergyWarnings(supabase, user.id, data))
+    return Response.json(await withAllergyWarnings(supabase, user.id, data, circleId))
   }
 
   const week = request.nextUrl.searchParams.get('week') ?? getMondayISO()
@@ -104,11 +114,13 @@ export async function GET(request: NextRequest) {
   // d'une ligne pour ce (user_id, week_start) — ne devrait plus arriver
   // depuis la contrainte unique posee en migration 0020, mais .maybeSingle()
   // aurait renvoye une erreur Postgrest (PGRST116) et 500 au client.
-  const { data: existingRows, error: selectError } = await supabase
+  let weekQuery = supabase
     .from('meal_plans')
     .select(PLAN_SELECT)
     .eq('user_id', user.id)
     .eq('week_start', week)
+  weekQuery = circleId ? weekQuery.eq('circle_id', circleId) : weekQuery.is('circle_id', null)
+  const { data: existingRows, error: selectError } = await weekQuery
     .order('created_at', { ascending: false })
     .limit(1)
 
@@ -116,7 +128,7 @@ export async function GET(request: NextRequest) {
   const existing = existingRows?.[0] ?? null
   if (existing) {
     console.log(`[meal-plans:GET existing] ${(performance.now() - start).toFixed(1)}ms`)
-    return Response.json(await withAllergyWarnings(supabase, user.id, existing))
+    return Response.json(await withAllergyWarnings(supabase, user.id, existing, circleId))
   }
 
   // Un membre (aucun cercle où il planifie) ne crée pas de menu vide à son
@@ -131,7 +143,7 @@ export async function GET(request: NextRequest) {
 
   const { data: created, error } = await supabase
     .from('meal_plans')
-    .insert({ user_id: user.id, week_start: week })
+    .insert({ user_id: user.id, week_start: week, circle_id: circleId })
     .select('id, week_start, status')
     .single()
 

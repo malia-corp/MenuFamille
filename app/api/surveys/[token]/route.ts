@@ -45,7 +45,7 @@ export async function GET(
   const { data: planData, error } = await supabase
     .from('meal_plans')
     .select(`
-      id, week_start,
+      id, week_start, circle_id,
       meal_plan_items (
         id, day_of_week, meal_type, applies_all_days, servings,
         recipes ( id, name, photo_url, description, prep_time_min, categories ( icon, name ) ),
@@ -59,12 +59,14 @@ export async function GET(
     return Response.json({ error: 'Sondage introuvable' }, { status: 404 })
   }
 
-  // Nom de la planificatrice + nom de famille — meal_plans.circle_id n'est
-  // quasiment jamais renseigne (pas de notion de "cercle actif" dans l'app),
-  // donc on remonte le premier cercle du proprietaire du plan plutot que de
-  // dependre de cette colonne, meme pattern que getViewer() (app/(app)/layout.tsx).
-  const [{ data: owner }, { data: membership }] = await Promise.all([
+  // Nom de la planificatrice + nom du cercle du menu (meal_plans.circle_id,
+  // renseigné depuis la migration w) ; à défaut, le premier cercle de
+  // l'auteur du menu.
+  const [{ data: owner }, { data: circle }, { data: membership }] = await Promise.all([
     supabase.from('users').select('display_name').eq('id', plan.user_id).maybeSingle(),
+    planData.circle_id
+      ? supabase.from('family_circles').select('name').eq('id', planData.circle_id).maybeSingle()
+      : Promise.resolve({ data: null }),
     supabase
       .from('family_circle_members')
       .select('family_circles ( name )')
@@ -75,7 +77,7 @@ export async function GET(
   ])
 
   const planner_name = owner?.display_name ?? null
-  const family_name  = (membership?.family_circles as { name: string } | null)?.name ?? null
+  const family_name  = circle?.name ?? (membership?.family_circles as { name: string } | null)?.name ?? null
 
   const items = ((planData.meal_plan_items ?? []) as unknown as RawItem[]).map(i => ({
     id:                i.id,

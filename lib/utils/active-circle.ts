@@ -9,8 +9,9 @@ type Client = SupabaseClient<Database>
 //
 // Le cercle actif se choisit explicitement (PUT /api/circles/active) ;
 // sélectionner un cercle dans /circle ne fait que l'afficher.
-// Ne concerne que l'affichage (page cercle, en-tête, accueil, profil) : la
-// génération et les allergènes agrègent toujours tous les cercles.
+// Pilote toute l'app : page cercle, en-tête, accueil, profil, et les menus
+// (meal_plans.circle_id, migration w) — menu de la semaine, menu du jour,
+// planification, génération et allergènes pris en compte.
 export async function resolveActiveCircleId(supabase: Client, userId: string): Promise<string | null> {
   const [{ data: profile }, { data: memberships }] = await Promise.all([
     supabase.from('users').select('active_circle_id').eq('id', userId).maybeSingle(),
