@@ -58,7 +58,7 @@ export async function GET(
   const ids = suggestions.map(s => s.associated_recipe_id)
   const { data: recipes } = await service
     .from('recipes')
-    .select('id, name, photo_url, categories(name, icon)')
+    .select('id, name, photo_url, description, categories(name, slug, icon)')
     .in('id', ids)
 
   const recipesById = new Map((recipes ?? []).map(r => [r.id, r]))
@@ -67,7 +67,7 @@ export async function GET(
     .map(s => {
       const r = recipesById.get(s.associated_recipe_id)
       if (!r) return null
-      return { id: r.id, name: r.name, photo_url: r.photo_url, category: r.categories, score: s.score }
+      return { id: r.id, name: r.name, photo_url: r.photo_url, description: r.description, category: r.categories, score: s.score }
     })
     .filter((r) => r !== null)
 

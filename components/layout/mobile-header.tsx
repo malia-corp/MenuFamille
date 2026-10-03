@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
 import { UserMenu } from './user-menu'
 import { NotificationBell } from './notification-bell'
@@ -12,9 +12,15 @@ interface MobileHeaderProps {
   showBack?: boolean
 }
 
+// Pages à en-tête immersif (photo bord à bord) : pas d'en-tête global sur mobile.
+const IMMERSIVE_ROUTES = [/^\/recipes\/(?!add$)[^/]+$/]
+
 export function MobileHeader({ displayName, title, showBack = false }: MobileHeaderProps) {
   const router = useRouter()
+  const pathname = usePathname()
   const initial = (displayName ?? '?').trim().charAt(0).toUpperCase()
+
+  if (IMMERSIVE_ROUTES.some(re => re.test(pathname))) return null
 
   return (
     <header className="lg:hidden print:hidden fixed top-0 left-0 right-0 z-40 bg-white border-b border-[var(--kkb-border)]/50 h-14 flex items-center px-4">
