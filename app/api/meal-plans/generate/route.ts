@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
 import { loadStrictAllergens, findAllergenMatches } from '@/lib/utils/allergen-exclusion'
 import { sortByMealType } from '@/lib/utils/sort-meal-configs'
+import { resolveActiveCircleId } from '@/lib/utils/active-circle'
 import { NextRequest } from 'next/server'
 
 const DAYS = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'] as const
@@ -70,11 +71,15 @@ export async function POST(request: NextRequest) {
   // plan n'existait et en recreait un complet a CHAQUE appel, aggravant le
   // doublon un peu plus a chaque generation. Contrainte unique posee en
   // migration 0020 pour empecher que ça se reproduise.
-  const { data: existingRows, error: existingError } = await service
+  // Menu du cercle actif (cf. migration w_meal_plans_per_circle).
+  const activeCircleId = await resolveActiveCircleId(supabase, user.id)
+  let existingQuery = service
     .from('meal_plans')
     .select('id, status')
     .eq('user_id', user.id)
     .eq('week_start', weekStart)
+  existingQuery = activeCircleId ? existingQuery.eq('circle_id', activeCircleId) : existingQuery.is('circle_id', null)
+  const { data: existingRows, error: existingError } = await existingQuery
     .order('created_at', { ascending: false })
     .limit(1)
 
@@ -86,7 +91,7 @@ export async function POST(request: NextRequest) {
   if (existingPlan?.status === 'finalized') {
     const { data: newPlan, error: e } = await service
       .from('meal_plans')
-      .insert({ user_id: user.id, week_start: weekStart, status: 'draft' })
+      .insert({ user_id: user.id, week_start: weekStart, status: 'draft', circle_id: activeCircleId })
       .select('id')
       .single()
     if (e || !newPlan) return Response.json({ error: 'Erreur création plan' }, { status: 500 })
@@ -96,7 +101,7 @@ export async function POST(request: NextRequest) {
   } else {
     const { data: newPlan, error: e } = await service
       .from('meal_plans')
-      .insert({ user_id: user.id, week_start: weekStart, status: 'draft' })
+      .insert({ user_id: user.id, week_start: weekStart, status: 'draft', circle_id: activeCircleId })
       .select('id')
       .single()
     if (e || !newPlan) return Response.json({ error: 'Erreur création plan' }, { status: 500 })
@@ -201,17 +206,15 @@ export async function POST(request: NextRequest) {
     return Array.from(scores.entries()).sort((a, b) => b[1] - a[1]).slice(0, limit).map(([id]) => id)
   }
 
-  // 5c. Allergènes stricts des membres du/des cercle(s) du planificateur.
-  // Simplification documentée : meal_plans.circle_id n'est jamais renseigné
-  // aujourd'hui (pas de notion de "cercle actif"), donc on agrège tous les
-  // cercles de l'utilisateur qui génère plutôt qu'un cercle précis — correct
-  // dans le cas courant (un seul cercle), sur-inclusif si plusieurs.
+  // 5c. Allergènes stricts des membres du cercle actif (celui du menu
+  // généré) ; sans cercle actif, ceux de tous ses cercles.
   let memberUserIds = [user.id]
-  if (circleIds.length > 0) {
+  const allergenCircleIds = activeCircleId ? [activeCircleId] : circleIds
+  if (allergenCircleIds.length > 0) {
     const { data: circleMembers } = await service
       .from('family_circle_members')
       .select('user_id')
-      .in('circle_id', circleIds)
+      .in('circle_id', allergenCircleIds)
     memberUserIds = Array.from(new Set([user.id, ...(circleMembers ?? []).map(m => m.user_id)]))
   }
   const strictAllergens = await loadStrictAllergens(service, memberUserIds)
