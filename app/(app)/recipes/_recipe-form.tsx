@@ -566,13 +566,13 @@ export function RecipeForm({
 
       {/* Sélecteur d'accompagnement / boisson (même filtres que la planification) */}
       {assocPicker && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/30 lg:items-center" onClick={e => { if (e.target === e.currentTarget) setAssocPicker(null) }}>
+        <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/30 lg:items-center" onClick={e => { if (e.target === e.currentTarget) setAssocPicker(null) }}>
           <div className="flex max-h-[75vh] w-full flex-col rounded-t-[var(--kkb-radius-card)] bg-[var(--kkb-bg)] shadow-xl lg:max-w-lg lg:rounded-[var(--kkb-radius-card)]">
-            <div className="flex items-center justify-between px-4 pb-2 pt-4">
+            <div className="flex shrink-0 items-center justify-between px-4 pb-2 pt-4">
               <p className="font-dosis font-bold text-base text-[var(--kkb-text-primary)]">{assocPicker === 'side' ? 'Choisir un accompagnement' : 'Choisir une boisson'}</p>
               <button type="button" onClick={() => setAssocPicker(null)} className="-mr-1 p-1.5 text-[var(--kkb-text-tertiary)]" aria-label="Fermer"><X className="h-5 w-5" /></button>
             </div>
-            <div className="px-4 pb-2">
+            <div className="shrink-0 px-4 pb-2">
               <div className="flex items-center gap-2 rounded-[var(--kkb-radius-sm)] border border-[var(--kkb-border)] bg-white px-3 py-2">
                 <Search className="h-4 w-4 shrink-0 text-[var(--kkb-text-tertiary)]" />
                 <input type="search" autoFocus placeholder="Chercher une recette…" aria-label="Chercher une recette" value={assocSearch}
@@ -585,28 +585,28 @@ export function RecipeForm({
                   className="flex-1 bg-transparent text-sm font-quicksand outline-none placeholder:text-[var(--kkb-text-tertiary)]" />
               </div>
             </div>
-            <div className="flex gap-1.5 overflow-x-auto px-4 pb-2 hide-scrollbar">
+            <div className="flex shrink-0 gap-1.5 overflow-x-auto px-4 pb-2 hide-scrollbar">
               {ASSOC_SCOPE_OPTIONS.map(o => (
                 <button key={o.val} type="button" onClick={() => { setAssocScope(o.val); void searchAssoc(o.val, assocCategory, assocSearch) }}
-                  className={`shrink-0 rounded-[var(--kkb-radius-pill)] px-3 py-1 text-[11px] font-quicksand font-bold ${assocScope === o.val ? 'bg-[var(--kkb-coral)] text-white' : 'border border-[var(--kkb-border)] bg-white text-[var(--kkb-text-secondary)]'}`}>
+                  className={`shrink-0 whitespace-nowrap rounded-[var(--kkb-radius-pill)] px-3 py-1.5 text-xs font-quicksand font-bold ${assocScope === o.val ? 'bg-[var(--kkb-coral)] text-white' : 'border border-[var(--kkb-border)] bg-white text-[var(--kkb-text-secondary)]'}`}>
                   {o.label}
                 </button>
               ))}
             </div>
             {categories.length > 0 && (
-              <div className="flex gap-1.5 overflow-x-auto px-4 pb-2 hide-scrollbar">
+              <div className="flex shrink-0 gap-1.5 overflow-x-auto px-4 pb-3 hide-scrollbar">
                 {[{ id: null as string | null, name: 'Toutes', slug: '' }, ...categories].map(c => {
                   const Icon = c.id ? categoryIcon(c.slug) : null
                   return (
                     <button key={c.id ?? 'all'} type="button" onClick={() => { setAssocCategory(c.id); void searchAssoc(assocScope, c.id, assocSearch) }}
-                      className={`flex shrink-0 items-center gap-1 rounded-[var(--kkb-radius-pill)] px-3 py-1 text-[11px] font-quicksand font-bold ${assocCategory === c.id ? 'bg-[var(--kkb-teal)] text-white' : 'border border-[var(--kkb-border)] bg-white text-[var(--kkb-text-secondary)]'}`}>
+                      className={`flex shrink-0 items-center gap-1 whitespace-nowrap rounded-[var(--kkb-radius-pill)] px-3 py-1.5 text-xs font-quicksand font-bold ${assocCategory === c.id ? 'bg-[var(--kkb-teal)] text-white' : 'border border-[var(--kkb-border)] bg-white text-[var(--kkb-text-secondary)]'}`}>
                       {Icon && <Icon className="h-3 w-3" />} {c.name}
                     </button>
                   )
                 })}
               </div>
             )}
-            <div className="flex-1 overflow-y-auto border-t border-[var(--kkb-border)]">
+            <div className="min-h-0 flex-1 overflow-y-auto border-t border-[var(--kkb-border)]">
               {assocLoading ? (
                 <div className="flex justify-center py-8"><Loader2 className="h-5 w-5 animate-spin text-[var(--kkb-coral)]" /></div>
               ) : assocResults.length === 0 ? (
@@ -627,7 +627,7 @@ export function RecipeForm({
                 )
               })}
             </div>
-            <div className="p-3">
+            <div className="shrink-0 p-3 pb-[max(12px,env(safe-area-inset-bottom))]">
               <button type="button" onClick={() => setAssocPicker(null)} className="w-full rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-coral)] py-2.5 text-sm font-quicksand font-bold text-white">Terminé</button>
             </div>
           </div>
