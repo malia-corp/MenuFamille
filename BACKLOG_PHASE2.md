@@ -13,3 +13,13 @@ Fonctionnalités identifiées comme utiles mais hors scope du MVP (CDC section 5
 | Numérisation d'un carnet manuscrit / photo (scan) | Bloc « Magie Express » de l'ajout de recette (sprint 4). Bouton présent en « Bientôt disponible » ; fonctionnalité exclue du MVP (décision de cadrage n°4). |
 | Archiver une recette | Menu options du détail mobile (sprint 4). Pas de colonne d'archivage ; seuls Modifier / Partager / Supprimer sont proposés. |
 | Aperçu de la recette avant enregistrement (desktop) | Bouton « Aperçu » de la maquette d'ajout desktop (sprint 4). |
+| Langue & unités culinaires (mesures locales : sodabi, oloko…, sélecteur métrique/local) | Page Paramètres (sprint 4). Aucun modèle de données pour la langue ni les unités ; lignes présentes en « Bientôt disponible ». |
+| « Menu du jour sur WhatsApp » (envoi automatique quotidien à la famille) | Maquette du profil (sprint 4). Nécessite une intégration WhatsApp Business ; non implémenté. |
+| Indicateur « X kg de denrées économisées » | Maquette du profil (sprint 4). Aucune donnée de quantités achetées/gaspillées pour le calculer. |
+| Statut actif/inactif d'un cercle + sélecteur multi-cercles | Maquette mobile du cercle (sprint 4). Pas de notion de cercle actif (cf. docs/ecarts-implementation.md #1) ; un seul cercle affiché. |
+| Convives ponctuels (invités du week-end) | Maquette mobile du cercle (sprint 4). Aucun modèle d'invité temporaire. |
+| Rôle familial et âge des membres (« Papa », « Fille · 12 ans ») | Maquettes du cercle (sprint 4). `family_circle_members` ne porte que planificatrice/membre. |
+| Relance d'un membre (« Rappeler ») et statut de connexion | Maquette desktop du cercle (sprint 4). |
+| Réinitialisation du code d'invitation | Maquette desktop du cercle (sprint 4). Le QR code est implémenté, pas la régénération. |
+| Heure de service sur l'avis post-repas (« Servi à 12h30 ») | Maquette /feedback (sprint 4). L'heure n'est pas chargée avec le plan. |
+| Dictée vocale du commentaire d'avis | Icône micro de la maquette /feedback (sprint 4), en « Bientôt disponible ». |

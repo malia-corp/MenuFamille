@@ -699,7 +699,7 @@ function PlanPageContent() {
           </button>
           <button
             type="button"
-            onClick={() => router.push('/plan/configure')}
+            onClick={() => router.push('/settings/meal-config')}
             className="p-1.5 text-[var(--kkb-text-secondary)] hover:text-[var(--kkb-coral)] transition-colors"
             aria-label="Configurer les repas"
           >
@@ -817,7 +817,7 @@ function PlanPageContent() {
               </p>
               <button
                 type="button"
-                onClick={() => router.push('/plan/configure')}
+                onClick={() => router.push('/settings/meal-config')}
                 className="text-sm text-[var(--kkb-coral)] underline font-quicksand"
               >
                 Configurer les repas

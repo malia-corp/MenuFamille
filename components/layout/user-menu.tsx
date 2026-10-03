@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { UserCircle, Settings, LogOut } from 'lucide-react'
+import { logout } from '@/lib/utils/logout'
 
 interface UserMenuProps {
   trigger: React.ReactNode
@@ -24,7 +25,7 @@ export function UserMenu({ trigger, align = 'below', side = 'right' }: UserMenuP
   }, [])
 
   async function handleLogout() {
-    await fetch('/api/auth/logout', { method: 'POST' })
+    await logout()
     router.push('/login')
   }
 
@@ -55,7 +56,7 @@ export function UserMenu({ trigger, align = 'below', side = 'right' }: UserMenuP
           </button>
           <button
             type="button"
-            onClick={() => go('/plan/configure')}
+            onClick={() => go('/settings')}
             className="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm font-quicksand text-[var(--kkb-text-secondary)] hover:bg-[var(--kkb-teal-light)] hover:text-[var(--kkb-teal)]"
           >
             <Settings className="h-4 w-4" />

@@ -29,6 +29,29 @@ export function circleInvitePayload(circleName: string, code: string): SharePayl
   }
 }
 
+// Lien d'accès direct au cercle (QR code, "Copier le lien d'accès") :
+// /circle/join pré-remplit le code.
+export function circleJoinUrl(code: string): string {
+  return `${window.location.origin}/circle/join?code=${encodeURIComponent(code)}`
+}
+
+export function circleJoinLinkPayload(circleName: string, code: string): SharePayload {
+  return {
+    title: 'Rejoins notre cercle familial — KeskonBouf',
+    text:  `Rejoins notre cercle familial "${circleName}" sur KeskonBouf !`,
+    url:   circleJoinUrl(code),
+  }
+}
+
+// Recommander l'application (Paramètres > Partager KeskonBouf).
+export function appSharePayload(): SharePayload {
+  return {
+    title: 'KeskonBouf',
+    text:  'Je planifie les repas de la famille avec KeskonBouf. Essaie-le !',
+    url:   window.location.origin,
+  }
+}
+
 interface ShareActionsProps {
   // Appelé au clic (peut générer un lien à la volée) ; null = rien à partager.
   getPayload:       () => Promise<SharePayload | null> | SharePayload | null

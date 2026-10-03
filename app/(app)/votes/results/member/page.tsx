@@ -4,6 +4,7 @@ import { Suspense, useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ArrowRight, Inbox, PartyPopper, Shield, Vote, WifiOff } from 'lucide-react'
 import { ArrowRight, Inbox, PartyPopper, Shield, Vote } from 'lucide-react'
+import { ArrowRight, CheckCircle, Inbox, PartyPopper, Shield, Vote, WifiOff } from 'lucide-react'
 import { formatWeekRange } from '@/lib/utils/week'
 import { totalReactions } from '@/lib/utils/survey-score'
 import { ConsensusGauge } from '@/components/votes/consensus-gauge'
@@ -25,8 +26,11 @@ interface MemberResultsData {
   planner_name:      string | null
   has_voted:         boolean
   share_token:       string
+  status:            string
   items:             ResultItem[]
 }
+
+const VOTER_COLORS = ['var(--kkb-coral)', 'var(--kkb-teal)', 'var(--kkb-warning)', 'var(--kkb-success)', 'var(--kkb-text-secondary)']
 
 function harmonyMessage(score: number | null): string {
   if (score === null) return 'Les votes de la famille arrivent bientôt.'
@@ -91,6 +95,7 @@ function MemberResultsContent() {
     return (
       <EmptyState
         icon={loadState === 'error' ? WifiOff : Inbox}
+        icon={<Inbox className="h-8 w-8 text-[var(--kkb-text-tertiary)]" />}
         title={loadState === 'error' ? 'Impossible de charger les résultats' : 'Aucun sondage en cours'}
         message={loadState === 'error'
           ? 'Réessaie dans un instant.'
@@ -125,7 +130,22 @@ function MemberResultsContent() {
         <h1 className="flex items-center justify-center gap-2 font-dosis font-extrabold text-2xl text-[var(--kkb-text-primary)]">
           Résultats de la famille <PartyPopper className="h-6 w-6 text-[var(--kkb-coral)]" />
         </h1>
-        <p className="text-xs font-quicksand text-[var(--kkb-text-tertiary)]">Semaine du {formatWeekRange(data.week_start)}</p>
+        <p className="text-xs font-quicksand text-[var(--kkb-text-tertiary)]">
+          Semaine du {formatWeekRange(data.week_start)}{data.status === 'finalized' ? ' · Consultation clôturée' : ''}
+        </p>
+        {data.voter_names.length > 0 && (
+          <div className="flex justify-center -space-x-2 pt-1" aria-label={`${data.voter_names.length} votants`}>
+            {data.voter_names.slice(0, 6).map((n, i) => (
+              <span
+                key={n}
+                className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-white font-dosis text-xs font-bold text-white"
+                style={{ backgroundColor: VOTER_COLORS[i % VOTER_COLORS.length] }}
+              >
+                {n.charAt(0).toUpperCase()}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Indice d'harmonie */}
@@ -182,13 +202,36 @@ function MemberResultsContent() {
         )
       })}
 
-      <button
-        type="button"
-        onClick={() => router.push(surveyUrl)}
-        className="mx-auto flex items-center gap-1.5 rounded-[var(--kkb-radius-pill)] px-4 py-2 text-sm font-quicksand font-bold text-[var(--kkb-teal)] hover:bg-[var(--kkb-teal-light)]"
-      >
-        Consulter le menu de la semaine <ArrowRight className="h-4 w-4" />
-      </button>
+      {data.status === 'finalized' ? (
+        <section className="space-y-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white p-4">
+          <div className="flex items-start gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--kkb-teal)] text-white">
+              <CheckCircle className="h-5 w-5" />
+            </span>
+            <div>
+              <p className="font-dosis text-lg font-bold text-[var(--kkb-text-primary)]">Menu officiellement validé !</p>
+              <p className="font-quicksand text-sm text-[var(--kkb-text-secondary)]">
+                {data.planner_name ?? 'La planificatrice'} prépare la liste des courses pour le marché. Merci pour ta contribution conviviale !
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => router.push('/')}
+            className="flex w-full items-center justify-center gap-1.5 rounded-[var(--kkb-radius-pill)] border border-[var(--kkb-border)] bg-white py-2.5 text-sm font-quicksand font-bold text-[var(--kkb-teal)] hover:bg-[var(--kkb-teal-light)]"
+          >
+            Consulter le menu de la semaine <ArrowRight className="h-4 w-4" />
+          </button>
+        </section>
+      ) : (
+        <button
+          type="button"
+          onClick={() => router.push(surveyUrl)}
+          className="mx-auto flex items-center gap-1.5 rounded-[var(--kkb-radius-pill)] px-4 py-2 text-sm font-quicksand font-bold text-[var(--kkb-teal)] hover:bg-[var(--kkb-teal-light)]"
+        >
+          Revoir mes votes <ArrowRight className="h-4 w-4" />
+        </button>
+      )}
     </div>
   )
 }

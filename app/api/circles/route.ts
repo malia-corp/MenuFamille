@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
+import { resolveActiveCircleId } from '@/lib/utils/active-circle'
 
 export async function GET() {
   const supabase = await createClient()
@@ -7,17 +8,16 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return Response.json({ error: 'Non authentifié' }, { status: 401 })
 
-  // Trie par date d'adhesion pour que circles[0] (pas de notion de "cercle
-  // actif", cf. docs/ecarts-implementation.md #1) designe toujours le meme
-  // cercle que celui choisi par getViewer() dans app/(app)/layout.tsx.
+  // Uniquement les cercles dont l'utilisateur est membre (créateur compris :
+  // il y est inscrit comme planificatrice). Trié par date d'adhésion.
   const { data, error } = await supabase
     .from('family_circle_members')
     .select(`
-      role, joined_at,
+      role, joined_at, is_active,
       family_circles (
         id, name, invite_code, created_by, created_at,
         family_circle_members (
-          id, role, joined_at,
+          id, role, joined_at, is_active,
           users ( id, display_name, email, member_dietary_prefs ( id, pref_type, value, severity ) )
         )
       )
@@ -27,12 +27,26 @@ export async function GET() {
 
   if (error) return Response.json({ error: error.message }, { status: 500 })
 
-  const circles = (data ?? []).map((m) => ({
-    ...(m.family_circles as object),
-    my_role: m.role,
-  }))
+  type RawCircle = { invite_code: string; family_circle_members: { users: { id: string } | null }[] }
+  const circles = (data ?? []).map((m) => {
+    const circle = m.family_circles as unknown as RawCircle
+    // Membre désactivé : ni code d'invitation, ni autres membres (la RLS ne
+    // renvoie déjà que sa propre ligne ; on ne compte pas dessus seule).
+    if (!m.is_active) {
+      return {
+        ...circle,
+        invite_code: null,
+        family_circle_members: circle.family_circle_members.filter((fm) => fm.users?.id === user.id),
+        my_role: m.role,
+        my_is_active: false,
+      }
+    }
+    return { ...circle, my_role: m.role, my_is_active: true }
+  })
 
-  return Response.json({ data: circles, viewer_id: user.id })
+  const active_circle_id = await resolveActiveCircleId(supabase, user.id)
+
+  return Response.json({ data: circles, viewer_id: user.id, active_circle_id })
 }
 
 function makeInviteCode(displayName: string): string {
@@ -84,6 +98,9 @@ export async function POST(request: Request) {
     user_id: user.id,
     role: 'planificatrice',
   })
+
+  // Le cercle créé devient le cercle affiché.
+  await supabase.from('users').update({ active_circle_id: circle.id }).eq('id', user.id)
 
   return Response.json({ circle }, { status: 201 })
 }

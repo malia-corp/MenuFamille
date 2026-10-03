@@ -1,14 +1,14 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import {
-  CheckCircle, Clock, Send, Star, PenLine, X,
-} from 'lucide-react'
-import { formatDistanceToNow } from 'date-fns'
-import { fr } from 'date-fns/locale'
+import { Check, Heart, History, Loader2, Lock, Mic, ShieldCheck, Sparkles, Star } from 'lucide-react'
 import { composedName } from '@/lib/utils/composed-name'
 import { MEAL_LABEL, type MealType } from '@/lib/constants/meal-type'
 import { MealTypeIcon } from '@/components/ui/meal-type-icon'
+import { EmptyState } from '@/components/ui/empty-state'
+import { SkeletonCard } from '@/components/ui/skeleton-card'
+import { toast } from '@/lib/stores/toast-store'
+import { formatWeekRange } from '@/lib/utils/week'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -16,7 +16,7 @@ type Rating   = 'excellent' | 'correct' | 'decevant'
 type Status   = 'past' | 'today' | 'future'
 
 interface Composition {
-  role:       'side' | 'drink'
+  role:       'side' | 'drink' | string
   sort_order: number
   recipes:    { name: string } | null
 }
@@ -26,7 +26,7 @@ interface MealPlanItem {
   meal_type:         MealType
   day_of_week:       string
   applies_all_days:  boolean
-  recipes:           { name: string } | null
+  recipes:           { name: string; photo_url: string | null } | null
   meal_compositions: Composition[]
 }
 
@@ -41,8 +41,21 @@ interface FeedbackEntry {
   meal_plan_item_id: string
   rating:            Rating
   message:           string | null
-  respondent_name:   string
   created_at:        string
+}
+
+// Historique : mes avis, avec le repas noté.
+interface HistoryEntry extends FeedbackEntry {
+  week_start: string | null
+  item:       MealPlanItem
+}
+
+interface FamilyResponse {
+  role:         'planificatrice' | 'membre' | null
+  is_active:    boolean
+  planner_name: string | null
+  plan:         MealPlan | null
+  meal_times:   Record<string, string>
 }
 
 interface Template {
@@ -57,16 +70,44 @@ const DAY_ORDER = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 
 
 const MEAL_ORDER: MealType[] = ['petit_dejeuner', 'dejeuner', 'gouter', 'diner']
 
-const RATING_CONFIG: { value: Rating; emoji: string; label: string; bg: string; border: string; textColor: string }[] = [
-  { value: 'excellent', emoji: '\u{1F60A}', label: 'Excellent',   bg: 'var(--kkb-success-light)', border: 'var(--kkb-success)', textColor: 'var(--kkb-success)' },
-  { value: 'correct',   emoji: '\u{1F610}', label: 'Correct',     bg: 'var(--kkb-bg)', border: 'var(--kkb-warning)', textColor: 'var(--kkb-warning)' },
-  { value: 'decevant',  emoji: '\u{1F615}', label: 'Décevant',    bg: 'var(--kkb-danger-light)', border: 'var(--kkb-danger)', textColor: 'var(--kkb-danger)' },
+// Emojis de réaction en échappements unicode (cf. CLAUDE.md).
+const RATING_CONFIG: { value: Rating; emoji: string; label: string; hint: string; tone: string; light: string }[] = [
+  { value: 'excellent', emoji: '\u{1F60A}', label: 'J\'ai adoré', hint: 'Savoureux & riche', tone: 'var(--kkb-success)', light: 'var(--kkb-success-light)' },
+  { value: 'correct',   emoji: '\u{1F610}', label: 'Ça passe',    hint: 'Bien dosé',         tone: 'var(--kkb-warning)', light: 'var(--kkb-warning-light)' },
+  { value: 'decevant',  emoji: '\u{1F615}', label: 'Pas trop',    hint: 'À réajuster',       tone: 'var(--kkb-danger)',  light: 'var(--kkb-danger-light)' },
 ]
 
 const RATING_EMOJI: Record<Rating, string> = {
   excellent: '\u{1F60A}',
   correct:   '\u{1F610}',
   decevant:  '\u{1F615}',
+}
+
+// Puces "impressions rapides" : couleur selon la réaction choisie.
+const CHIP_TONE: Record<Rating, { idle: string; active: string }> = {
+  excellent: {
+    idle:   'border-[var(--kkb-success)]/40 bg-[var(--kkb-success-light)] text-[var(--kkb-success)]',
+    active: 'border-[var(--kkb-success)] bg-[var(--kkb-success)] text-white',
+  },
+  correct: {
+    idle:   'border-[var(--kkb-warning)]/50 bg-[var(--kkb-warning-light)] text-[var(--kkb-text-secondary)]',
+    active: 'border-[var(--kkb-warning)] bg-[var(--kkb-warning)] text-white',
+  },
+  decevant: {
+    idle:   'border-[var(--kkb-danger)]/40 bg-[var(--kkb-danger-light)] text-[var(--kkb-danger)]',
+    active: 'border-[var(--kkb-danger)] bg-[var(--kkb-danger)] text-white',
+  },
+}
+
+const CATCH_UP_SHOWN = 4
+
+const SECTION_LABEL = 'font-quicksand text-[11px] font-bold uppercase tracking-wider'
+
+function mondayISO(): string {
+  const d = new Date()
+  const day = d.getDay()
+  d.setDate(d.getDate() + (day === 0 ? -6 : 1 - day))
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
 function getMealStatus(dayOfWeek: string, weekStart: string): Status {
@@ -81,33 +122,88 @@ function getMealStatus(dayOfWeek: string, weekStart: string): Status {
   return 'future'
 }
 
+function capitalize(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1)
+}
+
+function dayLabel(item: MealPlanItem): string {
+  return item.applies_all_days ? 'Toute la semaine' : capitalize(item.day_of_week)
+}
+
+function sidesOf(item: MealPlanItem): string {
+  return [...item.meal_compositions]
+    .sort((a, b) => a.sort_order - b.sort_order)
+    .map((c) => c.recipes?.name)
+    .filter(Boolean)
+    .join(' · ')
+}
+
+function formatTime(t: string | undefined): string | null {
+  return t ? t.replace(':', 'h') : null
+}
+
+// Vignette photo (ou icône du type de repas).
+function Thumb({ item, size }: { item: MealPlanItem; size: string }) {
+  return (
+    <div className={`relative shrink-0 overflow-hidden rounded-[var(--kkb-radius-sm)] bg-[var(--kkb-coral-light)] ${size}`}>
+      {item.recipes?.photo_url ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={item.recipes.photo_url} alt="" className="absolute inset-0 h-full w-full object-cover" />
+      ) : (
+        <span className="flex h-full w-full items-center justify-center">
+          <MealTypeIcon type={item.meal_type} className="h-6 w-6 text-[var(--kkb-coral)]" />
+        </span>
+      )}
+    </div>
+  )
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function FeedbackPage() {
+  const [family,    setFamily]    = useState<FamilyResponse | null>(null)
   const [plan,      setPlan]      = useState<MealPlan | null>(null)
   const [feedbacks, setFeedbacks] = useState<FeedbackEntry[]>([])
+  const [history,   setHistory]   = useState<HistoryEntry[]>([])
   const [loading,   setLoading]   = useState(true)
 
-  // Bottom sheet state
-  const [sheetItem,     setSheetItem]     = useState<MealPlanItem | null>(null)
-  const [sheetRating,   setSheetRating]   = useState<Rating | null>(null)
-  const [templates,     setTemplates]     = useState<Template[]>([])
-  const [selectedTpl,   setSelectedTpl]   = useState<string | null>(null)
-  const [customMsg,     setCustomMsg]     = useState('')
-  const [writingCustom, setWritingCustom] = useState(false)
-  const [submitting,       setSubmitting]       = useState(false)
+  // Repas en cours de notation (carte mise en avant)
+  const [focusId,     setFocusId]     = useState<string | null>(null)
+  const [rating,      setRating]      = useState<Rating | null>(null)
+  const [templates,   setTemplates]   = useState<Template[]>([])
+  const [selectedTpl, setSelectedTpl] = useState<string | null>(null)
+  const [customMsg,   setCustomMsg]   = useState('')
+  const [submitting,  setSubmitting]  = useState(false)
+  const [showAllCatchUp, setShowAllCatchUp] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const planRes = await fetch('/api/meal-plans')
+      // Menu de la famille (celui de la planificatrice du cercle actif) ; pour
+      // une planificatrice, c'est le sien. Ne crée jamais de menu.
+      const [familyRes, historyRes] = await Promise.all([
+        fetch(`/api/meal-plans/family?week=${mondayISO()}`).then(r => (r.ok ? r.json() : null)),
+        fetch('/api/users/me/feedback?limit=40').then(r => (r.ok ? r.json() : [])),
+      ])
+      const fam: FamilyResponse | null = familyRes
+      setFamily(fam)
+      setHistory(Array.isArray(historyRes) ? historyRes : [])
 
-      const planData: MealPlan | null = planRes.ok ? await planRes.json() : null
-      if (!planData?.id) { setPlan(null); setLoading(false); return }
-      setPlan(planData)
+      // Sans cercle : son propre menu, comme avant.
+      const planData: MealPlan | null = fam?.role
+        ? (fam.plan ?? null)
+        : await fetch('/api/meal-plans').then(r => (r.ok ? r.json() : null)).catch(() => null)
+      setPlan(planData?.id ? planData : null)
+      if (!planData?.id) return
 
-      const fbRes = await fetch(`/api/meal-plans/${planData.id}/feedback`)
+      // Planificatrice : tous les avis de la famille. Membre : les siens.
+      const fbUrl = fam?.role === 'membre'
+        ? `/api/users/me/feedback?plan=${planData.id}`
+        : `/api/meal-plans/${planData.id}/feedback`
+      const fbRes = await fetch(fbUrl)
       if (fbRes.ok) setFeedbacks(await fbRes.json())
+    } catch {
+      toast.error('Erreur de connexion')
     } finally {
       setLoading(false)
     }
@@ -115,281 +211,435 @@ export default function FeedbackPage() {
 
   useEffect(() => { void load() }, [load])
 
-  async function openSheet(item: MealPlanItem) {
-    setSheetItem(item)
-    setSheetRating(null)
+  function focus(item: MealPlanItem) {
+    setFocusId(item.id)
+    setRating(null)
     setSelectedTpl(null)
     setCustomMsg('')
-    setWritingCustom(false)
+    setTemplates([])
   }
 
-  async function selectRating(rating: Rating) {
-    setSheetRating(rating)
+  async function selectRating(value: Rating) {
+    setRating(value)
     setSelectedTpl(null)
-    setCustomMsg('')
-    setWritingCustom(false)
-    const res = await fetch(`/api/feedback-templates?rating=${rating}`)
+    const res = await fetch(`/api/feedback-templates?rating=${value}`)
     if (res.ok) setTemplates(await res.json())
   }
 
-  async function submitFeedback() {
-    if (!sheetItem || !sheetRating) return
+  async function submitFeedback(item: MealPlanItem) {
+    if (!rating) return
     setSubmitting(true)
     try {
-      const res = await fetch(`/api/meal-plan-items/${sheetItem.id}/feedback`, {
+      const res = await fetch(`/api/meal-plan-items/${item.id}/feedback`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          rating:          sheetRating,
-          template_id:     writingCustom ? undefined : (selectedTpl ?? undefined),
-          custom_message:  writingCustom ? customMsg.trim() : undefined,
+          rating,
+          template_id:    selectedTpl ?? undefined,
+          custom_message: customMsg.trim() || undefined,
         }),
       })
       if (res.ok) {
+        toast.success(planner ? `Avis envoyé à ${planner}` : 'Avis enregistré, merci !')
+        setFocusId(null)
+        setRating(null)
+        setSelectedTpl(null)
+        setCustomMsg('')
         await load()
-        setSheetItem(null)
+      } else {
+        const d = await res.json().catch(() => ({}))
+        toast.error(d.error ?? 'Impossible d\'enregistrer ton avis')
       }
+    } catch {
+      toast.error('Erreur de connexion')
     } finally {
       setSubmitting(false)
     }
   }
 
-  // Trier les items : lundi→dimanche puis petit-dej→diner
-  const sortedItems = plan
-    ? [...plan.meal_plan_items].sort((a, b) => {
-        const dayDiff = DAY_ORDER.indexOf(a.day_of_week) - DAY_ORDER.indexOf(b.day_of_week)
-        if (dayDiff !== 0) return dayDiff
-        return MEAL_ORDER.indexOf(a.meal_type) - MEAL_ORDER.indexOf(b.meal_type)
-      })
-    : []
-
-  const feedbackMap = new Map(feedbacks.map(f => [f.meal_plan_item_id, f]))
+  const planner   = family?.role === 'membre' ? family.planner_name : null
+  const cook      = planner ?? 'la cuisine du foyer'
+  const mealTimes = family?.meal_times ?? {}
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="h-5 w-5 border-2 border-[var(--kkb-coral)] border-t-transparent rounded-full animate-spin" />
+      <div className="mx-auto max-w-lg space-y-3 px-4 py-6 lg:max-w-[1200px] lg:px-8" aria-busy="true">
+        <SkeletonCard variant="list" />
+        <SkeletonCard variant="recipe" />
+        <SkeletonCard variant="list" />
+      </div>
+    )
+  }
+
+  // Historique de mes avis (hors menu affiché), regroupé par semaine.
+  const currentItemIds = new Set(plan?.meal_plan_items.map(i => i.id) ?? [])
+  const pastHistory    = history.filter(h => !currentItemIds.has(h.meal_plan_item_id))
+  const historySection = pastHistory.length > 0 && (
+    <section className="space-y-2">
+      <p className={`flex items-center gap-1.5 ${SECTION_LABEL} text-[var(--kkb-text-tertiary)]`}>
+        <History className="h-3.5 w-3.5" /> Mon historique d&apos;avis
+      </p>
+      {pastHistory.map(h => (
+        <div key={h.id} className="flex gap-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white p-3">
+          <Thumb item={h.item} size="h-12 w-12" />
+          <div className="min-w-0 flex-1">
+            <p className="font-quicksand text-[11px] font-semibold text-[var(--kkb-text-tertiary)]">
+              {h.week_start ? `Semaine du ${formatWeekRange(h.week_start)} · ` : ''}{dayLabel(h.item)} · {MEAL_LABEL[h.item.meal_type]}
+            </p>
+            <p className="flex items-center gap-1.5 font-dosis text-sm font-semibold text-[var(--kkb-text-primary)]">
+              <span className="text-base leading-none">{RATING_EMOJI[h.rating]}</span>
+              <span className="truncate">{composedName(h.item.recipes?.name, h.item.meal_compositions)}</span>
+            </p>
+            {h.message && <p className="mt-0.5 font-quicksand text-xs italic text-[var(--kkb-text-secondary)]">&ldquo;{h.message}&rdquo;</p>}
+          </div>
+        </div>
+      ))}
+    </section>
+  )
+
+  // Membre désactivé : plus de notation, seulement l'historique.
+  if (family?.role === 'membre' && !family.is_active) {
+    return (
+      <div className="mx-auto max-w-lg space-y-6 px-4 pb-8 pt-5 lg:max-w-2xl lg:pt-2">
+        <h1 className="font-dosis text-[22px] font-extrabold text-[var(--kkb-text-primary)]">Mes avis sur les repas</h1>
+        <div className="rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white">
+          <EmptyState
+            icon={Lock}
+            title="Ton accès au cercle est désactivé"
+            description="Tu ne peux plus noter les repas de ce cercle, mais tu retrouves ci-dessous l'historique de tes avis."
+            className="py-8"
+          />
+        </div>
+        {historySection || (
+          <p className="text-center font-quicksand text-sm italic text-[var(--kkb-text-tertiary)]">Aucun avis donné pour l&apos;instant.</p>
+        )}
       </div>
     )
   }
 
   if (!plan) {
     return (
-      <div className="px-4 py-10 text-center">
-        <Star className="h-8 w-8 text-[var(--kkb-text-tertiary)] mx-auto mb-2" />
-        <p className="font-dosis font-semibold text-base text-[var(--kkb-text-primary)]">Aucun menu cette semaine</p>
-        <p className="text-xs font-quicksand text-[var(--kkb-text-tertiary)] mt-1">Générez un menu pour pouvoir noter vos repas.</p>
+      <div className="mx-auto max-w-lg space-y-6 px-4 pb-8 pt-5 lg:max-w-2xl lg:pt-2">
+        <EmptyState
+          icon={Star}
+          title="Aucun menu cette semaine"
+          description={planner
+            ? `Dès que ${planner} aura préparé le menu, tu pourras donner ton avis sur chaque repas.`
+            : 'Les repas de la semaine apparaîtront ici pour que tu puisses donner ton avis.'}
+        />
+        {historySection}
       </div>
     )
   }
 
+  // Trier les items : lundi→dimanche puis petit-dej→diner
+  const sortedItems = [...plan.meal_plan_items].sort((a, b) => {
+    const dayDiff = DAY_ORDER.indexOf(a.day_of_week) - DAY_ORDER.indexOf(b.day_of_week)
+    if (dayDiff !== 0) return dayDiff
+    return MEAL_ORDER.indexOf(a.meal_type) - MEAL_ORDER.indexOf(b.meal_type)
+  })
+
+  const feedbackMap = new Map(feedbacks.map(f => [f.meal_plan_item_id, f]))
+  const statusOf    = (item: MealPlanItem) => getMealStatus(item.applies_all_days ? 'lundi' : item.day_of_week, plan.week_start)
+
+  const rateable = sortedItems.filter(i => statusOf(i) !== 'future')
+  const rated    = rateable.filter(i => feedbackMap.has(i.id))
+  const toRate   = rateable.filter(i => !feedbackMap.has(i.id))
+  const upcoming = sortedItems.filter(i => statusOf(i) === 'future')
+
+  // Carte mise en avant : le repas choisi, sinon le premier du jour à noter,
+  // sinon le plus ancien en attente.
+  const featured =
+    toRate.find(i => i.id === focusId) ??
+    toRate.find(i => statusOf(i) === 'today') ??
+    toRate[0] ??
+    null
+  const catchUp = toRate.filter(i => i.id !== featured?.id)
+
+  const pct = rateable.length > 0 ? Math.round((rated.length / rateable.length) * 100) : 0
+  const featuredTime = featured ? formatTime(mealTimes[featured.meal_type]) : null
+
+  const progressCard = rateable.length > 0 && (
+    <div className="flex items-center gap-4 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white p-4">
+      <div
+        className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-full"
+        style={{ background: `conic-gradient(var(--kkb-coral) ${pct * 3.6}deg, var(--kkb-bg) 0deg)` }}
+        aria-label={`${pct} % des repas notés`}
+      >
+        <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white font-dosis text-sm font-extrabold text-[var(--kkb-coral)]">{pct}%</span>
+      </div>
+      <div className="min-w-0">
+        <p className="font-quicksand text-sm font-bold text-[var(--kkb-text-primary)]">{rated.length} repas sur {rateable.length} notés</p>
+        <p className="font-quicksand text-xs text-[var(--kkb-text-secondary)]">
+          {rated.length > 0 ? 'Merci ! Tes retours aident à préparer le marché.' : 'Note les repas déjà servis cette semaine.'}
+        </p>
+      </div>
+    </div>
+  )
+
   return (
-    <div className="min-h-screen bg-[var(--kkb-bg)]">
-      <div className="max-w-lg mx-auto px-4 py-5 space-y-3">
-        {/* Titre */}
-        <div className="mb-1">
-          <p className="text-[11px] font-quicksand font-bold uppercase tracking-wider text-[var(--kkb-text-tertiary)]">
-            Avis post-repas
+    <div className="mx-auto max-w-lg px-4 pb-8 pt-5 lg:max-w-[1200px] lg:px-8 lg:pt-2">
+      {/* En-tête */}
+      <header className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="space-y-2">
+          <p className="font-quicksand text-xs font-semibold text-[var(--kkb-text-tertiary)]">Semaine du {formatWeekRange(plan.week_start)}</p>
+          <h1 className="font-dosis text-[22px] font-extrabold text-[var(--kkb-text-primary)] lg:text-3xl">Mes avis sur les repas</h1>
+          <p className="max-w-2xl font-quicksand text-sm text-[var(--kkb-text-secondary)]">
+            Pour guider {cook} avec amour sur les épices, le dosage du sel et les portions du foyer, en toute sérénité.
           </p>
-          <h1 className="font-dosis font-bold text-xl text-[var(--kkb-text-primary)]">
-            Semaine du {new Date(plan.week_start + 'T00:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}
-          </h1>
         </div>
+        <div className="lg:w-[380px] lg:shrink-0">{progressCard}</div>
+      </header>
 
-        {sortedItems.map(item => {
-          const status   = getMealStatus(item.applies_all_days ? 'lundi' : item.day_of_week, plan.week_start)
-          const feedback = feedbackMap.get(item.id)
-          const isToday  = status === 'today'
+      <div className="space-y-6 lg:grid lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start lg:gap-8 lg:space-y-0">
+        {/* Colonne principale : à noter */}
+        <div className="space-y-6">
+          {featured ? (
+            <section className="space-y-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className={`${SECTION_LABEL} text-[var(--kkb-coral)]`}>
+                  {statusOf(featured) === 'today' ? 'À noter aujourd\'hui' : 'À noter'}
+                </p>
+                <span className="inline-flex items-center gap-1.5 rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-coral-light)] px-2.5 py-1 font-quicksand text-xs font-bold text-[var(--kkb-coral)]">
+                  <MealTypeIcon type={featured.meal_type} className="h-3.5 w-3.5" />
+                  {dayLabel(featured)} · {MEAL_LABEL[featured.meal_type]}{featuredTime ? ` · ${featuredTime}` : ''}
+                </span>
+              </div>
 
-          return (
-            <div
-              key={item.id}
-              className={[
-                'border rounded-2xl p-3.5 transition-all',
-                isToday
-                  ? 'bg-[var(--kkb-coral-light)] border-[var(--kkb-coral)]/30'
-                  : 'bg-white border-[var(--kkb-border-light)]',
-                status === 'future' ? 'opacity-60' : '',
-              ].join(' ')}
-            >
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex items-start gap-2.5 flex-1 min-w-0">
-                  <MealTypeIcon type={item.meal_type} className="h-5 w-5 mt-0.5 flex-shrink-0 text-[var(--kkb-coral)]" />
-                  <div className="flex-1 min-w-0">
-                    {isToday && (
-                      <p className="text-[9px] font-quicksand font-bold uppercase tracking-wider text-[var(--kkb-coral)] mb-0.5">
-                        Aujourd&apos;hui
+              <article className="overflow-hidden rounded-[var(--kkb-radius-card)] border-2 border-[var(--kkb-coral)] bg-white shadow-[var(--kkb-shadow-card)]">
+                {/* Photo + nom */}
+                <div className="relative h-[200px] bg-gradient-to-br from-[var(--kkb-coral)] to-[var(--kkb-teal)] lg:h-[300px]">
+                  {featured.recipes?.photo_url && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={featured.recipes.photo_url} alt="" className="absolute inset-0 h-full w-full object-cover" />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+                  <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-[var(--kkb-radius-pill)] bg-white/90 px-2.5 py-1 font-quicksand text-[11px] font-bold text-[var(--kkb-text-primary)]">
+                    <MealTypeIcon type={featured.meal_type} className="h-3.5 w-3.5 text-[var(--kkb-coral)]" />
+                    {statusOf(featured) === 'today'
+                      ? `Servi aujourd'hui${featuredTime ? ` à ${featuredTime}` : ''}`
+                      : `Servi ${featured.applies_all_days ? 'cette semaine' : featured.day_of_week}`}
+                  </span>
+                  <div className="absolute bottom-3 left-4 right-4">
+                    <p className="font-dosis text-lg font-bold text-white lg:text-3xl">{featured.recipes?.name ?? composedName(null, featured.meal_compositions)}</p>
+                    {sidesOf(featured) && <p className="font-quicksand text-[13px] text-white/80">Accompagnements : {sidesOf(featured)}</p>}
+                  </div>
+                </div>
+
+                <div className="space-y-4 p-4 lg:p-6">
+                  <div>
+                    <p className="font-dosis text-base font-semibold text-[var(--kkb-text-primary)] lg:text-xl">Comment était ce repas pour toi ?</p>
+                    <p className="font-quicksand text-[13px] text-[var(--kkb-text-secondary)]">Un ressenti sincère et doux pour parfaire la prochaine recette</p>
+                  </div>
+
+                  {/* Réactions */}
+                  <div className="grid grid-cols-3 gap-2">
+                    {RATING_CONFIG.map(r => {
+                      const active = rating === r.value
+                      return (
+                        <button
+                          key={r.value}
+                          type="button"
+                          onClick={() => { if (featured.id !== focusId) setFocusId(featured.id); void selectRating(r.value) }}
+                          aria-pressed={active}
+                          className="flex flex-col items-center gap-1 rounded-[var(--kkb-radius-sm)] border-2 px-1 py-2.5 transition-colors lg:py-4"
+                          style={active
+                            ? { backgroundColor: r.light, borderColor: r.tone }
+                            : { backgroundColor: 'var(--kkb-surface)', borderColor: 'var(--kkb-border-light)' }}
+                        >
+                          <span className={`text-2xl leading-none lg:text-3xl ${active ? 'animate-kkb-react-pop' : ''}`}>{r.emoji}</span>
+                          <span className="font-quicksand text-xs font-bold lg:text-sm" style={{ color: active ? r.tone : 'var(--kkb-text-secondary)' }}>{r.label}</span>
+                          {active && <span className="font-quicksand text-[11px]" style={{ color: r.tone }}>{r.hint}</span>}
+                        </button>
+                      )
+                    })}
+                  </div>
+
+                  {/* Impressions rapides */}
+                  {rating && templates.length > 0 && (
+                    <div className="space-y-2">
+                      <p className={`${SECTION_LABEL} text-[var(--kkb-text-tertiary)]`}>Impressions rapides (optionnel)</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {templates.map(t => {
+                          const active = selectedTpl === t.id
+                          return (
+                            <button
+                              key={t.id}
+                              type="button"
+                              onClick={() => setSelectedTpl(active ? null : t.id)}
+                              aria-pressed={active}
+                              className={`rounded-[var(--kkb-radius-pill)] border px-3 py-1.5 font-quicksand text-xs font-semibold transition-colors ${
+                                active ? CHIP_TONE[rating].active : CHIP_TONE[rating].idle
+                              }`}
+                            >
+                              {t.message}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Petit mot */}
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={customMsg}
+                      onChange={e => setCustomMsg(e.target.value)}
+                      placeholder={`Un petit mot doux ou un conseil pour ${planner ?? 'la cuisine'}`}
+                      aria-label="Commentaire"
+                      className="w-full rounded-[var(--kkb-radius-sm)] border border-[var(--kkb-border)] bg-[var(--kkb-bg)] py-2.5 pl-3 pr-10 font-quicksand text-sm text-[var(--kkb-text-primary)] outline-none placeholder:text-[var(--kkb-text-tertiary)] focus:border-[var(--kkb-coral)]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => toast.info('Bientôt disponible')}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-[var(--kkb-text-tertiary)]"
+                      aria-label="Dicter un message"
+                    >
+                      <Mic className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                    <button
+                      type="button"
+                      onClick={() => void submitFeedback(featured)}
+                      disabled={!rating || submitting}
+                      className="flex w-full items-center justify-center gap-2 rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-coral)] px-8 py-3 font-quicksand text-[15px] font-bold text-white transition-all hover:bg-[var(--kkb-coral-hover)] active:scale-[0.98] disabled:opacity-50 lg:w-auto"
+                    >
+                      {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                      {submitting ? 'Envoi…' : 'Enregistrer mon avis'}
+                    </button>
+                    {planner && (
+                      <p className="flex items-center justify-center gap-1.5 font-quicksand text-xs text-[var(--kkb-text-tertiary)]">
+                        <ShieldCheck className="h-3.5 w-3.5 text-[var(--kkb-teal)]" /> Transmis uniquement à {planner}
                       </p>
                     )}
-                    <p className="text-[10px] font-quicksand font-semibold text-[var(--kkb-text-tertiary)]">
-                      {MEAL_LABEL[item.meal_type]}
-                      {!item.applies_all_days && ` · ${item.day_of_week.charAt(0).toUpperCase() + item.day_of_week.slice(1)}`}
-                    </p>
-                    <p className="font-dosis font-semibold text-sm text-[var(--kkb-text-primary)] truncate">
-                      {composedName(item.recipes?.name, item.meal_compositions)}
-                    </p>
                   </div>
                 </div>
-
-                {/* État côté droit */}
-                {status === 'future' ? (
-                  <div className="flex items-center gap-1 flex-shrink-0">
-                    <Clock className="h-3.5 w-3.5 text-[var(--kkb-text-tertiary)]" />
-                    <span className="text-[10px] font-quicksand text-[var(--kkb-text-tertiary)]">À venir</span>
-                  </div>
-                ) : feedback ? (
-                  <div className="flex items-center gap-1.5 flex-shrink-0">
-                    <span className="text-lg">{RATING_EMOJI[feedback.rating]}</span>
-                    <CheckCircle className="h-4 w-4 text-[var(--kkb-success)]" />
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => openSheet(item)}
-                    className="flex-shrink-0 flex items-center gap-1.5 bg-[var(--kkb-coral)] text-white text-[11px] font-quicksand font-semibold px-3 py-1.5 rounded-xl"
-                  >
-                    <Star className="h-3.5 w-3.5" />
-                    Noter
-                  </button>
-                )}
-              </div>
-
-              {/* Feedback existant */}
-              {feedback && (
-                <div className="mt-2 pl-9">
-                  {feedback.message && (
-                    <p className="text-xs font-quicksand text-[var(--kkb-text-secondary)] italic">
-                      &ldquo;{feedback.message}&rdquo;
-                    </p>
-                  )}
-                  <p className="text-[10px] font-quicksand text-[var(--kkb-text-tertiary)] mt-0.5">
-                    {feedback.respondent_name} ·{' '}
-                    {formatDistanceToNow(new Date(feedback.created_at), { addSuffix: true, locale: fr })}
-                  </p>
-                </div>
-              )}
+              </article>
+            </section>
+          ) : (
+            <div className="rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white">
+              <EmptyState
+                icon={Check}
+                title={rateable.length > 0 ? 'Tout est noté, merci !' : 'Rien à noter pour l\'instant'}
+                description={rateable.length > 0
+                  ? `Tes avis aident ${cook} à préparer la suite de la semaine.`
+                  : 'Les repas s\'ouvrent à la notation le jour où ils sont servis.'}
+                className="py-8"
+              />
             </div>
-          )
-        })}
-      </div>
+          )}
 
-      {/* Bottom sheet notation */}
-      {sheetItem && (
-        <>
-          <div
-            className="fixed inset-0 bg-black/40 z-40"
-            onClick={() => setSheetItem(null)}
-          />
-          <div className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-3xl p-5 space-y-4 max-h-[85vh] overflow-y-auto">
-            {/* Header sheet */}
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-[10px] font-quicksand font-semibold uppercase tracking-wider text-[var(--kkb-text-tertiary)]">
-                  {MEAL_LABEL[sheetItem.meal_type]}
-                </p>
-                <p className="font-dosis font-bold text-base text-[var(--kkb-text-primary)]">
-                  Comment était {sheetItem.recipes ? composedName(sheetItem.recipes.name, sheetItem.meal_compositions) : 'ce repas'} ?
-                </p>
-              </div>
-              <button onClick={() => setSheetItem(null)} className="p-1 -mr-1 text-[var(--kkb-text-tertiary)]">
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            {/* Boutons réaction */}
-            <div className="flex gap-2">
-              {RATING_CONFIG.map(r => (
+          {/* Repas passés encore à noter */}
+          {catchUp.length > 0 && (
+            <section className="space-y-2">
+              <p className={`${SECTION_LABEL} text-[var(--kkb-text-tertiary)]`}>À rattraper</p>
+              {(showAllCatchUp ? catchUp : catchUp.slice(0, CATCH_UP_SHOWN)).map(item => (
                 <button
-                  key={r.value}
-                  onClick={() => selectRating(r.value)}
-                  aria-label={r.label}
-                  style={sheetRating === r.value ? { backgroundColor: r.bg, borderColor: r.border } : {}}
-                  className={[
-                    'flex-1 flex flex-col items-center gap-1 py-2.5 rounded-xl border text-xs font-quicksand font-medium transition-all',
-                    sheetRating === r.value ? 'border-2' : 'border-[var(--kkb-border-light)] text-[var(--kkb-text-tertiary)]',
-                  ].join(' ')}
+                  key={item.id}
+                  type="button"
+                  onClick={() => focus(item)}
+                  className="flex w-full items-center gap-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white p-3 text-left transition-colors hover:border-[var(--kkb-coral)]"
                 >
-                  <span className="text-xl">{r.emoji}</span>
-                  <span style={sheetRating === r.value ? { color: r.border } : {}}>{r.label}</span>
+                  <MealTypeIcon type={item.meal_type} className="h-5 w-5 shrink-0 text-[var(--kkb-coral)]" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-quicksand text-[11px] font-semibold text-[var(--kkb-text-tertiary)]">{dayLabel(item)} · {MEAL_LABEL[item.meal_type]}</span>
+                    <span className="block truncate font-dosis text-sm font-semibold text-[var(--kkb-text-primary)]">{composedName(item.recipes?.name, item.meal_compositions)}</span>
+                  </span>
+                  <span className="shrink-0 rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-coral)] px-3 py-1 font-quicksand text-[11px] font-bold text-white">Noter</span>
                 </button>
               ))}
-            </div>
+              {catchUp.length > CATCH_UP_SHOWN && (
+                <button
+                  type="button"
+                  onClick={() => setShowAllCatchUp(v => !v)}
+                  className="w-full py-2 font-quicksand text-sm font-bold text-[var(--kkb-teal)]"
+                >
+                  {showAllCatchUp ? 'Réduire' : `Voir les ${catchUp.length - CATCH_UP_SHOWN} autres`}
+                </button>
+              )}
+            </section>
+          )}
+        </div>
 
-            {/* Messages prêts */}
-            {sheetRating && (
-              <div>
-                <p className="text-[10px] font-quicksand font-semibold uppercase tracking-wider text-[var(--kkb-text-tertiary)] mb-2">
-                  Choisissez un message
-                </p>
-                <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-                  {templates.map(t => (
-                    <button
-                      key={t.id}
-                      onClick={() => { setSelectedTpl(t.id); setWritingCustom(false); setCustomMsg('') }}
-                      className={[
-                        'flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-quicksand font-medium border transition-all whitespace-nowrap',
-                        selectedTpl === t.id && !writingCustom
-                          ? 'bg-[var(--kkb-coral)] text-white border-[var(--kkb-coral)]'
-                          : 'bg-white text-[var(--kkb-text-secondary)] border-[var(--kkb-border-light)]',
-                      ].join(' ')}
-                    >
-                      {t.message}
-                    </button>
-                  ))}
-
-                  {/* Pill "Écrire mon propre message…" */}
-                  <button
-                    onClick={() => { setWritingCustom(true); setSelectedTpl(null) }}
-                    className={[
-                      'flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-quicksand font-medium border border-dashed transition-all whitespace-nowrap',
-                      writingCustom
-                        ? 'bg-[var(--kkb-warning-light)] text-[var(--kkb-warning)] border-[var(--kkb-warning)]'
-                        : 'text-[var(--kkb-text-tertiary)] border-[var(--kkb-text-tertiary)]',
-                    ].join(' ')}
-                  >
-                    <PenLine className="h-3 w-3" />
-                    Écrire mon propre message…
-                  </button>
-                </div>
-
-                {/* Champ texte libre */}
-                {writingCustom && (
-                  <textarea
-                    value={customMsg}
-                    onChange={e => setCustomMsg(e.target.value)}
-                    placeholder="Votre message personnalisé…"
-                    rows={2}
-                    className="w-full mt-2 text-sm font-quicksand text-[var(--kkb-text-primary)] bg-[var(--kkb-bg)] border border-[var(--kkb-border-light)] rounded-xl px-3 py-2 outline-none placeholder:text-[var(--kkb-text-tertiary)] resize-none"
-                  />
-                )}
-
-                {/* Aperçu du message sélectionné */}
-                {selectedTpl && !writingCustom && (
-                  <div className="mt-2 bg-[var(--kkb-bg)] border border-[var(--kkb-border-light)] rounded-xl px-3 py-2">
-                    <p className="text-xs font-quicksand text-[var(--kkb-text-secondary)]">
-                      {templates.find(t => t.id === selectedTpl)?.message}
-                    </p>
-                  </div>
-                )}
+        {/* Colonne latérale : déjà notés, à venir, historique */}
+        <div className="space-y-6">
+          {rated.length > 0 && (
+            <section className="space-y-2">
+              <div className="flex items-center gap-2">
+                <p className={`${SECTION_LABEL} text-[var(--kkb-text-tertiary)]`}>Déjà notés cette semaine</p>
+                <span className="rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-teal-light)] px-2 py-0.5 font-quicksand text-[11px] font-bold text-[var(--kkb-teal)]">
+                  {rated.length} repas
+                </span>
               </div>
-            )}
+              {rated.map(item => {
+                const fb = feedbackMap.get(item.id)!
+                return (
+                  <div key={item.id} className="relative flex gap-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white p-3">
+                    <Thumb item={item} size="h-16 w-16" />
+                    <div className="min-w-0 flex-1 pr-16">
+                      <span className="inline-flex items-center gap-1 rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-bg)] px-2 py-0.5 font-quicksand text-[10px] font-bold text-[var(--kkb-text-secondary)]">
+                        {dayLabel(item)} · {MEAL_LABEL[item.meal_type]}
+                      </span>
+                      <p className="mt-1 flex items-center gap-1.5 font-dosis text-sm font-semibold text-[var(--kkb-text-primary)]">
+                        <span className="text-base leading-none">{RATING_EMOJI[fb.rating]}</span>
+                        <span className="truncate">{composedName(item.recipes?.name, item.meal_compositions)}</span>
+                      </p>
+                      {fb.message && (
+                        <p className="mt-1 font-quicksand text-[13px] italic text-[var(--kkb-text-secondary)]">&ldquo;{fb.message}&rdquo;</p>
+                      )}
+                    </div>
+                    <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-success-light)] px-2 py-0.5 font-quicksand text-[10px] font-bold text-[var(--kkb-success)]">
+                      Transmis <Check className="h-3 w-3" />
+                    </span>
+                  </div>
+                )
+              })}
+            </section>
+          )}
 
-            {/* Bouton valider */}
-            <button
-              onClick={submitFeedback}
-              disabled={!sheetRating || submitting}
-              className={[
-                'w-full flex items-center justify-center gap-2 py-3 rounded-2xl font-dosis font-bold text-sm transition-all',
-                sheetRating
-                  ? 'bg-[var(--kkb-coral)] text-white'
-                  : 'bg-[var(--kkb-border-light)] text-[var(--kkb-text-tertiary)] cursor-not-allowed',
-              ].join(' ')}
-            >
-              <Send className="h-4 w-4" />
-              {submitting ? 'Envoi…' : 'Valider mon avis'}
-            </button>
-          </div>
-        </>
-      )}
+          {upcoming.length > 0 && (
+            <section className="space-y-2">
+              <div className="flex items-baseline justify-between">
+                <p className={`${SECTION_LABEL} text-[var(--kkb-text-tertiary)]`}>Repas à venir</p>
+                <p className="font-quicksand text-xs text-[var(--kkb-text-tertiary)]">À évaluer plus tard</p>
+              </div>
+              <div className="pointer-events-none space-y-2 opacity-50" aria-disabled="true">
+                {upcoming.map(item => {
+                  const time = formatTime(mealTimes[item.meal_type])
+                  return (
+                    <div key={item.id} className="flex items-center gap-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white p-3">
+                      <Lock className="h-4 w-4 shrink-0 text-[var(--kkb-text-tertiary)]" />
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate font-quicksand text-sm font-semibold text-[var(--kkb-text-primary)]">
+                          {composedName(item.recipes?.name, item.meal_compositions)}
+                        </span>
+                        <span className="block font-quicksand text-[11px] text-[var(--kkb-text-tertiary)]">
+                          {dayLabel(item)} · {MEAL_LABEL[item.meal_type]}{time ? ` (${time})` : ''}
+                        </span>
+                      </span>
+                      <span className="shrink-0 rounded-[var(--kkb-radius-pill)] border border-[var(--kkb-border)] bg-[var(--kkb-bg)] px-2 py-0.5 font-quicksand text-[11px] font-semibold text-[var(--kkb-text-tertiary)]">
+                        Dès {item.day_of_week}
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
+            </section>
+          )}
+
+          <footer className="flex items-start gap-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white p-4">
+            <Heart className="mt-0.5 h-5 w-5 shrink-0 text-[var(--kkb-coral)]" />
+            <p className="font-quicksand text-[13px] text-[var(--kkb-text-secondary)]">
+              Chaque retour aide {cook} à doser les condiments, éviter le gaspillage et dresser la liste du grand marché du samedi avec l&apos;esprit léger.
+            </p>
+          </footer>
+
+          {historySection}
+        </div>
+      </div>
     </div>
   )
 }

@@ -45,7 +45,7 @@ export async function GET(
   const { data: planData, error } = await supabase
     .from('meal_plans')
     .select(`
-      id, week_start,
+      id, week_start, circle_id,
       meal_plan_items (
         id, day_of_week, meal_type, applies_all_days, servings,
         recipes ( id, name, photo_url, description, prep_time_min, categories ( icon, name ) ),
@@ -59,12 +59,14 @@ export async function GET(
     return Response.json({ error: 'Sondage introuvable' }, { status: 404 })
   }
 
-  // Nom de la planificatrice + nom de famille — meal_plans.circle_id n'est
-  // quasiment jamais renseigne (pas de notion de "cercle actif" dans l'app),
-  // donc on remonte le premier cercle du proprietaire du plan plutot que de
-  // dependre de cette colonne, meme pattern que getViewer() (app/(app)/layout.tsx).
-  const [{ data: owner }, { data: membership }] = await Promise.all([
+  // Nom de la planificatrice + nom du cercle du menu (meal_plans.circle_id,
+  // renseigné depuis la migration w) ; à défaut, le premier cercle de
+  // l'auteur du menu.
+  const [{ data: owner }, { data: circle }, { data: membership }] = await Promise.all([
     supabase.from('users').select('display_name').eq('id', plan.user_id).maybeSingle(),
+    planData.circle_id
+      ? supabase.from('family_circles').select('name').eq('id', planData.circle_id).maybeSingle()
+      : Promise.resolve({ data: null }),
     supabase
       .from('family_circle_members')
       .select('family_circles ( name )')
@@ -75,7 +77,7 @@ export async function GET(
   ])
 
   const planner_name = owner?.display_name ?? null
-  const family_name  = (membership?.family_circles as { name: string } | null)?.name ?? null
+  const family_name  = circle?.name ?? (membership?.family_circles as { name: string } | null)?.name ?? null
 
   const items = ((planData.meal_plan_items ?? []) as unknown as RawItem[]).map(i => ({
     id:                i.id,
@@ -110,16 +112,19 @@ export async function GET(
     answers:        { item_id: string; reaction: string; comment: string | null }[]
   } | null = null
 
-  const RESPONSE_SELECT = 'id, respondent_name, survey_answers ( meal_plan_item_id, reaction, comment )'
-  const responseId = new URL(request.url).searchParams.get('response_id')
-  let response = responseId
-    ? (await supabase.from('survey_responses').select(RESPONSE_SELECT).eq('id', responseId).eq('meal_plan_id', plan.id).maybeSingle()).data
-    : null
+  const RESPONSE_SELECT = 'id, respondent_name, user_id, survey_answers ( meal_plan_item_id, reaction, comment )'
+  const { data: { user } } = await (await createClient()).auth.getUser()
 
-  if (!response) {
-    const { data: { user } } = await (await createClient()).auth.getUser()
-    if (user) {
-      response = (await supabase
+  // Visiteur connecté : son nom vient de son profil (plus de saisie), et sa
+  // réponse est celle rattachée à son compte en priorité.
+  let viewer: { display_name: string } | null = null
+  if (user) {
+    const { data: profile } = await supabase.from('users').select('display_name').eq('id', user.id).maybeSingle()
+    viewer = { display_name: profile?.display_name?.trim() || user.email?.split('@')[0] || '' }
+  }
+
+  let response = user
+    ? (await supabase
         .from('survey_responses')
         .select(RESPONSE_SELECT)
         .eq('meal_plan_id', plan.id)
@@ -127,7 +132,13 @@ export async function GET(
         .order('created_at')
         .limit(1)
         .maybeSingle()).data
-    }
+    : null
+
+  const responseId = new URL(request.url).searchParams.get('response_id')
+  if (!response && responseId) {
+    const byId = (await supabase.from('survey_responses').select(RESPONSE_SELECT).eq('id', responseId).eq('meal_plan_id', plan.id).maybeSingle()).data
+    // Réponse d'un autre compte (appareil partagé) : on ne la reprend pas.
+    if (byId && (!byId.user_id || byId.user_id === user?.id)) response = byId
   }
 
   if (response) {
@@ -147,5 +158,6 @@ export async function GET(
     plan: { id: planData.id, week_start: planData.week_start, planner_name, family_name },
     items,
     existing_response,
+    viewer,
   })
 }

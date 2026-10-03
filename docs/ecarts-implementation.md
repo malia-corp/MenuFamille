@@ -39,6 +39,8 @@ Ce fichier trace les cas où le code réel diverge de ce qu'un prompt de sprint 
 
 **Décision** : reporté à un futur "sprint polish" (UI de sélection de cercle). Une fois cette UI construite, elle n'aura qu'à choisir quel cercle afficher/cibler — aucune des API listées ci-dessus n'a besoin d'être modifiée pour ça.
 
+**Mise à jour (sprint 4, 3 octobre 2026) — résolu côté affichage** : colonne `users.active_circle_id` (migration `u_users_active_circle`), choisie via `PUT /api/circles/active` et le sélecteur avec recherche de `/circle` (`components/circle/circle-switcher.tsx`). Résolution unique dans `lib/utils/active-circle.ts` (cercle choisi s'il en est toujours membre, sinon le premier rejoint), utilisée par le layout (en-tête, rôle, navigation), `GET /api/circles` (`active_circle_id`), l'accueil et le profil. Créer ou rejoindre un cercle le rend actif. **Menus par cercle** (migration `w_meal_plans_per_circle`) : `meal_plans.circle_id` est renseigné à la création (cercle actif) et rattrapé pour les menus existants ; unicité par (auteur, cercle, semaine). Accueil, menu de la semaine, planification, génération (allergènes du cercle actif), dernier menu partagé et sondage suivent le cercle actif.
+
 ---
 
 ## 2. Liste de courses — schéma présent en base, aucune route ni UI

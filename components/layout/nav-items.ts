@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
-import { Home, CalendarDays, BookOpen, Users, MessageSquare } from 'lucide-react'
+import { Home, CalendarDays, BookOpen, Users, MessageSquare, Vote } from 'lucide-react'
 
 export type Role = 'planificatrice' | 'membre' | null
 
@@ -21,12 +21,18 @@ const TAIL: NavItem[] = [
   { href: '/circle', icon: Users, label: 'Cercle' },
 ]
 
-// Planificatrice : Recettes. Membre : Avis (retours post-repas).
+// Planificatrice : Menu + Recettes. Membre : Votes + Avis — il ne planifie
+// pas : son menu de la semaine est sur l'accueil (lecture seule).
 export function navItemsForRole(role: Role): NavItem[] {
-  const middle: NavItem = role === 'membre'
-    ? { href: '/feedback', icon: MessageSquare, label: 'Avis' }
-    : { href: '/recipes',  icon: BookOpen,      label: 'Recettes' }
-  return [...HEAD, middle, ...TAIL]
+  if (role === 'membre') {
+    return [
+      HEAD[0],
+      { href: '/votes/results/member', icon: Vote,          label: 'Votes' },
+      { href: '/feedback',             icon: MessageSquare, label: 'Avis' },
+      ...TAIL,
+    ]
+  }
+  return [...HEAD, { href: '/recipes', icon: BookOpen, label: 'Recettes' }, ...TAIL]
 }
 
 export function isNavItemActive(pathname: string, href: string): boolean {

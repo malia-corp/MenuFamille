@@ -46,5 +46,8 @@ export async function POST(request: Request) {
 
   if (insertError) return Response.json({ error: insertError.message }, { status: 500 })
 
+  // Le cercle rejoint devient le cercle affiché.
+  await supabase.from('users').update({ active_circle_id: circle.id }).eq('id', user.id)
+
   return Response.json({ circle })
 }

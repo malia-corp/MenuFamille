@@ -42,6 +42,7 @@ export type Database = {
         Row: {
           circle_id: string
           id: string
+          is_active: boolean
           joined_at: string
           role: Database["public"]["Enums"]["circle_role_enum"]
           user_id: string
@@ -49,6 +50,7 @@ export type Database = {
         Insert: {
           circle_id: string
           id?: string
+          is_active?: boolean
           joined_at?: string
           role?: Database["public"]["Enums"]["circle_role_enum"]
           user_id: string
@@ -56,6 +58,7 @@ export type Database = {
         Update: {
           circle_id?: string
           id?: string
+          is_active?: boolean
           joined_at?: string
           role?: Database["public"]["Enums"]["circle_role_enum"]
           user_id?: string
@@ -1024,6 +1027,7 @@ export type Database = {
       }
       users: {
         Row: {
+          active_circle_id: string | null
           created_at: string
           dietary_prefs: Json
           display_name: string
@@ -1033,6 +1037,7 @@ export type Database = {
           preferences: Json
         }
         Insert: {
+          active_circle_id?: string | null
           created_at?: string
           dietary_prefs?: Json
           display_name: string
@@ -1042,6 +1047,7 @@ export type Database = {
           preferences?: Json
         }
         Update: {
+          active_circle_id?: string | null
           created_at?: string
           dietary_prefs?: Json
           display_name?: string
@@ -1050,13 +1056,25 @@ export type Database = {
           id?: string
           preferences?: Json
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "users_active_circle_id_fkey"
+            columns: ["active_circle_id"]
+            isOneToOne: false
+            referencedRelation: "family_circles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      is_active_circle_member: {
+        Args: { p_circle_id: string; p_user_id: string }
+        Returns: boolean
+      }
       is_circle_member: {
         Args: { p_circle_id: string; p_user_id: string }
         Returns: boolean

@@ -14,11 +14,12 @@ import { WeekDayPicker } from '@/components/home/week-day-picker'
 import { UpcomingCarousel, type UpcomingDay } from '@/components/home/upcoming-carousel'
 import { UpcomingGrid, type UpcomingGridDay } from '@/components/home/upcoming-grid'
 import { HarmonyWidget } from '@/components/home/harmony-widget'
-import { MemberResultsCard } from '@/components/home/member-results-card'
+import { MemberHome } from '@/components/home/member-home'
 import { TipCard } from '@/components/home/tip-card'
 import type { ChipItem } from '@/components/home/composition-carousel'
 import { EmptyState } from '@/components/ui/empty-state'
 import { SkeletonCard } from '@/components/ui/skeleton-card'
+import { pickActiveCircle } from '@/lib/utils/active-circle'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -141,7 +142,7 @@ export default function HomePage() {
       setConfigs(Array.isArray(configRes) ? configRes : [])
       setPlan(planRes?.id ? planRes : null)
 
-      const circle = circlesRes?.data?.[0]
+      const circle = pickActiveCircle<{ id: string; my_role: string; family_circle_members?: unknown[] }>(circlesRes)
       setMemberCount(circle?.family_circle_members?.length ?? 1)
       setIsMember(circle?.my_role === 'membre')
 
@@ -360,6 +361,9 @@ export default function HomePage() {
     )
   }
 
+  // Membre (ne planifie pas) : accueil dédié sur le menu de la famille.
+  if (isMember) return <MemberHome firstName={firstName} />
+
   return (
     <>
     <div className="max-w-sm mx-auto px-4 pb-40 space-y-6 lg:hidden">
@@ -370,8 +374,6 @@ export default function HomePage() {
         </h1>
         <p className="text-kkb-body text-[var(--kkb-text-secondary)]">Prête pour une nouvelle semaine de délices ?</p>
       </section>
-
-      {isMember && <MemberResultsCard />}
 
       {/* Sélecteur de semaine */}
       <section className="space-y-2">
@@ -411,7 +413,7 @@ export default function HomePage() {
         </button>
         <button
           type="button"
-          onClick={() => router.push('/plan/configure')}
+          onClick={() => router.push('/settings/meal-config')}
           className="border border-[var(--kkb-border)] bg-[var(--kkb-bg)]/70 hover:bg-[var(--kkb-bg)] text-[var(--kkb-text-secondary)] py-3 px-3 rounded-xl text-btn-secondary flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all"
         >
           <Settings className="h-4 w-4" /> Ajuster mes préférences
@@ -457,7 +459,7 @@ export default function HomePage() {
         <div className="flex items-center gap-3 shrink-0">
           <button
             type="button"
-            onClick={() => router.push('/plan/configure')}
+            onClick={() => router.push('/settings/meal-config')}
             className="h-12 px-4 rounded-lg bg-white hover:bg-[var(--kkb-bg)] text-[var(--kkb-text-primary)] text-btn-secondary flex items-center gap-2 shadow-sm transition-colors"
           >
             <Settings className="h-5 w-5 text-[var(--kkb-teal)]" /> Ajuster préférences
@@ -472,7 +474,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {isMember && <div className="pb-8 max-w-xl"><MemberResultsCard /></div>}
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         <div className="lg:col-span-8 flex flex-col gap-10 min-w-0">
