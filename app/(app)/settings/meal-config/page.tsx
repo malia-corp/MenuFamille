@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { CalendarDays, Check, Info, LayoutGrid, Loader2, Repeat, SlidersHorizontal, WifiOff } from 'lucide-react'
+import { CalendarDays, Check, Clock, Info, LayoutGrid, Loader2, Repeat, SlidersHorizontal, WifiOff } from 'lucide-react'
 import { Switch } from '@/components/ui/switch'
 import { EmptyState } from '@/components/ui/empty-state'
 import { SkeletonCard } from '@/components/ui/skeleton-card'
@@ -87,7 +87,7 @@ function formatSaving(minutes: number): string {
 function sameRhythm(a: MealConfig[], b: MealConfig[]): boolean {
   return a.every(c => {
     const o = b.find(x => x.meal_type === c.meal_type)
-    return !!o && o.is_active === c.is_active && o.mode === c.mode
+    return !!o && o.is_active === c.is_active && o.mode === c.mode && formatTime(o.default_time) === formatTime(c.default_time)
   })
 }
 
@@ -116,7 +116,7 @@ export default function MealConfigPage() {
 
   useEffect(() => { void load() }, [])
 
-  function patch(mealType: MealType, changes: Partial<Pick<MealConfig, 'is_active' | 'mode'>>) {
+  function patch(mealType: MealType, changes: Partial<Pick<MealConfig, 'is_active' | 'mode' | 'default_time'>>) {
     setDraft(prev => prev.map(c => (c.meal_type === mealType ? { ...c, ...changes } : c)))
   }
 
@@ -126,7 +126,7 @@ export default function MealConfigPage() {
       const res = await fetch('/api/users/me/meal-config', {
         method:  'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify(draft.map(c => ({ meal_type: c.meal_type, is_active: c.is_active, mode: c.mode }))),
+        body:    JSON.stringify(draft.map(c => ({ meal_type: c.meal_type, is_active: c.is_active, mode: c.mode, default_time: c.default_time ? formatTime(c.default_time) : null }))),
       })
       const data = await res.json().catch(() => null)
       if (!res.ok || !Array.isArray(data)) {
@@ -209,6 +209,7 @@ export default function MealConfigPage() {
             key={c.meal_type}
             config={c}
             onToggle={on => patch(c.meal_type, { is_active: on })}
+            onTime={value => patch(c.meal_type, { default_time: value || null })}
             onMode={mode => patch(c.meal_type, { mode })}
           />
         ))}
@@ -258,10 +259,11 @@ export default function MealConfigPage() {
   )
 }
 
-function MealCard({ config, onToggle, onMode }: {
+function MealCard({ config, onToggle, onMode, onTime }: {
   config:   MealConfig
   onToggle: (on: boolean) => void
   onMode:   (mode: Mode) => void
+  onTime:   (value: string) => void
 }) {
   const t      = CARD_TEXT[config.meal_type]
   const Icon   = MEAL_ICON[config.meal_type]
@@ -299,9 +301,21 @@ function MealCard({ config, onToggle, onMode }: {
         </div>
       </div>
 
-      <p className="mt-1 font-quicksand text-xs text-[var(--kkb-text-tertiary)]">
-        {time ? `${time} · ` : ''}{t.moment}
-      </p>
+      <div className="mt-1.5 flex items-center gap-2">
+        <label className={`inline-flex items-center gap-1.5 rounded-[var(--kkb-radius-pill)] border border-[var(--kkb-border)] bg-[var(--kkb-bg)] px-2.5 py-1 ${on ? '' : 'opacity-50'}`}>
+          <Clock className="h-3.5 w-3.5 text-[var(--kkb-teal)]" />
+          <input
+            type="time"
+            step={900}
+            value={time}
+            onChange={e => onTime(e.target.value)}
+            disabled={!on}
+            aria-label={`Heure du ${t.title.toLowerCase()}`}
+            className="bg-transparent font-quicksand text-xs font-bold text-[var(--kkb-text-primary)] outline-none"
+          />
+        </label>
+        <span className="font-quicksand text-xs text-[var(--kkb-text-tertiary)]">{t.moment}</span>
+      </div>
 
       <div className={`mt-3 flex gap-2 ${on ? '' : 'pointer-events-none opacity-50'}`}>
         <ModePill label="Quotidien"    icon={LayoutGrid} active={config.mode === 'daily'}    tone="coral" disabled={!on} onClick={() => onMode('daily')} />
