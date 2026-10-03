@@ -2,9 +2,12 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Bell, Check, Info, Save } from 'lucide-react'
+import { ArrowLeft, Bell, Check, Info, Loader2 } from 'lucide-react'
 import { MEAL_LABEL, type MealType } from '@/lib/constants/meal-type'
 import { MealTypeIcon } from '@/components/ui/meal-type-icon'
+import { Switch } from '@/components/ui/switch'
+import { SkeletonCard } from '@/components/ui/skeleton-card'
+import { toast } from '@/lib/stores/toast-store'
 import { registerServiceWorker } from '@/lib/utils/service-worker'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -52,6 +55,10 @@ const DEFAULT_PREF = (mealType: MealType, defaultTime: string): NotifPref => ({
   feedback_enabled:   false,
   feedback_delay_min: 120,
 })
+
+const SECTION_LABEL = 'font-quicksand text-[11px] font-bold uppercase tracking-wider text-[var(--kkb-text-tertiary)]'
+const FIELD_LABEL   = 'mb-1.5 font-quicksand text-[10px] font-bold uppercase tracking-wider text-[var(--kkb-text-tertiary)]'
+const SWITCH        = 'data-[state=checked]:bg-[var(--kkb-coral)] data-[state=unchecked]:bg-[var(--kkb-border)]'
 
 // ─── Push helpers ─────────────────────────────────────────────────────────────
 
@@ -125,11 +132,17 @@ export default function NotificationsPage() {
     updatePref(mealType, { days_of_week: next.length > 0 ? next : current })
   }
 
+  // Permission push demandée au premier passage sur ON (jamais au chargement) ;
+  // si elle est déjà accordée, on s'abonne sans redemander.
   async function handleReminderToggle(mealType: MealType, on: boolean) {
     if (on) {
-      const permission = await Notification.requestPermission()
+      if (typeof Notification === 'undefined') {
+        toast.warning('Notifications non prises en charge sur cet appareil')
+        return
+      }
+      const permission = Notification.permission === 'granted' ? 'granted' : await Notification.requestPermission()
       if (permission !== 'granted') {
-        alert('Autorisez les notifications dans les paramètres de votre navigateur.')
+        toast.warning('Autorise les notifications dans les paramètres de ton navigateur.')
         return
       }
       const sub = await subscribePush()
@@ -155,7 +168,14 @@ export default function NotificationsPage() {
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify(rows),
       })
-      if (res.ok) setSaved(true)
+      if (res.ok) {
+        setSaved(true)
+        toast.success('Préférences enregistrées')
+      } else {
+        toast.error('Impossible d\'enregistrer')
+      }
+    } catch {
+      toast.error('Erreur de connexion')
     } finally {
       setSaving(false)
     }
@@ -163,205 +183,174 @@ export default function NotificationsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="h-5 w-5 border-2 border-[var(--kkb-coral)] border-t-transparent rounded-full animate-spin" />
+      <div className="mx-auto max-w-lg space-y-3 px-4 py-6" aria-busy="true">
+        <SkeletonCard variant="list" />
+        <SkeletonCard variant="list" />
+        <SkeletonCard variant="list" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-[var(--kkb-bg)] pb-28">
-      {/* Header */}
-      <div className="hidden lg:flex sticky top-16 z-30 bg-[var(--kkb-bg)] border-b border-[var(--kkb-border)] px-4 py-3 items-center gap-3">
-        <button type="button" onClick={() => router.back()} className="p-1 -ml-1 text-[var(--kkb-text-secondary)]">
-          <ArrowLeft className="h-5 w-5" />
-        </button>
-        <div className="flex items-center gap-2">
-          <Bell className="h-4 w-4 text-[var(--kkb-coral)]" />
-          <h1 className="font-dosis font-bold text-base text-[var(--kkb-text-primary)]">Notifications</h1>
+    <div className="pb-28">
+      <div className="mx-auto max-w-lg space-y-6 px-4 py-5 lg:pt-2">
+        {/* En-tête desktop (le MobileHeader porte le titre sur mobile) */}
+        <div className="hidden items-center gap-2 lg:flex">
+          <button type="button" onClick={() => router.back()} className="-ml-1 p-1 text-[var(--kkb-teal)]" aria-label="Retour">
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          <Bell className="h-5 w-5 text-[var(--kkb-coral)]" />
+          <h1 className="font-dosis text-xl font-bold text-[var(--kkb-text-primary)]">Notifications</h1>
         </div>
-      </div>
 
-      <div className="max-w-lg mx-auto px-4 py-5 space-y-6">
+        {/* Rappels de repas */}
+        <section className="space-y-2">
+          <p className={SECTION_LABEL}>Rappels de repas</p>
+          {configs.map(cfg => {
+            const pref = prefs[cfg.meal_type]
+            if (!pref) return null
+            return (
+              <div key={cfg.meal_type} className="rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="flex items-center gap-2.5">
+                    <MealTypeIcon type={cfg.meal_type} className="h-5 w-5 text-[var(--kkb-coral)]" />
+                    <span className="font-quicksand text-sm font-bold text-[var(--kkb-text-primary)]">{MEAL_LABEL[cfg.meal_type]}</span>
+                  </span>
+                  <Switch
+                    checked={pref.reminder_enabled}
+                    onCheckedChange={on => void handleReminderToggle(cfg.meal_type, on)}
+                    aria-label={`Rappel ${MEAL_LABEL[cfg.meal_type]}`}
+                    className={SWITCH}
+                  />
+                </div>
 
-        {/* Section rappels */}
-        <div>
-          <p className="text-[11px] font-quicksand font-bold uppercase tracking-wider text-[var(--kkb-text-tertiary)] mb-3">
-            Rappels de repas
-          </p>
-          <div className="space-y-3">
+                <Expand open={pref.reminder_enabled}>
+                  <div className="mt-3 space-y-3 border-t border-[var(--kkb-border-light)] pt-3">
+                    <div>
+                      <p className={FIELD_LABEL}>Heure du rappel</p>
+                      <input
+                        type="time"
+                        value={pref.reminder_time ?? cfg.default_time}
+                        onChange={e => updatePref(cfg.meal_type, { reminder_time: e.target.value })}
+                        className="rounded-[var(--kkb-radius-sm)] border border-[var(--kkb-border)] bg-[var(--kkb-bg)] px-3 py-2 font-quicksand text-sm text-[var(--kkb-text-primary)] outline-none focus:border-[var(--kkb-coral)]"
+                      />
+                    </div>
+                    <div>
+                      <p className={FIELD_LABEL}>Jours</p>
+                      <div className="flex gap-1.5">
+                        {DAYS.map((d, i) => {
+                          const active = pref.days_of_week.includes(d.value)
+                          return (
+                            <button
+                              key={i}
+                              type="button"
+                              onClick={() => toggleDay(cfg.meal_type, d.value)}
+                              aria-pressed={active}
+                              className={`h-9 w-9 rounded-full border font-quicksand text-xs font-bold transition-colors ${
+                                active
+                                  ? 'border-[var(--kkb-coral)] bg-[var(--kkb-coral)] text-white'
+                                  : 'border-[var(--kkb-border)] bg-white text-[var(--kkb-text-secondary)]'
+                              }`}
+                            >
+                              {d.label}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </Expand>
+              </div>
+            )
+          })}
+        </section>
+
+        {/* Feedback post-repas */}
+        <section className="space-y-2">
+          <p className={SECTION_LABEL}>Feedback post-repas</p>
+          <div className="divide-y divide-[var(--kkb-border-light)] rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white">
+            <p className="px-4 pb-1 pt-4 font-quicksand text-sm font-bold text-[var(--kkb-text-primary)]">Demande d&apos;avis après le repas</p>
             {configs.map(cfg => {
               const pref = prefs[cfg.meal_type]
               if (!pref) return null
-
               return (
-                <div key={cfg.meal_type} className="bg-white border border-[var(--kkb-border-light)] rounded-2xl p-4 space-y-3">
-                  {/* Ligne titre + toggle */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <MealTypeIcon type={cfg.meal_type} className="h-5 w-5 text-[var(--kkb-coral)]" />
-                      <span className="font-dosis font-semibold text-sm text-[var(--kkb-text-primary)]">
-                        {MEAL_LABEL[cfg.meal_type]}
-                      </span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handleReminderToggle(cfg.meal_type, !pref.reminder_enabled)}
-                      className={[
-                        'relative w-10 h-6 rounded-full transition-colors',
-                        pref.reminder_enabled ? 'bg-[var(--kkb-coral)]' : 'bg-[var(--kkb-border-light)]',
-                      ].join(' ')}
-                      aria-label={pref.reminder_enabled ? 'Désactiver' : 'Activer'}
-                    >
-                      <span className={[
-                        'absolute top-0.5 left-0.5 h-5 w-5 bg-white rounded-full shadow transition-transform',
-                        pref.reminder_enabled ? 'translate-x-4' : 'translate-x-0',
-                      ].join(' ')} />
-                    </button>
+                <div key={cfg.meal_type} className="px-4 py-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="flex items-center gap-2.5">
+                      <MealTypeIcon type={cfg.meal_type} className="h-4 w-4 text-[var(--kkb-coral)]" />
+                      <span className="font-quicksand text-sm font-semibold text-[var(--kkb-text-secondary)]">{MEAL_LABEL[cfg.meal_type]}</span>
+                    </span>
+                    <Switch
+                      checked={pref.feedback_enabled}
+                      onCheckedChange={on => updatePref(cfg.meal_type, { feedback_enabled: on })}
+                      aria-label={`Avis après le ${MEAL_LABEL[cfg.meal_type]}`}
+                      className={SWITCH}
+                    />
                   </div>
-
-                  {/* Détails — visibles si actif */}
-                  {pref.reminder_enabled && (
-                    <div className="space-y-3 pt-1 border-t border-[var(--kkb-border-light)]">
-                      {/* Heure */}
-                      <div>
-                        <p className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--kkb-text-tertiary)] mb-1">
-                          Heure du rappel
-                        </p>
-                        <input
-                          type="time"
-                          value={pref.reminder_time ?? cfg.default_time}
-                          onChange={e => updatePref(cfg.meal_type, { reminder_time: e.target.value })}
-                          className="font-quicksand text-sm text-[var(--kkb-text-primary)] bg-[var(--kkb-bg)] border border-[var(--kkb-border-light)] rounded-lg px-3 py-1.5 outline-none"
-                        />
-                      </div>
-
-                      {/* Jours */}
-                      <div>
-                        <p className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--kkb-text-tertiary)] mb-1.5">
-                          Jours
-                        </p>
-                        <div className="flex gap-1.5">
-                          {DAYS.map((d, i) => {
-                            const active = pref.days_of_week.includes(d.value)
-                            return (
-                              <button
-                                key={i}
-                                type="button"
-                                onClick={() => toggleDay(cfg.meal_type, d.value)}
-                                className={[
-                                  'w-8 h-8 rounded-full text-xs font-quicksand font-semibold transition-all',
-                                  active
-                                    ? 'bg-[var(--kkb-coral)] text-white'
-                                    : 'bg-[var(--kkb-bg)] text-[var(--kkb-text-tertiary)] border border-[var(--kkb-border-light)]',
-                                ].join(' ')}
-                              >
-                                {d.label}
-                              </button>
-                            )
-                          })}
-                        </div>
+                  <Expand open={pref.feedback_enabled}>
+                    <div className="pt-3">
+                      <p className={FIELD_LABEL}>Délai après le repas</p>
+                      <div className="flex flex-wrap gap-2">
+                        {DELAYS.map(d => {
+                          const active = pref.feedback_delay_min === d.value
+                          return (
+                            <button
+                              key={d.value}
+                              type="button"
+                              onClick={() => updatePref(cfg.meal_type, { feedback_delay_min: d.value })}
+                              aria-pressed={active}
+                              className={`rounded-[var(--kkb-radius-pill)] border px-3.5 py-1.5 font-quicksand text-xs font-bold transition-colors ${
+                                active
+                                  ? 'border-[var(--kkb-coral)] bg-[var(--kkb-coral)] text-white'
+                                  : 'border-[var(--kkb-border)] bg-white text-[var(--kkb-text-secondary)]'
+                              }`}
+                            >
+                              {d.label}
+                            </button>
+                          )
+                        })}
                       </div>
                     </div>
-                  )}
+                  </Expand>
                 </div>
               )
             })}
           </div>
-        </div>
-
-        {/* Section feedback */}
-        <div>
-          <p className="text-[11px] font-quicksand font-bold uppercase tracking-wider text-[var(--kkb-text-tertiary)] mb-3">
-            Demandes d&apos;avis post-repas
-          </p>
-          <div className="space-y-3">
-            {configs.map(cfg => {
-              const pref = prefs[cfg.meal_type]
-              if (!pref) return null
-
-              return (
-                <div key={cfg.meal_type} className="bg-white border border-[var(--kkb-border-light)] rounded-2xl p-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <MealTypeIcon type={cfg.meal_type} className="h-5 w-5 text-[var(--kkb-coral)]" />
-                      <span className="font-dosis font-semibold text-sm text-[var(--kkb-text-primary)]">
-                        {MEAL_LABEL[cfg.meal_type]}
-                      </span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => updatePref(cfg.meal_type, { feedback_enabled: !pref.feedback_enabled })}
-                      className={[
-                        'relative w-10 h-6 rounded-full transition-colors',
-                        pref.feedback_enabled ? 'bg-[var(--kkb-coral)]' : 'bg-[var(--kkb-border-light)]',
-                      ].join(' ')}
-                      aria-label={pref.feedback_enabled ? 'Désactiver' : 'Activer'}
-                    >
-                      <span className={[
-                        'absolute top-0.5 left-0.5 h-5 w-5 bg-white rounded-full shadow transition-transform',
-                        pref.feedback_enabled ? 'translate-x-4' : 'translate-x-0',
-                      ].join(' ')} />
-                    </button>
-                  </div>
-
-                  {pref.feedback_enabled && (
-                    <div className="space-y-2 pt-1 border-t border-[var(--kkb-border-light)]">
-                      <p className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--kkb-text-tertiary)]">
-                        Délai après le repas
-                      </p>
-                      <div className="flex gap-2 flex-wrap">
-                        {DELAYS.map(d => (
-                          <button
-                            key={d.value}
-                            type="button"
-                            onClick={() => updatePref(cfg.meal_type, { feedback_delay_min: d.value })}
-                            className={[
-                              'px-3 py-1.5 rounded-full text-xs font-quicksand font-medium border transition-all',
-                              pref.feedback_delay_min === d.value
-                                ? 'bg-[var(--kkb-coral)] text-white border-[var(--kkb-coral)]'
-                                : 'bg-white text-[var(--kkb-text-secondary)] border-[var(--kkb-border-light)]',
-                            ].join(' ')}
-                          >
-                            {d.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )
-            })}
-          </div>
-        </div>
+        </section>
 
         {/* Note iOS */}
-        <div className="flex items-start gap-2.5 bg-[var(--kkb-warning-light)] border border-[var(--kkb-warning)] rounded-xl p-3">
-          <Info className="h-4 w-4 text-[var(--kkb-warning)] flex-shrink-0 mt-0.5" />
-          <p className="text-xs font-quicksand text-[var(--kkb-warning)]">
-            Sur iPhone, ajoutez KeskonBouf à votre écran d&apos;accueil (Partager → Sur l&apos;écran d&apos;accueil) pour recevoir les notifications push.
+        <div className="flex items-start gap-2.5 rounded-[var(--kkb-radius-sm)] border border-[var(--kkb-teal)] bg-[var(--kkb-teal-light)] p-3">
+          <Info className="mt-0.5 h-4 w-4 shrink-0 text-[var(--kkb-teal)]" />
+          <p className="font-quicksand text-xs text-[var(--kkb-teal)]">
+            Sur iOS, l&apos;application doit être ajoutée à l&apos;écran d&apos;accueil (Partager → Sur l&apos;écran d&apos;accueil) pour recevoir les notifications push.
           </p>
         </div>
       </div>
 
-      {/* Bouton Save sticky */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-[var(--kkb-bg)] border-t border-[var(--kkb-border)] z-20">
+      {/* Enregistrer : fixe en bas (pas de bottom nav sur les pages réglages) */}
+      <div className="fixed bottom-5 left-4 right-4 z-40 mx-auto max-w-lg lg:left-60 lg:px-4">
         <button
           type="button"
-          onClick={handleSave}
+          onClick={() => void handleSave()}
           disabled={saving}
-          className={[
-            'w-full max-w-lg mx-auto flex items-center justify-center gap-2 py-3 rounded-2xl font-dosis font-bold text-sm transition-all',
-            saved
-              ? 'bg-[var(--kkb-success)] text-white'
-              : 'bg-[var(--kkb-coral)] text-white',
-            saving ? 'opacity-60' : '',
-          ].join(' ')}
+          className="flex w-full items-center justify-center gap-2 rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-coral)] py-3.5 font-quicksand text-[15px] font-bold text-white shadow-[var(--kkb-shadow-fab)] transition-all hover:bg-[var(--kkb-coral-hover)] active:scale-[0.98] disabled:opacity-60"
         >
-          {saved && !saving ? <Check className="h-4 w-4" /> : <Save className="h-4 w-4" />}
-          {saving ? 'Enregistrement…' : saved ? 'Préférences sauvegardées' : 'Enregistrer mes préférences'}
+          {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+          {saving ? 'Enregistrement…' : saved ? 'Préférences enregistrées' : 'Enregistrer mes préférences'}
         </button>
       </div>
+    </div>
+  )
+}
+
+// Dépliage animé en hauteur (grid 0fr → 1fr).
+function Expand({ open, children }: { open: boolean; children: React.ReactNode }) {
+  return (
+    <div
+      className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out ${open ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
+      aria-hidden={!open}
+    >
+      <div className="min-h-0 overflow-hidden">{children}</div>
     </div>
   )
 }
