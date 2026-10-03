@@ -46,7 +46,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <>
       <Sidebar role={role} displayName={displayName} />
-      <MobileHeader displayName={displayName} />
+      <MobileHeader displayName={displayName} circleName={circleName} />
       <DesktopHeader role={role} displayName={displayName} circleName={circleName} />
       <OfflineBanner />
       <main className="lg:ml-60 pt-14 pb-24 lg:pt-24 lg:pb-8 print:ml-0 print:p-0 print:min-h-0 print:bg-white min-h-screen bg-[var(--kkb-bg)]">

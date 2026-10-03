@@ -7,15 +7,16 @@ import {
   Bell,
   BookOpen,
   CalendarCheck,
-  ChefHat,
   ChevronRight,
-  Home,
+  Globe,
   LogOut,
   Pencil,
   Save,
   Settings,
+  Share2,
   SlidersHorizontal,
   Smile,
+  Star,
   Trophy,
   UserPlus,
   Users,
@@ -26,6 +27,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { SkeletonCard } from '@/components/ui/skeleton-card'
 import { DietaryPrefsSheet } from '@/components/settings/dietary-prefs-sheet'
+import { ShareActions, appSharePayload } from '@/components/ui/share-actions'
 import { toast } from '@/lib/stores/toast-store'
 import { logout } from '@/lib/utils/logout'
 import { prefChipStyle, type Pref } from '@/lib/constants/dietary-pref'
@@ -71,13 +73,30 @@ function SectionTitle({ icon: Icon, label, action }: { icon: LucideIcon; label: 
   )
 }
 
+const SETTING_ROW = 'flex min-h-[56px] w-full items-center gap-3 p-4 text-left transition-colors hover:bg-[var(--kkb-bg)]'
+
+function SettingContent({ icon: Icon, label, sub, chevron = true }: { icon: LucideIcon; label: string; sub?: string; chevron?: boolean }) {
+  return (
+    <span className="flex w-full items-center gap-3">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--kkb-coral-light)]">
+        <Icon className="h-4 w-4 text-[var(--kkb-coral)]" />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block font-quicksand text-[15px] font-semibold text-[var(--kkb-text-primary)]">{label}</span>
+        {sub && <span className="block font-quicksand text-xs text-[var(--kkb-text-tertiary)]">{sub}</span>}
+      </span>
+      {chevron && <ChevronRight className="h-4 w-4 shrink-0 text-[var(--kkb-text-tertiary)]" />}
+    </span>
+  )
+}
+
 function Stat({ icon: Icon, value, label, tone }: { icon: LucideIcon; value: string; label: string; tone: string }) {
   return (
     <div className="flex flex-col items-center text-center">
       <span className="mb-1.5 flex h-9 w-9 items-center justify-center rounded-full" style={{ backgroundColor: `color-mix(in srgb, ${tone} 14%, white)` }}>
         <Icon className="h-4 w-4" style={{ color: tone }} />
       </span>
-      <p className="font-dosis text-2xl font-extrabold" style={{ color: tone }}>{value}</p>
+      <p className="font-dosis text-2xl font-extrabold text-[var(--kkb-coral)]">{value}</p>
       <p className="font-quicksand text-[10px] font-bold uppercase leading-tight tracking-wide text-[var(--kkb-text-tertiary)]">{label}</p>
     </div>
   )
@@ -166,22 +185,22 @@ export default function ProfilePage() {
       {/* Avatar + nom */}
       <div className="flex flex-col items-center gap-3">
         <div className="relative">
-          <div className="flex h-24 w-24 items-center justify-center rounded-full border-4 border-white bg-[var(--kkb-coral)] font-dosis text-4xl font-bold text-white shadow-[var(--kkb-shadow-card)]">
+          <div className="flex h-20 w-20 items-center justify-center rounded-full border-4 border-white bg-[var(--kkb-coral)] font-dosis text-[32px] font-bold text-white shadow-[var(--kkb-shadow-card)]">
             {initial}
           </div>
           {isPlanner && (
-            <span className="absolute -top-1 left-1/2 inline-flex -translate-x-1/2 items-center gap-1 rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-warning)] px-2 py-0.5 font-quicksand text-[10px] font-bold uppercase text-white">
-              <ChefHat className="h-3 w-3" /> Chef
+            <span className="absolute -right-6 -top-1 inline-flex items-center gap-1 rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-warning)] px-2 py-0.5 font-quicksand text-[10px] font-bold uppercase text-white shadow-sm">
+              <Star className="h-3 w-3 fill-current" /> Chef
             </span>
           )}
           {!editMode && (
             <button
               type="button"
               onClick={startEdit}
-              className="absolute -bottom-0.5 -right-0.5 flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-[var(--kkb-teal)] text-white"
+              className="absolute bottom-0 right-0 flex h-6 w-6 items-center justify-center rounded-full border border-[var(--kkb-border)] bg-white text-[var(--kkb-text-secondary)] hover:text-[var(--kkb-coral)]"
               aria-label="Modifier le nom"
             >
-              <Pencil className="h-3.5 w-3.5" />
+              <Pencil className="h-3 w-3" />
             </button>
           )}
         </div>
@@ -204,13 +223,13 @@ export default function ProfilePage() {
           </div>
         ) : (
           <div className="space-y-1.5 text-center">
-            <p className="font-dosis text-2xl font-bold text-[var(--kkb-text-primary)]">{profile?.display_name}</p>
+            <p className="font-dosis text-[22px] font-bold text-[var(--kkb-text-primary)]">{profile?.display_name}</p>
             <p className="font-quicksand text-sm italic text-[var(--kkb-text-secondary)]">
               {isPlanner ? 'Chef d\'orchestre culinaire du foyer' : 'Gourmet du foyer'}
             </p>
             {circle && (
-              <span className="inline-flex items-center gap-1.5 rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-coral-light)] px-3 py-1 font-quicksand text-xs font-bold text-[var(--kkb-text-primary)]">
-                <Home className="h-3.5 w-3.5 text-[var(--kkb-coral)]" />
+              <span className="inline-flex items-center gap-1.5 rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-teal-light)] px-3 py-1 font-quicksand text-xs font-bold text-[var(--kkb-teal)]">
+                <UtensilsCrossed className="h-3.5 w-3.5" />
                 {circle.name} · {members.length} {members.length > 1 ? 'gourmets' : 'gourmet'}
               </span>
             )}
@@ -268,9 +287,9 @@ export default function ProfilePage() {
           )}
           <Link
             href="/circle"
-            className="flex items-center justify-center gap-2 rounded-[var(--kkb-radius-sm)] border border-dashed border-[var(--kkb-coral)]/40 bg-[var(--kkb-coral-light)] py-3 font-quicksand text-sm font-bold text-[var(--kkb-coral)]"
+            className="flex items-center justify-center gap-2 rounded-[var(--kkb-radius-sm)] border border-[var(--kkb-border)] bg-white py-3 font-quicksand text-sm font-semibold text-[var(--kkb-coral)] transition-colors hover:bg-[var(--kkb-coral-light)]"
           >
-            <UserPlus className="h-4 w-4" /> Inviter un membre de la famille
+            <UserPlus className="h-4 w-4" /> Inviter un membre ou un invité du week-end
           </Link>
         </div>
       </section>
@@ -307,7 +326,7 @@ export default function ProfilePage() {
               ))}
             </div>
           )}
-          <p className="font-quicksand text-xs text-[var(--kkb-text-secondary)]">
+          <p className="font-quicksand text-xs italic text-[var(--kkb-text-tertiary)]">
             Ces filtres alimentent automatiquement la génération du menu de la semaine.
           </p>
         </div>
@@ -317,28 +336,32 @@ export default function ProfilePage() {
       <section className="space-y-2">
         <SectionTitle icon={Settings} label="Paramètres de l'application" />
         <div className="divide-y-[0.5px] divide-[var(--kkb-border)] overflow-hidden rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white">
-          {[
-            { icon: Bell,     label: 'Notifications push',       sub: 'Rappels de repas et avis',         href: '/settings/notifications' },
-            { icon: Settings, label: 'Tous les paramètres',      sub: 'Rythme des repas, langue, partage…', href: '/settings' },
-          ].map(({ icon: Icon, label, sub, href }) => (
-            <Link key={href} href={href} className="flex min-h-[56px] items-center gap-3 p-4 transition-colors hover:bg-[var(--kkb-bg)]">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--kkb-coral-light)]">
-                <Icon className="h-4 w-4 text-[var(--kkb-coral)]" />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block font-quicksand text-[15px] font-semibold text-[var(--kkb-text-primary)]">{label}</span>
-                <span className="block font-quicksand text-xs text-[var(--kkb-text-tertiary)]">{sub}</span>
-              </span>
-              <ChevronRight className="h-4 w-4 text-[var(--kkb-text-tertiary)]" />
-            </Link>
-          ))}
+          <Link href="/settings/notifications" className={SETTING_ROW}>
+            <SettingContent icon={Bell} label="Notifications push" sub="Rappels de repas et avis après le repas" />
+          </Link>
+          <button type="button" onClick={() => toast.info('Bientôt disponible')} className={SETTING_ROW}>
+            <SettingContent icon={Globe} label="Langue & Unités culinaires" sub="Français · Mesures locales (Sodabi, Oloko, Grammes)" />
+          </button>
+          <button type="button" onClick={() => toast.info('Bientôt disponible')} className={SETTING_ROW}>
+            <SettingContent icon={BookOpen} label="Aide & Astuces familiales" />
+          </button>
+          <div className="space-y-3 p-4">
+            <SettingContent icon={Share2} label="Partager KeskonBouf" sub="Offrir sérénité culinaire à vos proches" chevron={false} />
+            <ShareActions
+              getPayload={appSharePayload}
+              buttonClassName="flex-1 flex items-center justify-center gap-1.5 rounded-[var(--kkb-radius-pill)] py-2.5 font-quicksand font-bold text-sm border border-[var(--kkb-border)] text-[var(--kkb-text-secondary)] hover:border-[var(--kkb-coral)] hover:text-[var(--kkb-coral)] transition-colors disabled:opacity-60"
+            />
+          </div>
+          <Link href="/settings" className={SETTING_ROW}>
+            <SettingContent icon={Settings} label="Tous les paramètres" sub="Rythme des repas, préférences, compte" />
+          </Link>
         </div>
       </section>
 
       <button
         type="button"
         onClick={() => void handleLogout()}
-        className="flex w-full items-center justify-center gap-2 rounded-[var(--kkb-radius-card)] bg-[var(--kkb-coral-light)] py-4 font-quicksand text-sm font-bold text-[var(--kkb-coral)] transition-colors hover:bg-[var(--kkb-coral-light)]/70"
+        className="flex w-full items-center justify-center gap-2 rounded-[var(--kkb-radius-card)] p-4 font-quicksand text-[15px] font-bold text-[var(--kkb-danger)] transition-colors hover:bg-[var(--kkb-danger-light)]"
       >
         <LogOut className="h-4 w-4" /> Se déconnecter
       </button>
