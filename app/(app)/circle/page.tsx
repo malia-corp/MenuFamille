@@ -28,7 +28,9 @@ import { SkeletonCard } from '@/components/ui/skeleton-card'
 import { MealTypeIcon } from '@/components/ui/meal-type-icon'
 import { MEAL_LABEL, type MealType } from '@/lib/constants/meal-type'
 import { PREF_TYPE_OPTIONS, prefChipStyle, type Pref, type PrefType, type Severity } from '@/lib/constants/dietary-pref'
-import { sortByMealType } from '@/lib/utils/sort-meal-configs'
+import { pickActiveCircle } from '@/lib/utils/active-circle'
+import { toast } from '@/lib/stores/toast-store'
+import { CircleSwitcher } from '@/components/circle/circle-switcher'
 
 const AVATAR_COLORS = ['var(--kkb-coral)', 'var(--kkb-success)', 'var(--kkb-warning)', 'var(--kkb-teal)', 'var(--kkb-text-secondary)']
 
@@ -83,7 +85,9 @@ export default function CirclePage() {
   const [circles, setCircles] = useState<Circle[]>([])
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [activeId, setActiveId] = useState<string | null>(null)
   const [mealConfigs, setMealConfigs] = useState<MealConfig[]>([])
+  const [plannerName, setPlannerName] = useState<string | null>(null)
   const [stats, setStats] = useState<CircleStats | null>(null)
 
   // ── Préférences alimentaires ─────────────────────────────────────────────
@@ -98,23 +102,44 @@ export default function CirclePage() {
     fetch('/api/circles')
       .then((r) => r.json())
       .then((res) => {
-        const list: Circle[] = res?.data ?? []
-        setCircles(list)
+        setCircles(res?.data ?? [])
+        setActiveId(pickActiveCircle<Circle>(res)?.id ?? null)
         setCurrentUserId(res?.viewer_id ?? null)
         setLoading(false)
-        // Moments de repas : la config de la planificatrice (la sienne).
-        if (list[0]?.my_role === 'planificatrice') {
-          fetch('/api/users/me/meal-config')
-            .then((r) => (r.ok ? r.json() : []))
-            .then((data) => setMealConfigs(Array.isArray(data) ? sortByMealType(data) : []))
-            .catch(() => {})
-        }
       })
+      .catch(() => { toast.error('Erreur de connexion'); setLoading(false) })
     fetch('/api/users/me/stats')
       .then((r) => (r.ok ? r.json() : null))
       .then((s) => setStats(s))
       .catch(() => {})
   }, [])
+
+  // Moments de repas du cercle affiché (configuration de sa planificatrice,
+  // lisible par tous les membres).
+  useEffect(() => {
+    if (!activeId) return
+    setMealConfigs([])
+    fetch(`/api/circles/${activeId}/meal-config`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((res) => {
+        setMealConfigs(Array.isArray(res?.configs) ? res.configs : [])
+        setPlannerName(res?.planner_name ?? null)
+      })
+      .catch(() => {})
+  }, [activeId])
+
+  async function switchCircle(id: string) {
+    const res = await fetch('/api/circles/active', {
+      method:  'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ circle_id: id }),
+    })
+    if (!res.ok) { toast.error('Impossible de changer de cercle'); return }
+    setActiveId(id)
+    toast.success(`Cercle actif : ${circles.find((c) => c.id === id)?.name ?? ''}`)
+    // En-tête, rôle et navigation sont rendus côté serveur.
+    router.refresh()
+  }
 
   async function removeMember(circleId: string, userId: string) {
     const res = await fetch(`/api/circles/${circleId}/members/${userId}`, { method: 'DELETE' })
@@ -133,7 +158,10 @@ export default function CirclePage() {
     if (!currentUserId) return
     const res = await fetch(`/api/circles/${circleId}/members/${currentUserId}`, { method: 'DELETE' })
     if (res.ok) {
-      setCircles((prev) => prev.filter((c) => c.id !== circleId))
+      const remaining = circles.filter((c) => c.id !== circleId)
+      setCircles(remaining)
+      if (activeId === circleId) setActiveId(remaining[0]?.id ?? null)
+      router.refresh()
     }
   }
 
@@ -258,7 +286,7 @@ export default function CirclePage() {
   }
 
   // Afficher le premier cercle (MVP : un seul cercle à la fois)
-  const circle = circles[0]
+  const circle = circles.find((c) => c.id === activeId) ?? circles[0]
   const members = (circle.family_circle_members ?? []).filter((m) => m.users)
   const isPlanificatrice = circle.my_role === 'planificatrice'
   const me = members.find((m) => m.users!.id === currentUserId)
@@ -372,26 +400,43 @@ export default function CirclePage() {
     </div>
   )
 
+  // Le cercle affiché est le cercle actif (users.active_circle_id).
+  const statusRow = (
+    <div className="flex items-center justify-between rounded-[var(--kkb-radius-sm)] border border-[var(--kkb-border-light)] px-3 py-2">
+      <span className="font-quicksand text-xs font-semibold text-[var(--kkb-text-secondary)]">Statut cercle</span>
+      <span className="inline-flex items-center gap-1.5 rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-success-light)] px-2.5 py-1 font-quicksand text-xs font-bold text-[var(--kkb-success)]">
+        <span className="h-1.5 w-1.5 rounded-full bg-[var(--kkb-success)]" /> Actif
+      </span>
+    </div>
+  )
+
   return (
     <>
       {/* ─── Mobile ─────────────────────────────────────────────────────── */}
       <div className="mx-auto max-w-lg space-y-5 px-4 pb-6 pt-4 lg:hidden print:hidden">
         {/* Statut du cercle */}
         <section className="space-y-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white p-4">
-          <div className="flex items-center gap-3">
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--kkb-coral-light)]">
-              <Users className="h-5 w-5 text-[var(--kkb-coral)]" />
+          <CircleSwitcher circles={circles} activeId={circle.id} onSelect={switchCircle}>
+            <span className="flex items-center gap-3">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--kkb-coral-light)]">
+                <Users className="h-5 w-5 text-[var(--kkb-coral)]" />
+              </span>
+              <span className="min-w-0">
+                <span className="block truncate font-dosis text-lg font-bold text-[var(--kkb-text-primary)]">{circle.name}</span>
+                <span className="block font-quicksand text-xs text-[var(--kkb-text-tertiary)]">
+                  {members.length} {members.length > 1 ? 'convives' : 'convive'}
+                  {circles.length > 1 && ` · ${circles.length} cercles`}
+                </span>
+              </span>
             </span>
-            <div className="min-w-0">
-              <h1 className="truncate font-dosis text-lg font-bold text-[var(--kkb-text-primary)]">{circle.name}</h1>
-              <p className="font-quicksand text-xs text-[var(--kkb-text-tertiary)]">
-                {members.length} {members.length > 1 ? 'convives' : 'convive'}
-              </p>
-            </div>
-          </div>
+          </CircleSwitcher>
+          {statusRow}
           <p className="flex items-start gap-2 rounded-[var(--kkb-radius-sm)] bg-[var(--kkb-warning-light)] p-3 font-quicksand text-[13px] text-[var(--kkb-text-secondary)]">
             <Utensils className="mt-0.5 h-4 w-4 shrink-0 text-[var(--kkb-warning)]" />
-            <span><strong className="font-bold">Cuisine du cœur :</strong> vos votes et appétits guident le menu de la semaine.</span>
+            <span>
+              <strong className="font-bold">Cuisine du cœur :</strong> vos votes et appétits guident le menu de la semaine
+              {plannerName && !isPlanificatrice ? ` préparé par ${plannerName}` : ''}.
+            </span>
           </p>
         </section>
 
@@ -465,14 +510,16 @@ export default function CirclePage() {
         </section>
 
         {/* Moments de repas (lecture) */}
-        {isPlanificatrice && mealConfigs.length > 0 && (
+        {mealConfigs.length > 0 && (
           <section className="space-y-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white p-4">
             <div className="flex items-center justify-between">
               <p className="flex items-center gap-2 font-quicksand text-[13px] font-bold text-[var(--kkb-text-primary)]">
                 <Clock className="h-4 w-4 text-[var(--kkb-teal)]" />
                 Moments de repas · {mealConfigs.filter((c) => c.is_active).length} créneaux
               </p>
-              <Link href="/settings/meal-config" className="font-quicksand text-xs font-bold text-[var(--kkb-coral)]">Ajuster</Link>
+              {isPlanificatrice && (
+                <Link href="/settings/meal-config" className="font-quicksand text-xs font-bold text-[var(--kkb-coral)]">Ajuster</Link>
+              )}
             </div>
             <div className="grid grid-cols-2 gap-2">
               {mealConfigs.map((c) => (
@@ -491,7 +538,9 @@ export default function CirclePage() {
                 </div>
               ))}
             </div>
-            <p className="font-quicksand text-[11px] text-[var(--kkb-text-tertiary)]">Horaires synchronisés avec le planning de préparation</p>
+            <p className="font-quicksand text-[11px] text-[var(--kkb-text-tertiary)]">
+              Horaires synchronisés avec le planning de préparation{plannerName && !isPlanificatrice ? ` de ${plannerName}` : ''}
+            </p>
           </section>
         )}
 
@@ -534,12 +583,24 @@ export default function CirclePage() {
 
       {/* ─── Desktop ────────────────────────────────────────────────────── */}
       <div className="mx-auto hidden max-w-[1200px] px-8 py-8 lg:block print:block print:p-0">
-        <div className="mb-6 print:hidden">
+        <div className="mb-6 flex items-start justify-between gap-6 print:hidden">
+          <div>
           <p className="font-quicksand text-[11px] font-bold uppercase tracking-wider text-[var(--kkb-coral)]">Tablée &amp; gouvernance</p>
           <h1 className="font-dosis text-3xl font-bold text-[var(--kkb-text-primary)]">Cercle familial · {circle.name}</h1>
           <p className="mt-1 max-w-2xl font-quicksand text-sm text-[var(--kkb-text-secondary)]">
             Réunissez votre tablée pour voter les repas de la semaine et partager les préférences de chacun.
           </p>
+          </div>
+          <div className="w-72 shrink-0 space-y-2 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white p-3">
+            <CircleSwitcher circles={circles} activeId={circle.id} onSelect={switchCircle}>
+              <span className="block truncate font-dosis text-base font-bold text-[var(--kkb-text-primary)]">{circle.name}</span>
+              <span className="block font-quicksand text-xs text-[var(--kkb-text-tertiary)]">
+                {members.length} {members.length > 1 ? 'convives' : 'convive'}
+                {circles.length > 1 && ` · ${circles.length} cercles`}
+              </span>
+            </CircleSwitcher>
+            {statusRow}
+          </div>
         </div>
 
         <div className="grid grid-cols-[280px_minmax(0,1fr)] items-start gap-8 print:block">
