@@ -107,7 +107,7 @@ export async function PATCH(
 
   const body = await request.json()
   const {
-    name, description, tip, category_id, prep_time_min, cook_time_min,
+    name, description, category_id, prep_time_min, cook_time_min,
     servings, difficulty, visibility, circle_id, ingredients, steps,
     photo_url, suggested_sides, suggested_drinks,
   } = body
@@ -125,7 +125,6 @@ export async function PATCH(
     }
   }
   if (description !== undefined) updates.description   = description || null
-  if (tip !== undefined)         updates.tip           = (tip as string | null)?.trim() || null
   if (category_id !== undefined) updates.category_id   = category_id || null
   if (prep_time_min !== undefined) updates.prep_time_min = prep_time_min ? Number(prep_time_min) : null
   if (cook_time_min !== undefined) updates.cook_time_min = cook_time_min ? Number(cook_time_min) : null
@@ -152,12 +151,12 @@ export async function PATCH(
     if (rows.length > 0) await service.from('recipe_ingredients').insert(rows)
   }
 
-  type StepRow = { title?: string; description?: string; duration_min?: string | number }
+  type StepRow = { description?: string; duration_min?: string | number }
   if (Array.isArray(steps)) {
     await service.from('recipe_steps').delete().eq('recipe_id', params.id)
     const rows = (steps as StepRow[])
       .filter(s => s.description?.trim())
-      .map((s, idx) => ({ recipe_id: params.id, step_number: idx + 1, title: s.title?.trim() || null, description: s.description!.trim(), duration_min: s.duration_min ? Number(s.duration_min) : null }))
+      .map((s, idx) => ({ recipe_id: params.id, step_number: idx + 1, description: s.description!.trim(), duration_min: s.duration_min ? Number(s.duration_min) : null }))
     if (rows.length > 0) await service.from('recipe_steps').insert(rows)
   }
 

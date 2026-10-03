@@ -92,7 +92,6 @@ function RecipeAddInner() {
     const body: Record<string, unknown> = {
       name:          values.name.trim(),
       description:   values.description.trim() || null,
-      tip:           values.tip.trim() || null,
       category_id:   values.categoryId || null,
       prep_time_min: values.prepTime ? Number(values.prepTime) : null,
       cook_time_min: values.cookTime ? Number(values.cookTime) : null,
@@ -101,7 +100,7 @@ function RecipeAddInner() {
       visibility:    isPlanCtx ? 'private' : values.visibility,
       circle_id:     values.visibility === 'circle' ? values.circleId : null,
       ingredients:   values.ingredients.filter(i => i.name.trim()),
-      steps:         values.steps.filter(s => s.description.trim()).map(s => ({ title: s.title, description: s.description, duration_min: s.duration || null })),
+      steps:         values.steps.filter(s => s.description.trim()),
       suggested_sides:  values.sideItems.map(i => i.id),
       suggested_drinks: values.drinkItems.map(i => i.id),
       photo_url:     values.photo_url ?? null,

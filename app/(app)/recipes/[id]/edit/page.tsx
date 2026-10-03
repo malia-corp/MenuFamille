@@ -9,7 +9,6 @@ interface ApiRecipe {
   id: string
   name: string
   description: string | null
-  tip: string | null
   category_id: string | null
   prep_time_min: number | null
   cook_time_min: number | null
@@ -19,7 +18,7 @@ interface ApiRecipe {
   circle_id: string | null
   photo_url: string | null
   recipe_ingredients: { id: string; name: string; quantity: number | null; unit: string | null; sort_order: number }[]
-  recipe_steps: { id: string; step_number: number; title: string | null; description: string; duration_min: number | null }[]
+  recipe_steps: { id: string; step_number: number; description: string }[]
 }
 
 export default function RecipeEditPage() {
@@ -39,7 +38,6 @@ export default function RecipeEditPage() {
         setDefaultValues({
           name:        data.name,
           description: data.description ?? '',
-          tip:         data.tip ?? '',
           categoryId:  data.category_id ?? '',
           prepTime:    data.prep_time_min != null ? String(data.prep_time_min) : '',
           cookTime:    data.cook_time_min != null ? String(data.cook_time_min) : '',
@@ -52,7 +50,7 @@ export default function RecipeEditPage() {
             ? data.recipe_ingredients.map(i => ({ _id: uid(), name: i.name, quantity: i.quantity != null ? String(i.quantity) : '', unit: i.unit ?? '' }))
             : [emptyIngredient()],
           steps: data.recipe_steps.length
-            ? data.recipe_steps.map(s => ({ _id: uid(), title: s.title ?? '', description: s.description, duration: s.duration_min != null ? String(s.duration_min) : '' }))
+            ? data.recipe_steps.map(s => ({ _id: uid(), description: s.description }))
             : [emptyStep()],
         })
       })
@@ -65,7 +63,6 @@ export default function RecipeEditPage() {
     const body = {
       name:          values.name.trim(),
       description:   values.description.trim() || null,
-      tip:           values.tip.trim() || null,
       category_id:   values.categoryId || null,
       prep_time_min: values.prepTime ? Number(values.prepTime) : null,
       cook_time_min: values.cookTime ? Number(values.cookTime) : null,
@@ -74,7 +71,7 @@ export default function RecipeEditPage() {
       visibility:    values.visibility,
       circle_id:     values.visibility === 'circle' ? values.circleId : null,
       ingredients:   values.ingredients.filter(i => i.name.trim()),
-      steps:         values.steps.filter(s => s.description.trim()).map(s => ({ title: s.title, description: s.description, duration_min: s.duration || null })),
+      steps:         values.steps.filter(s => s.description.trim()),
       photo_url:     values.photo_url ?? null,
       // N'écrase les associations existantes que si l'utilisateur en a choisi
       ...(values.sideItems.length || values.drinkItems.length

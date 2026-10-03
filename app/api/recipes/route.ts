@@ -30,7 +30,6 @@ export async function POST(request: NextRequest) {
   const {
     name,
     description,
-    tip,
     category_id,
     prep_time_min,
     cook_time_min,
@@ -87,7 +86,6 @@ export async function POST(request: NextRequest) {
       slug,
       name_fingerprint: fingerprint,
       description: (description as string | undefined)?.trim() || null,
-      tip: (tip as string | undefined)?.trim() || null,
       prep_time_min: prep_time_min ? Number(prep_time_min) : null,
       cook_time_min: cook_time_min ? Number(cook_time_min) : null,
       servings: Math.max(1, Number(servings) || 4),
@@ -117,13 +115,12 @@ export async function POST(request: NextRequest) {
     if (ingErr) return Response.json({ error: ingErr.message }, { status: 500 })
   }
 
-  type StepRow = { title?: string; description?: string; duration_min?: string | number }
+  type StepRow = { description?: string; duration_min?: string | number }
   const validSteps = (steps as StepRow[])
     .filter((s) => s.description?.trim())
     .map((s, idx) => ({
       recipe_id: recipe.id,
       step_number: idx + 1,
-      title: s.title?.trim() || null,
       description: s.description!.trim(),
       duration_min: s.duration_min ? Number(s.duration_min) : null,
     }))

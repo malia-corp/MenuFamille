@@ -11,7 +11,7 @@ import { categoryIcon } from '@/lib/constants/category-icon'
 
 // ── Types exportés ────────────────────────────────────────────
 export interface IngredientRow { _id: string; name: string; quantity: string; unit: string }
-export interface StepRow { _id: string; title: string; description: string; duration: string }
+export interface StepRow { _id: string; description: string }
 export interface AssocItem { id: string; name: string }
 export type DifficultyVal = 'facile' | 'moyen' | 'difficile'
 export type VisibilityVal = 'private' | 'circle' | 'community'
@@ -19,7 +19,6 @@ export type VisibilityVal = 'private' | 'circle' | 'community'
 export interface RecipeFormValues {
   name: string
   description: string
-  tip: string
   categoryId: string
   prepTime: string
   cookTime: string
@@ -49,7 +48,7 @@ export interface RecipeFormProps {
 
 export const uid = () => Math.random().toString(36).slice(2)
 export const emptyIngredient = (): IngredientRow => ({ _id: uid(), name: '', quantity: '', unit: '' })
-export const emptyStep = (): StepRow => ({ _id: uid(), title: '', description: '', duration: '' })
+export const emptyStep = (): StepRow => ({ _id: uid(), description: '' })
 
 export function clearRecipeDraft(key: string) {
   try { localStorage.removeItem(key) } catch { /* stockage indisponible */ }
@@ -67,8 +66,8 @@ const NO_ASSOCIATIONS_SLUGS = new Set(['boisson', 'bouillie-cereales'])
 const DRAFT_DELAY_MS = 2000
 
 // Un brouillon ne vaut la peine d'être gardé que s'il contient une saisie.
-function isMeaningful(d: { name?: string; description?: string; tip?: string; ingredients?: IngredientRow[]; steps?: StepRow[] }) {
-  return !!(d.name?.trim() || d.description?.trim() || d.tip?.trim()
+function isMeaningful(d: { name?: string; description?: string; ingredients?: IngredientRow[]; steps?: StepRow[] }) {
+  return !!(d.name?.trim() || d.description?.trim()
     || d.ingredients?.some(i => i.name.trim()) || d.steps?.some(s => s.description.trim()))
 }
 
@@ -123,7 +122,6 @@ export function RecipeForm({
 
   const [name,        setName]        = useState(defaultValues?.name        ?? '')
   const [description, setDescription] = useState(defaultValues?.description ?? '')
-  const [tip,         setTip]         = useState(defaultValues?.tip         ?? '')
   const [categoryId,  setCategoryId]  = useState(defaultValues?.categoryId  ?? '')
   const [prepTime,    setPrepTime]    = useState(defaultValues?.prepTime    ?? '')
   const [cookTime,    setCookTime]    = useState(defaultValues?.cookTime    ?? '')
@@ -173,9 +171,9 @@ export function RecipeForm({
 
   // ── Brouillon local ──────────────────────────────────────────
   const snapshot = useMemo(() => ({
-    name, description, tip, categoryId, prepTime, cookTime, servings, difficulty, visibility, circleId,
+    name, description, categoryId, prepTime, cookTime, servings, difficulty, visibility, circleId,
     ingredients, steps, sideItems, drinkItems,
-  }), [name, description, tip, categoryId, prepTime, cookTime, servings, difficulty, visibility, circleId, ingredients, steps, sideItems, drinkItems])
+  }), [name, description, categoryId, prepTime, cookTime, servings, difficulty, visibility, circleId, ingredients, steps, sideItems, drinkItems])
 
   // Restauration au montage — sauf si le formulaire est pré-rempli (import).
   useEffect(() => {
@@ -186,7 +184,6 @@ export function RecipeForm({
       if (d && isMeaningful(d)) {
         if (d.name !== undefined) setName(d.name)
         if (d.description !== undefined) setDescription(d.description)
-        if (d.tip !== undefined) setTip(d.tip)
         if (d.categoryId !== undefined) setCategoryId(d.categoryId)
         if (d.prepTime !== undefined) setPrepTime(d.prepTime)
         if (d.cookTime !== undefined) setCookTime(d.cookTime)
@@ -195,7 +192,7 @@ export function RecipeForm({
         if (d.visibility) setVisibility(d.visibility)
         if (d.circleId !== undefined) setCircleId(d.circleId)
         if (d.ingredients?.length) setIngredients(d.ingredients)
-        if (d.steps?.length) setSteps(d.steps.map(s => ({ ...emptyStep(), ...s })))
+        if (d.steps?.length) setSteps(d.steps.map(s => ({ _id: s._id ?? uid(), description: s.description ?? '' })))
         if (d.sideItems) setSideItems(d.sideItems)
         if (d.drinkItems) setDrinkItems(d.drinkItems)
         setDraftRestored(true)
@@ -221,7 +218,7 @@ export function RecipeForm({
   function discardDraft() {
     if (!draftKey) return
     clearRecipeDraft(draftKey)
-    setName(''); setDescription(''); setTip(''); setCategoryId(''); setPrepTime(''); setCookTime('')
+    setName(''); setDescription(''); setCategoryId(''); setPrepTime(''); setCookTime('')
     setServings(4); setDifficulty('moyen'); setVisibility('private'); setCircleId('')
     setIngredients([emptyIngredient()]); setSteps([emptyStep()]); setSideItems([]); setDrinkItems([])
     setDraftRestored(false)
@@ -257,8 +254,8 @@ export function RecipeForm({
   // ── Lignes ────────────────────────────────────────────────────
   const updateIngredient = (id: string, f: keyof Omit<IngredientRow, '_id'>, v: string) =>
     setIngredients(p => p.map(i => i._id === id ? { ...i, [f]: v } : i))
-  const updateStep = (id: string, f: keyof Omit<StepRow, '_id'>, v: string) =>
-    setSteps(p => p.map(s => s._id === id ? { ...s, [f]: v } : s))
+  const updateStep = (id: string, v: string) =>
+    setSteps(p => p.map(s => s._id === id ? { ...s, description: v } : s))
 
   async function handleSubmit() {
     setNameError(null)
@@ -375,13 +372,8 @@ export function RecipeForm({
               </div>
             </div>
             <div>
-              <label htmlFor="recipe-description" className={LABEL}>Description (optionnel)</label>
-              <textarea id="recipe-description" value={description} onChange={e => setDescription(e.target.value)} rows={2}
-                placeholder="Présente le plat en une ou deux phrases" className={`${INPUT} resize-none`} />
-            </div>
-            <div>
-              <label htmlFor="recipe-tip" className={LABEL}>Astuce de famille (optionnel)</label>
-              <textarea id="recipe-tip" value={tip} onChange={e => setTip(e.target.value)} rows={3}
+              <label htmlFor="recipe-description" className={LABEL}>Astuce ou description (optionnel)</label>
+              <textarea id="recipe-description" value={description} onChange={e => setDescription(e.target.value)} rows={3}
                 placeholder="Le secret de famille : tremper les tranches de plantain dans une eau légèrement salée…" className={`${INPUT} resize-none`} />
             </div>
           </section>
@@ -487,17 +479,9 @@ export function RecipeForm({
               {steps.map((step, idx) => (
                 <li key={step._id} className="flex gap-2.5">
                   <span className="mt-1.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--kkb-coral)] font-dosis font-bold text-sm text-white">{idx + 1}</span>
-                  <div className="min-w-0 flex-1 space-y-1.5">
-                    <div className="flex gap-1.5">
-                      <input type="text" value={step.title} onChange={e => updateStep(step._id, 'title', e.target.value)}
-                        placeholder="Titre (optionnel)" aria-label={`Titre de l'étape ${idx + 1}`} className={`${FIELD} min-w-0 flex-1 py-2 font-semibold`} />
-                      <input type="text" inputMode="numeric" value={step.duration} onChange={e => updateStep(step._id, 'duration', e.target.value.replace(/\D/g, ''))}
-                        placeholder="min" aria-label={`Durée de l'étape ${idx + 1} en minutes`} className={`${FIELD} w-16 shrink-0 px-2 py-2 text-center`} />
-                    </div>
-                    <textarea value={step.description} onChange={e => updateStep(step._id, 'description', e.target.value)} rows={2}
-                      placeholder={idx === 0 ? 'Éplucher les bananes plantains, les couper en rondelles obliques…' : `Étape ${idx + 1}…`}
-                      aria-label={`Description de l'étape ${idx + 1}`} className={`${INPUT} resize-none`} />
-                  </div>
+                  <textarea value={step.description} onChange={e => updateStep(step._id, e.target.value)} rows={2}
+                    placeholder={idx === 0 ? 'Éplucher les bananes plantains, les couper en rondelles obliques…' : `Étape ${idx + 1}…`}
+                    aria-label={`Description de l'étape ${idx + 1}`} className={`${INPUT} min-w-0 flex-1 resize-none`} />
                   <button type="button" onClick={() => setSteps(p => p.length > 1 ? p.filter(s => s._id !== step._id) : p)} disabled={steps.length === 1}
                     aria-label={`Supprimer l'étape ${idx + 1}`} className="mt-1.5 shrink-0 p-1.5 text-[var(--kkb-text-tertiary)] hover:text-[var(--kkb-danger)] disabled:opacity-30">
                     <Trash2 className="h-4 w-4" />
