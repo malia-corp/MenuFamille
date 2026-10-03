@@ -1024,6 +1024,7 @@ export type Database = {
       }
       users: {
         Row: {
+          active_circle_id: string | null
           created_at: string
           dietary_prefs: Json
           display_name: string
@@ -1033,6 +1034,7 @@ export type Database = {
           preferences: Json
         }
         Insert: {
+          active_circle_id?: string | null
           created_at?: string
           dietary_prefs?: Json
           display_name: string
@@ -1042,6 +1044,7 @@ export type Database = {
           preferences?: Json
         }
         Update: {
+          active_circle_id?: string | null
           created_at?: string
           dietary_prefs?: Json
           display_name?: string
@@ -1050,7 +1053,15 @@ export type Database = {
           id?: string
           preferences?: Json
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "users_active_circle_id_fkey"
+            columns: ["active_circle_id"]
+            isOneToOne: false
+            referencedRelation: "family_circles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

@@ -30,6 +30,7 @@ import { DietaryPrefsSheet } from '@/components/settings/dietary-prefs-sheet'
 import { ShareActions, appSharePayload } from '@/components/ui/share-actions'
 import { toast } from '@/lib/stores/toast-store'
 import { logout } from '@/lib/utils/logout'
+import { pickActiveCircle } from '@/lib/utils/active-circle'
 import { prefChipStyle, type Pref } from '@/lib/constants/dietary-pref'
 
 interface UserProfile {
@@ -130,7 +131,7 @@ export default function ProfilePage() {
       .catch(() => {})
     fetch('/api/circles')
       .then((r) => (r.ok ? r.json() : null))
-      .then((res) => setCircle(res?.data?.[0] ?? null))
+      .then((res) => setCircle(pickActiveCircle<Circle>(res)))
       .catch(() => {})
   }, [])
 

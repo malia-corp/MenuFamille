@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
+import { resolveActiveCircleId } from '@/lib/utils/active-circle'
 
 export async function GET() {
   const supabase = await createClient()
@@ -32,7 +33,9 @@ export async function GET() {
     my_role: m.role,
   }))
 
-  return Response.json({ data: circles, viewer_id: user.id })
+  const active_circle_id = await resolveActiveCircleId(supabase, user.id)
+
+  return Response.json({ data: circles, viewer_id: user.id, active_circle_id })
 }
 
 function makeInviteCode(displayName: string): string {
@@ -84,6 +87,9 @@ export async function POST(request: Request) {
     user_id: user.id,
     role: 'planificatrice',
   })
+
+  // Le cercle créé devient le cercle affiché.
+  await supabase.from('users').update({ active_circle_id: circle.id }).eq('id', user.id)
 
   return Response.json({ circle }, { status: 201 })
 }

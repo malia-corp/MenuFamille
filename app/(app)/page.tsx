@@ -19,6 +19,7 @@ import { TipCard } from '@/components/home/tip-card'
 import type { ChipItem } from '@/components/home/composition-carousel'
 import { EmptyState } from '@/components/ui/empty-state'
 import { SkeletonCard } from '@/components/ui/skeleton-card'
+import { pickActiveCircle } from '@/lib/utils/active-circle'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -141,7 +142,7 @@ export default function HomePage() {
       setConfigs(Array.isArray(configRes) ? configRes : [])
       setPlan(planRes?.id ? planRes : null)
 
-      const circle = circlesRes?.data?.[0]
+      const circle = pickActiveCircle<{ id: string; my_role: string; family_circle_members?: unknown[] }>(circlesRes)
       setMemberCount(circle?.family_circle_members?.length ?? 1)
       setIsMember(circle?.my_role === 'membre')
 
