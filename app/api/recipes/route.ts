@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
 import { upsertSuggestedAssociations } from '@/lib/utils/recipe-associations'
+import { findSimilarRecipe } from '@/lib/utils/recipe-similarity'
 import { NextRequest } from 'next/server'
 
 const DIACRITICS_RE = /[̀-ͯ]/g
@@ -58,17 +59,15 @@ export async function POST(request: NextRequest) {
   const service = createServiceClient()
   const fingerprint = makeFingerprint(name)
 
-  if (!force && !parent_recipe_id) {
-    const { data: similars } = await service
-      .from('recipes')
-      .select('id, name')
-      .eq('name_fingerprint', fingerprint)
-      .or(`user_id.eq.${user.id},visibility.eq.community`)
-      .limit(1)
-    const similar = similars?.[0] ?? null
-    if (similar) {
-      return Response.json({ conflict: true, existing: { id: similar.id, name: similar.name } }, { status: 409 })
-    }
+  // Doublon : uniquement pour une recette partagée (cercle / communauté) — le
+  // client fait normalement ce contrôle avant via /api/recipes/check-duplicate.
+  if (!force && !parent_recipe_id && visibility !== 'private') {
+    const similar = await findSimilarRecipe(service, {
+      name: name.trim(),
+      userId: user.id,
+      circleId: visibility === 'circle' ? circle_id : null,
+    })
+    if (similar) return Response.json({ conflict: true, existing: similar }, { status: 409 })
   }
 
   let slug = makeSlug(name.trim()) || 'recette'

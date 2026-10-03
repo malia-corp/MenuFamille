@@ -61,19 +61,29 @@ export async function GET(
     (a, b) => (a.step_number ?? 0) - (b.step_number ?? 0)
   )
 
-  const { data: fav } = await service
+  // Foyer = membres de mes cercles (moi compris) : "Favori du foyer N/M"
+  const { data: myCircles } = await service.from('family_circle_members').select('circle_id').eq('user_id', user.id)
+  const circleIds = (myCircles ?? []).map(c => c.circle_id as string)
+  let foyerIds = [user.id]
+  if (circleIds.length > 0) {
+    const { data: mates } = await service.from('family_circle_members').select('user_id').in('circle_id', circleIds)
+    foyerIds = Array.from(new Set([user.id, ...(mates ?? []).map(m => m.user_id as string)]))
+  }
+
+  const { data: favRows } = await service
     .from('recipe_favorites')
-    .select('id')
+    .select('user_id')
     .eq('recipe_id', recipe.id)
-    .eq('user_id', user.id)
-    .maybeSingle()
+    .in('user_id', foyerIds)
 
   return Response.json({
     ...recipe,
     recipe_ingredients: ingredients,
     recipe_steps: steps,
-    is_favorited: !!fav,
+    is_favorited: (favRows ?? []).some(f => f.user_id === user.id),
     is_owner: recipe.user_id === user.id,
+    foyer_favorites: favRows?.length ?? 0,
+    foyer_size: foyerIds.length,
   })
 }
 
