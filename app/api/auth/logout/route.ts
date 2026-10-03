@@ -1,8 +1,9 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
+import { publicOrigin } from '@/lib/utils/public-origin'
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient()
   await supabase.auth.signOut()
-  return NextResponse.redirect(new URL('/login', request.nextUrl.origin))
+  return NextResponse.redirect(new URL('/login', publicOrigin(request)))
 }

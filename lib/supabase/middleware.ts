@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { publicOrigin } from '@/lib/utils/public-origin'
 
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request })
@@ -32,10 +33,13 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith('/login') ||
     pathname.startsWith('/api/auth') ||
     pathname.startsWith('/s/') ||
-    pathname.startsWith('/api/surveys')
+    pathname.startsWith('/api/surveys') ||
+    // Tâches planifiées (cron) : protégées par l'en-tête x-cron-secret,
+    // appelées sans session.
+    pathname.startsWith('/api/jobs/')
 
   if (!user && !isPublicPath) {
-    return NextResponse.redirect(new URL('/login', request.url))
+    return NextResponse.redirect(new URL('/login', publicOrigin(request)))
   }
 
   return response

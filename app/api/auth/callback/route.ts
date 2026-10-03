@@ -2,9 +2,11 @@ import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
 import { DEFAULT_MEAL_CONFIGS } from '@/lib/constants/meal-type'
 import { NextRequest, NextResponse } from 'next/server'
+import { publicOrigin } from '@/lib/utils/public-origin'
 
 export async function GET(request: NextRequest) {
-  const { searchParams, origin } = request.nextUrl
+  const { searchParams } = request.nextUrl
+  const origin = publicOrigin(request)
   const code = searchParams.get('code')
 
   if (!code) {
