@@ -301,7 +301,7 @@ export default function HomePage() {
   )
 
   return (
-    <div className="mx-auto max-w-sm px-4 pt-2 pb-8 lg:max-w-[1280px] lg:px-8 lg:pt-0">
+    <div className="mx-auto max-w-sm px-4 pt-2 pb-8 lg:max-w-none lg:px-6 lg:pt-0 xl:px-10">
       <div className="space-y-6 lg:grid lg:grid-cols-12 lg:items-start lg:gap-6 lg:space-y-0">
         {/* ─── Colonne principale ─────────────────────────────────────────── */}
         <div className="space-y-6 lg:col-span-8">

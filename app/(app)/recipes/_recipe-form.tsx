@@ -532,7 +532,7 @@ export function RecipeForm({
       {apiError && <p className="mt-4 text-sm font-quicksand text-[var(--kkb-danger)]">{apiError}</p>}
 
       {/* Enregistrer : pastille compacte centrée au-dessus de la bottom nav (mobile), barre pleine largeur (desktop) */}
-      <div className="fixed bottom-[var(--kkb-nav-offset)] left-1/2 z-30 -translate-x-1/2 lg:inset-x-0 lg:bottom-0 lg:left-60 lg:translate-x-0 lg:border-t lg:border-[var(--kkb-border)] lg:bg-white lg:px-8 lg:py-3">
+      <div className="fixed bottom-[var(--kkb-nav-offset)] left-1/2 z-30 -translate-x-1/2 lg:inset-x-0 lg:bottom-0 lg:left-24 lg:translate-x-0 lg:border-t lg:border-[var(--kkb-border)] lg:bg-white lg:px-8 lg:py-3">
         <div className="mx-auto flex max-w-[1300px] items-center gap-4">
           {draftKey && (
             <p className="hidden flex-1 items-center gap-1.5 text-xs font-quicksand text-[var(--kkb-success)] lg:flex" aria-live="polite">

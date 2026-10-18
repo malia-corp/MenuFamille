@@ -19,7 +19,7 @@ export function DesktopHeader({ circleName, role, displayName }: DesktopHeaderPr
   const initial = (displayName ?? '?').trim().charAt(0).toUpperCase()
 
   return (
-    <header className="hidden lg:flex print:hidden fixed top-0 left-60 right-0 h-16 z-30 bg-white/85 backdrop-blur-xl border-b border-[color-mix(in_srgb,var(--kkb-border)_50%,transparent)] px-8 items-center justify-between">
+    <header className="hidden lg:flex print:hidden fixed top-0 left-24 right-0 h-16 z-30 bg-white/85 backdrop-blur-xl border-b border-[color-mix(in_srgb,var(--kkb-border)_50%,transparent)] px-6 xl:px-10 items-center justify-between">
       <span className="font-quicksand text-sm text-[var(--kkb-text-secondary)]">
         Foyer · {circleName ?? 'Mon cercle'}
       </span>

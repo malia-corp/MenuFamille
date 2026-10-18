@@ -244,7 +244,7 @@ export default function MealConfigPage() {
       </section>
 
       {/* Enregistrer : fixe en bas (pas de bottom nav sur les pages réglages) */}
-      <div className="fixed bottom-5 left-4 right-4 z-40 mx-auto max-w-lg lg:left-60 lg:max-w-2xl lg:px-4">
+      <div className="fixed bottom-5 left-4 right-4 z-40 mx-auto max-w-lg lg:left-24 lg:max-w-2xl lg:px-4">
         <button
           type="button"
           onClick={() => void save()}
