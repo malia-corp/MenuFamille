@@ -19,12 +19,13 @@ interface CircleSwitcherProps {
   // Contenu du bouton (nom du cercle + méta), propre à chaque mise en page.
   children: React.ReactNode
   className?: string
+  tone?: 'light' | 'onDark' // onDark : posé sur le vert forêt
 }
 
 // Sélection du cercle à consulter : liste déroulante (uniquement les cercles
 // de l'utilisateur, cf. GET /api/circles) avec recherche par nom. Choisir un
 // cercle l'affiche sans l'activer ; l'activation est une action à part.
-export function CircleSwitcher({ circles, selectedId, activeId, onSelect, children, className = '' }: CircleSwitcherProps) {
+export function CircleSwitcher({ circles, selectedId, activeId, onSelect, children, className = '', tone = 'light' }: CircleSwitcherProps) {
   const [open,     setOpen]     = useState(false)
   const [query,    setQuery]    = useState('')
   const [pending,  setPending]  = useState<string | null>(null)
@@ -63,7 +64,7 @@ export function CircleSwitcher({ circles, selectedId, activeId, onSelect, childr
         className="flex w-full items-center gap-2 text-left"
       >
         <span className="min-w-0 flex-1">{children}</span>
-        <ChevronDown className={`h-5 w-5 shrink-0 text-[var(--kkb-text-tertiary)] transition-transform ${open ? 'rotate-180' : ''}`} />
+        <ChevronDown className={`h-5 w-5 shrink-0 transition-transform ${tone === 'onDark' ? 'text-[var(--kkb-foret-100)]' : 'text-[var(--kkb-text-tertiary)]'} ${open ? 'rotate-180' : ''}`} />
       </button>
 
       {open && (
@@ -97,7 +98,7 @@ export function CircleSwitcher({ circles, selectedId, activeId, onSelect, childr
                     aria-selected={selected}
                     onClick={() => void choose(c.id)}
                     disabled={pending !== null}
-                    className={`flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-[var(--kkb-bg)] ${selected ? 'bg-[color-mix(in_srgb,var(--kkb-coral-light)_50%,transparent)]' : ''}`}
+                    className={`flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-[var(--kkb-bg)] ${selected ? 'bg-[var(--kkb-foret-50)]' : ''}`}
                   >
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--kkb-teal-light)]">
                       <Users className="h-4 w-4 text-[var(--kkb-teal)]" />
@@ -109,7 +110,7 @@ export function CircleSwitcher({ circles, selectedId, activeId, onSelect, childr
                       </span>
                     </span>
                     {pending === c.id ? (
-                      <Loader2 className="h-4 w-4 animate-spin text-[var(--kkb-coral)]" />
+                      <Loader2 className="h-4 w-4 animate-spin text-[var(--kkb-foret)]" />
                     ) : (
                       <span className="flex shrink-0 items-center gap-1.5">
                         {active && (
@@ -118,7 +119,7 @@ export function CircleSwitcher({ circles, selectedId, activeId, onSelect, childr
                         {disabled && (
                           <span className="rounded-[var(--kkb-radius-pill)] border border-[var(--kkb-border)] bg-[var(--kkb-bg)] px-2 py-0.5 font-quicksand text-[10px] font-bold text-[var(--kkb-text-tertiary)]">Désactivé</span>
                         )}
-                        {selected && <Check className="h-4 w-4 text-[var(--kkb-coral)]" aria-label="Consulté" />}
+                        {selected && <Check className="h-4 w-4 text-[var(--kkb-foret-500)]" aria-label="Consulté" />}
                       </span>
                     )}
                   </button>
@@ -131,7 +132,7 @@ export function CircleSwitcher({ circles, selectedId, activeId, onSelect, childr
           </ul>
 
           <div className="grid grid-cols-2 border-t border-[var(--kkb-border-light)]">
-            <Link href="/circle/create" className="flex items-center justify-center gap-1.5 py-3 font-quicksand text-xs font-bold text-[var(--kkb-coral)] hover:bg-[var(--kkb-coral-light)]">
+            <Link href="/circle/create" className="flex items-center justify-center gap-1.5 py-3 font-quicksand text-xs font-bold text-[var(--kkb-foret)] hover:bg-[var(--kkb-foret-50)]">
               <PlusCircle className="h-4 w-4" /> Créer un cercle
             </Link>
             <Link href="/circle/join" className="flex items-center justify-center gap-1.5 border-l border-[var(--kkb-border-light)] py-3 font-quicksand text-xs font-bold text-[var(--kkb-teal)] hover:bg-[var(--kkb-teal-light)]">

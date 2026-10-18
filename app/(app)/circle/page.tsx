@@ -6,30 +6,28 @@ import { useRouter } from 'next/navigation'
 import { QRCodeSVG } from 'qrcode.react'
 import {
   Check,
-  CheckCircle,
   Clock,
   Heart,
+  Info,
   Key,
   KeyRound,
   Loader2,
   Lock,
   LogOut,
-  Pencil,
   Plus,
   Power,
   Printer,
   QrCode,
   ThumbsUp,
+  UserMinus,
   Users,
-  Utensils,
-  UtensilsCrossed,
   X,
 } from 'lucide-react'
 import { ShareActions, circleInvitePayload, circleJoinLinkPayload, circleJoinUrl } from '@/components/ui/share-actions'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Switch } from '@/components/ui/switch'
 import { MealTypeIcon } from '@/components/ui/meal-type-icon'
-import { MEAL_LABEL, type MealType } from '@/lib/constants/meal-type'
+import { MEAL_COLOR, MEAL_LABEL, type MealType } from '@/lib/constants/meal-type'
 import { PREF_TYPE_OPTIONS, prefChipStyle, type Pref, type PrefType, type Severity } from '@/lib/constants/dietary-pref'
 import { pickActiveCircle } from '@/lib/utils/active-circle'
 import { toast } from '@/lib/stores/toast-store'
@@ -41,7 +39,7 @@ const AVATAR_COLORS = ['var(--kkb-orange)', 'var(--kkb-foret-500)', 'var(--kkb-j
 const ROLE_LABEL: Record<string, string> = { planificatrice: 'Planificatrice', membre: 'Membre' }
 const ROLE_BADGE: Record<string, string> = {
   planificatrice: 'bg-[var(--kkb-foret)] text-[var(--kkb-creme)]',
-  membre:         'bg-[var(--kkb-teal-light)] text-[var(--kkb-teal)]',
+  membre:         'bg-[var(--kkb-foret-50)] text-[var(--kkb-foret)]',
 }
 const ROLE_DESCRIPTION: Record<string, string> = {
   planificatrice: 'Planifie les repas de la semaine, valide la liste de courses et coordonne les votes de la famille.',
@@ -78,12 +76,9 @@ interface CircleStats {
   favorites_count:   number
 }
 
-const SHARE_GHOST = 'flex-1 flex items-center justify-center gap-1.5 rounded-[var(--kkb-radius-pill)] border border-[var(--kkb-border)] bg-white py-2.5 font-quicksand text-sm font-bold text-[var(--kkb-text-secondary)] transition-colors hover:border-[var(--kkb-coral)] hover:text-[var(--kkb-coral)] disabled:opacity-60'
-const SHARE_TEAL  = 'flex-1 flex items-center justify-center gap-1.5 rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-teal)] py-2.5 font-quicksand text-sm font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-60'
-
-function prefsSummary(prefs: Pref[]): string {
-  if (prefs.length === 0) return 'Aucune préférence renseignée'
-  return prefs.slice(0, 3).map((p) => p.value).join(' · ') + (prefs.length > 3 ? '…' : '')
+// « Imalyn, Koffi, Aïcha et Sena »
+function joinNames(names: string[]): string {
+  return names.length <= 1 ? names.join('') : `${names.slice(0, -1).join(', ')} et ${names[names.length - 1]}`
 }
 
 export default function CirclePage() {
@@ -107,6 +102,7 @@ export default function CirclePage() {
   const [prefSeverity, setPrefSeverity] = useState<Severity>('strict')
   const [savingPref,   setSavingPref]   = useState(false)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+  const [showQr, setShowQr] = useState(false)
 
   useEffect(() => {
     fetch('/api/circles')
@@ -335,7 +331,6 @@ export default function CirclePage() {
   const members = (circle.family_circle_members ?? []).filter((m) => m.users)
   const isPlanificatrice = circle.my_role === 'planificatrice'
   const me = members.find((m) => m.users!.id === currentUserId)
-  const myPrefs = me?.users?.member_dietary_prefs ?? []
 
   // Puces de préférences d'un membre (suppression au 2e tap + "Ajouter").
   function prefChips(m: Member, size: 'sm' | 'md') {
@@ -399,54 +394,24 @@ export default function CirclePage() {
     )
   }
 
-  // Planificatrice : statut (actif / désactivé) et retrait d'un membre.
-  const removeButton = (m: Member) =>
-    isPlanificatrice && m.users!.id !== currentUserId ? (
-      <div className="flex shrink-0 flex-col items-end gap-1">
-        {m.role === 'membre' && (
-          <label className="flex items-center gap-1.5 font-quicksand text-[11px] font-semibold text-[var(--kkb-text-tertiary)]">
-            {m.is_active === false ? 'Désactivé' : 'Actif'}
-            <Switch
-              checked={m.is_active !== false}
-              onCheckedChange={(on) => void setMemberActive(circle.id, m.users!.id, on)}
-              aria-label={`Statut de ${m.users!.display_name || m.users!.email}`}
-              className="data-[state=checked]:bg-[var(--kkb-success)] data-[state=unchecked]:bg-[var(--kkb-border)]"
-            />
-          </label>
-        )}
-        <button
-          type="button"
-          onClick={() => void removeMember(circle.id, m.users!.id)}
-          className="rounded-[var(--kkb-radius-pill)] px-2.5 py-1 font-quicksand text-xs font-semibold text-[var(--kkb-danger)] transition-colors hover:bg-[var(--kkb-danger-light)]"
-        >
-          Retirer
-        </button>
-      </div>
-    ) : null
-
-  const inactiveBadge = (m: Member) =>
-    m.is_active === false ? (
-      <span className="rounded-[var(--kkb-radius-pill)] border border-[var(--kkb-border)] bg-[var(--kkb-bg)] px-2 py-0.5 font-quicksand text-xs font-bold text-[var(--kkb-text-tertiary)]">Désactivé</span>
-    ) : null
-
   const aloneState = members.length <= 1 && (
-    <div className="rounded-[var(--kkb-radius-card)] border border-dashed border-[var(--kkb-border)] bg-white">
+    <div className="rounded-[var(--kkb-r-lg)] border-[1.5px] border-dashed border-[var(--kkb-filet)] bg-white">
       {/* Pas de bouton : le code d'invitation et le partage sont déjà visibles */}
       <EmptyState
         icon={Users}
-        title="Tu es seul(e) dans ce cercle pour l'instant"
-        description="Invite ta famille avec le code ou le lien d'accès."
+        title="La table n'attend plus que ta famille"
+        description="Partage le code du foyer ou le lien d'accès pour qu'elle te rejoigne."
         className="py-8"
       />
     </div>
   )
 
   const otherActions = (
-    <div className="space-y-2 pt-2">
+    <div className="space-y-1">
       <button
         type="button"
         onClick={() => router.push('/circle/create')}
-        className="flex w-full items-center justify-center gap-2 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white py-3 font-quicksand text-sm font-semibold text-[var(--kkb-text-secondary)] transition-colors hover:bg-[var(--kkb-coral-light)]"
+        className="flex h-11 w-full items-center justify-center gap-2 rounded-full border-[1.5px] border-dashed border-[var(--kkb-foret-300)] font-quicksand text-sm font-semibold text-[var(--kkb-foret)] transition-colors hover:bg-[var(--kkb-foret-50)]"
       >
         <Plus className="h-4 w-4" />
         Créer ou rejoindre un autre cercle
@@ -455,36 +420,10 @@ export default function CirclePage() {
         <button
           type="button"
           onClick={() => void leaveCircle(circle.id)}
-          className="flex w-full items-center justify-center gap-2 rounded-[var(--kkb-radius-card)] py-3 font-quicksand text-sm font-semibold text-[var(--kkb-danger)] transition-colors hover:bg-[var(--kkb-danger-light)]"
+          className="flex h-11 w-full items-center justify-center gap-2 rounded-full font-quicksand text-sm font-semibold text-[var(--kkb-danger)] transition-colors hover:bg-[var(--kkb-danger-light)]"
         >
           <LogOut className="h-4 w-4" />
           Quitter le cercle
-        </button>
-      )}
-    </div>
-  )
-
-  // Statut du cercle consulté : actif, à activer, ou accès désactivé.
-  const statusRow = (
-    <div className="flex items-center justify-between gap-2 rounded-[var(--kkb-radius-sm)] border border-[var(--kkb-border-light)] px-3 py-2">
-      <span className="font-quicksand text-xs font-semibold text-[var(--kkb-text-secondary)]">Statut cercle</span>
-      {!circle.my_is_active ? (
-        <span className="inline-flex items-center gap-1.5 rounded-[var(--kkb-radius-pill)] border border-[var(--kkb-border)] bg-[var(--kkb-bg)] px-2.5 py-1 font-quicksand text-xs font-bold text-[var(--kkb-text-tertiary)]">
-          <Lock className="h-3 w-3" /> Accès désactivé
-        </span>
-      ) : isActiveCircle ? (
-        <span className="inline-flex items-center gap-1.5 rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-success-light)] px-2.5 py-1 font-quicksand text-xs font-bold text-[var(--kkb-success)]">
-          <span className="h-1.5 w-1.5 rounded-full bg-[var(--kkb-success)]" /> Actif
-        </span>
-      ) : (
-        <button
-          type="button"
-          onClick={() => void activateCircle(circle.id)}
-          disabled={activating}
-          className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[var(--kkb-coral)] px-4 font-quicksand text-sm font-bold text-white transition-colors hover:bg-[var(--kkb-coral-hover)] disabled:opacity-60"
-        >
-          {activating ? <Loader2 className="h-3 w-3 animate-spin" /> : <Power className="h-3 w-3" />}
-          Activer ce cercle
         </button>
       )}
     </div>
@@ -496,27 +435,31 @@ export default function CirclePage() {
   // seulement ses propres informations et l'historique de ses avis.
   if (!circle.my_is_active) {
     return (
-      <div className="mx-auto max-w-lg space-y-5 px-4 pb-8 pt-4 lg:pt-8">
-        <section className="space-y-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white p-4">
-          <CircleSwitcher {...switcherProps}>
-            <span className="block truncate font-dosis text-lg font-bold text-[var(--kkb-text-primary)]">{circle.name}</span>
-            <span className="block font-quicksand text-xs text-[var(--kkb-text-tertiary)]">{circles.length > 1 ? `${circles.length} cercles` : 'Mon cercle'}</span>
+      <div className="mx-auto max-w-lg space-y-4 px-4 pb-8 pt-2 lg:max-w-2xl lg:px-0 lg:pt-0">
+        <section className="rounded-[var(--kkb-r-xl)] bg-[var(--kkb-foret)] p-5 lg:p-6">
+          <p className="font-quicksand text-sm font-semibold text-[var(--kkb-foret-100)]">
+            Cercle familial{circles.length > 1 ? ` · ${circles.length} cercles` : ''}
+          </p>
+          <CircleSwitcher {...switcherProps} tone="onDark" className="mt-0.5 w-fit max-w-full">
+            <span className="block truncate text-h1 text-[var(--kkb-creme)]">{circle.name}</span>
           </CircleSwitcher>
-          {statusRow}
+          <span className="mt-4 inline-flex h-8 items-center gap-1.5 rounded-full bg-white/10 px-3 font-quicksand text-xs font-bold text-[var(--kkb-foret-100)]">
+            <Lock className="h-3.5 w-3.5" /> Accès en pause
+          </span>
         </section>
-        <section className="rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white">
+        <section className="rounded-[var(--kkb-r-xl)] bg-white">
           <EmptyState
             icon={Lock}
-            title="Ton accès à ce cercle est désactivé"
-            description="La planificatrice a désactivé ta participation : tu ne vois plus le menu, les votes ni les membres. Tu gardes l'historique de tes avis."
+            title="Ton accès à ce cercle est en pause"
+            description="La planificatrice a mis ta participation en pause : tu ne vois plus le menu, les sondages ni les membres. Tu gardes l'historique de tes avis."
             ctaLabel="Voir mes avis"
             ctaHref="/feedback"
             className="py-8"
           />
         </section>
         {me && (
-          <section className="space-y-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white p-4">
-            <p className="font-dosis text-base font-bold text-[var(--kkb-text-primary)]">Mon assiette personnalisée</p>
+          <section className="space-y-3 rounded-[var(--kkb-r-xl)] bg-white p-5">
+            <p className="text-h3 text-[var(--kkb-profond)]">Mon assiette personnalisée</p>
             {prefChips(me, 'md')}
           </section>
         )}
@@ -526,290 +469,256 @@ export default function CirclePage() {
   }
 
   // Membre actif : le code d'invitation est toujours renvoyé par l'API.
-  const inviteCode = circle.invite_code ?? ''
+  const inviteCode    = circle.invite_code ?? ''
+  const activeMembers = members.filter((m) => m.is_active !== false)
+  const activeMeals   = mealConfigs.filter((c) => c.is_active)
+  const ghostBtn = 'flex h-11 flex-1 items-center justify-center gap-1.5 rounded-full border-[1.5px] border-[var(--kkb-filet)] bg-white font-quicksand text-sm font-semibold text-[var(--kkb-foret)] transition-colors hover:border-[var(--kkb-foret-300)] disabled:opacity-60'
 
   return (
     <>
-      {/* ─── Mobile ─────────────────────────────────────────────────────── */}
-      <div className="mx-auto max-w-lg space-y-5 px-4 pb-6 pt-4 lg:hidden print:hidden">
-        {/* Statut du cercle */}
-        <section className="space-y-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white p-4">
-          <CircleSwitcher {...switcherProps}>
-            <span className="flex items-center gap-3">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--kkb-foret-50)]">
-                <Users className="h-5 w-5 text-[var(--kkb-foret)]" />
-              </span>
-              <span className="min-w-0">
-                <span className="block truncate font-dosis text-lg font-bold text-[var(--kkb-text-primary)]">{circle.name}</span>
-                <span className="block font-quicksand text-xs text-[var(--kkb-text-tertiary)]">
-                  {members.length} {members.length > 1 ? 'convives' : 'convive'}
-                  {circles.length > 1 && ` · ${circles.length} cercles`}
-                </span>
-              </span>
-            </span>
-          </CircleSwitcher>
-          {statusRow}
-          <p className="flex items-start gap-2 rounded-[var(--kkb-radius-sm)] bg-[var(--kkb-warning-light)] p-3 font-quicksand text-[13px] text-[var(--kkb-text-secondary)]">
-            <Utensils className="mt-0.5 h-4 w-4 shrink-0 text-[var(--kkb-warning)]" />
-            <span>
-              <strong className="font-bold">Cuisine du cœur :</strong> vos votes et appétits guident le menu de la semaine
-              {plannerName && !isPlanificatrice ? ` préparé par ${plannerName}` : ''}.
-            </span>
-          </p>
-        </section>
-
-        {/* Code d'invitation */}
-        <section className="space-y-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white p-4">
-          <p className="flex items-center gap-1.5 font-quicksand text-xs font-bold text-[var(--kkb-text-tertiary)]">
-            <KeyRound className="h-3.5 w-3.5 text-[var(--kkb-foret)]" /> Code d&apos;invitation au cercle
-          </p>
-          <p className="font-dosis text-[28px] font-extrabold tracking-wider text-[var(--kkb-foret)]">{inviteCode}</p>
-          <p className="font-quicksand text-[13px] text-[var(--kkb-text-secondary)]">
-            Partage ce code avec un proche ou un invité du dimanche pour qu&apos;il vote et donne son avis sur les repas.
-          </p>
-          <ShareActions
-            getPayload={() => circleInvitePayload(circle.name, inviteCode)}
-            copyLabel="Copier"
-            className="flex flex-row-reverse items-center gap-2"
-            buttonClassName={SHARE_GHOST}
-            shareButtonClassName={SHARE_TEAL}
-          />
-          <ShareActions
-            getPayload={() => circleJoinLinkPayload(circle.name, inviteCode)}
-            copyLabel="Copier le lien d'accès"
-            className="flex items-center gap-2"
-            buttonClassName={SHARE_GHOST}
-            shareButtonClassName="hidden"
-          />
-        </section>
-
-        {/* Membres */}
-        <section className="space-y-3">
-          <div className="flex items-start justify-between gap-2">
-            <div>
-              <h2 className="flex items-center gap-2 font-dosis text-lg font-bold text-[var(--kkb-text-primary)]">
-                Membres de la tablée
-                <span className="rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-teal-light)] px-2 py-0.5 font-quicksand text-xs font-bold text-[var(--kkb-teal)]">{members.length}</span>
-              </h2>
-              <p className="font-quicksand text-xs text-[var(--kkb-text-tertiary)]">Réunis autour des saveurs de la maison</p>
-            </div>
-            <UtensilsCrossed className="mt-1 h-5 w-5 text-[var(--kkb-text-tertiary)]" />
-          </div>
-
-          {aloneState}
-
-          <div className="space-y-2">
-            {members.map((m, index) => {
-              const u = m.users!
-              const isCurrentUser = u.id === currentUserId
-              return (
-                <div key={m.id} className="space-y-2.5 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white p-3">
-                  <div className="flex items-center gap-3">
-                    {avatar(m, index, 40)}
-                    <div className="min-w-0 flex-1">
-                      <p className="flex flex-wrap items-center gap-1.5">
-                        <span className="truncate font-quicksand text-sm font-bold text-[var(--kkb-text-primary)]">{u.display_name || u.email}</span>
-                        {isCurrentUser && (
-                          <span className="rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-foret-50)] px-2 py-0.5 font-quicksand text-xs font-bold text-[var(--kkb-foret)]">Moi</span>
-                        )}
-                        {inactiveBadge(m)}
-                      </p>
-                      <div className="mt-0.5 flex items-center gap-1.5">
-                        {roleBadge(m.role)}
-                        <span className="truncate font-quicksand text-xs text-[var(--kkb-text-tertiary)]">{prefsSummary(u.member_dietary_prefs ?? [])}</span>
-                      </div>
-                    </div>
-                    {removeButton(m)}
-                  </div>
-                  {prefChips(m, 'sm')}
-                </div>
-              )
-            })}
-          </div>
-        </section>
-
-        {/* Moments de repas (lecture) */}
-        {mealConfigs.length > 0 && (
-          <section className="space-y-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white p-4">
-            <div className="flex items-center justify-between">
-              <p className="flex items-center gap-2 font-quicksand text-[13px] font-bold text-[var(--kkb-text-primary)]">
-                <Clock className="h-4 w-4 text-[var(--kkb-teal)]" />
-                Moments de repas · {mealConfigs.filter((c) => c.is_active).length} créneaux
-              </p>
-              {isPlanificatrice && (
-                <Link href="/settings/meal-config" className="font-quicksand text-xs font-bold text-[var(--kkb-foret)]">Ajuster</Link>
-              )}
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              {mealConfigs.map((c) => (
-                <div
-                  key={c.meal_type}
-                  className={`rounded-[var(--kkb-radius-sm)] border p-2.5 ${c.is_active ? 'border-[var(--kkb-border)] bg-[var(--kkb-bg)]' : 'border-dashed border-[var(--kkb-border)] opacity-60'}`}
-                >
-                  <p className="flex items-center gap-1.5 font-quicksand text-xs font-bold text-[var(--kkb-text-primary)]">
-                    <MealTypeIcon type={c.meal_type} className="h-3.5 w-3.5 text-[var(--kkb-foret)]" />
-                    {MEAL_LABEL[c.meal_type]}
-                    <span className={`ml-auto h-2 w-2 rounded-full ${c.is_active ? 'bg-[var(--kkb-success)]' : 'bg-[var(--kkb-border)]'}`} aria-label={c.is_active ? 'Actif' : 'Inactif'} />
-                  </p>
-                  <p className="mt-1 font-quicksand text-[11px] text-[var(--kkb-text-tertiary)]">
-                    {c.default_time ? c.default_time.slice(0, 5) : '—'} · {c.is_active ? (c.mode === 'daily' ? 'Quotidien' : 'Hebdomadaire') : 'Inactif'}
-                  </p>
-                </div>
-              ))}
-            </div>
-            <p className="font-quicksand text-[11px] text-[var(--kkb-text-tertiary)]">
-              Horaires synchronisés avec le planning de préparation{plannerName && !isPlanificatrice ? ` de ${plannerName}` : ''}
+      <div className="mx-auto max-w-lg px-4 pb-8 pt-2 lg:max-w-none lg:px-0 lg:pt-0 print:hidden">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:gap-5">
+          {/* ── Bandeau : le cercle, son statut, ses chiffres ──────────────── */}
+          <section className="flex flex-col rounded-[var(--kkb-r-xl)] bg-[var(--kkb-foret)] p-5 lg:col-span-8 lg:row-start-1 lg:p-6">
+            <p className="font-quicksand text-sm font-semibold text-[var(--kkb-foret-100)]">
+              Cercle familial{circles.length > 1 ? ` · ${circles.length} cercles` : ''}
             </p>
-          </section>
-        )}
-
-        {/* Mon assiette personnalisée */}
-        {me && (
-          <section className="space-y-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white p-4">
-            <div className="flex items-center justify-between">
-              <p className="font-dosis text-base font-bold text-[var(--kkb-text-primary)]">Mon assiette personnalisée</p>
-              <button
-                type="button"
-                onClick={() => openPrefSheet(circle.id, me.users!.id, me.users!.display_name || me.users!.email)}
-                className="flex items-center gap-1 font-quicksand text-xs font-bold text-[var(--kkb-foret)]"
-              >
-                <Pencil className="h-3.5 w-3.5" /> {myPrefs.length} critère{myPrefs.length > 1 ? 's' : ''}
-              </button>
-            </div>
-            {prefChips(me, 'md')}
-            <p className="font-quicksand text-xs italic text-[var(--kkb-text-tertiary)]">
-              Ces filtres alimentent automatiquement la génération du menu de la semaine.
-            </p>
-          </section>
-        )}
-
-        {/* Stats */}
-        <section className="grid grid-cols-2 gap-2">
-          {[
-            { icon: ThumbsUp, value: stats?.meals_rated_month, label: 'Repas notés ce mois' },
-            { icon: Heart,    value: stats?.favorites_count,   label: 'Plats favoris' },
-          ].map(({ icon: Icon, value, label }) => (
-            <div key={label} className="rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white p-4">
-              <Icon className="h-5 w-5 text-[var(--kkb-foret)]" />
-              <p className="mt-2 font-dosis text-2xl font-bold text-[var(--kkb-text-primary)]">{value ?? '–'}</p>
-              <p className="font-quicksand text-xs text-[var(--kkb-text-tertiary)]">{label}</p>
-            </div>
-          ))}
-        </section>
-
-        {otherActions}
-      </div>
-
-      {/* ─── Desktop ────────────────────────────────────────────────────── */}
-      <div className="hidden pb-8 lg:block print:block print:p-0">
-        <div className="mb-6 flex items-start justify-between gap-6 print:hidden">
-          <div>
-          <p className="font-quicksand text-xs font-bold text-[var(--kkb-foret)]">Tablée &amp; gouvernance</p>
-          <h1 className="text-h1 text-[var(--kkb-foret)]">Cercle familial · {circle.name}</h1>
-          <p className="mt-1 max-w-2xl font-quicksand text-sm text-[var(--kkb-text-secondary)]">
-            Réunissez votre tablée pour voter les repas de la semaine et partager les préférences de chacun.
-          </p>
-          </div>
-          <div className="w-72 shrink-0 space-y-2 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white p-3">
-            <CircleSwitcher {...switcherProps}>
-              <span className="block truncate font-dosis text-base font-bold text-[var(--kkb-text-primary)]">{circle.name}</span>
-              <span className="block font-quicksand text-xs text-[var(--kkb-text-tertiary)]">
-                {members.length} {members.length > 1 ? 'convives' : 'convive'}
-                {circles.length > 1 && ` · ${circles.length} cercles`}
-              </span>
+            <CircleSwitcher {...switcherProps} tone="onDark" className="mt-0.5 w-fit max-w-full">
+              <span className="block truncate text-h1 text-[var(--kkb-creme)]">{circle.name}</span>
             </CircleSwitcher>
-            {statusRow}
-          </div>
-        </div>
+            <p className="mt-2 max-w-xl font-quicksand text-sm text-[var(--kkb-foret-100)]">
+              Vos avis et vos appétits guident le menu de la semaine
+              {plannerName && !isPlanificatrice ? `, préparé par ${plannerName}` : ''}.
+            </p>
 
-        <div className="grid grid-cols-[280px_minmax(0,1fr)] items-start gap-8 print:block">
-          {/* Colonne gauche : invitation */}
-          <aside className="space-y-4">
-            <section className="space-y-3 rounded-[var(--kkb-radius-card)] bg-[var(--kkb-orange-50)] p-5 print:hidden">
-              <p className="font-quicksand text-xs font-bold text-[var(--kkb-text-tertiary)]">Code unique du foyer</p>
-              <p className="font-dosis text-[32px] font-extrabold leading-none tracking-wider text-[var(--kkb-foret)]">{inviteCode}</p>
-              <p className="font-quicksand text-xs text-[var(--kkb-text-secondary)]">
-                Partage ce code avec les enfants ou ton conjoint(e) pour rejoindre la tablée.
-              </p>
-              <ShareActions
-                getPayload={() => circleInvitePayload(circle.name, inviteCode)}
-                copyLabel="Copier"
-                className="flex flex-col gap-2"
-                buttonClassName={SHARE_GHOST + ' w-full flex-none'}
-                shareButtonClassName={SHARE_TEAL + ' w-full flex-none'}
-              />
-            </section>
-
-            <section className="space-y-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white p-5 text-center print:border-0">
-              <div className="flex items-center justify-between print:justify-center">
-                <p className="flex items-center gap-1.5 font-quicksand text-sm font-bold text-[var(--kkb-text-primary)]">
-                  <QrCode className="h-4 w-4 text-[var(--kkb-teal)]" /> Scan direct à table
-                </p>
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              {isActiveCircle ? (
+                <span className="inline-flex h-8 items-center gap-1.5 rounded-full bg-[var(--kkb-sauge)] px-3 font-quicksand text-xs font-bold text-[var(--kkb-profond)]">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[var(--kkb-profond)]" /> Cercle actif
+                </span>
+              ) : (
                 <button
                   type="button"
-                  onClick={() => window.print()}
-                  className="flex items-center gap-1 font-quicksand text-xs font-bold text-[var(--kkb-foret)] print:hidden"
+                  onClick={() => void activateCircle(circle.id)}
+                  disabled={activating}
+                  className="inline-flex h-10 items-center gap-1.5 rounded-full bg-[var(--kkb-orange)] px-4 font-quicksand text-sm font-bold text-white transition-colors hover:bg-[var(--kkb-orange-700)] disabled:opacity-60"
                 >
-                  <Printer className="h-3.5 w-3.5" /> Imprimer
+                  {activating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Power className="h-4 w-4" />}
+                  Activer ce cercle
+                </button>
+              )}
+              <div className="flex -space-x-1.5" aria-hidden="true">
+                {members.slice(0, 5).map((m) => (
+                  <span key={m.id} className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--kkb-foret-100)] font-quicksand text-xs font-bold text-[var(--kkb-foret)] ring-2 ring-[var(--kkb-foret)]">
+                    {(m.users!.display_name || m.users!.email)[0].toUpperCase()}
+                  </span>
+                ))}
+                {members.length > 5 && (
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/15 font-quicksand text-[11px] font-bold text-[var(--kkb-creme)] ring-2 ring-[var(--kkb-foret)]">
+                    +{members.length - 5}
+                  </span>
+                )}
+              </div>
+              <p className="hidden min-w-0 truncate font-quicksand text-sm font-semibold text-[var(--kkb-foret-100)] sm:block">
+                {joinNames(members.map((m) => m.users!.display_name || m.users!.email))}
+              </p>
+            </div>
+
+            <dl className="mt-5 grid grid-cols-3 gap-2 lg:mt-auto lg:pt-5">
+              {[
+                { icon: Users,    label: 'Convives',      value: activeMembers.length, total: members.length },
+                { icon: ThumbsUp, label: 'Notés ce mois', value: stats?.meals_rated_month },
+                { icon: Heart,    label: 'Plats favoris', value: stats?.favorites_count },
+              ].map(({ icon: Icon, label, value, total }) => (
+                <div key={label} className="rounded-[var(--kkb-r-md)] bg-white/10 px-3 py-2.5">
+                  <dt className="flex items-center gap-1.5 font-quicksand text-xs text-[var(--kkb-foret-100)]">
+                    <Icon className="hidden h-3.5 w-3.5 shrink-0 text-[var(--kkb-sauge)] sm:block" /> <span className="truncate">{label}</span>
+                  </dt>
+                  <dd className="mt-0.5 font-dosis text-[20px] font-extrabold leading-tight text-[var(--kkb-creme)] tabular-nums">
+                    {value ?? '–'}
+                    {total !== undefined && total !== value && <span className="text-sm font-bold text-[var(--kkb-foret-100)]">/{total}</span>}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </section>
+
+          {/* ── Inviter à table ────────────────────────────────────────────── */}
+          <section className="flex flex-col rounded-[var(--kkb-r-xl)] bg-white p-5 lg:col-span-4 lg:col-start-9 lg:row-start-1" aria-labelledby="invite-title">
+            <CardTitle id="invite-title" icon={<KeyRound className="h-4 w-4" />}>Inviter à table</CardTitle>
+            {/* Ticket : le code, ou le QR code à scanner à sa place. */}
+            <div className="mt-3 rounded-[var(--kkb-r-lg)] border-[1.5px] border-dashed border-[var(--kkb-foret-300)] bg-[var(--kkb-foret-50)] px-4 py-3 text-center">
+              {showQr ? (
+                <div className="flex items-center gap-4 text-left">
+                  <div className="shrink-0 rounded-[var(--kkb-r-sm)] bg-white p-1.5">
+                    <QRCodeSVG value={circleJoinUrl(inviteCode)} size={92} fgColor="#294E3B" />
+                  </div>
+                  <div className="min-w-0 space-y-1.5">
+                    <p className="font-dosis text-xl font-extrabold tracking-[0.12em] text-[var(--kkb-foret)]">{inviteCode}</p>
+                    <p className="font-quicksand text-xs text-[var(--kkb-texte-2)]">À scanner avec l&apos;appareil photo.</p>
+                    <button type="button" onClick={() => window.print()} className="flex items-center gap-1 font-quicksand text-xs font-bold text-[var(--kkb-foret)] hover:underline">
+                      <Printer className="h-3.5 w-3.5" /> Imprimer pour la cuisine
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <p className="font-quicksand text-xs font-semibold text-[var(--kkb-texte-2)]">Code du foyer</p>
+                  <p className="font-dosis text-[32px] font-extrabold leading-tight tracking-[0.12em] text-[var(--kkb-foret)]">{inviteCode}</p>
+                </>
+              )}
+            </div>
+            <p className="mt-3 font-quicksand text-[13px] text-[var(--kkb-texte-2)]">
+              Un proche, un invité du dimanche : avec ce code, il rejoint la tablée et donne son avis sur les repas.
+            </p>
+            <div className="mt-auto space-y-2 pt-4">
+              <ShareActions
+                getPayload={() => circleInvitePayload(circle.name, inviteCode)}
+                copyLabel="Copier le code"
+                className="flex items-center gap-2"
+                buttonClassName={ghostBtn}
+                shareButtonClassName="flex h-11 flex-1 items-center justify-center gap-1.5 rounded-full bg-[var(--kkb-foret)] font-quicksand text-sm font-semibold text-[var(--kkb-creme)] transition-colors hover:bg-[var(--kkb-foret-900)] disabled:opacity-60"
+              />
+              <div className="flex items-center gap-2">
+                <ShareActions
+                  getPayload={() => circleJoinLinkPayload(circle.name, inviteCode)}
+                  copyLabel="Copier le lien"
+                  className="contents"
+                  buttonClassName={ghostBtn}
+                  shareButtonClassName="hidden"
+                />
+                <button type="button" onClick={() => setShowQr((v) => !v)} aria-expanded={showQr} className={ghostBtn}>
+                  <QrCode className="h-4 w-4" /> {showQr ? 'Le code' : 'QR code'}
                 </button>
               </div>
-              <div className="mx-auto w-fit rounded-[var(--kkb-radius-sm)] bg-white p-3">
-                <QRCodeSVG value={circleJoinUrl(inviteCode)} size={160} fgColor="#294E3B" />
-              </div>
-              <p className="hidden font-dosis text-2xl font-extrabold text-[var(--kkb-coral)] print:block">{inviteCode}</p>
-              <p className="font-quicksand text-xs text-[var(--kkb-text-secondary)]">
-                Scanner avec l&apos;appareil photo pour rejoindre la tablée en 10 secondes.
-              </p>
-            </section>
-          </aside>
+            </div>
+          </section>
 
-          {/* Colonne droite : membres */}
-          <section className="space-y-4 print:hidden">
-            <h2 className="flex items-center gap-3 font-dosis text-2xl font-bold text-[var(--kkb-text-primary)]">
-              Membres du cercle
-              <span className="rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-teal-light)] px-2.5 py-0.5 font-quicksand text-sm font-bold text-[var(--kkb-teal)]">{members.length}</span>
-            </h2>
+          {/* ── La tablée ──────────────────────────────────────────────────── */}
+          <section className="space-y-3 pt-2 lg:col-span-8 lg:row-start-2 lg:pt-3" aria-labelledby="table-title">
+            <div className="flex items-baseline justify-between gap-3">
+              <h2 id="table-title" className="flex items-center gap-2 text-h2 text-[var(--kkb-foret)]">
+                La tablée
+                <span className="rounded-full bg-[var(--kkb-foret-50)] px-2.5 py-0.5 font-quicksand text-sm font-bold">{members.length}</span>
+              </h2>
+              <p className="hidden font-quicksand text-xs text-[var(--kkb-texte-2)] sm:block">Les préférences de chacun guident la génération du menu</p>
+            </div>
 
             {aloneState}
 
-            <div className="overflow-hidden rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white">
+            <div className="grid gap-3 sm:grid-cols-2 lg:gap-4">
               {members.map((m, index) => {
                 const u = m.users!
                 const isCurrentUser = u.id === currentUserId
+                const canManage = isPlanificatrice && !isCurrentUser
+                const inactive = m.is_active === false
                 return (
-                  <div key={m.id} className="space-y-3 border-b border-[var(--kkb-border)] p-5 last:border-b-0">
-                    <div className="flex items-center gap-4">
-                      {avatar(m, index, 48)}
+                  <article key={m.id} className="flex flex-col gap-3 rounded-[var(--kkb-r-lg)] bg-white p-4">
+                    <div className={`flex items-center gap-3 ${inactive ? 'opacity-60' : ''}`}>
+                      {avatar(m, index, 44)}
                       <div className="min-w-0 flex-1">
-                        <p className="flex flex-wrap items-center gap-2">
-                          <span className="font-dosis text-lg font-semibold text-[var(--kkb-text-primary)]">{u.display_name || u.email}</span>
-                          {roleBadge(m.role)}
+                        <p className="flex flex-wrap items-center gap-1.5">
+                          <span className="truncate text-h3 text-[var(--kkb-profond)]">{u.display_name || u.email}</span>
                           {isCurrentUser && (
-                            <span className="rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-foret-50)] px-2 py-0.5 font-quicksand text-xs font-bold text-[var(--kkb-foret)]">Vous</span>
+                            <span className="rounded-full bg-[var(--kkb-jaune-50)] px-2 py-0.5 font-quicksand text-[11px] font-bold text-[var(--kkb-jaune-text)]">Moi</span>
                           )}
-                          {inactiveBadge(m)}
                         </p>
-                        <p className="font-quicksand text-sm text-[var(--kkb-foret)]">{m.role === 'planificatrice' ? 'Cheffe du foyer' : 'Membre votant'}</p>
+                        <p className="mt-0.5 flex items-center gap-1.5">
+                          {roleBadge(m.role)}
+                          {inactive && <span className="font-quicksand text-xs font-semibold text-[var(--kkb-texte-2)]">· En pause</span>}
+                        </p>
                       </div>
-                      {removeButton(m)}
                     </div>
-                    {m.role === 'planificatrice' && (
-                      <div className="rounded-[var(--kkb-radius-sm)] bg-[var(--kkb-success-light)] p-3">
-                        <p className="flex items-center gap-1.5 font-quicksand text-xs font-bold text-[var(--kkb-success)]">
-                          <CheckCircle className="h-3.5 w-3.5" /> Rôle actif au sein du foyer
-                        </p>
-                        <p className="mt-1 font-quicksand text-[13px] text-[var(--kkb-text-secondary)]">{ROLE_DESCRIPTION.planificatrice}</p>
+                    {prefChips(m, 'sm')}
+                    {canManage && (
+                      <div className="mt-auto flex items-center justify-between gap-2 border-t border-dashed border-[var(--kkb-filet)] pt-3">
+                        {m.role === 'membre' ? (
+                          <label className="flex items-center gap-2 font-quicksand text-xs font-semibold text-[var(--kkb-texte-2)]">
+                            <Switch
+                              checked={!inactive}
+                              onCheckedChange={(on) => void setMemberActive(circle.id, u.id, on)}
+                              aria-label={`Participation de ${u.display_name || u.email}`}
+                              className="data-[state=checked]:bg-[var(--kkb-foret-500)] data-[state=unchecked]:bg-[var(--kkb-filet)]"
+                            />
+                            {inactive ? 'En pause' : 'Participe'}
+                          </label>
+                        ) : <span />}
+                        <button
+                          type="button"
+                          onClick={() => void removeMember(circle.id, u.id)}
+                          className="flex h-8 items-center gap-1 rounded-full px-2.5 font-quicksand text-xs font-semibold text-[var(--kkb-danger)] transition-colors hover:bg-[var(--kkb-danger-light)]"
+                        >
+                          <UserMinus className="h-3.5 w-3.5" /> Retirer
+                        </button>
                       </div>
                     )}
-                    {prefChips(m, 'md')}
-                  </div>
+                  </article>
                 )
               })}
             </div>
+          </section>
+
+          {/* ── Colonne : moments de repas, rôles, autres actions ──────────── */}
+          <div className="space-y-4 lg:col-span-4 lg:col-start-9 lg:row-start-2 lg:pt-3">
+            {mealConfigs.length > 0 && (
+              <section className="rounded-[var(--kkb-r-xl)] bg-white p-5" aria-labelledby="meals-title">
+                <div className="flex items-center justify-between gap-2">
+                  <CardTitle id="meals-title" icon={<Clock className="h-4 w-4" />}>Moments de repas</CardTitle>
+                  {isPlanificatrice && (
+                    <Link href="/settings/meal-config" className="font-quicksand text-xs font-bold text-[var(--kkb-foret)] hover:underline">Ajuster</Link>
+                  )}
+                </div>
+                <ul className="mt-3 space-y-1">
+                  {mealConfigs.map((c) => {
+                    const color = MEAL_COLOR[c.meal_type]
+                    return (
+                      <li key={c.meal_type} className={`flex items-center gap-3 py-1.5 ${c.is_active ? '' : 'opacity-50'}`}>
+                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[var(--kkb-r-md)]" style={{ backgroundColor: color.bg, color: color.text }}>
+                          <MealTypeIcon type={c.meal_type} className="h-4 w-4" />
+                        </span>
+                        <span className="min-w-0 flex-1 font-quicksand text-sm font-bold text-[var(--kkb-profond)]">{MEAL_LABEL[c.meal_type]}</span>
+                        <span className="shrink-0 text-right font-quicksand text-xs text-[var(--kkb-texte-2)]">
+                          {c.is_active ? (
+                            <>
+                              <span className="font-dosis text-sm font-extrabold text-[var(--kkb-profond)] tabular-nums">{c.default_time ? c.default_time.slice(0, 5) : '—'}</span>
+                              {' · '}{c.mode === 'daily' ? 'chaque jour' : 'toute la semaine'}
+                            </>
+                          ) : 'Pas prévu'}
+                        </span>
+                      </li>
+                    )
+                  })}
+                </ul>
+                <p className="mt-2 font-quicksand text-xs text-[var(--kkb-texte-2)]">
+                  {activeMeals.length} moment{activeMeals.length > 1 ? 's' : ''} par jour{plannerName && !isPlanificatrice ? `, réglés par ${plannerName}` : ''}.
+                </p>
+              </section>
+            )}
+
+            <section className="rounded-[var(--kkb-r-xl)] bg-white p-5" aria-labelledby="roles-title">
+              <CardTitle id="roles-title" icon={<Info className="h-4 w-4" />}>Qui fait quoi</CardTitle>
+              <dl className="mt-3 space-y-3">
+                {(['planificatrice', 'membre'] as const).map((r) => (
+                  <div key={r} className="space-y-1">
+                    <dt>{roleBadge(r)}</dt>
+                    <dd className="font-quicksand text-[13px] text-[var(--kkb-texte-2)]">{ROLE_DESCRIPTION[r]}</dd>
+                  </div>
+                ))}
+              </dl>
+            </section>
 
             {otherActions}
-          </section>
+          </div>
         </div>
+      </div>
+
+      {/* Impression : le QR code et le code, à afficher dans la cuisine */}
+      <div className="hidden text-center print:block">
+        <p className="font-dosis text-2xl font-bold text-[var(--kkb-foret)]">Rejoins la tablée {circle.name}</p>
+        <div className="mx-auto my-6 w-fit">
+          <QRCodeSVG value={circleJoinUrl(inviteCode)} size={240} fgColor="#294E3B" />
+        </div>
+        <p className="font-dosis text-3xl font-extrabold tracking-[0.12em] text-[var(--kkb-foret)]">{inviteCode}</p>
       </div>
 
       {/* Feuille : ajouter une préférence alimentaire */}
@@ -887,5 +796,14 @@ export default function CirclePage() {
         </>
       )}
     </>
+  )
+}
+
+function CardTitle({ id, icon, children }: { id: string; icon: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <h2 id={id} className="flex items-center gap-2.5 text-h3 text-[var(--kkb-profond)]">
+      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--kkb-foret-50)] text-[var(--kkb-foret)]">{icon}</span>
+      {children}
+    </h2>
   )
 }
