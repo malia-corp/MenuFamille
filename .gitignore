@@ -48,3 +48,6 @@ supabase/functions/.env
 
 # notes locales hors périmètre repo
 fix-otp.md
+
+# images d inspiration tierces (non publiées)
+/design/
