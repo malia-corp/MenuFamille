@@ -54,9 +54,10 @@ const config: Config = {
         // Noms historiques : dosis = titres (Montserrat), quicksand = texte (Quicksand).
         dosis: ['var(--font-dosis)', 'system-ui', 'sans-serif'],
         quicksand: ['var(--font-quicksand)', 'system-ui', 'sans-serif'],
-        // DynaPuff : signature et états vides, une fois par écran, ≥ 22 px,
+        // Bricolage Grotesque : signature, interjections, états vides. Semibold,
+        // posé droit, une fois par écran, ≥ 22 px,
         // jamais dans un bouton (T-04).
-        main: ['var(--font-main)', 'cursive'],
+        main: ['var(--font-main)', 'system-ui', 'sans-serif'],
       },
       borderRadius: {
         lg: 'var(--radius)',

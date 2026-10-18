@@ -55,9 +55,9 @@ export function Sidebar({ role, displayName }: { role: Role; displayName?: strin
         />
       </div>
 
-      {/* Signature officielle : DynaPuff, seconde phrase en jaune sur vert. */}
+      {/* Signature officielle : Bricolage Grotesque, seconde phrase en jaune sur vert. */}
       <div className="px-5 py-5 border-t border-white/15">
-        <p className="text-signature origin-left text-[var(--kkb-creme)]">
+        <p className="text-signature text-[var(--kkb-creme)]">
           On mange quoi ?<br />
           <span className="text-[var(--kkb-jaune)]">On décide ensemble.</span>
         </p>

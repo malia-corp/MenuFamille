@@ -146,10 +146,10 @@
   .text-h3 {
     @apply font-dosis font-bold text-[17px] leading-[22px];
   }
-  /* Accent manuscrit (DynaPuff) : incliné de -3 à -6°, une fois par écran. */
+  /* Accent expressif (Bricolage Grotesque) : Semibold, posé droit, ≥ 22 px,
+     une fois par écran, jamais dans un bouton (T-04). */
   .text-signature {
-    @apply font-main text-[22px] leading-tight;
-    transform: rotate(-3deg);
+    @apply font-main font-semibold text-[22px] leading-tight;
   }
   .text-kkb-label {
     @apply font-quicksand font-bold text-[10px] uppercase tracking-[0.08em];
