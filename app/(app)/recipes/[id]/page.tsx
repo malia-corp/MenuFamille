@@ -356,7 +356,7 @@ function RecipeDetail() {
       </div>
 
       {/* ── Desktop ────────────────────────────────────────────────────── */}
-      <div className="mx-auto hidden max-w-[1300px] space-y-6 px-8 py-6 lg:block">
+      <div className="hidden space-y-6 pb-8 lg:block">
         <nav className="flex items-center gap-1.5 text-xs font-quicksand text-[var(--kkb-text-tertiary)] print:hidden" aria-label="Fil d'Ariane">
           <button type="button" onClick={() => router.push('/recipes')} className="hover:text-[var(--kkb-coral)]">Carnet Culinaire</button>
           <ChevronRight className="h-3.5 w-3.5" />
@@ -393,7 +393,7 @@ function RecipeDetail() {
             {recipe.categories && <CategoryBadge category={recipe.categories} />}
             <span className="rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-teal-light)] px-2 py-0.5 text-xs font-quicksand font-bold text-[var(--kkb-teal)]">{VISIBILITY_TAG[recipe.visibility]}</span>
           </div>
-          <h1 className="font-dosis font-extrabold text-[32px] leading-tight text-[var(--kkb-text-primary)]">{recipe.name}</h1>
+          <h1 className="text-h1 text-[var(--kkb-foret)]">{recipe.name}</h1>
         </div>
 
         <div className="grid grid-cols-4 gap-4">

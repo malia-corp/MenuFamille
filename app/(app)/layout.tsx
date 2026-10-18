@@ -51,7 +51,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <MobileHeader displayName={displayName} circleName={circleName} />
       <DesktopHeader role={role} displayName={displayName} circleName={circleName} />
       <OfflineBanner />
-      <main className="lg:ml-[var(--kkb-rail-offset)] lg:transition-[margin] lg:duration-200 pt-14 pb-[calc(112px+env(safe-area-inset-bottom))] lg:pt-24 lg:pb-8 print:ml-0 print:p-0 print:min-h-0 print:bg-white min-h-screen bg-[var(--kkb-bg)]">
+      <main className="lg:ml-[var(--kkb-rail-offset)] lg:px-[var(--kkb-gutter)] lg:transition-[margin] lg:duration-200 pt-14 pb-[calc(112px+env(safe-area-inset-bottom))] lg:pt-24 lg:pb-8 print:ml-0 print:p-0 print:min-h-0 print:bg-white min-h-screen bg-[var(--kkb-bg)]">
         {children}
       </main>
       <BottomNav role={role} />

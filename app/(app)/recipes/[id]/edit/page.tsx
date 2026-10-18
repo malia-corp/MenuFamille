@@ -98,13 +98,13 @@ export default function RecipeEditPage() {
   }
 
   return (
-    <div className="mx-auto max-w-[1300px] px-4 pb-44 pt-3 lg:px-8 lg:pb-28 lg:pt-6">
+    <div className="mx-auto max-w-[1300px] px-4 pb-44 pt-3 lg:max-w-none lg:px-0 lg:pb-28 lg:pt-0">
       <div className="mb-5 space-y-1">
         <button type="button" onClick={() => router.push(`/recipes/${id}`)}
           className="hidden items-center gap-1.5 text-sm font-quicksand text-[var(--kkb-text-tertiary)] hover:text-[var(--kkb-coral)] lg:flex">
           <ArrowLeft className="h-4 w-4" /> Recette <span>/</span> <span className="font-bold text-[var(--kkb-coral)]">Modifier</span>
         </button>
-        <h1 className="font-dosis font-extrabold text-[22px] leading-tight text-[var(--kkb-text-primary)] lg:text-[28px]">Modifier la recette</h1>
+        <h1 className="font-dosis font-extrabold text-[22px] leading-tight text-[var(--kkb-text-primary)] lg:text-[28px] lg:leading-[32px] lg:text-[var(--kkb-foret)]">Modifier la recette</h1>
         <p className="text-sm font-quicksand text-[var(--kkb-text-secondary)]">{defaultValues.name}</p>
       </div>
 

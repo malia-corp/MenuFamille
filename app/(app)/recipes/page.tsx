@@ -255,14 +255,14 @@ export default function RecipesPage() {
       </div>
 
       {/* ── Desktop ────────────────────────────────────────────────────── */}
-      <div className="mx-auto hidden max-w-[1400px] px-8 py-8 lg:block">
+      <div className="hidden pb-8 lg:block">
         <div className="mb-6 flex items-end justify-between gap-6">
           <div className="space-y-1">
             <p className="text-xs font-quicksand font-bold text-[var(--kkb-text-tertiary)]">
               Trésors gourmands · Transmission culinaire &amp; partage
             </p>
             <div className="flex items-center gap-3">
-              <h1 className="font-dosis font-extrabold text-[32px] leading-tight text-[var(--kkb-text-primary)]">Carnet Culinaire</h1>
+              <h1 className="text-h1 text-[var(--kkb-foret)]">Carnet culinaire</h1>
               <span className="rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-coral-light)] px-3 py-1 text-sm font-quicksand font-bold text-[var(--kkb-coral)]">
                 {totalAll} recette{totalAll > 1 ? 's' : ''} authentique{totalAll > 1 ? 's' : ''}
               </span>
@@ -371,11 +371,11 @@ export default function RecipesPage() {
             </div>
 
             {loading ? (
-              <div className="grid grid-cols-2 gap-5 xl:grid-cols-3" aria-busy="true" aria-label="Chargement des recettes">
+              <div className="grid grid-cols-2 gap-5 xl:grid-cols-3 2xl:grid-cols-4 min-[1800px]:grid-cols-5" aria-busy="true" aria-label="Chargement des recettes">
                 {Array.from({ length: 6 }, (_, i) => <SkeletonCard key={i} variant="recipe" />)}
               </div>
             ) : error || items.length === 0 ? emptyOrError : view === 'grid' ? (
-              <div className="grid grid-cols-2 gap-5 xl:grid-cols-3">
+              <div className="grid grid-cols-2 gap-5 xl:grid-cols-3 2xl:grid-cols-4 min-[1800px]:grid-cols-5">
                 {items.map(r => (
                   <RecipeCard key={r.id} recipe={r} variant="grid" onOpen={() => openRecipe(r)} onPlan={() => planRecipe(r)} onToggleFavorite={() => void toggleFavorite(r)} />
                 ))}

@@ -109,7 +109,7 @@ export function MemberHome({ firstName }: { firstName: string }) {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-lg space-y-4 px-4 pt-4 lg:max-w-3xl lg:py-8" aria-busy="true">
+      <div className="mx-auto max-w-lg space-y-4 px-4 pt-4 lg:max-w-none lg:px-0 lg:pt-0" aria-busy="true">
         <SkeletonCard variant="list" />
         <SkeletonCard variant="recipe" />
         <SkeletonCard variant="list" />
@@ -123,7 +123,7 @@ export function MemberHome({ firstName }: { firstName: string }) {
   const todayIdx = DAY_OPTIONS.findIndex(d => d.val === today)
 
   const greeting = (
-    <section className="pt-3">
+    <section className="pt-3 lg:pt-0">
       <p className="font-quicksand text-[15px] font-medium text-[var(--kkb-texte-2)]">
         Bonjour{firstName ? `, ${firstName}` : ''}
       </p>
@@ -138,7 +138,7 @@ export function MemberHome({ firstName }: { firstName: string }) {
   // Accès désactivé : plus de menu ni de vote, l'historique reste.
   if (data?.role === 'membre' && !data.is_active) {
     return (
-      <div className="mx-auto max-w-sm space-y-6 px-4 pb-8 lg:max-w-3xl lg:py-8">
+      <div className="mx-auto max-w-sm space-y-6 px-4 pb-8 lg:max-w-2xl lg:px-0">
         {greeting}
         <div className="rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white">
           <EmptyState
@@ -224,7 +224,9 @@ export function MemberHome({ firstName }: { firstName: string }) {
   )
 
   return (
-    <div className="mx-auto max-w-sm space-y-7 px-4 pb-8 lg:max-w-3xl lg:py-8">
+    <div className="mx-auto max-w-sm px-4 pb-8 lg:max-w-none lg:px-0">
+      <div className="space-y-7 lg:grid lg:grid-cols-12 lg:items-start lg:gap-6 lg:space-y-0">
+      <div className="space-y-7 lg:col-span-8">
       {greeting}
 
       {!plan ? (
@@ -316,7 +318,7 @@ export function MemberHome({ firstName }: { firstName: string }) {
           {week.length > 0 && (
             <section className="space-y-3">
               <h2 className="px-1 text-h2 text-[var(--kkb-profond)]">Cette semaine</h2>
-              <div ref={weekRef} className="-mx-4 flex snap-x gap-2.5 overflow-x-auto px-4 pb-1 hide-scrollbar">
+              <div ref={weekRef} className="-mx-4 flex snap-x gap-2.5 overflow-x-auto px-4 pb-1 hide-scrollbar lg:mx-0 lg:px-0 xl:grid xl:grid-cols-7 xl:overflow-visible">
                 {week.map(d => {
                   const isToday = d.val === today
                   const isPast  = todayIdx >= 0 && d.idx < todayIdx
@@ -324,7 +326,7 @@ export function MemberHome({ firstName }: { firstName: string }) {
                     <div
                       key={d.val}
                       data-today={isToday || undefined}
-                      className={`w-36 shrink-0 snap-start rounded-[var(--kkb-r-xl)] p-3.5 ${
+                      className={`w-36 shrink-0 snap-start rounded-[var(--kkb-r-xl)] p-3.5 xl:w-auto ${
                         isToday ? 'bg-[var(--kkb-foret)] text-[var(--kkb-creme)]' : 'bg-white'
                       } ${isPast ? 'opacity-60' : ''}`}
                     >
@@ -344,9 +346,10 @@ export function MemberHome({ firstName }: { firstName: string }) {
           )}
         </>
       )}
+      </div>
 
       {/* Mes retours récents */}
-      <section className="space-y-3">
+      <section className="space-y-3 lg:col-span-4">
         <div className="flex items-center justify-between px-1">
           <h2 className="text-h2 text-[var(--kkb-profond)]">Mes avis</h2>
           <Link href="/feedback" className="-mr-2 inline-flex h-11 items-center gap-0.5 px-2 font-quicksand text-sm font-bold text-[var(--kkb-foret)]">
@@ -382,6 +385,7 @@ export function MemberHome({ firstName }: { firstName: string }) {
           </div>
         )}
       </section>
+      </div>
     </div>
   )
 }

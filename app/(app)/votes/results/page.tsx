@@ -184,7 +184,7 @@ function VotesResultsContent() {
   return (
     <>
     <FridgePrintSheet data={data} favoriteIds={favorites.map(f => f.id)} />
-    <div className="mx-auto max-w-lg px-4 pb-24 pt-2 lg:max-w-[1400px] lg:px-8 lg:py-8 lg:pb-12 space-y-5 lg:space-y-6 print:hidden">
+    <div className="mx-auto max-w-lg px-4 pb-24 pt-2 lg:max-w-none lg:px-0 lg:pt-0 lg:pb-12 space-y-5 lg:space-y-6 print:hidden">
 
       {/* ── Mobile : en-tête + synthèse ─────────────────────────────────── */}
       <div className="lg:hidden space-y-4">
@@ -193,7 +193,7 @@ function VotesResultsContent() {
         </button>
 
         <div className="space-y-2 text-center">
-          <h1 className="font-dosis font-extrabold text-2xl text-[var(--kkb-text-primary)]">Résultats des votes</h1>
+          <h1 className="font-dosis font-extrabold text-2xl text-[var(--kkb-text-primary)]">Résultats du sondage</h1>
           <ParticipationBadge allVoted={allVoted} respondents={data.total_respondents} members={memberCount} />
         </div>
 
@@ -238,7 +238,7 @@ function VotesResultsContent() {
                 <span className="h-1.5 w-1.5 rounded-full bg-[var(--kkb-success)]" /> Semaine du {weekRange}
               </span>
             </p>
-            <h1 className="font-dosis font-extrabold text-[28px] leading-tight text-[var(--kkb-text-primary)]">Résultats des votes de la famille</h1>
+            <h1 className="text-h1 text-[var(--kkb-foret)]">Résultats du sondage de la famille</h1>
             <ParticipationBadge allVoted={allVoted} respondents={data.total_respondents} members={memberCount} long />
             <p className="max-w-2xl pt-1 text-sm font-quicksand text-[var(--kkb-text-secondary)]">
               {allVoted && rejected.length === 0

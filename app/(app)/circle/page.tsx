@@ -300,7 +300,7 @@ export default function CirclePage() {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-lg space-y-3 px-4 py-6 lg:max-w-[1100px] lg:px-8" aria-busy="true">
+      <div className="mx-auto max-w-lg space-y-3 px-4 py-6 lg:max-w-none lg:px-0" aria-busy="true">
         <SkeletonCard variant="list" />
         <SkeletonCard variant="meal" />
         <SkeletonCard variant="meal" />
@@ -709,11 +709,11 @@ export default function CirclePage() {
       </div>
 
       {/* ─── Desktop ────────────────────────────────────────────────────── */}
-      <div className="mx-auto hidden max-w-[1200px] px-8 py-8 lg:block print:block print:p-0">
+      <div className="hidden pb-8 lg:block print:block print:p-0">
         <div className="mb-6 flex items-start justify-between gap-6 print:hidden">
           <div>
           <p className="font-quicksand text-xs font-bold text-[var(--kkb-foret)]">Tablée &amp; gouvernance</p>
-          <h1 className="font-dosis text-3xl font-bold text-[var(--kkb-text-primary)]">Cercle familial · {circle.name}</h1>
+          <h1 className="text-h1 text-[var(--kkb-foret)]">Cercle familial · {circle.name}</h1>
           <p className="mt-1 max-w-2xl font-quicksand text-sm text-[var(--kkb-text-secondary)]">
             Réunissez votre tablée pour voter les repas de la semaine et partager les préférences de chacun.
           </p>

@@ -109,7 +109,7 @@ function SideSkeleton() {
 export function HomeSkeleton() {
   return (
     <div
-      className="mx-auto max-w-sm px-4 pt-2 pb-8 lg:max-w-none lg:px-[var(--kkb-gutter)] lg:pt-0"
+      className="mx-auto max-w-sm px-4 pt-2 pb-8 lg:max-w-none lg:px-0 lg:pt-0"
       aria-busy="true"
       aria-label="Chargement de l'accueil"
     >

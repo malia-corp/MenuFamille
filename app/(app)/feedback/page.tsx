@@ -263,7 +263,7 @@ export default function FeedbackPage() {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-lg space-y-3 px-4 py-6 lg:max-w-[1200px] lg:px-8" aria-busy="true">
+      <div className="mx-auto max-w-lg space-y-3 px-4 py-6 lg:max-w-none lg:px-0" aria-busy="true">
         <SkeletonCard variant="list" />
         <SkeletonCard variant="recipe" />
         <SkeletonCard variant="list" />
@@ -378,12 +378,12 @@ export default function FeedbackPage() {
   )
 
   return (
-    <div className="mx-auto max-w-lg px-4 pb-8 pt-5 lg:max-w-[1200px] lg:px-8 lg:pt-2">
+    <div className="mx-auto max-w-lg px-4 pb-8 pt-5 lg:max-w-none lg:px-0 lg:pt-0">
       {/* En-tête */}
       <header className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="space-y-2">
           <p className="font-quicksand text-xs font-semibold text-[var(--kkb-text-tertiary)]">Semaine du {formatWeekRange(plan.week_start)}</p>
-          <h1 className="font-dosis text-[22px] font-extrabold text-[var(--kkb-text-primary)] lg:text-3xl">Mes avis sur les repas</h1>
+          <h1 className="font-dosis text-[22px] font-extrabold text-[var(--kkb-text-primary)] lg:text-[28px] lg:leading-[32px] lg:text-[var(--kkb-foret)]">Mes avis sur les repas</h1>
           <p className="max-w-2xl font-quicksand text-sm text-[var(--kkb-text-secondary)]">
             Pour guider {cook} avec amour sur les épices, le dosage du sel et les portions du foyer, en toute sérénité.
           </p>

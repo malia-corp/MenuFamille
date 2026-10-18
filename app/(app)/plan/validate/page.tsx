@@ -455,7 +455,7 @@ function ValidateInner() {
   const monday = new Date(plan.week_start + 'T00:00:00')
 
   const statsRow = (
-    <div className="grid grid-cols-3 gap-2 mx-4">
+    <div className="grid grid-cols-3 gap-2 mx-4 lg:mx-0">
       {[
         { icon: Users,        value: servings,                      label: 'Convives' },
         { icon: CheckCircle2, value: `${daysComplete}/7`,            label: 'Jours'    },
@@ -471,7 +471,7 @@ function ValidateInner() {
   )
 
   const viewToggle = (
-    <div className="flex items-center gap-2 mx-4">
+    <div className="flex items-center gap-2 mx-4 lg:mx-0">
       <button
         type="button"
         onClick={() => setViewMode('day')}
@@ -525,7 +525,7 @@ function ValidateInner() {
   )
 
   const ctaSection = (
-    <div className="mx-4 space-y-3">
+    <div className="mx-4 space-y-3 lg:mx-0">
       {validated && (
         <div className="bg-emerald-50 border border-emerald-200 rounded-2xl px-4 py-3.5 flex items-center gap-3">
           <CheckCircle2 className="h-5 w-5 text-emerald-600 flex-shrink-0" />
@@ -598,7 +598,7 @@ function ValidateInner() {
       </div>
 
       {apiError && (
-        <p className="mx-4 mt-4 text-sm text-red-600 font-quicksand bg-red-50 px-4 py-2 rounded-xl">
+        <p className="mx-4 lg:mx-0 mt-4 text-sm text-red-600 font-quicksand bg-red-50 px-4 py-2 rounded-xl">
           {apiError}
         </p>
       )}
@@ -612,7 +612,7 @@ function ValidateInner() {
       </div>
 
       {/* ── Desktop ── */}
-      <div className="hidden lg:block max-w-4xl mx-auto px-6 py-8 space-y-6">
+      <div className="hidden lg:block pb-8 space-y-6">
         {/* Stepper — 2 étapes réelles, cf. /plan */}
         <div className="flex items-center justify-center gap-1.5">
           <div className="flex items-center gap-1.5">
@@ -636,22 +636,21 @@ function ValidateInner() {
             <CheckCircle2 className="h-6 w-6 text-[var(--kkb-coral)]" />
           </div>
           <div>
-            <h1 className="text-h1 text-[var(--kkb-text-primary)]">Confirmer le menu de la semaine</h1>
+            <h1 className="text-h1 text-[var(--kkb-foret)]">Confirmer le menu de la semaine</h1>
             <p className="text-sm font-quicksand text-[var(--kkb-text-secondary)]">{formatWeekRange(plan.week_start)}</p>
           </div>
         </div>
 
-        {statsRow}
-        {viewToggle}
-
-        <div className="space-y-2.5">{accordion}</div>
+        {/* Jours à gauche, actions (valider, partager) en colonne fixe à droite */}
+        <div className="grid grid-cols-12 items-start gap-6">
+          <div className="col-span-8 space-y-6">
+            {statsRow}
+            {viewToggle}
+            <div className="space-y-2.5">{accordion}</div>
+          </div>
+          <aside className="sticky top-24 col-span-4 rounded-[var(--kkb-r-xl)] bg-white p-5">{ctaSection}</aside>
+        </div>
       </div>
-
-      {/* Barre d'action sticky desktop */}
-      <div className="hidden lg:block fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-[var(--kkb-border)] px-6 py-4">
-        <div className="max-w-4xl mx-auto">{ctaSection}</div>
-      </div>
-      <div className="hidden lg:block h-32" aria-hidden="true" />
     </div>
   )
 }

@@ -165,7 +165,7 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-lg space-y-4 px-4 py-6" aria-busy="true">
+      <div className="mx-auto max-w-lg space-y-4 px-4 py-6 lg:max-w-none lg:px-0 lg:pt-0" aria-busy="true">
         <SkeletonCard variant="stat" className="mx-auto w-40" />
         <SkeletonCard variant="list" />
         <SkeletonCard variant="list" />
@@ -181,10 +181,12 @@ export default function ProfilePage() {
     : []
 
   return (
-    <div className="mx-auto max-w-lg space-y-6 px-4 pb-10 pt-6 lg:pt-2">
+    <div className="mx-auto max-w-lg px-4 pb-10 pt-6 lg:max-w-none lg:px-0 lg:pt-0">
+    {/* Desktop : identité à gauche, sections en grille à droite */}
+    <div className="space-y-6 lg:grid lg:grid-cols-12 lg:items-start lg:gap-6 lg:space-y-0">
 
       {/* Avatar + nom */}
-      <div className="flex flex-col items-center gap-3">
+      <div className="flex flex-col items-center gap-3 lg:sticky lg:top-24 lg:col-span-4 lg:rounded-[var(--kkb-r-xl)] lg:bg-white lg:p-6">
         <div className="relative">
           <div className="flex h-20 w-20 items-center justify-center rounded-full border-4 border-white bg-[var(--kkb-coral)] font-dosis text-[32px] font-bold text-white shadow-[var(--kkb-shadow-card)]">
             {initial}
@@ -238,6 +240,7 @@ export default function ProfilePage() {
         )}
       </div>
 
+      <div className="space-y-6 lg:col-span-8 lg:grid lg:grid-cols-2 lg:items-start lg:gap-6 lg:space-y-0">
       {/* Mon impact */}
       <section className="space-y-2">
         <SectionTitle icon={Trophy} label="Mon impact & victoires" />
@@ -362,10 +365,12 @@ export default function ProfilePage() {
       <button
         type="button"
         onClick={() => void handleLogout()}
-        className="flex w-full items-center justify-center gap-2 rounded-[var(--kkb-radius-card)] p-4 font-quicksand text-[15px] font-bold text-[var(--kkb-danger)] transition-colors hover:bg-[var(--kkb-danger-light)]"
+        className="flex w-full items-center justify-center gap-2 rounded-[var(--kkb-radius-card)] p-4 font-quicksand text-[15px] font-bold text-[var(--kkb-danger)] transition-colors hover:bg-[var(--kkb-danger-light)] lg:col-span-2"
       >
         <LogOut className="h-4 w-4" /> Se déconnecter
       </button>
+      </div>
+    </div>
 
       {prefsOpen && (
         <DietaryPrefsSheet prefs={dietaryPrefs} onChange={setDietaryPrefs} onClose={() => setPrefsOpen(false)} />

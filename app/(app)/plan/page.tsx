@@ -674,7 +674,7 @@ function PlanPageContent() {
   return (
     <>
       {/* Sous-header : navigation semaine */}
-      <div className="sticky top-14 z-30 bg-[color-mix(in_srgb,var(--kkb-creme)_88%,transparent)] backdrop-blur-md px-4 py-2 lg:top-16">
+      <div className="sticky top-14 z-30 bg-[color-mix(in_srgb,var(--kkb-creme)_88%,transparent)] backdrop-blur-md px-4 py-2 lg:top-[76px] lg:px-0">
         <div className="mx-auto flex max-w-sm items-center gap-2 lg:max-w-none">
           <button type="button" onClick={goToPrevWeek} className="h-10 w-10 shrink-0 rounded-full bg-white flex items-center justify-center text-[var(--kkb-foret)] active:scale-95 transition-transform" aria-label="Semaine précédente">
             <ChevronLeft className="h-5 w-5" />
@@ -757,13 +757,13 @@ function PlanPageContent() {
         <div className="space-y-5 py-4 pb-40">
 
           {genError && (
-            <p className="mx-4 text-sm text-[var(--kkb-danger)] font-quicksand bg-[var(--kkb-danger-light)] px-4 py-3 rounded-[var(--kkb-r-lg)]">
+            <p className="mx-4 lg:mx-0 text-sm text-[var(--kkb-danger)] font-quicksand bg-[var(--kkb-danger-light)] px-4 py-3 rounded-[var(--kkb-r-lg)]">
               {genError}
             </p>
           )}
 
           {/* Barre : convives + stats de session */}
-          <div className="flex items-center justify-between gap-3 px-4 lg:px-6">
+          <div className="flex items-center justify-between gap-3 px-4 lg:px-0">
             {plan && (
               <div className="flex items-center gap-1.5 rounded-full bg-white p-1 pl-3">
                 <Users className="h-4 w-4 text-[var(--kkb-foret)]" />
@@ -795,10 +795,10 @@ function PlanPageContent() {
 
           {/* Emplacement d'ancrage du FAB (cf. components/layout/fab.tsx) — un
               seul bouton "Générer ma semaine", pas un deuxième dupliqué ici */}
-          <div id="generate-slot" className="mx-4 min-h-[40px]" />
+          <div id="generate-slot" className="mx-4 min-h-[40px] lg:hidden" />
 
           {activeConfigs.length === 0 ? (
-            <div className="mx-4 flex flex-col items-center gap-3 py-8 text-center">
+            <div className="mx-4 lg:mx-0 flex flex-col items-center gap-3 py-8 text-center">
               <p className="text-sm font-quicksand text-[var(--kkb-text-secondary)]">
                 Aucun type de repas actif.
               </p>
@@ -814,7 +814,7 @@ function PlanPageContent() {
             <>
               {/* Barre de progression */}
               {plan && (
-                <div className="px-4 lg:px-6 space-y-1.5">
+                <div className="px-4 lg:px-0 space-y-1.5">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-quicksand text-[var(--kkb-texte-2)]">
                       <span className="font-bold tabular-nums text-[var(--kkb-profond)]">{filled}/{total}</span> repas planifiés

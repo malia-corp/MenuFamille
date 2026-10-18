@@ -183,7 +183,7 @@ export default function NotificationsPage() {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-lg space-y-3 px-4 py-6" aria-busy="true">
+      <div className="mx-auto max-w-lg space-y-3 px-4 py-6 lg:max-w-none lg:px-0 lg:pt-0" aria-busy="true">
         <SkeletonCard variant="list" />
         <SkeletonCard variant="list" />
         <SkeletonCard variant="list" />
@@ -193,14 +193,14 @@ export default function NotificationsPage() {
 
   return (
     <div className="pb-28">
-      <div className="mx-auto max-w-lg space-y-6 px-4 py-5 lg:pt-2">
+      <div className="mx-auto max-w-lg space-y-6 px-4 py-5 lg:grid lg:max-w-none lg:grid-cols-2 lg:items-start lg:gap-6 lg:space-y-0 lg:px-0 lg:pt-0">
         {/* En-tête desktop (le MobileHeader porte le titre sur mobile) */}
-        <div className="hidden items-center gap-2 lg:flex">
+        <div className="hidden items-center gap-2 lg:col-span-2 lg:flex">
           <button type="button" onClick={() => router.back()} className="-ml-1 p-1 text-[var(--kkb-teal)]" aria-label="Retour">
             <ArrowLeft className="h-5 w-5" />
           </button>
           <Bell className="h-5 w-5 text-[var(--kkb-coral)]" />
-          <h1 className="font-dosis text-xl font-bold text-[var(--kkb-text-primary)]">Notifications</h1>
+          <h1 className="text-h1 text-[var(--kkb-foret)]">Notifications</h1>
         </div>
 
         {/* Rappels de repas */}
@@ -319,7 +319,7 @@ export default function NotificationsPage() {
         </section>
 
         {/* Note iOS */}
-        <div className="flex items-start gap-2.5 rounded-[var(--kkb-radius-sm)] border border-[var(--kkb-teal)] bg-[var(--kkb-teal-light)] p-3">
+        <div className="flex items-start gap-2.5 rounded-[var(--kkb-radius-sm)] border border-[var(--kkb-teal)] bg-[var(--kkb-teal-light)] p-3 lg:col-span-2">
           <Info className="mt-0.5 h-4 w-4 shrink-0 text-[var(--kkb-teal)]" />
           <p className="font-quicksand text-xs text-[var(--kkb-teal)]">
             Sur iOS, l&apos;application doit être ajoutée à l&apos;écran d&apos;accueil (Partager → Sur l&apos;écran d&apos;accueil) pour recevoir les notifications push.
@@ -328,7 +328,7 @@ export default function NotificationsPage() {
       </div>
 
       {/* Enregistrer : fixe en bas (pas de bottom nav sur les pages réglages) */}
-      <div className="fixed bottom-5 left-4 right-4 z-40 mx-auto max-w-lg lg:left-[var(--kkb-rail-offset)] lg:px-4">
+      <div className="fixed bottom-5 left-4 right-4 z-40 mx-auto max-w-lg lg:left-auto lg:right-[var(--kkb-gutter)] lg:mx-0 lg:w-[360px] lg:max-w-none">
         <button
           type="button"
           onClick={() => void handleSave()}

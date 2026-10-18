@@ -166,7 +166,7 @@ function RecipeAddInner() {
   const planHeader = isPlanCtx && mealType ? `${MEAL_LABEL[mealType] ?? mealType}${dayLabel ? ` · ${dayLabel}` : ''}` : null
 
   return (
-    <div className="mx-auto max-w-[1300px] px-4 pb-44 pt-3 lg:px-8 lg:pb-28 lg:pt-6">
+    <div className="mx-auto max-w-[1300px] px-4 pb-44 pt-3 lg:max-w-none lg:px-0 lg:pb-28 lg:pt-0">
       <div className="mb-5 flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
         <div className="space-y-1">
           <button type="button" onClick={() => router.push(isPlanCtx ? '/plan' : '/recipes')}
@@ -177,7 +177,7 @@ function RecipeAddInner() {
           <p className="flex items-center gap-1.5 text-xs font-quicksand font-bold text-[var(--kkb-coral)] lg:hidden">
             <BookOpen className="h-3.5 w-3.5" /> {planHeader ? `Nouveau repas · ${planHeader}` : 'Transmission culinaire'}
           </p>
-          <h1 className="font-dosis font-extrabold text-[22px] leading-tight text-[var(--kkb-text-primary)] lg:text-[28px]">
+          <h1 className="font-dosis font-extrabold text-[22px] leading-tight text-[var(--kkb-text-primary)] lg:text-[28px] lg:leading-[32px] lg:text-[var(--kkb-foret)]">
             <span className="lg:hidden">Nouvelle création culinaire</span>
             <span className="hidden lg:inline">{planHeader ? `Nouveau repas — ${planHeader}` : 'Nouvelle recette'}</span>
           </h1>

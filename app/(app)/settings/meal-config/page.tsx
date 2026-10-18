@@ -159,7 +159,7 @@ export default function MealConfigPage() {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-lg space-y-3 px-4 py-6" aria-busy="true">
+      <div className="mx-auto max-w-lg space-y-3 px-4 py-6 lg:max-w-none lg:px-0 lg:pt-0" aria-busy="true">
         <SkeletonCard variant="list" />
         <SkeletonCard variant="meal" />
         <SkeletonCard variant="meal" />
@@ -181,10 +181,10 @@ export default function MealConfigPage() {
   }
 
   return (
-    <div className="mx-auto max-w-lg px-4 pb-32 pt-5 lg:max-w-2xl lg:pt-2">
+    <div className="mx-auto max-w-lg px-4 pb-32 pt-5 lg:max-w-none lg:px-0 lg:pt-0">
       {/* Titre (le MobileHeader porte déjà le titre sur mobile) */}
       <div className="mb-4 hidden items-center justify-between lg:flex">
-        <h1 className="font-dosis text-xl font-bold text-[var(--kkb-text-primary)]">Rythme des repas</h1>
+        <h1 className="text-h1 text-[var(--kkb-foret)]">Rythme des repas</h1>
         <SlidersHorizontal className="h-5 w-5 text-[var(--kkb-text-tertiary)]" />
       </div>
 
@@ -202,8 +202,10 @@ export default function MealConfigPage() {
         </p>
       </div>
 
+      {/* Desktop : cartes en grille à gauche, aperçu de la semaine à droite */}
+      <div className="lg:mt-6 lg:grid lg:grid-cols-12 lg:items-start lg:gap-6">
       {/* Cartes types de repas */}
-      <div className="mt-4 space-y-3">
+      <div className="mt-4 space-y-3 lg:col-span-7 lg:mt-0 lg:grid lg:grid-cols-2 lg:items-start lg:gap-3 lg:space-y-0">
         {cards.map(c => (
           <MealCard
             key={c.meal_type}
@@ -216,7 +218,7 @@ export default function MealConfigPage() {
       </div>
 
       {/* Aperçu de la semaine */}
-      <section className="mt-4 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-teal)] bg-[var(--kkb-teal-light)] p-4">
+      <section className="mt-4 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-teal)] bg-[var(--kkb-teal-light)] p-4 lg:sticky lg:top-24 lg:col-span-5 lg:mt-0">
         <p className="flex items-center gap-2 font-quicksand text-[13px] font-bold text-[var(--kkb-teal)]">
           <CalendarDays className="h-4 w-4" /> Aperçu de la semaine
         </p>
@@ -242,9 +244,10 @@ export default function MealConfigPage() {
           )}
         </div>
       </section>
+      </div>
 
       {/* Enregistrer : fixe en bas (pas de bottom nav sur les pages réglages) */}
-      <div className="fixed bottom-5 left-4 right-4 z-40 mx-auto max-w-lg lg:left-[var(--kkb-rail-offset)] lg:max-w-2xl lg:px-4">
+      <div className="fixed bottom-5 left-4 right-4 z-40 mx-auto max-w-lg lg:left-auto lg:right-[var(--kkb-gutter)] lg:mx-0 lg:w-[360px] lg:max-w-none">
         <button
           type="button"
           onClick={() => void save()}
