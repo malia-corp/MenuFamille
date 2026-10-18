@@ -4,8 +4,9 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { QRCodeSVG } from 'qrcode.react'
-import { ArrowLeft, ArrowRight, Check, Loader2, MessageCircleHeart, Minus, PartyPopper, Plus, Share2, Tag, UserRound, Users } from 'lucide-react'
+import { ArrowRight, Loader2, MessageCircleHeart, Minus, PartyPopper, Plus, Share2, Tag, UserRound, Users } from 'lucide-react'
 import { ShareActions, circleInvitePayload, circleJoinUrl } from '@/components/ui/share-actions'
+import { EntryShell, EntrySteps, type EntryStep } from '@/components/circle/entry-shell'
 
 type State = 'idle' | 'saving' | 'done'
 
@@ -18,7 +19,7 @@ interface Circle {
 const MIN_SIZE = 1
 const MAX_SIZE = 20
 
-const STEPS = [
+const STEPS: EntryStep[] = [
   { icon: Tag,                title: 'Nomme ton cercle',         text: 'Le nom que verra toute ta famille.' },
   { icon: Share2,             title: 'Partage le code',          text: 'Par message, ou en QR code à table.' },
   { icon: MessageCircleHeart, title: 'Chacun donne son avis',    text: 'Sur le menu de la semaine, en un geste.' },
@@ -75,7 +76,7 @@ export default function CreateCirclePage() {
   // ── Cercle créé : le code à partager ──────────────────────────────────────
   if (state === 'done' && circle) {
     return (
-      <Shell
+      <EntryShell
         aside={
           <>
             <span className="flex h-14 w-14 items-center justify-center rounded-full bg-white/10">
@@ -84,7 +85,7 @@ export default function CreateCirclePage() {
             <p className="mt-5 font-quicksand text-sm font-semibold text-[var(--kkb-foret-100)]">Cercle créé, bravo !</p>
             <h1 className="mt-0.5 text-h1 text-[var(--kkb-creme)]">{circle.name}</h1>
             <p className="text-signature mt-3 text-[var(--kkb-sauge)]">Il ne manque plus que ta famille.</p>
-            <Steps current={1} />
+            <EntrySteps steps={STEPS} current={1} />
           </>
         }
       >
@@ -125,7 +126,7 @@ export default function CreateCirclePage() {
             Voir mon cercle
           </Link>
         </div>
-      </Shell>
+      </EntryShell>
     )
   }
 
@@ -134,7 +135,7 @@ export default function CreateCirclePage() {
   const shownName = name.trim()
 
   return (
-    <Shell
+    <EntryShell
       onBack={() => router.back()}
       aside={
         <>
@@ -143,7 +144,7 @@ export default function CreateCirclePage() {
           <p className="mt-2 max-w-md font-quicksand text-sm text-[var(--kkb-foret-100)] lg:text-base">
             Tu planifies, ta famille donne son avis : le menu de la semaine se décide à plusieurs.
           </p>
-          <Steps current={0} />
+          <EntrySteps steps={STEPS} current={0} />
         </>
       }
     >
@@ -252,69 +253,6 @@ export default function CreateCirclePage() {
           </p>
         </div>
       </form>
-    </Shell>
-  )
-}
-
-// Panneau vert (explication) + carte blanche (formulaire), côte à côte sur
-// desktop, empilés sur mobile.
-function Shell({ aside, onBack, children }: { aside: React.ReactNode; onBack?: () => void; children: React.ReactNode }) {
-  return (
-    <div className="mx-auto max-w-lg px-4 pb-8 pt-2 lg:max-w-none lg:px-0 lg:pt-0">
-      <div className="grid gap-4 lg:min-h-[calc(100vh-152px)] lg:grid-cols-12 lg:gap-5">
-        <aside className="flex flex-col rounded-[var(--kkb-r-xl)] bg-[var(--kkb-foret)] p-5 lg:col-span-5 lg:p-10">
-          {onBack && (
-            <button
-              type="button"
-              onClick={onBack}
-              aria-label="Retour"
-              className="mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-[var(--kkb-creme)] transition-colors hover:bg-white/20 lg:mb-8"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </button>
-          )}
-          {aside}
-        </aside>
-        <section className="flex flex-col justify-center rounded-[var(--kkb-r-xl)] bg-white p-5 lg:col-span-7 lg:p-10">
-          <div className="mx-auto w-full max-w-md">{children}</div>
-        </section>
-      </div>
-    </div>
-  )
-}
-
-// Les trois étapes ; current = étape en cours (les précédentes sont cochées).
-function Steps({ current }: { current: number }) {
-  return (
-    <ol className="mt-5 grid grid-cols-3 gap-2 lg:mt-auto lg:grid-cols-1 lg:gap-0 lg:pt-10">
-      {STEPS.map(({ icon: Icon, title, text }, i) => {
-        const done = i < current
-        const now  = i === current
-        return (
-          <li
-            key={title}
-            aria-current={now ? 'step' : undefined}
-            className="relative flex flex-col items-center gap-2 text-center lg:flex-row lg:items-start lg:gap-4 lg:pb-6 lg:text-left lg:last:pb-0"
-          >
-            {/* Fil entre les étapes (desktop) */}
-            {i < STEPS.length - 1 && (
-              <span aria-hidden="true" className={`absolute left-5 top-11 hidden h-[calc(100%-44px)] w-px border-l lg:block ${done ? 'border-solid border-[var(--kkb-sauge)]' : 'border-dashed border-white/25'}`} />
-            )}
-            <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
-              done ? 'bg-[var(--kkb-sauge)] text-[var(--kkb-profond)]' : now ? 'bg-[var(--kkb-creme)] text-[var(--kkb-foret)]' : 'bg-white/10 text-[var(--kkb-sauge)]'
-            }`}>
-              {done ? <Check className="h-5 w-5" /> : <Icon className="h-5 w-5" />}
-            </span>
-            <span className="min-w-0">
-              <span className={`block font-quicksand text-xs font-bold leading-tight lg:text-[15px] ${done ? 'text-[var(--kkb-foret-100)]' : 'text-[var(--kkb-creme)]'}`}>
-                <span className="hidden lg:inline">{i + 1}. </span>{title}
-                {done && <span className="sr-only"> (fait)</span>}
-              </span>
-              <span className="hidden font-quicksand text-sm text-[var(--kkb-foret-100)] lg:block">{text}</span>
-            </span>
-          </li>
-        )
-      })}
-    </ol>
+    </EntryShell>
   )
 }
