@@ -56,6 +56,9 @@
     --kkb-r-sm: 8px; --kkb-r-md: 14px; --kkb-r-lg: 20px; --kkb-r-xl: 24px; --kkb-r-pill: 999px;
     --kkb-espace: 4px;   /* multiples uniquement */
     --kkb-tactile: 44px; /* cible tactile minimale (I-01) */
+    /* Bas des éléments flottants : au-dessus de la barre basse (64 px à 16 px
+       du bas) et de la zone sûre iOS. */
+    --kkb-nav-offset: calc(88px + env(safe-area-inset-bottom));
 
     /* ── Jetons historiques de l'app, réaffectés sur la palette du guide ── */
     --kkb-coral:          var(--kkb-orange);
@@ -84,7 +87,7 @@
     --kkb-danger-light:   #FCEBEB;
 
     --kkb-radius-pill:    var(--kkb-r-pill);
-    --kkb-radius-card:    var(--kkb-r-md);
+    --kkb-radius-card:    var(--kkb-r-lg);
     --kkb-radius-sm:      var(--kkb-r-sm);
     --kkb-radius-xs:      var(--kkb-r-sm);
 

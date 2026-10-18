@@ -377,7 +377,7 @@ export default function CirclePage() {
           <button
             type="button"
             onClick={() => openPrefSheet(circle.id, u.id, u.display_name || u.email)}
-            className={`inline-flex items-center gap-1 rounded-[var(--kkb-radius-pill)] border border-dashed border-[var(--kkb-coral)]/50 font-quicksand font-semibold text-[var(--kkb-coral)] ${chip}`}
+            className={`inline-flex items-center gap-1 rounded-[var(--kkb-radius-pill)] border border-dashed border-[color-mix(in_srgb,var(--kkb-coral)_50%,transparent)] font-quicksand font-semibold text-[var(--kkb-coral)] ${chip}`}
           >
             <Plus className={icon} />
             Ajouter

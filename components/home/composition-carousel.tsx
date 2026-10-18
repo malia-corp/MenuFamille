@@ -1,6 +1,6 @@
 'use client'
 
-import { PlusCircle, type LucideIcon } from 'lucide-react'
+import { Plus, type LucideIcon } from 'lucide-react'
 
 export interface ChipItem {
   icon: LucideIcon
@@ -16,44 +16,34 @@ interface CompositionCarouselProps {
   addLabel?: string
 }
 
-export function CompositionCarousel({ title, hint = 'Glisser →', items, onAdd, addLabel = 'Ajouter' }: CompositionCarouselProps) {
+// Accompagnements et boissons d'un repas : puces en pilule sur une ligne
+// qui défile, terminées par « Ajouter ». Cibles de 36 px dans 44 (I-01).
+export function CompositionCarousel({ title, items, onAdd, addLabel = 'Ajouter' }: CompositionCarouselProps) {
   if (items.length === 0 && !onAdd) return null
 
   return (
-    <div className="p-3 bg-[var(--kkb-bg)] border-t border-[var(--kkb-border)]">
-      <div className="flex items-center justify-between mb-1.5">
-        <span className="text-[9px] font-quicksand font-semibold uppercase tracking-wide text-[var(--kkb-text-tertiary)]">
-          {title}
-        </span>
-        <span className="text-[10px] font-quicksand text-[var(--kkb-teal)]">{hint}</span>
-      </div>
-      <div className="flex gap-2 overflow-x-auto hide-scrollbar py-1">
+    <div className="px-4 pb-4">
+      <p className="mb-2 font-quicksand text-xs font-semibold text-[var(--kkb-texte-2)]">{title}</p>
+      <div className="-mx-4 flex gap-2 overflow-x-auto px-4 py-1 hide-scrollbar">
         {items.map((item, i) => (
-          <div
+          <span
             key={i}
-            className="shrink-0 bg-white border border-[var(--kkb-border)] rounded-lg p-2 w-36 shadow-sm flex items-center gap-2"
+            className="inline-flex h-9 max-w-[180px] shrink-0 items-center gap-1.5 rounded-full bg-[var(--kkb-lin)] pl-1.5 pr-3.5"
+            title={item.subtitle ? `${item.name} · ${item.subtitle}` : item.name}
           >
-            <span className="h-8 w-8 rounded-full bg-[var(--kkb-bg)] flex items-center justify-center shrink-0">
-              <item.icon className="h-4 w-4 text-[var(--kkb-coral)]" />
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white">
+              <item.icon className="h-3.5 w-3.5 text-[var(--kkb-foret)]" />
             </span>
-            <span className="min-w-0">
-              <span className="block text-[11px] font-quicksand font-semibold text-[var(--kkb-text-primary)] truncate">
-                {item.name}
-              </span>
-              {item.subtitle && (
-                <span className="block text-[9px] text-[var(--kkb-text-tertiary)] truncate">{item.subtitle}</span>
-              )}
-            </span>
-          </div>
+            <span className="truncate font-quicksand text-[13px] font-semibold text-[var(--kkb-profond)]">{item.name}</span>
+          </span>
         ))}
         {onAdd && (
           <button
             type="button"
             onClick={onAdd}
-            className="shrink-0 border border-dashed border-[var(--kkb-border)] bg-white/60 hover:bg-white rounded-lg p-2 w-24 flex flex-col items-center justify-center gap-0.5 text-[var(--kkb-coral)] active:scale-95 transition-transform"
+            className="inline-flex h-9 shrink-0 items-center gap-1 rounded-full border border-dashed border-[var(--kkb-foret-300)] px-3.5 font-quicksand text-[13px] font-semibold text-[var(--kkb-foret)] transition-transform active:scale-95"
           >
-            <PlusCircle className="h-4 w-4" />
-            <span className="text-[11px] font-quicksand">{addLabel}</span>
+            <Plus className="h-4 w-4" /> {addLabel}
           </button>
         )}
       </div>

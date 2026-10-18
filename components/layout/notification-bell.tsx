@@ -28,7 +28,7 @@ export function NotificationBell({ className }: { className: string }) {
     >
       <Bell className="h-5 w-5" />
       {hasNew && (
-        <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-[var(--kkb-coral)] text-white text-[10px] font-quicksand font-bold leading-4 text-center">
+        <span className="absolute -top-0.5 -right-0.5 min-w-[18px] ring-2 ring-[var(--kkb-creme)] h-[18px] px-1 rounded-full bg-[var(--kkb-coral)] text-white text-[10px] font-quicksand font-bold leading-[18px] text-center">
           {count > 9 ? '9+' : count}
         </span>
       )}

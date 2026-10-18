@@ -731,7 +731,7 @@ function PlanPageContent() {
               <div className={`w-5 h-5 rounded-full flex items-center justify-center transition-colors ${
                 plan.status === 'finalized' || plan.status === 'shared'
                   ? 'bg-[var(--kkb-success)]'
-                  : 'bg-[var(--kkb-border)] group-hover:bg-[var(--kkb-coral)]/20'
+                  : 'bg-[var(--kkb-border)] group-hover:bg-[color-mix(in_srgb,var(--kkb-coral)_20%,transparent)]'
               }`}>
                 <span className={`text-[10px] font-bold ${
                   plan.status === 'finalized' || plan.status === 'shared'
@@ -978,7 +978,7 @@ function PlanPageContent() {
           repasse flottant (à gauche), ce bouton se contracte et glisse à
           droite pour partager la ligne — transition animée, pas de saut. ── */}
       {viewState === 'review' && plan && activeConfigs.length > 0 && (
-        <div className="fixed bottom-[88px] left-4 right-4 z-30 lg:hidden">
+        <div className="fixed bottom-[var(--kkb-nav-offset)] left-4 right-4 z-30 lg:hidden">
           <div className="relative h-[52px]">
             <button
               type="button"

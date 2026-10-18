@@ -86,15 +86,15 @@ const RATING_EMOJI: Record<Rating, string> = {
 // Puces "impressions rapides" : couleur selon la réaction choisie.
 const CHIP_TONE: Record<Rating, { idle: string; active: string }> = {
   excellent: {
-    idle:   'border-[var(--kkb-success)]/40 bg-[var(--kkb-success-light)] text-[var(--kkb-success)]',
+    idle:   'border-[color-mix(in_srgb,var(--kkb-success)_40%,transparent)] bg-[var(--kkb-success-light)] text-[var(--kkb-success)]',
     active: 'border-[var(--kkb-success)] bg-[var(--kkb-success)] text-white',
   },
   correct: {
-    idle:   'border-[var(--kkb-warning)]/50 bg-[var(--kkb-warning-light)] text-[var(--kkb-text-secondary)]',
+    idle:   'border-[color-mix(in_srgb,var(--kkb-warning)_50%,transparent)] bg-[var(--kkb-warning-light)] text-[var(--kkb-text-secondary)]',
     active: 'border-[var(--kkb-warning)] bg-[var(--kkb-warning)] text-white',
   },
   decevant: {
-    idle:   'border-[var(--kkb-danger)]/40 bg-[var(--kkb-danger-light)] text-[var(--kkb-danger)]',
+    idle:   'border-[color-mix(in_srgb,var(--kkb-danger)_40%,transparent)] bg-[var(--kkb-danger-light)] text-[var(--kkb-danger)]',
     active: 'border-[var(--kkb-danger)] bg-[var(--kkb-danger)] text-white',
   },
 }

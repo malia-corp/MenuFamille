@@ -532,7 +532,7 @@ export function RecipeForm({
       {apiError && <p className="mt-4 text-sm font-quicksand text-[var(--kkb-danger)]">{apiError}</p>}
 
       {/* Enregistrer : pastille compacte centrée au-dessus de la bottom nav (mobile), barre pleine largeur (desktop) */}
-      <div className="fixed bottom-[88px] left-1/2 z-30 -translate-x-1/2 lg:inset-x-0 lg:bottom-0 lg:left-60 lg:translate-x-0 lg:border-t lg:border-[var(--kkb-border)] lg:bg-white lg:px-8 lg:py-3">
+      <div className="fixed bottom-[var(--kkb-nav-offset)] left-1/2 z-30 -translate-x-1/2 lg:inset-x-0 lg:bottom-0 lg:left-60 lg:translate-x-0 lg:border-t lg:border-[var(--kkb-border)] lg:bg-white lg:px-8 lg:py-3">
         <div className="mx-auto flex max-w-[1300px] items-center gap-4">
           {draftKey && (
             <p className="hidden flex-1 items-center gap-1.5 text-xs font-quicksand text-[var(--kkb-success)] lg:flex" aria-live="polite">
@@ -604,7 +604,7 @@ export function RecipeForm({
                 const selected = (assocPicker === 'side' ? sideItems : drinkItems).some(i => i.id === recipe.id)
                 return (
                   <button key={recipe.id} type="button" onClick={() => toggleAssocItem(recipe)} aria-pressed={selected}
-                    className="flex w-full items-center gap-3 border-b border-[var(--kkb-border)]/40 px-4 py-3 text-left last:border-0 hover:bg-[var(--kkb-coral-light)]">
+                    className="flex w-full items-center gap-3 border-b border-[color-mix(in_srgb,var(--kkb-border)_40%,transparent)] px-4 py-3 text-left last:border-0 hover:bg-[var(--kkb-coral-light)]">
                     <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border-[1.5px] ${selected ? 'border-[var(--kkb-coral)] bg-[var(--kkb-coral)] text-white' : 'border-[var(--kkb-border)] bg-white'}`}>
                       {selected && <Check className="h-3 w-3" />}
                     </span>

@@ -1,14 +1,14 @@
 'use client'
 
 import { useState } from 'react'
-import { Clock, Heart, UtensilsCrossed, type LucideIcon } from 'lucide-react'
+import { Clock, Heart, type LucideIcon } from 'lucide-react'
 import { CompositionCarousel, type ChipItem } from './composition-carousel'
 import { FramedPhoto } from './framed-photo'
 
 const DIFFICULTY_LABEL: Record<string, string> = {
-  facile: 'Niveau facile',
-  moyen: 'Niveau intermédiaire',
-  difficile: 'Niveau difficile',
+  facile: 'Facile',
+  moyen: 'Intermédiaire',
+  difficile: 'Difficile',
 }
 
 interface MealCardHeroProps {
@@ -27,6 +27,9 @@ interface MealCardHeroProps {
   onAddComposition: () => void
 }
 
+// Repas principal du jour : grande photo arrondie, titre posé sur un voile
+// sombre (lisible quelle que soit la photo), puis l'avis de la table en
+// jauge et les accompagnements en puces.
 export function MealCardHero({
   icon: Icon,
   timeLabel,
@@ -58,74 +61,72 @@ export function MealCardHero({
     }
   }
 
+  const meta = [
+    prepTimeMin ? `${prepTimeMin} min` : null,
+    difficulty ? DIFFICULTY_LABEL[difficulty] ?? difficulty : null,
+  ].filter(Boolean).join(' · ')
+
   return (
-    <div className="relative rounded-xl overflow-hidden bg-white border-[0.5px] border-[var(--kkb-border)] shadow-md">
-      <div className="aspect-[4/3] w-full relative">
+    <article className="overflow-hidden rounded-[var(--kkb-r-xl)] bg-white">
+      <div className="relative m-1.5 aspect-[5/4] lg:aspect-[16/7] overflow-hidden rounded-[var(--kkb-r-lg)]">
         {photoUrl ? (
           <FramedPhoto src={photoUrl} alt={title} />
         ) : (
-          <div className="h-full w-full flex items-center justify-center bg-[var(--kkb-coral)]">
-            <Icon className="h-14 w-14 text-white" />
+          <div className="flex h-full w-full items-center justify-center bg-[var(--kkb-orange-50)]">
+            <Icon className="h-14 w-14 text-[var(--kkb-orange-300)]" />
           </div>
         )}
-        <div className="absolute top-3 left-3 flex gap-1.5">
-          <span className="inline-flex items-center gap-1 bg-[var(--kkb-coral)] text-white px-2.5 py-0.5 rounded-full text-[10px] font-quicksand font-bold uppercase">
-            <Icon className="h-3 w-3" /> {timeLabel}
-          </span>
-          <span className="bg-[var(--kkb-teal)] text-white px-2.5 py-0.5 rounded-full text-[10px] font-quicksand font-bold uppercase">
-            Aujourd&apos;hui
-          </span>
-        </div>
+        <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-[rgba(31,58,46,0.85)] via-[rgba(31,58,46,0.35)] to-transparent" />
+
+        <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 font-quicksand text-xs font-bold text-[var(--kkb-foret)] backdrop-blur-sm">
+          <Icon className="h-3.5 w-3.5" /> {timeLabel}
+        </span>
         {recipeId && (
           <button
             type="button"
             onClick={() => void toggleFavorite()}
-            aria-label="Favori"
-            className="absolute top-3 right-3 h-9 w-9 rounded-full bg-white/90 backdrop-blur-sm border border-[var(--kkb-border)] flex items-center justify-center active:scale-95 transition-transform shadow-sm"
+            aria-label={favorited ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+            aria-pressed={favorited}
+            className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm transition-transform active:scale-90"
           >
             <Heart
-              className="h-5 w-5"
-              style={{ color: 'var(--kkb-coral)' }}
-              fill={favorited ? 'var(--kkb-coral)' : 'none'}
+              className="h-5 w-5 text-[var(--kkb-orange)]"
+              fill={favorited ? 'var(--kkb-orange)' : 'none'}
             />
           </button>
         )}
-      </div>
 
-      <div className="p-4 space-y-2 border-b-2 border-[var(--kkb-teal)]">
-        <div className="flex items-center gap-1 text-[var(--kkb-coral)]">
-          <UtensilsCrossed className="h-4 w-4" />
-          <span className="text-[10px] font-quicksand font-bold uppercase tracking-wide">Plat principal</span>
-        </div>
-        <h3 className="font-dosis font-bold text-xl text-[var(--kkb-text-primary)] leading-tight">{title}</h3>
-        <div className="flex items-center gap-1 text-[var(--kkb-text-secondary)]">
-          <Clock className="h-3.5 w-3.5" />
-          <span className="text-sm font-quicksand">
-            {prepTimeMin ? `${prepTimeMin} min` : 'Durée non précisée'}
-            {difficulty && ` • ${DIFFICULTY_LABEL[difficulty] ?? difficulty}`}
-          </span>
-        </div>
-
-        <div className="flex items-center justify-between bg-[var(--kkb-success-light)] p-2.5 rounded-lg">
-          {agreementPct === null ? (
-            <span className="text-sm font-quicksand text-[var(--kkb-success)]">Pas encore de retours</span>
-          ) : (
-            <>
-              <span className="text-sm font-quicksand font-semibold text-[var(--kkb-success)]">
-                {respondentCount}/{memberCount} ont répondu
-              </span>
-              <span className="text-sm font-quicksand text-[var(--kkb-success)]">{agreementPct}% d&apos;accord</span>
-            </>
+        <div className="absolute inset-x-4 bottom-4 text-[var(--kkb-creme)]">
+          <h3 className="font-dosis text-[22px] font-extrabold leading-[26px]">{title}</h3>
+          {meta && (
+            <p className="mt-1 flex items-center gap-1.5 font-quicksand text-sm font-medium text-white/90">
+              <Clock className="h-3.5 w-3.5" /> {meta}
+            </p>
           )}
         </div>
       </div>
 
-      <CompositionCarousel
-        title={compositionTitle}
-        hint="Défiler →"
-        items={compositions}
-        onAdd={onAddComposition}
-      />
-    </div>
+      <div className="px-4 pb-4 pt-2.5">
+        {agreementPct === null ? (
+          <p className="font-quicksand text-sm text-[var(--kkb-texte-2)]">
+            La table n&apos;a pas encore donné son avis.
+          </p>
+        ) : (
+          <div className="space-y-2">
+            <div className="flex items-baseline justify-between gap-2 font-quicksand text-sm">
+              <span className="text-[var(--kkb-texte-2)]">
+                <span className="font-bold tabular-nums text-[var(--kkb-profond)]">{respondentCount}/{memberCount}</span> ont répondu
+              </span>
+              <span className="font-bold tabular-nums text-[var(--kkb-success)]">{agreementPct} % d&apos;accord</span>
+            </div>
+            <div className="h-2 overflow-hidden rounded-full bg-[var(--kkb-sauge-50)]" aria-hidden="true">
+              <div className="h-full rounded-full bg-[var(--kkb-sauge)]" style={{ width: `${agreementPct}%` }} />
+            </div>
+          </div>
+        )}
+      </div>
+
+      <CompositionCarousel title={compositionTitle} items={compositions} onAdd={onAddComposition} />
+    </article>
   )
 }

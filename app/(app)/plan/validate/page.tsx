@@ -88,7 +88,7 @@ function RecipeRow({ recipe, label, compositions, warnings }: {
   const drink = drinkComp ? { id: 'drink', name: drinkComp.recipes!.name } : null
 
   return (
-    <div className="flex items-center gap-3 px-3 py-2.5 border-b border-[var(--kkb-border)]/30 last:border-0">
+    <div className="flex items-center gap-3 px-3 py-2.5 border-b border-[color-mix(in_srgb,var(--kkb-border)_30%,transparent)] last:border-0">
       <p className="w-20 text-[10px] font-quicksand font-semibold text-[var(--kkb-text-tertiary)] flex-shrink-0">
         {label}
       </p>
@@ -191,7 +191,7 @@ function MealAccordionSection({ config, plan, open, onToggle }: {
       </button>
 
       {open && (
-        <div className="border-t border-[var(--kkb-border)]/50">
+        <div className="border-t border-[color-mix(in_srgb,var(--kkb-border)_50%,transparent)]">
           {config.mode === 'template' ? (
             <RecipeRow
               recipe={templateItem?.recipes ?? null}
@@ -241,7 +241,7 @@ function DayAccordionSection({ day, dateLabel, configs, plan, open, onToggle }: 
   const warningsCount = rows.reduce((acc, r) => acc + (r.item?.allergy_warnings?.length ?? 0), 0)
 
   return (
-    <div className={`mx-4 bg-white border rounded-[var(--kkb-radius-card)] overflow-hidden ${complete ? 'border-[var(--kkb-border)]' : 'border-[var(--kkb-warning)]/60'}`}>
+    <div className={`mx-4 bg-white border rounded-[var(--kkb-radius-card)] overflow-hidden ${complete ? 'border-[var(--kkb-border)]' : 'border-[color-mix(in_srgb,var(--kkb-warning)_60%,transparent)]'}`}>
       <button
         type="button"
         onClick={onToggle}
@@ -266,9 +266,9 @@ function DayAccordionSection({ day, dateLabel, configs, plan, open, onToggle }: 
       </button>
 
       {open && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-3 border-t border-[var(--kkb-border)]/50">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-3 border-t border-[color-mix(in_srgb,var(--kkb-border)_50%,transparent)]">
           {rows.map(({ config, item }) => (
-            <div key={config.meal_type} className="relative overflow-hidden rounded-xl border border-[var(--kkb-border)]/60 min-h-[132px]">
+            <div key={config.meal_type} className="relative overflow-hidden rounded-xl border border-[color-mix(in_srgb,var(--kkb-border)_60%,transparent)] min-h-[132px]">
               {item?.recipes?.photo_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={item.recipes.photo_url} alt="" className="absolute inset-0 h-full w-full object-cover" />
@@ -546,7 +546,7 @@ function ValidateInner() {
 
       <ShareActions
         getPayload={surveySharePayload}
-        shareButtonClassName="flex-1 flex items-center justify-center gap-1.5 border border-[var(--kkb-coral)] text-[var(--kkb-coral)] rounded-2xl py-3 font-dosis font-bold text-sm disabled:opacity-60 hover:bg-[var(--kkb-coral)]/5 transition-colors"
+        shareButtonClassName="flex-1 flex items-center justify-center gap-1.5 border border-[var(--kkb-coral)] text-[var(--kkb-coral)] rounded-2xl py-3 font-dosis font-bold text-sm disabled:opacity-60 hover:bg-[color-mix(in_srgb,var(--kkb-coral)_5%,transparent)] transition-colors"
       />
 
       <button

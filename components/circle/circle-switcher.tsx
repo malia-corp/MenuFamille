@@ -97,7 +97,7 @@ export function CircleSwitcher({ circles, selectedId, activeId, onSelect, childr
                     aria-selected={selected}
                     onClick={() => void choose(c.id)}
                     disabled={pending !== null}
-                    className={`flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-[var(--kkb-bg)] ${selected ? 'bg-[var(--kkb-coral-light)]/50' : ''}`}
+                    className={`flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-[var(--kkb-bg)] ${selected ? 'bg-[color-mix(in_srgb,var(--kkb-coral-light)_50%,transparent)]' : ''}`}
                   >
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--kkb-teal-light)]">
                       <Users className="h-4 w-4 text-[var(--kkb-teal)]" />

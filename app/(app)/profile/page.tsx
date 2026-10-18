@@ -265,7 +265,7 @@ export default function ProfilePage() {
               {members.slice(0, MEMBERS_SHOWN).map((m, i) => {
                 const name = m.users!.display_name || m.users!.email
                 return (
-                  <div key={m.id} className="flex min-w-0 items-center gap-2.5 rounded-[var(--kkb-radius-sm)] bg-[var(--kkb-coral-light)]/60 p-2.5">
+                  <div key={m.id} className="flex min-w-0 items-center gap-2.5 rounded-[var(--kkb-radius-sm)] bg-[color-mix(in_srgb,var(--kkb-coral-light)_60%,transparent)] p-2.5">
                     <span
                       className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-dosis text-sm font-bold text-white"
                       style={{ backgroundColor: AVATAR_COLORS[i % AVATAR_COLORS.length] }}

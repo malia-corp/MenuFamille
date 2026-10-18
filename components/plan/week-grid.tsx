@@ -115,7 +115,7 @@ export function WeekGrid({ weekStart, configs, items, onCellClick }: WeekGridPro
                   className={`relative overflow-hidden rounded-[var(--kkb-radius-sm)] border min-h-[104px] transition-colors ${
                     item?.recipes
                       ? 'border-[var(--kkb-border)] hover:border-[var(--kkb-coral)]'
-                      : 'border-dashed border-[var(--kkb-border)] bg-[var(--kkb-coral-light)]/40 hover:border-[var(--kkb-coral)] flex items-center justify-center'
+                      : 'border-dashed border-[var(--kkb-border)] bg-[color-mix(in_srgb,var(--kkb-coral-light)_40%,transparent)] hover:border-[var(--kkb-coral)] flex items-center justify-center'
                   }`}
                 >
                   {item?.is_locked && (

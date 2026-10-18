@@ -22,7 +22,7 @@ export function PublicHeader({ plannerName, familyName, viewer }: PublicHeaderPr
   if (viewer) {
     const initial = (viewer.display_name || '?').trim().charAt(0).toUpperCase()
     return (
-      <header className="sticky top-0 z-30 bg-white border-b border-[var(--kkb-border)]/50">
+      <header className="sticky top-0 z-30 bg-white border-b border-[color-mix(in_srgb,var(--kkb-border)_50%,transparent)]">
         <div className="max-w-7xl mx-auto px-4 lg:px-6 xl:px-10 h-14 lg:h-16 flex items-center justify-between">
           <Link href="/" className="flex min-w-0 items-center gap-2" aria-label="Retour à l'accueil">
             <ArrowLeft className="h-5 w-5 shrink-0 text-[var(--kkb-teal)]" />
@@ -55,7 +55,7 @@ export function PublicHeader({ plannerName, familyName, viewer }: PublicHeaderPr
 
   const initial = (plannerName ?? '?').trim().charAt(0).toUpperCase()
   return (
-    <header className="sticky top-0 z-30 bg-white border-b border-[var(--kkb-border)]/50">
+    <header className="sticky top-0 z-30 bg-white border-b border-[color-mix(in_srgb,var(--kkb-border)_50%,transparent)]">
       <div className="max-w-7xl mx-auto px-4 lg:px-6 xl:px-10 h-14 flex items-center justify-between">
         <Logo layout="horizontal" size={22} />
 

@@ -163,7 +163,7 @@ export function MemberHome({ firstName }: { firstName: string }) {
     vote.has_voted ? (
       <Link
         href="/votes/results/member"
-        className="flex items-center gap-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-teal)]/30 bg-[var(--kkb-teal-light)] p-4"
+        className="flex items-center gap-3 rounded-[var(--kkb-radius-card)] border border-[color-mix(in_srgb,var(--kkb-teal)_30%,transparent)] bg-[var(--kkb-teal-light)] p-4"
       >
         <CheckCircle className="h-6 w-6 shrink-0 text-[var(--kkb-teal)]" />
         <span className="min-w-0 flex-1">

@@ -78,7 +78,7 @@ function PickerSection({ icon, title, summary, disabled, open, onToggle, childre
   children: React.ReactNode
 }) {
   return (
-    <div className="border-b border-[var(--kkb-border)]/60">
+    <div className="border-b border-[color-mix(in_srgb,var(--kkb-border)_60%,transparent)]">
       <button
         type="button"
         onClick={onToggle}
@@ -212,7 +212,7 @@ export function RecipePickerPanel({
                     type="button"
                     disabled={picking}
                     onClick={() => handlePick(recipe)}
-                    className="w-full flex items-center gap-3 px-2 py-3 border-b border-[var(--kkb-border)]/40 last:border-0 hover:bg-[var(--kkb-coral-light)] transition-colors disabled:opacity-50"
+                    className="w-full flex items-center gap-3 px-2 py-3 border-b border-[color-mix(in_srgb,var(--kkb-border)_40%,transparent)] last:border-0 hover:bg-[var(--kkb-coral-light)] transition-colors disabled:opacity-50"
                   >
                     <div className="relative h-10 w-10 rounded-lg overflow-hidden shrink-0 bg-[var(--kkb-coral-light)]">
                       {recipe.photo_url
@@ -272,7 +272,7 @@ export function RecipePickerPanel({
           <button
             type="button"
             onClick={onCreateCustom}
-            className="w-full flex items-center gap-3 px-4 py-3 border-2 border-dashed border-[var(--kkb-coral)]/40 rounded-xl hover:bg-[var(--kkb-coral-light)] transition-colors group"
+            className="w-full flex items-center gap-3 px-4 py-3 border-2 border-dashed border-[color-mix(in_srgb,var(--kkb-coral)_40%,transparent)] rounded-xl hover:bg-[var(--kkb-coral-light)] transition-colors group"
           >
             <PlusCircle className="h-5 w-5 text-[var(--kkb-text-tertiary)] group-hover:text-[var(--kkb-coral)] transition-colors" />
             <span className="text-sm font-quicksand text-[var(--kkb-text-tertiary)] group-hover:text-[var(--kkb-coral)] transition-colors">

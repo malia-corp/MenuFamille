@@ -384,7 +384,7 @@ function GridRow({ config }: { config: MealConfig }) {
     return (
       <>
         {label}
-        <span className="col-span-7 flex h-6 items-center justify-center rounded border border-[var(--kkb-teal)]/30 bg-white/70 font-quicksand text-[10px] font-bold text-[var(--kkb-teal)]">
+        <span className="col-span-7 flex h-6 items-center justify-center rounded border border-[color-mix(in_srgb,var(--kkb-teal)_30%,transparent)] bg-white/70 font-quicksand text-[10px] font-bold text-[var(--kkb-teal)]">
           1 formule unique
         </span>
       </>

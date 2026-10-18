@@ -309,7 +309,7 @@ function RecipeDetail() {
           )}
         </div>
 
-        <div className="fixed bottom-[88px] left-1/2 z-30 flex -translate-x-1/2 items-center gap-1.5 rounded-[var(--kkb-radius-pill)] border border-[var(--kkb-border)] bg-white p-1.5 shadow-[var(--kkb-shadow-fab)]">
+        <div className="fixed bottom-[var(--kkb-nav-offset)] left-1/2 z-30 flex -translate-x-1/2 items-center gap-1.5 rounded-[var(--kkb-radius-pill)] border border-[var(--kkb-border)] bg-white p-1.5 shadow-[var(--kkb-shadow-fab)]">
           <button type="button" onClick={() => void toggleFavorite()} aria-label={recipe.is_favorited ? 'Retirer des favoris' : 'Ajouter aux favoris'} aria-pressed={recipe.is_favorited}
             className={`relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors ${recipe.is_favorited ? 'bg-[var(--kkb-coral-light)]' : 'bg-[var(--kkb-bg)]'}`}>
             <Heart key={favPop} className={`h-5 w-5 ${favPop ? 'motion-safe:animate-kkb-react-pop' : ''} ${recipe.is_favorited ? 'fill-[var(--kkb-coral)] text-[var(--kkb-coral)]' : 'text-[var(--kkb-text-secondary)]'}`} />

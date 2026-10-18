@@ -225,7 +225,7 @@ export default function RecipesPage() {
 
         <button
           type="button" onClick={() => router.push('/recipes/add')} aria-label="Ajouter une recette"
-          className="fixed bottom-[88px] right-5 z-40 flex h-[52px] w-[52px] items-center justify-center rounded-full bg-[var(--kkb-coral)] text-white shadow-[var(--kkb-shadow-fab)] transition-transform active:scale-95"
+          className="fixed bottom-[var(--kkb-nav-offset)] right-5 z-40 flex h-[52px] w-[52px] items-center justify-center rounded-full bg-[var(--kkb-coral)] text-white shadow-[var(--kkb-shadow-fab)] transition-transform active:scale-95"
         >
           <Plus className="h-6 w-6" />
         </button>

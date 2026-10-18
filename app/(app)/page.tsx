@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { CalendarDays, CupSoda, Hand, PlusCircle, Salad, Settings, UtensilsCrossed, Zap } from 'lucide-react'
+import { CalendarDays, ChevronRight, CupSoda, Hand, Plus, PlusCircle, Salad, Settings, SlidersHorizontal, UtensilsCrossed, Zap } from 'lucide-react'
 import { DAY_OPTIONS, getMondayISO, formatWeekRange, dayOfWeekFromDate, type DayOfWeek } from '@/lib/utils/week'
 import { MEAL_LABEL, MEAL_COLOR, type MealType } from '@/lib/constants/meal-type'
 import { MEAL_ICON } from '@/lib/constants/meal-type-icon'
@@ -18,6 +18,7 @@ import { MemberHome } from '@/components/home/member-home'
 import { TipCard } from '@/components/home/tip-card'
 import type { ChipItem } from '@/components/home/composition-carousel'
 import { EmptyState } from '@/components/ui/empty-state'
+import { MealTypeIcon } from '@/components/ui/meal-type-icon'
 import { SkeletonCard } from '@/components/ui/skeleton-card'
 import { pickActiveCircle } from '@/lib/utils/active-circle'
 
@@ -189,6 +190,7 @@ export default function HomePage() {
     return d
   }, [weekStart, selectedIdx])
   const dayBadge = selectedDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }).toUpperCase()
+  const dayLong = selectedDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
 
   const heroConfig  = activeConfigs.find(c => c.meal_type === 'dejeuner')
   const dinerConfig = activeConfigs.find(c => c.meal_type === 'diner')
@@ -283,7 +285,7 @@ export default function HomePage() {
       />
     </div>
   ) : (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {activeConfigs.map(config => {
         const item  = getItemForDay(config, selectedDay)
         const icon  = MEAL_ICON[config.meal_type]
@@ -291,22 +293,26 @@ export default function HomePage() {
 
         if (!item?.recipes) {
           return (
-            <div
+            <button
               key={config.meal_type}
-              className="bg-white border border-dashed border-[var(--kkb-border)] rounded-xl p-4 flex items-center justify-between gap-3"
+              type="button"
+              onClick={goToPlan}
+              className="w-full rounded-[var(--kkb-r-xl)] border border-dashed border-[var(--kkb-filet)] p-2.5 flex items-center gap-3 text-left active:scale-[0.99] transition-transform"
             >
-              <div className="min-w-0">
-                <p className="text-[10px] font-quicksand font-semibold uppercase text-[var(--kkb-text-tertiary)]">{label}</p>
-                <p className="text-sm font-quicksand text-[var(--kkb-text-secondary)]">Pas encore planifié</p>
-              </div>
-              <button
-                type="button"
-                onClick={goToPlan}
-                className="shrink-0 flex items-center gap-1 text-xs font-quicksand font-semibold text-[var(--kkb-coral)]"
+              <span
+                className="h-[72px] w-[72px] shrink-0 rounded-[var(--kkb-r-lg)] flex items-center justify-center"
+                style={{ backgroundColor: MEAL_COLOR[config.meal_type].bg, color: MEAL_COLOR[config.meal_type].text }}
               >
-                <PlusCircle className="h-4 w-4" /> Ajouter
-              </button>
-            </div>
+                <MealTypeIcon type={config.meal_type} className="h-7 w-7" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block font-dosis text-[17px] font-bold text-[var(--kkb-profond)]">{label}</span>
+                <span className="block font-quicksand text-sm text-[var(--kkb-texte-2)]">Pas encore planifié</span>
+              </span>
+              <span className="h-11 w-11 shrink-0 rounded-full bg-white flex items-center justify-center text-[var(--kkb-foret)]" aria-hidden="true">
+                <Plus className="h-5 w-5" />
+              </span>
+            </button>
           )
         }
 
@@ -324,7 +330,7 @@ export default function HomePage() {
               respondentCount={surveyResults?.respondent_count ?? 0}
               memberCount={memberCount}
               agreementPct={agreementPct}
-              compositionTitle="Accompagnements & Boissons"
+              compositionTitle="Accompagnements et boissons"
               compositions={toChips(item.meal_compositions)}
               onAddComposition={goToPlan}
             />
@@ -335,13 +341,13 @@ export default function HomePage() {
           <MealCardCompact
             key={config.meal_type}
             icon={icon}
-            badgeLabel={`${formatTime(config.default_time)} · ${label.toUpperCase()}`}
+            badgeLabel={`${label} · ${formatTime(config.default_time)}`}
             badgeBg={MEAL_COLOR[config.meal_type].bg}
             badgeText={MEAL_COLOR[config.meal_type].text}
             photoUrl={item.recipes.photo_url}
             title={item.recipes.name}
             subtitle={item.servings ? `${item.servings} pers.` : ''}
-            compositionTitle="Composantes & Extras"
+            compositionTitle="Extras"
             compositions={toChips(item.meal_compositions)}
             onEdit={goToPlan}
             onAddComposition={goToPlan}
@@ -366,67 +372,72 @@ export default function HomePage() {
 
   return (
     <>
-    <div className="max-w-sm mx-auto px-4 pb-40 space-y-6 lg:hidden">
-      {/* Salutation */}
-      <section className="space-y-1 pt-2">
-        <h1 className="text-h1 text-[var(--kkb-text-primary)] flex items-center gap-2">
-          Bonjour{firstName ? `, ${firstName}` : ''} <Hand className="h-6 w-6 text-[var(--kkb-coral)]" />
+    <div className="max-w-sm mx-auto px-4 pb-8 space-y-7 lg:hidden">
+      {/* Salutation : la question de la marque, posée au jour choisi */}
+      <section className="pt-3">
+        <p className="font-quicksand text-[15px] font-medium text-[var(--kkb-texte-2)]">
+          Bonjour{firstName ? `, ${firstName}` : ''}
+        </p>
+        <h1 className="mt-0.5 text-h1 text-[var(--kkb-foret)]">
+          {isToday ? <>On mange quoi<br />aujourd’hui&nbsp;?</> : <>Au menu<br />{dayOpt.full.toLowerCase()}</>}
         </h1>
-        <p className="text-kkb-body text-[var(--kkb-text-secondary)]">Prête pour une nouvelle semaine de délices ?</p>
       </section>
 
-      {/* Sélecteur de semaine */}
-      <section className="space-y-2">
-        <div className="flex items-center justify-between">
-          <span className="text-kkb-label text-[var(--kkb-text-tertiary)]">{formatWeekRange(weekStart).toUpperCase()}</span>
-          <CalendarDays className="h-4 w-4 text-[var(--kkb-coral)]" />
+      {/* Semaine */}
+      <section className="space-y-2.5">
+        <div className="flex items-center justify-between px-1">
+          <span className="font-quicksand text-sm font-semibold text-[var(--kkb-texte-2)]">Semaine du {formatWeekRange(weekStart)}</span>
+          <CalendarDays className="h-4 w-4 text-[var(--kkb-texte-2)]" />
         </div>
         <WeekDayPicker weekStart={weekStart} selectedDay={selectedDay} onSelect={setSelectedDay} />
       </section>
 
       {/* Repas du jour sélectionné */}
       <section className="space-y-3">
-        <div className="flex items-center justify-between gap-2">
-          <h2 className="text-h2 text-[var(--kkb-text-primary)] flex items-center gap-1.5">
-            <UtensilsCrossed className="h-4 w-4 text-[var(--kkb-coral)] shrink-0" />
-            {isToday ? "Repas d'aujourd'hui" : `Repas du ${dayOpt.full.toLowerCase()}`}
-          </h2>
-          <span className="shrink-0 text-[10px] font-quicksand font-bold px-2 py-0.5 rounded-full bg-[var(--kkb-coral-light)] text-[var(--kkb-coral)]">
-            {dayBadge}
-          </span>
+        <div className="flex items-baseline justify-between gap-2 px-1">
+          <h2 className="text-h2 text-[var(--kkb-profond)]">Au menu</h2>
+          <span className="inline-block font-quicksand text-sm font-semibold text-[var(--kkb-texte-2)] first-letter:uppercase">{dayLong}</span>
         </div>
 
         {mealCardsContent}
       </section>
 
       {/* Emplacement d'ancrage du FAB (cf. components/layout/fab.tsx) */}
-      <div id="generate-slot" className="min-h-[52px]" />
+      <div id="generate-slot" className="min-h-[48px]" />
 
-      {/* Actions secondaires */}
-      <section className="grid grid-cols-2 gap-2">
+      {/* Raccourcis : tuiles teintées, l'orange reste au bouton de génération */}
+      <section className="grid grid-cols-2 gap-3">
         <button
           type="button"
           onClick={goToPlan}
-          className="border border-[var(--kkb-border)] bg-[var(--kkb-bg)]/70 hover:bg-[var(--kkb-bg)] text-[var(--kkb-coral)] py-3 px-3 rounded-xl text-btn-secondary flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all"
+          className="rounded-[var(--kkb-r-xl)] bg-[var(--kkb-sauge-50)] p-4 text-left active:scale-[0.98] transition-transform"
         >
-          <PlusCircle className="h-4 w-4" /> Ajouter un repas
+          <span className="h-10 w-10 rounded-full bg-white flex items-center justify-center text-[var(--kkb-foret)]">
+            <PlusCircle className="h-5 w-5" />
+          </span>
+          <span className="mt-3 block font-dosis text-[15px] font-bold text-[var(--kkb-profond)]">Ajouter un repas</span>
+          <span className="block font-quicksand text-xs text-[var(--kkb-texte-2)]">Dans le menu de la semaine</span>
         </button>
         <button
           type="button"
           onClick={() => router.push('/settings/meal-config')}
-          className="border border-[var(--kkb-border)] bg-[var(--kkb-bg)]/70 hover:bg-[var(--kkb-bg)] text-[var(--kkb-text-secondary)] py-3 px-3 rounded-xl text-btn-secondary flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all"
+          className="rounded-[var(--kkb-r-xl)] bg-[var(--kkb-jaune-50)] p-4 text-left active:scale-[0.98] transition-transform"
         >
-          <Settings className="h-4 w-4" /> Ajuster mes préférences
+          <span className="h-10 w-10 rounded-full bg-white flex items-center justify-center text-[var(--kkb-jaune-text)]">
+            <SlidersHorizontal className="h-5 w-5" />
+          </span>
+          <span className="mt-3 block font-dosis text-[15px] font-bold text-[var(--kkb-profond)]">Rythme des repas</span>
+          <span className="block font-quicksand text-xs text-[var(--kkb-texte-2)]">Repas et horaires</span>
         </button>
       </section>
 
       {/* À venir */}
       {upcomingDays.length > 0 && (
-        <section className="space-y-3 pb-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-h2 text-[var(--kkb-text-primary)]">À venir</h3>
-            <button type="button" onClick={goToPlan} className="text-xs font-quicksand text-[var(--kkb-coral)] flex items-center gap-0.5">
-              Voir tout →
+        <section className="space-y-3">
+          <div className="flex items-center justify-between px-1">
+            <h3 className="text-h2 text-[var(--kkb-profond)]">À venir</h3>
+            <button type="button" onClick={goToPlan} className="-mr-2 h-11 px-2 font-quicksand text-sm font-bold text-[var(--kkb-foret)] flex items-center gap-0.5">
+              Tout voir <ChevronRight className="h-4 w-4" />
             </button>
           </div>
           <UpcomingCarousel days={upcomingDays} />
@@ -453,7 +464,7 @@ export default function HomePage() {
             Bonjour{firstName ? ` ${firstName}` : ''} <Hand className="h-7 w-7 text-[var(--kkb-coral)]" />
           </h1>
           <p className="text-kkb-body text-base text-[var(--kkb-text-secondary)] max-w-xl">
-            Prête pour une nouvelle semaine gourmande et sereine ?
+            On mange quoi cette semaine&nbsp;? On décide ensemble.
           </p>
         </div>
         <div className="flex items-center gap-3 shrink-0">
