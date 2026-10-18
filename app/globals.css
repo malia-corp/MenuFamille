@@ -133,15 +133,23 @@
     text-wrap: balance;
   }
 
-  /* Hierarchie typographique KeskonBouf — cf. globals.css :root pour les tokens couleur */
+  /* Échelle typographique du guide de marque v1.0 (chapitre 04) */
+  .text-display {
+    @apply font-dosis font-black text-[40px] leading-[44px];
+  }
   .text-h1 {
-    @apply font-dosis font-extrabold text-2xl;
+    @apply font-dosis font-extrabold text-[28px] leading-[32px];
   }
   .text-h2 {
-    @apply font-dosis font-bold text-lg;
+    @apply font-dosis font-extrabold text-[20px] leading-[24px];
   }
   .text-h3 {
-    @apply font-dosis font-semibold text-[15px];
+    @apply font-dosis font-bold text-[17px] leading-[22px];
+  }
+  /* Accent manuscrit (DynaPuff) : incliné de -3 à -6°, une fois par écran. */
+  .text-signature {
+    @apply font-main text-[22px] leading-tight;
+    transform: rotate(-3deg);
   }
   .text-kkb-label {
     @apply font-quicksand font-bold text-[10px] uppercase tracking-[0.08em];
