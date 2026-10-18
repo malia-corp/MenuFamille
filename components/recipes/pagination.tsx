@@ -27,7 +27,7 @@ export function Pagination({ page, pageCount, onChange }: { page: number; pageCo
         <span key={`gap-${i}`} className="px-1 text-[var(--kkb-text-tertiary)]">…</span>
       ) : (
         <button key={n} type="button" onClick={() => onChange(n)} aria-current={n === page ? 'page' : undefined}
-          className={`${btn} ${n === page ? 'bg-[var(--kkb-coral)] text-white' : 'border border-[var(--kkb-border)] bg-white text-[var(--kkb-text-secondary)] hover:border-[var(--kkb-coral)]'}`}>
+          className={`${btn} ${n === page ? 'bg-[var(--kkb-foret)] text-[var(--kkb-creme)]' : 'border border-[var(--kkb-border)] bg-white text-[var(--kkb-text-secondary)] hover:border-[var(--kkb-foret-300)]'}`}>
           {n}
         </button>
       ))}

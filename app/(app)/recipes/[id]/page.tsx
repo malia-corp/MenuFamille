@@ -3,11 +3,12 @@
 import { Suspense, useEffect, useRef, useState } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import {
-  ArrowLeft, BookHeart, CalendarPlus, Check, ChefHat, ChevronRight, Clock, CupSoda, Heart,
-  Loader2, Menu, Pencil, Printer, Salad, Smile, Timer, Trash2, Users,
+  ArrowLeft, CalendarPlus, Check, ChefHat, ChevronRight, Clock, CupSoda, Flame, Heart,
+  Loader2, MoreHorizontal, Pencil, Printer, Quote, Salad, Trash2, Users,
 } from 'lucide-react'
-import { categoryIcon } from '@/lib/constants/category-icon'
 import { CategoryBadge } from '@/components/recipes/category-badge'
+import { RecipeVisual } from '@/components/recipes/recipe-card'
+import { DIFFICULTY_LABEL } from '@/components/recipes/difficulty'
 import { AddToMenuSheet } from '@/components/recipes/add-to-menu-sheet'
 import { ServingsControl, scaleQuantity } from '@/components/recipes/servings-control'
 import { ShareActions } from '@/components/ui/share-actions'
@@ -40,9 +41,8 @@ interface Recipe {
 
 interface Suggestion { id: string; name: string; description: string | null; role: 'side' | 'drink' }
 
-const DIFFICULTY_SHORT: Record<string, string> = { facile: 'Facile', moyen: 'Moyen', difficile: 'Difficile' }
-const DIFFICULTY_LONG: Record<string, string>  = { facile: 'Accessible à tous', moyen: 'Intermédiaire', difficile: 'Pour cordon-bleu' }
 const VISIBILITY_TAG: Record<Recipe['visibility'], string> = { private: 'Ma recette', circle: 'Recette de famille', community: 'Recette de la communauté' }
+const MENU_ITEM = 'flex w-full items-center gap-2.5 px-4 py-2.5 text-left font-quicksand text-sm text-[var(--kkb-profond)] hover:bg-[var(--kkb-creme)]'
 
 export default function RecipeDetailPage() {
   return (
@@ -66,6 +66,7 @@ function RecipeDetail() {
   const [servings,    setServings]    = useState(4)
   const [suggestions, setSuggestions] = useState<Suggestion[]>([])
   const [checked,     setChecked]     = useState<Set<string>>(new Set())
+  const [stepsDone,   setStepsDone]   = useState<Set<string>>(new Set())
   const [menuOpen,    setMenuOpen]    = useState(false)
   const [addOpen,     setAddOpen]     = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -134,80 +135,198 @@ function RecipeDetail() {
     })
   }
 
+  function toggleStep(stepId: string) {
+    setStepsDone(prev => {
+      const next = new Set(prev)
+      if (next.has(stepId)) next.delete(stepId)
+      else next.add(stepId)
+      return next
+    })
+  }
+
   if (error) {
     return (
       <Centered>
         <p className="text-center text-sm font-quicksand text-[var(--kkb-danger)]">{error}</p>
-        <button type="button" onClick={() => router.push('/recipes')} className="text-xs font-quicksand font-bold text-[var(--kkb-coral)] underline">Retour au carnet</button>
+        <button type="button" onClick={() => router.push('/recipes')} className="text-xs font-quicksand font-bold text-[var(--kkb-foret)] underline">Retour au carnet</button>
       </Centered>
     )
   }
   if (!recipe) return <RecipeDetailSkeleton />
 
   const totalTime  = (recipe.prep_time_min ?? 0) + (recipe.cook_time_min ?? 0)
-  const CatIcon    = categoryIcon(recipe.categories?.slug)
   const allChecked = recipe.recipe_ingredients.length > 0 && checked.size === recipe.recipe_ingredients.length
   const shareUrl   = typeof window !== 'undefined' ? `${window.location.origin}/recipes/${recipe.id}` : ''
   const qtyOf      = (ing: Ingredient) => [scaleQuantity(ing.quantity, servings, recipe.servings), ing.unit].filter(Boolean).join(' ') || 'Q.S.'
 
-  const visual = (className: string, iconSize: string) => (
-    <div className={`relative overflow-hidden bg-[var(--kkb-orange-50)] ${className}`}>
-      {recipe.photo_url ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={recipe.photo_url} alt={recipe.name} className="absolute inset-0 h-full w-full object-cover" />
-      ) : (
-        <div className="absolute inset-0 flex items-center justify-center"><CatIcon className={`${iconSize} text-[var(--kkb-orange-300)]`} aria-hidden="true" /></div>
-      )}
-    </div>
-  )
-
   const optionsMenu = (
-    <div className="absolute right-0 top-full z-30 mt-2 w-56 overflow-hidden rounded-[var(--kkb-radius-sm)] border border-[var(--kkb-border)] bg-white py-1 shadow-lg">
+    <div className="absolute right-0 top-full z-30 mt-2 w-56 overflow-hidden rounded-[var(--kkb-r-lg)] border border-[var(--kkb-filet)] bg-white py-1.5 shadow-[0_12px_32px_rgba(31,58,46,0.14)]">
       {recipe.is_owner && (
-        <button type="button" onClick={() => router.push(`/recipes/${id}/edit`)} className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm font-quicksand text-[var(--kkb-text-primary)] hover:bg-[var(--kkb-bg)]">
-          <Pencil className="h-4 w-4 text-[var(--kkb-coral)]" /> Modifier
+        <button type="button" onClick={() => router.push(`/recipes/${id}/edit`)} className={MENU_ITEM}>
+          <Pencil className="h-4 w-4 text-[var(--kkb-foret)]" /> Modifier
         </button>
       )}
       {recipe.visibility !== 'private' && (
         <ShareActions
           getPayload={() => ({ title: `${recipe.name} — KeskonBouf`, text: `Découvre la recette « ${recipe.name} » sur KeskonBouf`, url: shareUrl })}
           className="flex flex-col"
-          buttonClassName="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm font-quicksand text-[var(--kkb-text-primary)] hover:bg-[var(--kkb-bg)] disabled:opacity-60"
+          buttonClassName={`${MENU_ITEM} disabled:opacity-60`}
         />
       )}
-      <button type="button" onClick={() => { setMenuOpen(false); setTimeout(() => window.print(), 50) }} className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm font-quicksand text-[var(--kkb-text-primary)] hover:bg-[var(--kkb-bg)]">
-        <Printer className="h-4 w-4 text-[var(--kkb-coral)]" /> Imprimer la fiche
+      <button type="button" onClick={() => { setMenuOpen(false); setTimeout(() => window.print(), 50) }} className={MENU_ITEM}>
+        <Printer className="h-4 w-4 text-[var(--kkb-foret)]" /> Imprimer la fiche
       </button>
       {recipe.is_owner && (
-        <button type="button" onClick={() => { setMenuOpen(false); setConfirmDelete(true) }} className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm font-quicksand text-[var(--kkb-danger)] hover:bg-[var(--kkb-danger-light)]">
+        <button type="button" onClick={() => { setMenuOpen(false); setConfirmDelete(true) }} className={`${MENU_ITEM} text-[var(--kkb-danger)] hover:bg-[var(--kkb-danger-light)]`}>
           <Trash2 className="h-4 w-4" /> Supprimer
         </button>
       )}
     </div>
   )
 
-  const tipCard = recipe.description && (
-    <section className="space-y-2 rounded-[var(--kkb-r-xl)] bg-[var(--kkb-jaune-50)] p-5">
-      <p className="flex items-center gap-2 text-sm font-quicksand font-bold text-[var(--kkb-jaune-text)]">
-        <BookHeart className="h-4 w-4" /> Le mot de la cuisine
-      </p>
-      <p className="text-[15px] font-quicksand leading-relaxed text-[var(--kkb-profond)]">« {recipe.description} »</p>
+  const favoriteButton = (size: string) => (
+    <button type="button" onClick={() => void toggleFavorite()} aria-label={recipe.is_favorited ? 'Retirer des favoris' : 'Ajouter aux favoris'} aria-pressed={recipe.is_favorited}
+      className={`flex shrink-0 items-center justify-center rounded-full transition-colors ${size} ${recipe.is_favorited ? 'bg-[var(--kkb-orange-50)]' : 'bg-[var(--kkb-creme)] hover:bg-[var(--kkb-foret-50)]'}`}>
+      <Heart key={favPop} className={`h-5 w-5 ${favPop ? 'motion-safe:animate-kkb-react-pop' : ''} ${recipe.is_favorited ? 'fill-[var(--kkb-orange)] text-[var(--kkb-orange)]' : 'text-[var(--kkb-foret)]'}`} />
+    </button>
+  )
+
+  // Titre et repères (catégorie, mot de la cuisine, temps, niveau, favoris).
+  const heading = (
+    <div className="space-y-2">
+      <div className="flex flex-wrap items-center gap-1.5">
+        {recipe.categories && <CategoryBadge category={recipe.categories} />}
+        <span className="rounded-full bg-[var(--kkb-foret-50)] px-2 py-0.5 font-quicksand text-xs font-bold text-[var(--kkb-foret)]">{VISIBILITY_TAG[recipe.visibility]}</span>
+      </div>
+      {/* Nom de la recette : l'accent Bricolage de l'écran */}
+      <h1 className="font-main text-[28px] font-semibold leading-[1.1] text-[var(--kkb-foret)] lg:text-[36px]">{recipe.name}</h1>
+      {recipe.description && (
+        <p className="flex gap-2 pt-1 font-quicksand text-[15px] leading-relaxed text-[var(--kkb-texte-2)]">
+          <Quote className="mt-1 h-4 w-4 shrink-0 text-[var(--kkb-jaune-700)]" aria-hidden="true" />
+          {recipe.description}
+        </p>
+      )}
+    </div>
+  )
+
+  const metaTiles = (
+    <dl className="grid grid-cols-4 gap-2">
+      {[
+        { icon: Clock,    label: 'Préparation', value: formatDuration(recipe.prep_time_min) ?? '—' },
+        { icon: Flame,    label: 'Cuisson',     value: formatDuration(recipe.cook_time_min) ?? '—' },
+        { icon: Users,    label: 'Portions',    value: `${recipe.servings}` },
+        { icon: ChefHat,  label: 'Niveau',      value: recipe.difficulty ? DIFFICULTY_LABEL[recipe.difficulty] : '—' },
+      ].map(m => (
+        <div key={m.label} className="flex min-w-0 flex-col items-center gap-1 rounded-[var(--kkb-r-lg)] bg-[var(--kkb-creme)] px-1 py-3 text-center">
+          <m.icon className="h-4 w-4 text-[var(--kkb-foret-500)]" aria-hidden="true" />
+          <dd className="w-full truncate font-dosis text-[15px] font-extrabold tabular-nums text-[var(--kkb-profond)]">{m.value}</dd>
+          <dt className="font-quicksand text-[11px] text-[var(--kkb-texte-2)]">{m.label}</dt>
+        </div>
+      ))}
+    </dl>
+  )
+
+  const foyerLine = recipe.foyer_favorites > 0 && (
+    <p className="inline-flex items-center gap-1.5 font-quicksand text-sm text-[var(--kkb-texte-2)]">
+      <Heart className="h-4 w-4 fill-[var(--kkb-orange)] text-[var(--kkb-orange)]" />
+      <span>
+        <span className="font-bold tabular-nums text-[var(--kkb-profond)]">{recipe.foyer_favorites}</span>
+        {recipe.foyer_size > 0 && <> sur {recipe.foyer_size}</>} à la table l’adore{recipe.foyer_favorites > 1 ? 'nt' : ''}
+      </span>
+    </p>
+  )
+
+  const ingredientsDone = recipe.recipe_ingredients.filter(i => checked.has(i.id)).length
+  const ingredients = (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between gap-3">
+        <p className="font-quicksand text-sm text-[var(--kkb-texte-2)]">
+          {allChecked ? 'Tout est prêt, au fourneau !' : <><span className="font-bold tabular-nums text-[var(--kkb-profond)]">{ingredientsDone}</span> sur {recipe.recipe_ingredients.length} sous la main</>}
+        </p>
+        <ServingsControl value={servings} onChange={setServings} suffix="pers." />
+      </div>
+      <div className="h-1.5 overflow-hidden rounded-full bg-[var(--kkb-lin)]" aria-hidden="true">
+        <div className="h-full rounded-full bg-[var(--kkb-sauge)] transition-[width] duration-300 motion-reduce:transition-none" style={{ width: `${(ingredientsDone / Math.max(1, recipe.recipe_ingredients.length)) * 100}%` }} />
+      </div>
+      <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1 2xl:grid-cols-2">
+        {recipe.recipe_ingredients.map(ing => {
+          const done = checked.has(ing.id)
+          return (
+            <li key={ing.id}>
+              <button type="button" onClick={() => toggleIngredient(ing.id)} aria-pressed={done}
+                className={`flex min-h-[52px] w-full items-center gap-3 rounded-[var(--kkb-r-md)] px-3 py-2 text-left transition-colors ${done ? 'bg-[var(--kkb-sauge-50)]' : 'bg-[var(--kkb-creme)] hover:bg-[var(--kkb-foret-50)]'}`}>
+                <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${done ? 'border-[var(--kkb-foret-500)] bg-[var(--kkb-foret-500)] text-white' : 'border-[var(--kkb-filet)] bg-white'}`}>
+                  {done && <Check className="h-3.5 w-3.5" />}
+                </span>
+                <span className={`min-w-0 flex-1 font-quicksand text-[15px] ${done ? 'text-[var(--kkb-texte-2)] line-through' : 'text-[var(--kkb-profond)]'}`}>{ing.name}</span>
+                <span className="shrink-0 font-dosis text-[15px] font-extrabold tabular-nums text-[var(--kkb-foret)]">{qtyOf(ing)}</span>
+              </button>
+            </li>
+          )
+        })}
+      </ul>
+      {recipe.recipe_ingredients.length > 1 && (
+        <button type="button" onClick={() => setChecked(allChecked ? new Set() : new Set(recipe.recipe_ingredients.map(i => i.id)))}
+          className="font-quicksand text-xs font-bold text-[var(--kkb-foret)] hover:underline">
+          {allChecked ? 'Tout décocher' : 'Tout cocher'}
+        </button>
+      )}
+    </div>
+  )
+
+  // Étapes en frise : on coche au fil de la cuisine ; l'étape en cours ressort.
+  const currentStep = recipe.recipe_steps.find(s => !stepsDone.has(s.id))?.id
+  const steps = (
+    <ol>
+      {recipe.recipe_steps.map((step, i) => {
+        const done = stepsDone.has(step.id)
+        const now  = step.id === currentStep
+        const last = i === recipe.recipe_steps.length - 1
+        return (
+          <li key={step.id} className="relative flex gap-3 pb-3 last:pb-0">
+            {!last && <span aria-hidden="true" className={`absolute left-[19px] top-11 bottom-0 w-px ${done ? 'bg-[var(--kkb-sauge)]' : 'border-l border-dashed border-[var(--kkb-filet)]'}`} />}
+            <button type="button" onClick={() => toggleStep(step.id)} aria-pressed={done} aria-label={`Étape ${step.step_number}${done ? ' faite' : ''}`}
+              className={`relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full font-dosis text-base font-extrabold transition-colors ${
+                done ? 'bg-[var(--kkb-sauge)] text-[var(--kkb-profond)]' : now ? 'bg-[var(--kkb-foret)] text-[var(--kkb-creme)]' : 'bg-[var(--kkb-creme)] text-[var(--kkb-foret)]'
+              }`}>
+              {done ? <Check className="h-5 w-5" /> : step.step_number}
+            </button>
+            <div className={`min-w-0 flex-1 rounded-[var(--kkb-r-lg)] px-4 py-2.5 transition-colors ${now ? 'bg-[var(--kkb-foret-50)]' : ''}`}>
+              {now && <p className="font-quicksand text-xs font-bold text-[var(--kkb-foret-500)]">En cours</p>}
+              <p className={`font-quicksand text-[15px] leading-relaxed ${done ? 'text-[var(--kkb-texte-2)]' : 'text-[var(--kkb-profond)]'}`}>{step.description}</p>
+            </div>
+          </li>
+        )
+      })}
+    </ol>
+  )
+
+  const stepsMeta = `${recipe.recipe_steps.length} étape${recipe.recipe_steps.length > 1 ? 's' : ''}${totalTime ? ` · ${formatDuration(totalTime)}` : ''}`
+
+  const suggestionsBlock = suggestions.length > 0 && (
+    <section className="space-y-3" aria-labelledby="pairing-title">
+      <h2 id="pairing-title" className="text-h3 text-[var(--kkb-profond)]">Pour l’accompagner</h2>
+      <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 hide-scrollbar lg:mx-0 lg:grid lg:grid-cols-2 lg:overflow-visible lg:px-0 xl:grid-cols-4">
+        {suggestions.map(s => {
+          const Icon = s.role === 'drink' ? CupSoda : Salad
+          return (
+            <button key={`${s.role}-${s.id}`} type="button" onClick={() => router.push(`/recipes/${s.id}`)}
+              className="flex shrink-0 items-center gap-3 rounded-[var(--kkb-r-lg)] bg-white p-2 pr-4 text-left transition-shadow hover:shadow-[0_8px_20px_rgba(31,58,46,0.08)]">
+              <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-[var(--kkb-r-md)] ${s.role === 'drink' ? 'bg-[var(--kkb-sauge-50)] text-[var(--kkb-foret-500)]' : 'bg-[var(--kkb-jaune-50)] text-[var(--kkb-jaune-text)]'}`}>
+                <Icon className="h-5 w-5" />
+              </span>
+              <span className="min-w-0">
+                <span className="block truncate font-quicksand text-sm font-bold text-[var(--kkb-profond)]">{s.name}</span>
+                <span className="block font-quicksand text-xs text-[var(--kkb-texte-2)]">{s.role === 'drink' ? 'Boisson' : 'Accompagnement'}</span>
+              </span>
+            </button>
+          )
+        })}
+      </div>
     </section>
   )
 
-  const suggestionIcon = (s: Suggestion) => s.role === 'drink' ? CupSoda : Salad
-  const suggestionLabel = (s: Suggestion) => s.role === 'drink' ? 'Boisson' : 'Accompagnement'
-
-  const steps = (
-    <ol className="space-y-5">
-      {recipe.recipe_steps.map(step => (
-        <li key={step.id} className="flex gap-3">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--kkb-foret)] font-dosis font-bold text-sm text-[var(--kkb-creme)]">{step.step_number}</span>
-          <p className="min-w-0 flex-1 pt-1 text-[15px] font-quicksand leading-relaxed text-[var(--kkb-profond)]">{step.description}</p>
-        </li>
-      ))}
-    </ol>
-  )
+  const hasContent = recipe.recipe_ingredients.length > 0 || recipe.recipe_steps.length > 0
 
   return (
     <>
@@ -230,11 +349,15 @@ function RecipeDetail() {
       {/* ── Mobile ─────────────────────────────────────────────────────── */}
       <div className="pb-8 lg:hidden">
         <div className="relative">
-          {visual('h-[300px] w-full', 'h-16 w-16')}
+          <RecipeVisual recipe={recipe} className="h-[300px] w-full" iconClassName="h-16 w-16" />
           <div className="absolute inset-0 bg-gradient-to-b from-[rgba(31,58,46,0.35)] via-transparent to-transparent" />
-          <div ref={mobileMenuRef} className="absolute right-4 top-4 print:hidden">
+          <button type="button" onClick={() => router.push('/recipes')} aria-label="Retour au carnet"
+            className="absolute left-4 top-4 flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-[var(--kkb-foret)] backdrop-blur-sm">
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          <div ref={mobileMenuRef} className="absolute right-4 top-4">
             <button type="button" onClick={() => setMenuOpen(o => !o)} aria-label="Options de la recette" aria-expanded={menuOpen} className="flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-[var(--kkb-foret)] backdrop-blur-sm">
-              <Menu className="h-5 w-5" />
+              <MoreHorizontal className="h-5 w-5" />
             </button>
             {menuOpen && optionsMenu}
           </div>
@@ -243,292 +366,124 @@ function RecipeDetail() {
         {/* Feuille de la recette, posée sur la photo */}
         <div className="relative z-10 -mt-8 space-y-6 rounded-t-[28px] bg-[var(--kkb-creme)] px-4 pt-3">
           <div className="mx-auto h-1 w-10 rounded-full bg-[var(--kkb-filet)]" aria-hidden="true" />
-
-          <div className="space-y-1.5 px-1">
-            <p className="font-quicksand text-sm font-semibold text-[var(--kkb-texte-2)]">
-              {recipe.categories?.name ?? VISIBILITY_TAG[recipe.visibility]}
-            </p>
-            <h1 className="text-h1 text-[var(--kkb-foret)]">{recipe.name}</h1>
-            {recipe.foyer_favorites > 0 && (
-              <p className="inline-flex items-center gap-1.5 font-quicksand text-sm text-[var(--kkb-texte-2)]">
-                <Heart className="h-4 w-4 fill-[var(--kkb-orange)] text-[var(--kkb-orange)]" />
-                <span><span className="font-bold tabular-nums text-[var(--kkb-profond)]">{recipe.foyer_favorites}</span> à la table l’adore{recipe.foyer_favorites > 1 ? 'nt' : ''}</span>
-              </p>
-            )}
+          <div className="space-y-3 px-1">
+            {heading}
+            {foyerLine}
           </div>
+          <div className="rounded-[var(--kkb-r-xl)] bg-white p-2">{metaTiles}</div>
 
-          <div className="grid grid-cols-4 gap-2">
-            {[
-              { icon: Clock,   value: formatDuration(totalTime) ?? '—', label: 'Temps' },
-              { icon: Users,   value: `${recipe.servings}`,              label: 'Portions' },
-              { icon: ChefHat, value: recipe.difficulty ? DIFFICULTY_SHORT[recipe.difficulty] : '—', label: 'Niveau' },
-              { icon: CatIcon, value: recipe.categories?.name ?? '—',     label: 'Type' },
-            ].map(m => (
-              <div key={m.label} className="flex min-w-0 flex-col items-center gap-1 rounded-[var(--kkb-r-lg)] bg-white px-1 py-3 text-center">
-                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--kkb-creme)] text-[var(--kkb-foret)]">
-                  <m.icon className="h-4 w-4" />
-                </span>
-                <span className="w-full truncate font-quicksand text-[13px] font-bold tabular-nums text-[var(--kkb-profond)]">{m.value}</span>
-                <span className="font-quicksand text-[11px] text-[var(--kkb-texte-2)]">{m.label}</span>
-              </div>
-            ))}
-          </div>
-
-          {(recipe.recipe_ingredients.length > 0 || recipe.recipe_steps.length > 0) && (
+          {hasContent && (
             <section className="space-y-4">
-              <div className="grid grid-cols-2 rounded-full bg-white p-1" role="tablist" aria-label="Contenu de la recette">
+              <div className="relative grid grid-cols-2 rounded-full bg-white p-1" role="tablist" aria-label="Contenu de la recette">
+                <span aria-hidden="true" className="pointer-events-none absolute bottom-1 left-1 top-1 w-[calc(50%-4px)] rounded-full bg-[var(--kkb-foret)] transition-transform duration-300 ease-[cubic-bezier(0.34,1.35,0.64,1)] motion-reduce:transition-none"
+                  style={{ transform: tab === 'steps' ? 'translateX(100%)' : 'none' }} />
                 {([['ingredients', 'Ingrédients', recipe.recipe_ingredients.length], ['steps', 'Préparation', recipe.recipe_steps.length]] as const).map(([v, label, n]) => (
                   <button key={v} type="button" role="tab" aria-selected={tab === v} onClick={() => setTab(v)}
-                    className={`h-11 rounded-full font-quicksand text-sm font-bold transition-colors ${tab === v ? 'bg-[var(--kkb-foret)] text-[var(--kkb-creme)]' : 'text-[var(--kkb-texte-2)]'}`}>
+                    className={`relative z-10 h-11 rounded-full font-quicksand text-sm font-bold transition-colors ${tab === v ? 'text-[var(--kkb-creme)]' : 'text-[var(--kkb-texte-2)]'}`}>
                     {label} <span className="tabular-nums opacity-70">{n}</span>
                   </button>
                 ))}
               </div>
-
-              {tab === 'ingredients' ? (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between gap-3 px-1">
-                    <p className="font-quicksand text-sm text-[var(--kkb-texte-2)]">
-                      {allChecked ? 'Tout est prêt' : 'Coche au fur et à mesure'}
-                    </p>
-                    <ServingsControl value={servings} onChange={setServings} />
-                  </div>
-                  <ul className="overflow-hidden rounded-[var(--kkb-r-xl)] bg-white">
-                    {recipe.recipe_ingredients.map(ing => {
-                      const done = checked.has(ing.id)
-                      return (
-                        <li key={ing.id} className="border-b border-[var(--kkb-lin)] last:border-0">
-                          <button type="button" onClick={() => toggleIngredient(ing.id)} aria-pressed={done}
-                            className="flex min-h-[52px] w-full items-center gap-3 px-4 py-2 text-left">
-                            <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${done ? 'border-[var(--kkb-foret)] bg-[var(--kkb-foret)] text-[var(--kkb-creme)]' : 'border-[var(--kkb-filet)]'}`}>
-                              {done && <Check className="h-3.5 w-3.5" />}
-                            </span>
-                            <span className={`min-w-0 flex-1 font-quicksand text-[15px] ${done ? 'text-[var(--kkb-texte-2)] line-through' : 'text-[var(--kkb-profond)]'}`}>{ing.name}</span>
-                            <span className="shrink-0 font-quicksand text-sm font-bold tabular-nums text-[var(--kkb-foret)]">{qtyOf(ing)}</span>
-                          </button>
-                        </li>
-                      )
-                    })}
-                  </ul>
-                </div>
-              ) : (
-                <div className="rounded-[var(--kkb-r-xl)] bg-white p-4">{steps}</div>
-              )}
-            </section>
-          )}
-
-          {tipCard}
-
-          {suggestions.length > 0 && (
-            <section className="space-y-3">
-              <h2 className="px-1 text-h3 text-[var(--kkb-profond)]">Pour l’accompagner</h2>
-              <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 hide-scrollbar">
-                {suggestions.map(s => {
-                  const Icon = suggestionIcon(s)
-                  return (
-                    <button key={`${s.role}-${s.id}`} type="button" onClick={() => router.push(`/recipes/${s.id}`)}
-                      className="flex shrink-0 items-center gap-2.5 rounded-full bg-white py-1.5 pl-1.5 pr-4 text-left">
-                      <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--kkb-creme)] text-[var(--kkb-foret)]"><Icon className="h-4 w-4" /></span>
-                      <span>
-                        <span className="block font-quicksand text-sm font-bold text-[var(--kkb-profond)]">{s.name}</span>
-                        <span className="block font-quicksand text-[11px] text-[var(--kkb-texte-2)]">{suggestionLabel(s)}</span>
-                      </span>
-                    </button>
-                  )
-                })}
+              <div className="rounded-[var(--kkb-r-xl)] bg-white p-4">
+                {tab === 'ingredients' ? ingredients : steps}
               </div>
             </section>
           )}
+
+          {suggestionsBlock}
 
           {/* Réserve la place de la barre d'action flottante */}
           <div className="h-16" aria-hidden="true" />
         </div>
 
         <div className="fixed inset-x-4 bottom-[var(--kkb-nav-offset)] z-30 mx-auto flex max-w-sm items-center gap-2 rounded-full bg-white p-1.5 shadow-[var(--kkb-shadow-sheet)]">
-          <button type="button" onClick={() => void toggleFavorite()} aria-label={recipe.is_favorited ? 'Retirer des favoris' : 'Ajouter aux favoris'} aria-pressed={recipe.is_favorited}
-            className={`relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full transition-colors ${recipe.is_favorited ? 'bg-[var(--kkb-orange-50)]' : 'bg-[var(--kkb-creme)]'}`}>
-            <Heart key={favPop} className={`h-5 w-5 ${favPop ? 'motion-safe:animate-kkb-react-pop' : ''} ${recipe.is_favorited ? 'fill-[var(--kkb-orange)] text-[var(--kkb-orange)]' : 'text-[var(--kkb-foret)]'}`} />
-          </button>
+          {favoriteButton('h-12 w-12')}
           <button type="button" onClick={() => setAddOpen(true)}
-            className="flex h-12 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-[var(--kkb-coral)] px-5 font-quicksand text-base font-bold text-white active:scale-[0.98] transition-transform">
+            className="flex h-12 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-[var(--kkb-orange)] px-5 font-quicksand text-base font-bold text-white transition-transform active:scale-[0.98]">
             <CalendarPlus className="h-5 w-5" /> Ajouter au menu
           </button>
         </div>
       </div>
 
       {/* ── Desktop ────────────────────────────────────────────────────── */}
-      <div className="hidden space-y-6 pb-8 lg:block">
-        <nav className="flex items-center gap-1.5 text-xs font-quicksand text-[var(--kkb-text-tertiary)] print:hidden" aria-label="Fil d'Ariane">
-          <button type="button" onClick={() => router.push('/recipes')} className="hover:text-[var(--kkb-coral)]">Carnet Culinaire</button>
+      <div className="hidden space-y-5 pb-8 lg:block">
+        <nav className="flex items-center gap-2 font-quicksand text-sm text-[var(--kkb-texte-2)]" aria-label="Fil d'Ariane">
+          <button type="button" onClick={() => router.push('/recipes')} aria-label="Retour au carnet"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-[var(--kkb-foret)] transition-colors hover:bg-[var(--kkb-foret-50)]">
+            <ArrowLeft className="h-4 w-4" />
+          </button>
+          <button type="button" onClick={() => router.push('/recipes')} className="font-semibold hover:text-[var(--kkb-foret)]">Carnet de recettes</button>
           <ChevronRight className="h-3.5 w-3.5" />
-          <span className="font-bold text-[var(--kkb-text-primary)]">Détail de la recette</span>
+          <span className="truncate font-bold text-[var(--kkb-profond)]">{recipe.name}</span>
         </nav>
 
-        <div className="flex flex-wrap items-center gap-3 print:hidden">
-          <button type="button" onClick={() => router.push('/recipes')} className="mr-auto flex items-center gap-1.5 text-sm font-quicksand font-semibold text-[var(--kkb-text-secondary)] hover:text-[var(--kkb-coral)]">
-            <ArrowLeft className="h-4 w-4" /> Revenir au Carnet Culinaire
-          </button>
-          <button type="button" onClick={() => void toggleFavorite()} aria-pressed={recipe.is_favorited}
-            className="flex items-center gap-2 rounded-[var(--kkb-radius-pill)] border border-[var(--kkb-border)] bg-white px-4 py-2 text-sm font-quicksand font-semibold text-[var(--kkb-text-secondary)] hover:border-[var(--kkb-coral)]">
-            <Heart className={`h-4 w-4 ${recipe.is_favorited ? 'fill-[var(--kkb-coral)] text-[var(--kkb-coral)]' : ''}`} />
-            Favori du foyer
-            <span className="rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-coral-light)] px-2 py-0.5 text-xs font-bold text-[var(--kkb-coral)]">{recipe.foyer_favorites}/{recipe.foyer_size}</span>
-          </button>
-          {(
-            <div ref={desktopMenuRef} className="relative">
-              <button type="button" onClick={() => setMenuOpen(o => !o)} aria-expanded={menuOpen}
-                className="flex items-center gap-2 rounded-[var(--kkb-radius-pill)] border border-[var(--kkb-border)] bg-white px-4 py-2 text-sm font-quicksand font-semibold text-[var(--kkb-text-secondary)] hover:border-[var(--kkb-coral)]">
-                <Menu className="h-4 w-4" /> Options
-              </button>
-              {menuOpen && optionsMenu}
-            </div>
-          )}
-          <button type="button" onClick={() => setAddOpen(true)}
-            className="flex items-center gap-2 rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-coral)] px-5 py-2.5 text-sm font-quicksand font-bold text-white hover:bg-[var(--kkb-coral-hover)]">
-            <CalendarPlus className="h-4 w-4" /> Planifier ce repas
-          </button>
-        </div>
-
-        <div className="space-y-2">
-          <div className="flex flex-wrap gap-2">
-            {recipe.categories && <CategoryBadge category={recipe.categories} />}
-            <span className="rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-teal-light)] px-2 py-0.5 text-xs font-quicksand font-bold text-[var(--kkb-teal)]">{VISIBILITY_TAG[recipe.visibility]}</span>
+        <div className="grid grid-cols-12 gap-5">
+          {/* Photo */}
+          <div className="relative col-span-7 min-h-[420px] overflow-hidden rounded-[var(--kkb-r-xl)]">
+            <RecipeVisual recipe={recipe} className="h-full min-h-[420px] w-full" iconClassName="h-24 w-24" />
+            {recipe.foyer_favorites > 0 && (
+              <span className="absolute bottom-4 left-4 inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 font-quicksand text-xs font-bold text-[var(--kkb-foret)] backdrop-blur-sm">
+                <Heart className="h-3.5 w-3.5 fill-[var(--kkb-orange)] text-[var(--kkb-orange)]" /> Favori de {recipe.foyer_favorites} à la table
+              </span>
+            )}
           </div>
-          <h1 className="text-h1 text-[var(--kkb-foret)]">{recipe.name}</h1>
-        </div>
 
-        <div className="grid grid-cols-4 gap-4">
-          {[
-            { icon: Clock, label: 'Préparation', value: formatDuration(recipe.prep_time_min) ?? '—' },
-            { icon: Timer, label: 'Cuisson',     value: formatDuration(recipe.cook_time_min) ?? '—' },
-            { icon: Clock, label: 'Temps total', value: formatDuration(totalTime) ?? '—' },
-            { icon: Smile, label: 'Difficulté',  value: recipe.difficulty ? DIFFICULTY_LONG[recipe.difficulty] : '—' },
-          ].map(m => (
-            <div key={m.label} className="flex items-center gap-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white p-4">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--kkb-coral-light)] text-[var(--kkb-coral)]"><m.icon className="h-5 w-5" /></span>
-              <div className="min-w-0">
-                <p className="text-xs font-quicksand font-bold text-[var(--kkb-text-tertiary)]">{m.label}</p>
-                <p className="truncate font-dosis font-bold text-lg text-[var(--kkb-text-primary)]">{m.value}</p>
+          {/* Fiche : titre, repères, actions */}
+          <section className="col-span-5 flex flex-col rounded-[var(--kkb-r-xl)] bg-white p-7">
+            {heading}
+            <div className="mt-5">{metaTiles}</div>
+            <div className="mt-auto flex items-center gap-2 pt-6">
+              <button type="button" onClick={() => setAddOpen(true)}
+                className="flex h-12 flex-1 items-center justify-center gap-2 rounded-full bg-[var(--kkb-orange)] font-quicksand text-[15px] font-bold text-white transition-colors hover:bg-[var(--kkb-orange-700)]">
+                <CalendarPlus className="h-5 w-5" /> Ajouter au menu
+              </button>
+              {favoriteButton('h-12 w-12')}
+              <div ref={desktopMenuRef} className="relative">
+                <button type="button" onClick={() => setMenuOpen(o => !o)} aria-label="Options de la recette" aria-expanded={menuOpen}
+                  className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--kkb-creme)] text-[var(--kkb-foret)] transition-colors hover:bg-[var(--kkb-foret-50)]">
+                  <MoreHorizontal className="h-5 w-5" />
+                </button>
+                {menuOpen && optionsMenu}
               </div>
             </div>
-          ))}
+          </section>
+
+          {/* Ingrédients */}
+          {recipe.recipe_ingredients.length > 0 && (
+            <section className="sticky top-24 col-span-5 self-start rounded-[var(--kkb-r-xl)] bg-white p-6" aria-labelledby="ing-title">
+              <h2 id="ing-title" className="mb-4 flex items-baseline gap-2 text-h2 text-[var(--kkb-foret)]">
+                Ingrédients <span className="font-quicksand text-sm font-semibold text-[var(--kkb-texte-2)]">{recipe.recipe_ingredients.length}</span>
+              </h2>
+              {ingredients}
+            </section>
+          )}
+
+          {/* Préparation */}
+          {recipe.recipe_steps.length > 0 && (
+            <section className={`rounded-[var(--kkb-r-xl)] bg-white p-6 ${recipe.recipe_ingredients.length > 0 ? 'col-span-7' : 'col-span-12'}`} aria-labelledby="steps-title">
+              <div className="mb-4 flex items-baseline justify-between gap-3">
+                <h2 id="steps-title" className="text-h2 text-[var(--kkb-foret)]">Préparation</h2>
+                <span className="font-quicksand text-sm text-[var(--kkb-texte-2)]">{stepsMeta}</span>
+              </div>
+              {steps}
+            </section>
+          )}
+
+          {suggestionsBlock && <div className="col-span-12">{suggestionsBlock}</div>}
         </div>
-
-        <div className="grid grid-cols-[55fr_45fr] items-start gap-6">
-          <div className="space-y-5">
-            <div className="relative">
-              {visual('aspect-[4/3] w-full rounded-[var(--kkb-radius-card)]', 'h-24 w-24')}
-              {recipe.categories && <span className="absolute bottom-3 left-3"><CategoryBadge category={recipe.categories} solid /></span>}
-            </div>
-            {tipCard}
-            {suggestions.length > 0 && (
-              <section className="space-y-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white p-5">
-                <h2 className="font-dosis font-bold text-lg text-[var(--kkb-text-primary)]">Accompagnements &amp; Boissons suggérés</h2>
-                <ul className="space-y-2">
-                  {suggestions.map(s => {
-                    const Icon = suggestionIcon(s)
-                    return (
-                      <li key={`${s.role}-${s.id}`}>
-                        <button type="button" onClick={() => router.push(`/recipes/${s.id}`)} className="flex w-full items-center gap-3 rounded-[var(--kkb-radius-sm)] bg-[var(--kkb-bg)] p-3 text-left hover:bg-[var(--kkb-coral-light)]">
-                          <Icon className={`h-5 w-5 shrink-0 ${s.role === 'drink' ? 'text-[var(--kkb-teal)]' : 'text-[var(--kkb-coral)]'}`} />
-                          <span className="min-w-0 flex-1">
-                            <span className="block text-sm font-quicksand font-bold text-[var(--kkb-text-primary)]">{s.name}</span>
-                            {s.description && <span className="block truncate text-xs font-quicksand text-[var(--kkb-text-tertiary)]">{s.description}</span>}
-                          </span>
-                          <span className="shrink-0 rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-teal-light)] px-2 py-0.5 text-xs font-quicksand font-bold text-[var(--kkb-teal)]">{suggestionLabel(s)}</span>
-                        </button>
-                      </li>
-                    )
-                  })}
-                </ul>
-              </section>
-            )}
-          </div>
-
-          <div className="space-y-5">
-            {recipe.recipe_ingredients.length > 0 && (
-              <section className="space-y-4 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white p-5">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-xs font-quicksand font-bold text-[var(--kkb-text-tertiary)]">Du marché à la table</p>
-                    <h2 className="font-dosis font-bold text-lg text-[var(--kkb-text-primary)]">Ingrédients du marché</h2>
-                  </div>
-                  <ServingsControl value={servings} onChange={setServings} suffix="pers." />
-                </div>
-                <div className="flex items-center justify-between text-xs font-quicksand text-[var(--kkb-text-tertiary)] print:hidden">
-                  Coche les ingrédients que tu as déjà.
-                  <button type="button" onClick={() => setChecked(allChecked ? new Set() : new Set(recipe.recipe_ingredients.map(i => i.id)))} className="font-bold text-[var(--kkb-coral)]">
-                    {allChecked ? 'Tout décocher' : 'Tout cocher'}
-                  </button>
-                </div>
-                <ul className="grid grid-cols-2 gap-2">
-                  {recipe.recipe_ingredients.map(ing => {
-                    const isChecked = checked.has(ing.id)
-                    return (
-                      <li key={ing.id}>
-                        <label className="flex h-full cursor-pointer items-start gap-2 rounded-[var(--kkb-radius-sm)] border border-[var(--kkb-border)] p-2.5 hover:border-[var(--kkb-coral)]">
-                          <input type="checkbox" checked={isChecked} onChange={() => toggleIngredient(ing.id)} className="peer sr-only" />
-                          <span className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border-[1.5px] peer-focus-visible:ring-2 peer-focus-visible:ring-[var(--kkb-coral)] ${isChecked ? 'border-[var(--kkb-coral)] bg-[var(--kkb-coral)] text-white' : 'border-[var(--kkb-border)]'}`}>
-                            {isChecked && <Check className="h-3 w-3" />}
-                          </span>
-                          <span className={`min-w-0 flex-1 text-sm font-quicksand ${isChecked ? 'text-[var(--kkb-text-tertiary)] line-through' : 'text-[var(--kkb-text-primary)]'}`}>{ing.name}</span>
-                          <span className="shrink-0 text-sm font-quicksand font-bold text-[var(--kkb-coral)]">{qtyOf(ing)}</span>
-                        </label>
-                      </li>
-                    )
-                  })}
-                </ul>
-              </section>
-            )}
-
-            {recipe.recipe_steps.length > 0 && (
-              <section className="space-y-4 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white p-5">
-                <div className="flex items-end justify-between gap-3">
-                  <div>
-                    <p className="text-xs font-quicksand font-bold text-[var(--kkb-text-tertiary)]">Méthode de préparation</p>
-                    <h2 className="font-dosis font-bold text-lg text-[var(--kkb-text-primary)]">Étapes simples pas-à-pas</h2>
-                  </div>
-                  <span className="text-xs font-quicksand text-[var(--kkb-text-tertiary)]">
-                    {recipe.recipe_steps.length} étape{recipe.recipe_steps.length > 1 ? 's' : ''}{totalTime ? ` · ${formatDuration(totalTime)}` : ''}
-                  </span>
-                </div>
-                {steps}
-              </section>
-            )}
-          </div>
-        </div>
-
-        <section className="flex items-center justify-between gap-6 rounded-[var(--kkb-radius-card)] bg-[var(--kkb-teal-light)] p-6 print:hidden">
-          <div className="flex items-center gap-4">
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-[var(--kkb-teal)]"><Users className="h-5 w-5" /></span>
-            <div>
-              <p className="font-dosis font-bold text-lg text-[var(--kkb-text-primary)]">Prêt pour votre planning de la semaine ?</p>
-              <p className="text-sm font-quicksand text-[var(--kkb-text-secondary)]">Intègre ce plat au menu familial ou imprime la fiche pour la cuisine.</p>
-            </div>
-          </div>
-          <div className="flex shrink-0 gap-3">
-            <button type="button" onClick={() => window.print()} className="flex items-center gap-2 rounded-[var(--kkb-radius-pill)] border border-[var(--kkb-border)] bg-white px-4 py-2.5 text-sm font-quicksand font-semibold text-[var(--kkb-text-secondary)] hover:border-[var(--kkb-coral)]">
-              <Printer className="h-4 w-4" /> Imprimer la fiche
-            </button>
-            <button type="button" onClick={() => setAddOpen(true)} className="flex items-center gap-2 rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-coral)] px-5 py-2.5 text-sm font-quicksand font-bold text-white hover:bg-[var(--kkb-coral-hover)]">
-              <CalendarPlus className="h-4 w-4" /> Ajouter au menu de la semaine
-            </button>
-          </div>
-        </section>
       </div>
-
       </div>
 
       <AddToMenuSheet recipeId={recipe.id} open={addOpen} onClose={() => setAddOpen(false)} />
 
       {confirmDelete && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 px-4 pb-6 lg:items-center">
-          <div role="alertdialog" aria-modal="true" className="w-full max-w-sm space-y-4 rounded-[var(--kkb-radius-card)] bg-white p-5 shadow-xl">
-            <p className="font-dosis font-bold text-lg text-[var(--kkb-text-primary)]">Supprimer cette recette ?</p>
-            <p className="text-sm font-quicksand text-[var(--kkb-text-secondary)]">Cette action est irréversible. La recette sera définitivement supprimée.</p>
+          <div role="alertdialog" aria-modal="true" className="w-full max-w-sm space-y-4 rounded-[var(--kkb-r-xl)] bg-white p-5 shadow-xl">
+            <p className="text-h3 text-[var(--kkb-profond)]">Supprimer cette recette ?</p>
+            <p className="font-quicksand text-sm text-[var(--kkb-texte-2)]">Cette action est irréversible. La recette sera définitivement supprimée.</p>
             <div className="flex gap-3">
-              <button type="button" onClick={() => setConfirmDelete(false)} className="flex-1 rounded-[var(--kkb-radius-pill)] border border-[var(--kkb-border)] py-3 text-sm font-quicksand font-bold text-[var(--kkb-text-secondary)]">Annuler</button>
-              <button type="button" onClick={() => void deleteRecipe()} disabled={deleting} className="flex flex-1 items-center justify-center gap-2 rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-danger)] py-3 text-sm font-quicksand font-bold text-white disabled:opacity-60">
+              <button type="button" onClick={() => setConfirmDelete(false)} className="h-11 flex-1 rounded-full border-[1.5px] border-[var(--kkb-filet)] font-quicksand text-sm font-bold text-[var(--kkb-foret)]">Annuler</button>
+              <button type="button" onClick={() => void deleteRecipe()} disabled={deleting} className="flex h-11 flex-1 items-center justify-center gap-2 rounded-full bg-[var(--kkb-danger)] font-quicksand text-sm font-bold text-white disabled:opacity-60">
                 {deleting && <Loader2 className="h-4 w-4 animate-spin" />} Supprimer
               </button>
             </div>

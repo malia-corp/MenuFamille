@@ -21,3 +21,9 @@ export function categoryIcon(slug: string | null | undefined): LucideIcon {
 export function categoryColor(color: string | null | undefined): string {
   return color && /^#[0-9a-f]{6}$/i.test(color) ? color : '#E66B43'
 }
+
+// Couleur de texte dérivée de la catégorie : assombrie vers le vert profond,
+// lisible sur sa propre teinte claire (le jaune #F5A623 seul ne l'est pas).
+export function categoryInk(color: string | null | undefined): string {
+  return `color-mix(in srgb, ${categoryColor(color)} 62%, #1F3A2E)`
+}
