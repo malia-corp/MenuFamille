@@ -1,11 +1,12 @@
 'use client'
 
-import { CupSoda, Inbox, Lock, Pencil, Salad, ThumbsUp } from 'lucide-react'
+import { CupSoda, Inbox, Lock, Pencil, Salad } from 'lucide-react'
 import { MEAL_COLOR, MEAL_LABEL } from '@/lib/constants/meal-type'
 import { MealTypeIcon } from '@/components/ui/meal-type-icon'
 import { agreementPct, totalReactions } from '@/lib/utils/survey-score'
 import { ReactionBars } from './reaction-bars'
 import { NameAvatar } from './name-avatar'
+import { agreementTone } from './result-helpers'
 import type { ResultItem } from './types'
 
 type Reaction = 'aime' | 'bof' | 'naime_pas'
@@ -29,21 +30,41 @@ export function ResultCard({ item, dayLabel, onEdit, myReaction }: ResultCardPro
   const total    = totalReactions(counts)
   const adhesion = agreementPct(counts)
   const color    = MEAL_COLOR[item.meal_type]
+  const tone     = agreementTone(adhesion)
 
   return (
-    <article className="bg-white border border-[var(--kkb-lin)] rounded-[var(--kkb-radius-card)] p-4 flex flex-col gap-3 h-full">
-      {/* En-tête : type (+ jour sur desktop), adhésion (desktop), édition */}
-      <div className="flex items-center gap-2">
-        <span
-          className="inline-flex items-center px-2 py-0.5 rounded-[var(--kkb-radius-pill)] text-xs font-quicksand font-bold"
-          style={{ backgroundColor: color.bg, color: color.text }}
-        >
-          {MEAL_LABEL[item.meal_type]}
-          <span className="hidden lg:inline">&nbsp;· {dayLabel}</span>
-        </span>
+    <article className="flex h-full flex-col gap-3 rounded-[var(--kkb-r-lg)] bg-white p-4">
+      {/* Vignette | nom et moment | accord | édition */}
+      <div className="flex items-start gap-3">
+        <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-[var(--kkb-r-md)]" style={{ backgroundColor: color.bg }}>
+          {item.photo_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={item.photo_url} alt="" className="absolute inset-0 h-full w-full object-cover" />
+          ) : (
+            <span className="absolute inset-0 flex items-center justify-center" style={{ color: color.text }}>
+              <MealTypeIcon type={item.meal_type} className="h-5 w-5" />
+            </span>
+          )}
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <p className="font-quicksand text-xs font-semibold" style={{ color: color.text }}>
+            {MEAL_LABEL[item.meal_type]} · {dayLabel}
+            {/* Petit écran : l'accord rejoint cette ligne pour laisser la place au nom. */}
+            {adhesion !== null && (
+              <span className="font-bold sm:hidden" style={{ color: tone.text }}> · {adhesion}% d&apos;accord</span>
+            )}
+          </p>
+          <h3 className="text-h3 text-[var(--kkb-profond)]">{item.main_name ?? 'Repas non défini'}</h3>
+        </div>
+
         {adhesion !== null && (
-          <span className="hidden lg:inline-flex items-center gap-1 px-2 py-0.5 rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-success-light)] text-[var(--kkb-success)] text-[10px] font-quicksand font-bold">
-            <ThumbsUp className="h-3 w-3" /> {adhesion}% Adhésion
+          <span
+            className="hidden shrink-0 rounded-full px-2.5 py-1 font-dosis sm:inline-block text-[15px] font-extrabold leading-none tabular-nums"
+            style={{ backgroundColor: tone.bg, color: tone.text }}
+            title="Part d'avis favorables (J'adore et Ça passe)"
+          >
+            {adhesion}%
           </span>
         )}
         {onEdit && (
@@ -51,73 +72,56 @@ export function ResultCard({ item, dayLabel, onEdit, myReaction }: ResultCardPro
             type="button"
             onClick={onEdit}
             aria-label={`Modifier ${item.main_name ?? 'ce repas'}`}
-            className="ml-auto p-1.5 -mr-1.5 rounded-full text-[var(--kkb-text-tertiary)] hover:text-[var(--kkb-coral)] hover:bg-[var(--kkb-coral-light)] transition-colors print:hidden"
+            className="-mr-1.5 -mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[var(--kkb-texte-2)] transition-colors hover:bg-[var(--kkb-foret-50)] hover:text-[var(--kkb-foret)] print:hidden"
           >
             <Pencil className="h-4 w-4" />
           </button>
         )}
       </div>
 
-      {/* Photo | nom (+ barres à droite sur desktop) */}
-      <div className="grid grid-cols-[80px_1fr] lg:grid-cols-[120px_1fr] gap-x-3 gap-y-3 items-start">
-        <div className="relative h-20 w-20 lg:h-[90px] lg:w-[120px] rounded-[var(--kkb-radius-sm)] overflow-hidden bg-[var(--kkb-coral)] lg:row-span-2">
-          {item.photo_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={item.photo_url} alt={item.main_name ?? ''} className="absolute inset-0 h-full w-full object-cover" />
-          ) : (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <MealTypeIcon type={item.meal_type} className="h-8 w-8 text-white" />
-            </div>
-          )}
-        </div>
-
-        <div className="min-w-0">
-          <h3 className="font-dosis font-bold text-base lg:text-lg leading-tight text-[var(--kkb-text-primary)]">
-            {item.main_name ?? 'Repas non défini'}
-          </h3>
+      {(item.side_names.length > 0 || item.drink_name || item.description) && (
+        <div className="space-y-1.5">
           {(item.side_names.length > 0 || item.drink_name) && (
-            <div className="mt-1.5 flex flex-wrap gap-1">
+            <div className="flex flex-wrap gap-1">
               {item.side_names.map(name => (
-                <span key={name} className="inline-flex items-center gap-1 rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-coral-light)] px-2 py-0.5 text-[11px] font-quicksand font-bold text-[var(--kkb-coral)]">
+                <span key={name} className="inline-flex items-center gap-1 rounded-full bg-[var(--kkb-creme)] px-2 py-0.5 font-quicksand text-[11px] font-semibold text-[var(--kkb-texte-2)]">
                   <Salad className="h-3 w-3" /> {name}
                 </span>
               ))}
               {item.drink_name && (
-                <span className="inline-flex items-center gap-1 rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-teal-light)] px-2 py-0.5 text-[11px] font-quicksand font-bold text-[var(--kkb-teal)]">
+                <span className="inline-flex items-center gap-1 rounded-full bg-[var(--kkb-creme)] px-2 py-0.5 font-quicksand text-[11px] font-semibold text-[var(--kkb-texte-2)]">
                   <CupSoda className="h-3 w-3" /> {item.drink_name}
                 </span>
               )}
             </div>
           )}
           {item.description && (
-            <p className="mt-1 text-[13px] font-quicksand text-[var(--kkb-text-secondary)] line-clamp-2">{item.description}</p>
+            <p className="line-clamp-2 font-quicksand text-[13px] text-[var(--kkb-texte-2)]">{item.description}</p>
           )}
         </div>
+      )}
 
-        <div className="col-span-2 lg:col-span-1 lg:col-start-2">
-          {total === 0 ? (
-            <p className="flex items-center gap-1.5 text-xs font-quicksand text-[var(--kkb-text-tertiary)]">
-              <Inbox className="h-3.5 w-3.5" /> Aucun vote pour ce repas
-            </p>
-          ) : (
-            <ReactionBars counts={counts} />
-          )}
-        </div>
-      </div>
+      {total === 0 ? (
+        <p className="flex items-center gap-1.5 font-quicksand text-xs text-[var(--kkb-texte-2)]">
+          <Inbox className="h-3.5 w-3.5" /> Aucun avis pour ce repas
+        </p>
+      ) : (
+        <ReactionBars counts={counts} />
+      )}
 
       {/* Repère personnel (vue Membre) */}
       {myReaction !== undefined && (
-        <p className="mt-auto flex items-center gap-1.5 rounded-[var(--kkb-radius-sm)] bg-[var(--kkb-bg)] px-3 py-2 text-xs font-quicksand font-semibold text-[var(--kkb-text-tertiary)]">
+        <p className="mt-auto flex items-center gap-1.5 rounded-[var(--kkb-r-md)] bg-[var(--kkb-creme)] px-3 py-2 font-quicksand text-xs font-semibold text-[var(--kkb-texte-2)]">
           {myReaction ? (
             <>
               Ton repère :
               <span className="text-sm leading-none" aria-hidden="true">{MY_REACTION_LABEL[myReaction].emoji}</span>
-              <span className="text-[var(--kkb-text-primary)]">{MY_REACTION_LABEL[myReaction].label}</span>
+              <span className="text-[var(--kkb-profond)]">{MY_REACTION_LABEL[myReaction].label}</span>
             </>
           ) : (
-            'Tu n’as pas voté pour ce repas'
+            'Tu n’as pas donné ton avis sur ce repas'
           )}
-          <span className="ml-auto inline-flex items-center gap-1 rounded-[var(--kkb-radius-pill)] bg-white px-2 py-0.5 text-xs font-bold">
+          <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-white px-2 py-0.5 text-xs font-bold">
             <Lock className="h-3 w-3" /> Privé
           </span>
         </p>
@@ -125,14 +129,13 @@ export function ResultCard({ item, dayLabel, onEdit, myReaction }: ResultCardPro
 
       {/* Commentaires nommés (vue Planificatrice) */}
       {item.comments.length > 0 && (
-        <ul className="mt-auto space-y-2 rounded-[var(--kkb-radius-sm)] bg-[var(--kkb-bg)] p-3">
+        <ul className="mt-auto space-y-2 border-t border-dashed border-[var(--kkb-filet)] pt-3">
           {item.comments.map((c, i) => (
             <li key={i} className="flex items-start gap-2">
-              <NameAvatar name={c.respondent_name} />
-              <p className="min-w-0 pt-1 text-[13px] font-quicksand leading-snug text-[var(--kkb-text-secondary)]">
-                <span className="font-bold not-italic text-[var(--kkb-text-primary)]">{c.respondent_name}</span>
-                {' : '}
-                <span className="italic">« {c.comment} »</span>
+              <NameAvatar name={c.respondent_name} size={26} />
+              <p className="min-w-0 rounded-[var(--kkb-r-md)] rounded-tl-[4px] bg-[var(--kkb-creme)] px-3 py-1.5 font-quicksand text-[13px] leading-snug text-[var(--kkb-texte-2)]">
+                <span className="block text-xs font-bold text-[var(--kkb-profond)]">{c.respondent_name}</span>
+                {c.comment}
               </p>
             </li>
           ))}

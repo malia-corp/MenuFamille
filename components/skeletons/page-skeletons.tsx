@@ -319,60 +319,81 @@ export function MemberHomeSkeleton() {
 // ─── Résultats du sondage ────────────────────────────────────────────────────
 
 export function ResultsSkeleton() {
-  return (
-    <SkeletonPage label="Chargement des résultats" className="mx-auto max-w-lg space-y-5 px-4 pb-24 pt-2 lg:max-w-none lg:space-y-6 lg:px-0 lg:pb-12 lg:pt-0">
-      {/* Mobile */}
-      <div className="space-y-4 lg:hidden">
-        <Bone className="h-4 w-24 rounded" />
-        <Bone className="h-7 w-56 rounded-lg" />
-        <BoneCard className="space-y-3 p-4">
-          <div className="grid grid-cols-2 gap-2">
-            {range(4).map((i) => <Bone key={i} className="h-12 rounded-[var(--kkb-r-sm)]" />)}
-          </div>
-        </BoneCard>
-        {range(3).map((i) => (
-          <BoneCard key={i} className="flex items-center gap-3 p-3">
-            <Bone className="h-16 w-16 shrink-0 rounded-[var(--kkb-r-md)]" />
-            <div className="flex-1 space-y-2">
-              <Bone className="h-4 w-3/4 rounded" />
-              <Bone className="h-2.5 w-full rounded-full" />
-            </div>
-          </BoneCard>
-        ))}
+  // Liste de la carte « Les plus appréciés » / « À revoir » / « Qui a répondu ».
+  const listRows = (n: number) => range(n).map((i) => (
+    <div key={i} className="flex items-center gap-3 py-2">
+      <Bone className="h-8 w-8 shrink-0 rounded-full" />
+      <div className="flex-1 space-y-1.5">
+        <Bone className="h-3.5 w-2/3 rounded" />
+        <Bone className="h-3 w-1/3 rounded" />
       </div>
-      {/* Desktop */}
-      <div className="hidden space-y-6 lg:block">
-        <div className="flex items-end justify-between gap-6">
-          <div className="space-y-2">
-            <Bone className="h-3 w-28 rounded" />
-            <DesktopTitle width="w-[26rem]" />
-            <Bone className="h-3.5 w-96 rounded" />
+      <Bone className="h-4 w-14 shrink-0 rounded" />
+    </div>
+  ))
+  const cardTitle = <div className="flex items-center gap-2.5"><Bone className="h-8 w-8 rounded-full" /><Bone className="h-4 w-36 rounded" /></div>
+
+  return (
+    <SkeletonPage label="Chargement des résultats" className="mx-auto max-w-lg space-y-6 px-4 pb-8 pt-2 lg:max-w-none lg:space-y-8 lg:px-0 lg:pt-0">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:gap-5">
+        {/* Bandeau vert */}
+        <div className="flex flex-col rounded-[var(--kkb-r-xl)] bg-[var(--kkb-foret)] p-5 lg:col-span-8 lg:row-start-1 lg:p-6">
+          <Bone dark className="h-3.5 w-48 rounded" />
+          <Bone dark className="mt-2 h-8 w-64 rounded-lg" />
+          <div className="mt-4 flex items-center gap-4 lg:gap-6">
+            <Bone dark className="h-[104px] w-[104px] shrink-0 rounded-full" />
+            <div className="flex-1 space-y-2.5">
+              <Bone dark className="h-6 w-36 rounded" />
+              <Bone dark className="h-3.5 w-full max-w-xs rounded" />
+            </div>
           </div>
-          <Bone className="h-11 w-48 rounded-[var(--kkb-r-sm)]" />
+          <div className="mt-4 flex items-center gap-2.5">
+            <Bone dark className="h-7 w-28 rounded-full" />
+            <Bone dark className="h-3 w-24 rounded" />
+          </div>
+          <div className="mt-5 flex flex-wrap gap-2 lg:mt-auto lg:pt-5">
+            <Bone dark className="h-11 w-full rounded-full sm:w-40" />
+            {range(3).map((i) => <Bone dark key={i} className="h-11 flex-1 rounded-full sm:w-32 sm:flex-none" />)}
+          </div>
         </div>
-        <div className="grid grid-cols-3 gap-5">
-          {range(3).map((i) => (
-            <BoneCard key={i} className="space-y-3 p-5">
-              <Bone className="h-3.5 w-32 rounded" />
-              <Bone className="h-9 w-24 rounded" />
-              <Bone className="h-3 w-40 rounded" />
-            </BoneCard>
-          ))}
+        {/* Les plus appréciés, À revoir */}
+        {range(2).map((i) => (
+          <div key={i} className="rounded-[var(--kkb-r-xl)] bg-white p-5 lg:col-span-6 lg:row-start-2">
+            {cardTitle}
+            <div className="mt-3">{listRows(3)}</div>
+          </div>
+        ))}
+        {/* Qui a répondu */}
+        <div className="rounded-[var(--kkb-r-xl)] bg-white p-5 lg:col-span-4 lg:col-start-9 lg:row-start-1">
+          {cardTitle}
+          <div className="mt-3">{listRows(4)}</div>
+          <Bone className="mt-3 h-10 rounded-full" />
         </div>
-        <div className="grid grid-cols-2 gap-5">
-          {range(2).map((i) => (
-            <BoneCard key={i} className="space-y-3 p-5">
-              <Bone className="h-5 w-48 rounded" />
-              {range(4).map((j) => (
-                <div key={j} className="flex items-center gap-3">
-                  <Bone className="h-12 w-12 shrink-0 rounded-[var(--kkb-r-md)]" />
-                  <div className="flex-1 space-y-2">
-                    <Bone className="h-3.5 w-2/3 rounded" />
-                    <Bone className="h-2.5 w-full rounded-full" />
-                  </div>
+      </div>
+
+      {/* Repas par repas */}
+      <div className="space-y-4">
+        <Bone className="h-6 w-44 rounded" />
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <Bone className="h-11 w-56 rounded-full" />
+          <Bone className="h-9 w-48 rounded-full" />
+        </div>
+        <div className="flex gap-1.5 overflow-hidden">
+          {range(6).map((i) => <Bone key={i} className="h-8 w-20 shrink-0 rounded-full" />)}
+        </div>
+        <Bone className="h-4 w-28 rounded" />
+        <div className="grid gap-3 sm:grid-cols-2 lg:gap-4 2xl:grid-cols-3">
+          {range(4).map((i) => (
+            <div key={i} className="space-y-3 rounded-[var(--kkb-r-lg)] bg-white p-4">
+              <div className="flex items-center gap-3">
+                <Bone className="h-12 w-12 shrink-0 rounded-[var(--kkb-r-md)]" />
+                <div className="flex-1 space-y-1.5">
+                  <Bone className="h-3 w-1/3 rounded" />
+                  <Bone className="h-4 w-2/3 rounded" />
                 </div>
-              ))}
-            </BoneCard>
+              </div>
+              <Bone className="h-2 rounded-full" />
+              <Bone className="h-3 w-3/4 rounded" />
+            </div>
           ))}
         </div>
       </div>

@@ -3,7 +3,7 @@
 import { CalendarDays, ChevronDown, UtensilsCrossed } from 'lucide-react'
 
 export type ResultsViewMode = 'day' | 'type'
-export type ResultsSort = 'approval' | 'chrono'
+export type ResultsSort = 'chrono' | 'best' | 'worst'
 
 interface Chip {
   value: string
@@ -16,52 +16,70 @@ interface ResultsFiltersProps {
   chips:            Chip[]
   activeChip:       string | null
   onChipChange:     (v: string | null) => void
-  votedCount:       number
   sort:             ResultsSort
   onSortChange:     (s: ResultsSort) => void
 }
 
+const MODES = [
+  { value: 'day',  label: 'Par jour',  icon: CalendarDays },
+  { value: 'type', label: 'Par repas', icon: UtensilsCrossed },
+] as const
+
 export function ResultsFilters({
-  viewMode, onViewModeChange, chips, activeChip, onChipChange, votedCount, sort, onSortChange,
+  viewMode, onViewModeChange, chips, activeChip, onChipChange, sort, onSortChange,
 }: ResultsFiltersProps) {
-  const pill = (active: boolean) =>
-    `flex items-center gap-1.5 rounded-[var(--kkb-radius-pill)] px-3.5 py-2 text-[13px] font-quicksand font-bold transition-colors ${
-      active ? 'bg-[var(--kkb-coral)] text-white' : 'bg-white border border-[var(--kkb-border)] text-[var(--kkb-text-secondary)]'
-    }`
   const chip = (active: boolean) =>
-    `shrink-0 whitespace-nowrap rounded-[var(--kkb-radius-pill)] px-3 py-1 text-[12px] font-quicksand font-bold transition-colors ${
-      active ? 'bg-[var(--kkb-coral)] text-white' : 'bg-white border border-[var(--kkb-border)] text-[var(--kkb-text-secondary)]'
+    `shrink-0 whitespace-nowrap rounded-full px-3.5 py-1.5 font-quicksand text-[13px] font-bold transition-colors ${
+      active ? 'bg-[var(--kkb-foret)] text-[var(--kkb-creme)]' : 'bg-white text-[var(--kkb-texte-2)] hover:text-[var(--kkb-foret)]'
     }`
 
   return (
-    <section className="space-y-2.5 print:hidden lg:bg-white lg:border lg:border-[var(--kkb-border)] lg:rounded-[var(--kkb-radius-card)] lg:p-4">
-      <div className="flex flex-col gap-2.5 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex items-center gap-2">
-          <button type="button" onClick={() => onViewModeChange('day')} className={pill(viewMode === 'day')}>
-            <CalendarDays className="h-4 w-4" /> Par Jour
-          </button>
-          <button type="button" onClick={() => onViewModeChange('type')} className={pill(viewMode === 'type')}>
-            <UtensilsCrossed className="h-4 w-4" /> Par Type de repas
-          </button>
+    <div className="space-y-3 print:hidden">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        {/* Bascule jour / type de repas : la pastille glisse sous l'option choisie. */}
+        <div role="radiogroup" aria-label="Regrouper les repas" className="relative grid grid-cols-2 rounded-full bg-white p-1">
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute bottom-1 left-1 top-1 w-[calc(50%-4px)] rounded-full bg-[var(--kkb-foret)] transition-transform duration-300 ease-[cubic-bezier(0.34,1.35,0.64,1)] motion-reduce:transition-none"
+            style={{ transform: viewMode === 'type' ? 'translateX(100%)' : 'none' }}
+          />
+          {MODES.map(m => {
+            const active = viewMode === m.value
+            return (
+              <button
+                key={m.value}
+                type="button"
+                role="radio"
+                aria-checked={active}
+                onClick={() => onViewModeChange(m.value)}
+                className={`relative z-10 flex h-9 items-center justify-center gap-1.5 rounded-full px-4 font-quicksand text-[13px] font-bold transition-colors duration-200 ${
+                  active ? 'text-[var(--kkb-creme)]' : 'text-[var(--kkb-texte-2)] hover:text-[var(--kkb-foret)]'
+                }`}
+              >
+                <m.icon className="h-4 w-4" /> {m.label}
+              </button>
+            )
+          })}
         </div>
 
-        <label className="hidden lg:flex items-center gap-2 text-xs font-quicksand text-[var(--kkb-text-tertiary)]">
-          Trier par :
+        <label className="flex items-center gap-2 font-quicksand text-xs text-[var(--kkb-texte-2)]">
+          <span className="hidden sm:inline">Trier</span>
           <span className="relative">
             <select
               value={sort}
               onChange={e => onSortChange(e.target.value as ResultsSort)}
-              className="appearance-none rounded-[var(--kkb-radius-sm)] border border-[var(--kkb-border)] bg-white py-1.5 pl-3 pr-8 text-xs font-quicksand font-semibold text-[var(--kkb-text-primary)] outline-none focus:border-[var(--kkb-coral)]"
+              className="h-9 appearance-none rounded-full bg-white pl-3.5 pr-8 font-quicksand text-xs font-semibold text-[var(--kkb-profond)] outline-none focus-visible:ring-2 focus-visible:ring-[var(--kkb-foret-300)]"
             >
-              <option value="approval">Taux d&apos;approbation (décroissant)</option>
               <option value="chrono">Ordre de la semaine</option>
+              <option value="best">Les plus appréciés d&apos;abord</option>
+              <option value="worst">Les moins appréciés d&apos;abord</option>
             </select>
-            <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--kkb-text-tertiary)]" />
+            <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--kkb-texte-2)]" />
           </span>
         </label>
       </div>
 
-      <div className="-mx-4 flex gap-1.5 overflow-x-auto px-4 hide-scrollbar lg:mx-0 lg:px-0 lg:flex-wrap">
+      <div className="-mx-4 flex gap-1.5 overflow-x-auto px-4 hide-scrollbar lg:mx-0 lg:flex-wrap lg:px-0">
         <button type="button" onClick={() => onChipChange(null)} className={chip(activeChip === null)}>Tous</button>
         {chips.map(c => (
           <button key={c.value} type="button" onClick={() => onChipChange(c.value)} className={chip(activeChip === c.value)}>
@@ -69,16 +87,6 @@ export function ResultsFilters({
           </button>
         ))}
       </div>
-
-      <div className="flex items-center justify-between gap-2">
-        <p className="flex items-center gap-1.5 text-[11px] font-quicksand text-[var(--kkb-text-tertiary)]">
-          <span className="h-1.5 w-1.5 rounded-full bg-[var(--kkb-coral)]" />
-          {viewMode === 'day' ? 'Vue chronologique par journée' : 'Vue groupée par type de repas'}
-        </p>
-        <span className="shrink-0 rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-teal-light)] px-2 py-0.5 text-xs font-quicksand font-bold text-[var(--kkb-teal)]">
-          {votedCount} {votedCount > 1 ? 'repas votés' : 'repas voté'}
-        </span>
-      </div>
-    </section>
+    </div>
   )
 }

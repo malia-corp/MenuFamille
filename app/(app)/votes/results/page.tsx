@@ -3,8 +3,8 @@
 import { Suspense, useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import {
-  ArrowLeft, ArrowRight, CalendarPlus, CheckCircle2, MailOpen, Printer,
-  Settings2, Share2, Smile, Sparkles, Star, UserPlus, Users, WifiOff,
+  ArrowLeft, CalendarPlus, ChevronRight, Heart, MailOpen, MessageCircleWarning,
+  PartyPopper, Pencil, Printer, Share2, Users, WifiOff,
 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { fr } from 'date-fns/locale'
@@ -19,7 +19,7 @@ import { NameAvatar } from '@/components/votes/name-avatar'
 import { ResultCard } from '@/components/votes/result-card'
 import { ResultsFilters, type ResultsSort, type ResultsViewMode } from '@/components/votes/results-filters'
 import type { ResultItem, SurveyResultsData } from '@/components/votes/types'
-import { TEMPLATE_KEY, chronoCompare, countsOf, dayLabelOf, harmonyOf } from '@/components/votes/result-helpers'
+import { TEMPLATE_KEY, agreementTone, chronoCompare, countsOf, dayLabelOf, harmonyOf } from '@/components/votes/result-helpers'
 import { EmptyState, PageLoader } from '@/components/votes/page-states'
 
 type LoadState = 'loading' | 'ready' | 'no_plan' | 'error'
@@ -41,7 +41,7 @@ function VotesResultsContent() {
   const [data,      setData]      = useState<SurveyResultsData | null>(null)
   const [viewMode,  setViewMode]  = useState<ResultsViewMode>('day')
   const [activeChip, setActiveChip] = useState<string | null>(null)
-  const [sort,      setSort]      = useState<ResultsSort>('approval')
+  const [sort,      setSort]      = useState<ResultsSort>('chrono')
 
   useEffect(() => {
     void (async () => {
@@ -73,8 +73,13 @@ function VotesResultsContent() {
     const rejected  = voted.filter(i => isRejected(countsOf(i)))
     const favorites = [...voted]
       .sort((a, b) => (b.aime / totalReactions(countsOf(b))) - (a.aime / totalReactions(countsOf(a))) || totalReactions(countsOf(b)) - totalReactions(countsOf(a)))
-      .slice(0, 2)
-    return { items, voted, rejected, favorites }
+      .slice(0, 3)
+    // À revoir : repas qui ont reçu au moins un « Pas trop », le moins apprécié d'abord.
+    const toReview = voted
+      .filter(i => i.naime_pas > 0)
+      .sort((a, b) => (agreementPct(countsOf(a)) ?? 0) - (agreementPct(countsOf(b)) ?? 0) || b.naime_pas - a.naime_pas)
+      .slice(0, 3)
+    return { items, voted, rejected, favorites, toReview }
   }, [data])
 
   function changeViewMode(m: ResultsViewMode) {
@@ -103,7 +108,6 @@ function VotesResultsContent() {
   const weekRange     = formatWeekRange(data.week_start)
   const memberCount   = Math.max(data.member_count, 1)
   const allVoted      = data.total_respondents >= memberCount
-  const participation = Math.min(100, Math.round((data.total_respondents / memberCount) * 100))
   const harmony       = harmonyOf(data.global_score)
 
   // 0 répondant : selon l'avancement du menu, on guide vers l'étape suivante.
@@ -145,7 +149,7 @@ function VotesResultsContent() {
 
   // ── Filtres ────────────────────────────────────────────────────────────────
 
-  const { items, voted, rejected, favorites } = derived
+  const { items, voted, rejected, favorites, toReview } = derived
   const hasTemplate = items.some(i => i.applies_all_days)
   const groupKeyOf  = (i: ResultItem): string =>
     viewMode === 'day' ? (i.applies_all_days ? TEMPLATE_KEY : i.day_of_week) : i.meal_type
@@ -160,238 +164,233 @@ function VotesResultsContent() {
         .filter(t => items.some(i => i.meal_type === t))
         .map(t => ({ value: t, label: MEAL_LABEL[t] }))
 
-  const filtered   = items.filter(i => activeChip === null || groupKeyOf(i) === activeChip)
-  const votedCount = filtered.filter(i => totalReactions(countsOf(i)) > 0).length
+  // Tri à l'intérieur de chaque groupe ; les repas sans avis restent à la fin.
+  const filtered = items.filter(i => activeChip === null || groupKeyOf(i) === activeChip)
+  const scoreOf  = (i: ResultItem, empty: number) => agreementPct(countsOf(i)) ?? empty
+  const sortFn   = (a: ResultItem, b: ResultItem) =>
+    sort === 'best'    ? scoreOf(b, -1) - scoreOf(a, -1) || chronoCompare(a, b)
+    : sort === 'worst' ? scoreOf(a, 101) - scoreOf(b, 101) || chronoCompare(a, b)
+    : chronoCompare(a, b)
 
   const groups = chips
     .filter(c => activeChip === null || c.value === activeChip)
-    .map(c => ({ key: c.value, label: c.label, items: filtered.filter(i => groupKeyOf(i) === c.value) }))
+    .map(c => ({ key: c.value, label: c.label, items: filtered.filter(i => groupKeyOf(i) === c.value).sort(sortFn) }))
     .filter(g => g.items.length > 0)
-  if (viewMode === 'type') {
-    for (const g of groups) g.items.sort(chronoCompare)
-  }
-
-  const desktopItems = sort === 'chrono'
-    ? filtered
-    : [...filtered].sort((a, b) => (agreementPct(countsOf(b)) ?? -1) - (agreementPct(countsOf(a)) ?? -1) || chronoCompare(a, b))
 
   const recapText = [
     `Résultats du sondage KeskonBouf — semaine du ${weekRange}`,
-    `${data.total_respondents} vote${data.total_respondents > 1 ? 's' : ''} · ${data.global_score ?? 0}% d'accord`,
-    favorites.length ? `Favoris : ${favorites.map(f => f.main_name).filter(Boolean).join(', ')}` : '',
+    `${data.total_respondents} avis · ${data.global_score ?? 0}% d'accord`,
+    favorites.length ? `Les plus appréciés : ${favorites.map(f => f.main_name).filter(Boolean).join(', ')}` : '',
   ].filter(Boolean).join('\n')
+
+  const token    = data.share_token
+  const pending  = Math.max(0, memberCount - data.total_respondents)
+  const ghostBtn = 'flex h-11 flex-1 sm:flex-none items-center justify-center gap-2 rounded-full bg-white/10 px-4 font-quicksand text-sm font-semibold text-[var(--kkb-creme)] transition-colors hover:bg-white/20 disabled:opacity-60'
 
   return (
     <>
     <FridgePrintSheet data={data} favoriteIds={favorites.map(f => f.id)} />
-    <div className="mx-auto max-w-lg px-4 pb-24 pt-2 lg:max-w-none lg:px-0 lg:pt-0 lg:pb-12 space-y-5 lg:space-y-6 print:hidden">
+    <div className="mx-auto max-w-lg space-y-6 px-4 pb-8 pt-2 lg:max-w-none lg:space-y-8 lg:px-0 lg:pt-0 print:hidden">
 
-      {/* ── Mobile : en-tête + synthèse ─────────────────────────────────── */}
-      <div className="lg:hidden space-y-4">
-        <button type="button" onClick={() => router.push('/plan')} className="flex items-center gap-1 text-sm font-quicksand font-semibold text-[var(--kkb-teal)] print:hidden">
-          <ArrowLeft className="h-4 w-4" /> Menu
-        </button>
-
-        <div className="space-y-2 text-center">
-          <h1 className="font-dosis font-extrabold text-2xl text-[var(--kkb-text-primary)]">Résultats du sondage</h1>
-          <ParticipationBadge allVoted={allVoted} respondents={data.total_respondents} members={memberCount} />
-        </div>
-
-        <div className="bg-white border border-[var(--kkb-lin)] rounded-[var(--kkb-radius-card)] p-4 space-y-3">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="h-5 w-5 shrink-0" style={{ color: allVoted ? 'var(--kkb-success)' : 'var(--kkb-warning)' }} />
-            <p className="flex-1 font-dosis font-semibold text-base text-[var(--kkb-text-primary)]">
-              {allVoted ? 'Participation complète' : 'Participation en cours'}
-            </p>
-            <span className="text-sm font-quicksand font-bold" style={{ color: allVoted ? 'var(--kkb-success)' : 'var(--kkb-warning)' }}>
-              {participation}%
-            </span>
-          </div>
-          <p className="text-[13px] font-quicksand text-[var(--kkb-text-secondary)]">
-            {data.total_respondents}/{memberCount} membres de la famille ont voté cette semaine
-          </p>
-          <hr className="border-[var(--kkb-border)]" />
-          <div className="flex items-end justify-between gap-3">
-            <div>
-              <p className="text-[12px] font-quicksand font-bold uppercase tracking-wide text-[var(--kkb-text-tertiary)]">Consensus global</p>
-              <p className="flex items-baseline gap-1.5">
-                <span className="font-dosis font-extrabold text-[28px] leading-none text-[var(--kkb-coral)]">
-                  {data.global_score === null ? '—' : `${data.global_score}%`}
-                </span>
-                <span className="text-sm font-quicksand text-[var(--kkb-text-secondary)]">d&apos;accord</span>
-              </p>
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:gap-5">
+        {/* ── Bandeau : accord global, participation, actions ─────────────── */}
+        <section className="flex flex-col rounded-[var(--kkb-r-xl)] bg-[var(--kkb-foret)] p-5 lg:col-span-8 lg:row-start-1 lg:p-6">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="font-quicksand text-sm font-semibold text-[var(--kkb-foret-100)]">Sondage · semaine du {weekRange}</p>
+              <h1 className="mt-0.5 text-h1 text-[var(--kkb-creme)]">Résultats du sondage</h1>
             </div>
-            <button type="button" onClick={() => router.push('/circle')} className="flex items-center gap-1 rounded-[var(--kkb-radius-pill)] px-3 py-1.5 text-xs font-quicksand font-bold text-[var(--kkb-teal)] hover:bg-[var(--kkb-teal-light)] print:hidden">
-              <Users className="h-3.5 w-3.5" /> Voir le cercle <ArrowRight className="h-3.5 w-3.5" />
+            <button
+              type="button" onClick={() => router.push('/plan')}
+              aria-label="Retour au menu"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-[var(--kkb-creme)] transition-colors hover:bg-white/20 lg:hidden"
+            >
+              <ArrowLeft className="h-5 w-5" />
             </button>
           </div>
-        </div>
-      </div>
 
-      {/* ── Desktop : en-tête + 3 colonnes de stats ─────────────────────── */}
-      <div className="hidden lg:block space-y-6">
-        <div className="flex items-start justify-between gap-6">
-          <div className="space-y-1.5">
-            <p className="flex items-center gap-3 text-xs font-quicksand font-bold text-[var(--kkb-text-tertiary)]">
-              Session de consultation hebdomadaire
-              <span className="flex items-center gap-1.5 normal-case tracking-normal text-xs font-normal text-[var(--kkb-success)]">
-                <span className="h-1.5 w-1.5 rounded-full bg-[var(--kkb-success)]" /> Semaine du {weekRange}
-              </span>
-            </p>
-            <h1 className="text-h1 text-[var(--kkb-foret)]">Résultats du sondage de la famille</h1>
-            <ParticipationBadge allVoted={allVoted} respondents={data.total_respondents} members={memberCount} long />
-            <p className="max-w-2xl pt-1 text-sm font-quicksand text-[var(--kkb-text-secondary)]">
-              {allVoted && rejected.length === 0
-                ? 'Chaque membre du foyer s’est exprimé et aucun plat n’est rejeté : le menu est prêt pour vos fourneaux.'
-                : 'Voici l’avis de la famille sur les repas de la semaine. Ajustez les plats les moins plébiscités avant de passer aux fourneaux.'}
+          <div className="mt-4 flex items-center gap-4 lg:gap-6">
+            <ConsensusGauge pct={data.global_score} label="d'accord" tone="onDark" size={104} />
+            <div className="min-w-0 space-y-2">
+              <p className="text-signature text-[var(--kkb-creme)]">{harmony.label}</p>
+              <p className="font-quicksand text-sm text-[var(--kkb-foret-100)]">
+                {rejected.length === 0
+                  ? `Aucun des ${voted.length} repas notés n’est rejeté par la famille.`
+                  : `${rejected.length} repas sur ${voted.length} rejeté${rejected.length > 1 ? 's' : ''} par la majorité.`}
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-4 flex items-center gap-2.5">
+            <AvatarStack names={data.respondents.map(r => r.name)} pending={pending} />
+            <p className="font-quicksand text-xs font-semibold text-[var(--kkb-foret-100)]">
+              {allVoted ? 'Toute la famille a répondu' : `${data.total_respondents} sur ${memberCount} ont répondu`}
             </p>
           </div>
-          <button type="button" onClick={() => router.push('/circle')} className="shrink-0 flex items-center gap-2 rounded-[var(--kkb-radius-sm)] border border-[var(--kkb-border)] bg-white px-4 py-2.5 text-sm font-quicksand font-semibold text-[var(--kkb-text-secondary)] hover:border-[var(--kkb-coral)] hover:text-[var(--kkb-coral)] print:hidden">
-            <Settings2 className="h-4 w-4" /> Paramètres du cercle
-          </button>
-        </div>
 
-        <div className="grid grid-cols-3 gap-5">
-          {/* Climat culinaire */}
-          <StatColumn eyebrow="Climat culinaire" title="Consensus global" icon={<Smile className="h-4 w-4" />}
-            footer={
-              <span className={`rounded-[var(--kkb-radius-pill)] px-2.5 py-1 text-[11px] font-quicksand font-bold ${rejected.length === 0 ? 'bg-[var(--kkb-success-light)] text-[var(--kkb-success)]' : 'bg-[var(--kkb-warning-light)] text-[var(--kkb-jaune-text)]'}`}>
-                {rejected.length === 0 ? 'Aucun plat rejeté' : `${rejected.length} plat${rejected.length > 1 ? 's' : ''} à revoir`}
-              </span>
-            }>
-            <div className="flex items-center gap-4">
-              <ConsensusGauge pct={data.global_score} label="Accord" />
-              <div className="space-y-1">
-                <p className="text-sm font-quicksand font-bold" style={{ color: harmony.color }}>{harmony.label}</p>
-                <p className="text-[13px] font-quicksand text-[var(--kkb-text-secondary)]">
-                  {voted.length - rejected.length} repas sur {voted.length} validé{voted.length > 1 ? 's' : ''} sans objection majeure.
-                  {rejected.length === 0 && ' Zéro gaspillage anticipé !'}
-                </p>
-              </div>
+          <div className="mt-5 flex flex-wrap gap-2 lg:mt-auto lg:pt-5">
+            <button
+              type="button"
+              onClick={() => router.push(`/plan?week=${data.week_start}`)}
+              className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[var(--kkb-orange)] px-5 font-quicksand text-sm font-bold text-white transition-colors hover:bg-[var(--kkb-orange-700)] sm:w-auto"
+            >
+              <Pencil className="h-4 w-4" /> Ajuster le menu
+            </button>
+            <ShareActions
+              getPayload={() => ({ title: 'Résultats du sondage — KeskonBouf', text: recapText })}
+              shareLabel="Partager"
+              copyLabel="Copier"
+              className="contents"
+              buttonClassName={ghostBtn}
+            />
+            <button type="button" onClick={() => window.print()} className={ghostBtn} aria-label="Imprimer pour le frigo">
+              <Printer className="h-4 w-4" /> <span className="hidden sm:inline">Imprimer pour le frigo</span>
+            </button>
+          </div>
+        </section>
+
+        {/* ── Les plus appréciés ─────────────────────────────────────────── */}
+        <section className="rounded-[var(--kkb-r-xl)] bg-white p-5 lg:col-span-6 lg:row-start-2" aria-labelledby="fav-title">
+          <CardTitle id="fav-title" icon={<Heart className="h-4 w-4" />} iconClass="bg-[var(--kkb-jaune-50)] text-[var(--kkb-jaune-text)]">
+            Les plus appréciés
+          </CardTitle>
+          {favorites.length === 0 ? (
+            <p className="mt-3 font-quicksand text-sm text-[var(--kkb-texte-2)]">Pas encore assez d&apos;avis.</p>
+          ) : (
+            <ol className="mt-3 space-y-1">
+              {favorites.map((f, idx) => (
+                <li key={f.id} className="flex items-center gap-3 px-1 py-2">
+                  <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full font-dosis text-sm font-extrabold ${
+                    idx === 0 ? 'bg-[var(--kkb-jaune)] text-[var(--kkb-jaune-900)]' : 'bg-[var(--kkb-jaune-50)] text-[var(--kkb-jaune-text)]'
+                  }`}>
+                    {idx + 1}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-quicksand text-sm font-bold text-[var(--kkb-profond)]">{f.main_name ?? 'Repas'}</p>
+                    <p className="font-quicksand text-xs text-[var(--kkb-texte-2)]">{MEAL_LABEL[f.meal_type]} · {dayLabelOf(f)}</p>
+                  </div>
+                  <span className="shrink-0 font-quicksand text-xs font-semibold text-[var(--kkb-texte-2)]">
+                    <span className="font-dosis text-base font-extrabold text-[var(--kkb-foret-500)] tabular-nums">{f.aime}</span> J&apos;adore
+                  </span>
+                </li>
+              ))}
+            </ol>
+          )}
+        </section>
+
+        {/* ── À revoir ───────────────────────────────────────────────────── */}
+        <section className="rounded-[var(--kkb-r-xl)] bg-white p-5 lg:col-span-6 lg:row-start-2" aria-labelledby="review-title">
+          <CardTitle id="review-title" icon={<MessageCircleWarning className="h-4 w-4" />} iconClass="bg-[var(--kkb-orange-50)] text-[var(--kkb-orange-text)]">
+            À revoir
+          </CardTitle>
+          {toReview.length === 0 ? (
+            <div className="mt-3 flex items-center gap-3 rounded-[var(--kkb-r-md)] bg-[var(--kkb-sauge-50)] p-3">
+              <PartyPopper className="h-5 w-5 shrink-0 text-[var(--kkb-foret-500)]" />
+              <p className="font-quicksand text-sm text-[var(--kkb-profond)]">Aucun plat n&apos;a déplu : le menu est prêt pour les fourneaux.</p>
             </div>
-          </StatColumn>
-
-          {/* Favoris */}
-          <StatColumn eyebrow="Favoris de la semaine" title="Plats plébiscités" icon={<Star className="h-4 w-4" />}
-            footer={
-              <span className={`rounded-[var(--kkb-radius-pill)] px-2.5 py-1 text-[11px] font-quicksand font-bold ${rejected.length === 0 ? 'bg-[var(--kkb-success-light)] text-[var(--kkb-success)]' : 'bg-[var(--kkb-warning-light)] text-[var(--kkb-jaune-text)]'}`}>
-                {rejected.length} plat{rejected.length > 1 ? 's' : ''} rejeté{rejected.length > 1 ? 's' : ''} cette semaine{rejected.length === 0 && ' · succès total'}
-              </span>
-            }>
-            <ol className="space-y-2">
-              {favorites.map((f, idx) => {
-                const lovePct = Math.round((f.aime / totalReactions(countsOf(f))) * 100)
+          ) : (
+            <ul className="mt-3 space-y-1">
+              {toReview.map(item => {
+                const pct  = agreementPct(countsOf(item))
+                const tone = agreementTone(pct)
                 return (
-                  <li key={f.id} className="flex items-center gap-3 rounded-[var(--kkb-radius-sm)] bg-[var(--kkb-bg)] p-2.5">
-                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--kkb-coral)] text-xs font-quicksand font-bold text-white">{idx + 1}</span>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-quicksand font-bold text-[var(--kkb-text-primary)]">{f.main_name ?? 'Repas'}</p>
-                      <p className="text-[11px] font-quicksand text-[var(--kkb-text-tertiary)]">{dayLabelOf(f)} · {MEAL_LABEL[f.meal_type]}</p>
-                    </div>
-                    <span className="shrink-0 rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-success-light)] px-2 py-0.5 text-[11px] font-quicksand font-bold text-[var(--kkb-success)]">
-                      {lovePct}% J&apos;adore
+                  <li key={item.id} className="flex items-center gap-3 px-1 py-2">
+                    <span className="flex h-8 min-w-[3rem] shrink-0 items-center justify-center rounded-full px-2 font-dosis text-sm font-extrabold tabular-nums" style={{ backgroundColor: tone.bg, color: tone.text }}>
+                      {pct}%
                     </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-quicksand text-sm font-bold text-[var(--kkb-profond)]">{item.main_name ?? 'Repas'}</p>
+                      <p className="truncate font-quicksand text-xs text-[var(--kkb-texte-2)]">
+                        {item.naime_pas} « Pas trop » · {MEAL_LABEL[item.meal_type]} · {dayLabelOf(item)}
+                      </p>
+                    </div>
+                    <button
+                      type="button" onClick={() => editItem(item)}
+                      aria-label={`Changer ${item.main_name ?? 'ce repas'}`}
+                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-[1.5px] border-[var(--kkb-filet)] font-quicksand text-xs font-bold text-[var(--kkb-foret)] transition-colors hover:border-[var(--kkb-foret-300)] sm:w-auto sm:px-3"
+                    >
+                      <Pencil className="h-3.5 w-3.5 sm:hidden" />
+                      <span className="hidden sm:inline">Changer</span>
+                    </button>
                   </li>
                 )
               })}
-            </ol>
-          </StatColumn>
-
-          {/* Cercle de table */}
-          <StatColumn eyebrow="Cercle de table" title="Ont voté" icon={<Users className="h-4 w-4" />}
-            footer={
-              <div className="flex w-full items-center justify-between">
-                <span className="flex items-center gap-1.5 text-[11px] font-quicksand font-bold text-[var(--kkb-success)]">
-                  <CheckCircle2 className="h-3.5 w-3.5" /> {data.total_respondents} vote{data.total_respondents > 1 ? 's' : ''} enregistré{data.total_respondents > 1 ? 's' : ''}
-                </span>
-                <button type="button" onClick={() => router.push('/circle')} className="flex items-center gap-1 text-[11px] font-quicksand font-bold text-[var(--kkb-coral)] hover:underline print:hidden">
-                  <UserPlus className="h-3.5 w-3.5" /> Inviter un convive
-                </button>
-              </div>
-            }>
-            <ul className="grid grid-cols-2 gap-2">
-              {data.respondents.slice(0, 4).map((r, i) => (
-                <li key={`${r.name}-${i}`} className="flex items-center gap-2 rounded-[var(--kkb-radius-sm)] bg-[var(--kkb-bg)] p-2">
-                  <NameAvatar name={r.name} />
-                  <div className="min-w-0">
-                    <p className="truncate text-xs font-quicksand font-bold text-[var(--kkb-text-primary)]">{r.name}</p>
-                    <p className="truncate text-[10px] font-quicksand text-[var(--kkb-text-tertiary)]">
-                      {formatDistanceToNow(new Date(r.voted_at), { addSuffix: true, locale: fr })}
-                    </p>
-                  </div>
-                </li>
-              ))}
             </ul>
-            {data.respondents.length > 4 && (
-              <p className="text-[11px] font-quicksand text-[var(--kkb-text-tertiary)]">+ {data.respondents.length - 4} autre{data.respondents.length - 4 > 1 ? 's' : ''}</p>
+          )}
+        </section>
+
+        {/* ── Qui a répondu ──────────────────────────────────────────────── */}
+        <section className="flex flex-col rounded-[var(--kkb-r-xl)] bg-white p-5 lg:col-span-4 lg:col-start-9 lg:row-start-1" aria-labelledby="who-title">
+          <CardTitle id="who-title" icon={<Users className="h-4 w-4" />} iconClass="bg-[var(--kkb-foret-50)] text-[var(--kkb-foret)]">
+            Qui a répondu
+          </CardTitle>
+          <ul className="mt-3 flex-1 space-y-1">
+            {data.respondents.slice(0, 5).map((r, i) => (
+              <li key={`${r.name}-${i}`} className="flex items-center gap-3 py-1.5">
+                <NameAvatar name={r.name} size={32} />
+                <p className="min-w-0 flex-1 truncate font-quicksand text-sm font-bold text-[var(--kkb-profond)]">{r.name}</p>
+                <p className="shrink-0 font-quicksand text-xs text-[var(--kkb-texte-2)]">
+                  {formatDistanceToNow(new Date(r.voted_at), { addSuffix: true, locale: fr })}
+                </p>
+              </li>
+            ))}
+            {data.respondents.length > 5 && (
+              <li className="font-quicksand text-xs text-[var(--kkb-texte-2)]">
+                et {data.respondents.length - 5} autre{data.respondents.length - 5 > 1 ? 's' : ''}
+              </li>
             )}
-          </StatColumn>
-        </div>
+          </ul>
+          {pending > 0 && token ? (
+            <div className="mt-3 space-y-2 border-t border-dashed border-[var(--kkb-filet)] pt-3">
+              <p className="font-quicksand text-xs text-[var(--kkb-texte-2)]">
+                {pending} avis attendu{pending > 1 ? 's' : ''}. Un petit rappel ?
+              </p>
+              <ShareActions
+                getPayload={() => surveyLinkPayload(token)}
+                shareLabel="Relancer"
+                className="flex items-center gap-2"
+                buttonClassName="flex h-10 flex-1 items-center justify-center gap-1.5 rounded-full border-[1.5px] border-[var(--kkb-filet)] font-quicksand text-sm font-semibold text-[var(--kkb-foret)] transition-colors hover:border-[var(--kkb-foret-300)] disabled:opacity-60"
+              />
+            </div>
+          ) : (
+            <button
+              type="button" onClick={() => router.push('/circle')}
+              className="mt-3 flex h-10 items-center justify-center gap-1 font-quicksand text-sm font-bold text-[var(--kkb-foret)]"
+            >
+              Voir le cercle <ChevronRight className="h-4 w-4" />
+            </button>
+          )}
+        </section>
       </div>
 
-      {/* ── Filtres ─────────────────────────────────────────────────────── */}
-      <ResultsFilters
-        viewMode={viewMode} onViewModeChange={changeViewMode}
-        chips={chips} activeChip={activeChip} onChipChange={setActiveChip}
-        votedCount={votedCount} sort={sort} onSortChange={setSort}
-      />
-
-      {/* ── Mobile : détail groupé ──────────────────────────────────────── */}
-      <section className="lg:hidden space-y-5">
-        <div className="flex items-baseline justify-between gap-2 border-b border-[var(--kkb-border)] pb-2">
-          <h2 className="font-dosis font-bold text-lg text-[var(--kkb-text-primary)]">Détail des votes</h2>
-          <span className="text-xs font-quicksand text-[var(--kkb-text-tertiary)]">Semaine du {weekRange}</span>
+      {/* ── Repas par repas ─────────────────────────────────────────────── */}
+      <section className="space-y-4" aria-labelledby="detail-title">
+        <div className="flex items-baseline justify-between gap-3">
+          <h2 id="detail-title" className="text-h2 text-[var(--kkb-foret)]">Repas par repas</h2>
+          <p className="font-quicksand text-xs text-[var(--kkb-texte-2)]">{voted.length} repas notés sur {items.length}</p>
         </div>
-        {groups.map(g => {
-          const groupVoted = g.items.filter(i => totalReactions(countsOf(i)) > 0).length
-          return (
+
+        <ResultsFilters
+          viewMode={viewMode} onViewModeChange={changeViewMode}
+          chips={chips} activeChip={activeChip} onChipChange={setActiveChip}
+          sort={sort} onSortChange={setSort}
+        />
+
+        <div className="space-y-6">
+          {groups.map(g => (
             <div key={g.key} className="space-y-3">
-              <p className="flex items-baseline gap-2">
-                <span className="rounded-[var(--kkb-radius-sm)] bg-[var(--kkb-coral-light)] px-2.5 py-1 font-dosis font-bold text-base text-[var(--kkb-coral)]">{g.label}</span>
-                <span className="text-xs font-quicksand text-[var(--kkb-text-tertiary)]">{groupVoted} {groupVoted > 1 ? 'repas votés' : 'repas voté'}</span>
-              </p>
-              {g.items.map(item => (
-                <ResultCard key={item.id} item={item} dayLabel={dayLabelOf(item)} onEdit={() => editItem(item)} />
-              ))}
+              <h3 className="flex items-center gap-3 font-dosis text-base font-bold text-[var(--kkb-profond)]">
+                {g.label}
+                <span className="h-px flex-1 bg-[var(--kkb-filet)]" aria-hidden="true" />
+                <span className="font-quicksand text-xs font-semibold text-[var(--kkb-texte-2)]">{g.items.length} repas</span>
+              </h3>
+              <div className="grid gap-3 sm:grid-cols-2 lg:gap-4 2xl:grid-cols-3">
+                {g.items.map(item => (
+                  <ResultCard key={item.id} item={item} dayLabel={dayLabelOf(item)} onEdit={() => editItem(item)} />
+                ))}
+              </div>
             </div>
-          )
-        })}
-      </section>
-
-      {/* ── Desktop : grille 2 colonnes ─────────────────────────────────── */}
-      <section className="hidden lg:grid grid-cols-2 gap-5">
-        {desktopItems.map(item => (
-          <ResultCard key={item.id} item={item} dayLabel={dayLabelOf(item)} onEdit={() => editItem(item)} />
-        ))}
-      </section>
-
-      {/* ── Desktop : pied de page ──────────────────────────────────────── */}
-      <section className="hidden lg:flex items-center justify-between gap-6 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white p-6">
-        <div className="flex items-start gap-4">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[var(--kkb-radius-sm)] bg-[var(--kkb-success)] text-white">
-            <Sparkles className="h-5 w-5" />
-          </span>
-          <div className="space-y-1">
-            <h3 className="font-dosis font-bold text-lg text-[var(--kkb-text-primary)]">Charge mentale allégée</h3>
-            <p className="max-w-xl text-sm font-quicksand text-[var(--kkb-text-secondary)]">
-              Grâce à cette consultation, la question « Qu’est-ce qu’on mange ce soir ? » est réglée pour les 7 prochains jours.
-            </p>
-          </div>
-        </div>
-        <div className="flex shrink-0 gap-3 print:hidden">
-          <ShareActions
-            getPayload={() => ({ title: 'Résultats des votes — KeskonBouf', text: recapText })}
-            shareLabel="Partager le récap"
-            copyLabel="Copier le récap"
-            className="contents"
-            buttonClassName="flex items-center gap-2 rounded-[var(--kkb-radius-sm)] border border-[var(--kkb-border)] px-4 py-2.5 text-sm font-quicksand font-semibold text-[var(--kkb-text-secondary)] hover:border-[var(--kkb-coral)] hover:text-[var(--kkb-coral)] disabled:opacity-60"
-          />
-          <button
-            type="button" onClick={() => window.print()}
-            className="flex items-center gap-2 rounded-[var(--kkb-radius-sm)] border border-[var(--kkb-border)] px-4 py-2.5 text-sm font-quicksand font-semibold text-[var(--kkb-text-secondary)] hover:border-[var(--kkb-coral)] hover:text-[var(--kkb-coral)]"
-          >
-            <Printer className="h-4 w-4" /> Imprimer pour le frigo
-          </button>
+          ))}
         </div>
       </section>
     </div>
@@ -401,35 +400,37 @@ function VotesResultsContent() {
 
 // ─── Sous-composants ──────────────────────────────────────────────────────────
 
-function ParticipationBadge({ allVoted, respondents, members, long }: {
-  allVoted: boolean; respondents: number; members: number; long?: boolean
+function CardTitle({ id, icon, iconClass, children }: {
+  id: string; icon: React.ReactNode; iconClass: string; children: React.ReactNode
 }) {
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-[var(--kkb-radius-pill)] px-3 py-1 text-[13px] font-quicksand font-semibold ${
-      allVoted ? 'bg-[var(--kkb-success-light)] text-[var(--kkb-success)]' : 'bg-[var(--kkb-warning-light)] text-[var(--kkb-jaune-text)]'
-    }`}>
-      <CheckCircle2 className="h-4 w-4" />
-      {allVoted
-        ? (long ? `Participation complète : ${respondents}/${members} membres ont voté` : 'Toute la famille a participé !')
-        : `${respondents}/${members} membres ont voté`}
-    </span>
+    <h2 id={id} className="flex items-center gap-2.5 text-h3 text-[var(--kkb-profond)]">
+      <span className={`flex h-8 w-8 items-center justify-center rounded-full ${iconClass}`}>{icon}</span>
+      {children}
+    </h2>
   )
 }
 
-function StatColumn({ eyebrow, title, icon, children, footer }: {
-  eyebrow: string; title: string; icon: React.ReactNode; children: React.ReactNode; footer: React.ReactNode
-}) {
+// Visages de ceux qui ont répondu, puis une place en pointillé pour les avis attendus.
+function AvatarStack({ names, pending }: { names: string[]; pending: number }) {
+  const shown = names.slice(0, 4)
   return (
-    <div className="flex flex-col rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white p-5">
-      <div className="mb-4 flex items-start justify-between gap-2">
-        <div>
-          <p className="text-xs font-quicksand font-bold text-[var(--kkb-text-tertiary)]">{eyebrow}</p>
-          <p className="font-dosis font-bold text-xl text-[var(--kkb-text-primary)]">{title}</p>
-        </div>
-        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--kkb-coral-light)] text-[var(--kkb-coral)]">{icon}</span>
-      </div>
-      <div className="flex-1 space-y-2">{children}</div>
-      <div className="mt-4 flex items-center border-t border-[var(--kkb-border)] pt-3">{footer}</div>
+    <div className="flex -space-x-1.5" aria-hidden="true">
+      {shown.map((n, i) => (
+        <span key={`${n}-${i}`} className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--kkb-foret-100)] font-quicksand text-xs font-bold text-[var(--kkb-foret)] ring-2 ring-[var(--kkb-foret)]">
+          {n.trim().charAt(0).toUpperCase() || '?'}
+        </span>
+      ))}
+      {names.length > shown.length && (
+        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/15 font-quicksand text-[11px] font-bold text-[var(--kkb-creme)] ring-2 ring-[var(--kkb-foret)]">
+          +{names.length - shown.length}
+        </span>
+      )}
+      {pending > 0 && (
+        <span className="flex h-7 w-7 items-center justify-center rounded-full border-[1.5px] border-dashed border-[var(--kkb-foret-300)] bg-[var(--kkb-foret)] font-quicksand text-[11px] font-bold text-[var(--kkb-foret-100)]">
+          {pending}
+        </span>
+      )}
     </div>
   )
 }
