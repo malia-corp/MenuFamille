@@ -47,15 +47,12 @@ const MEAL_STRIP = [
   { icon: MEAL_ICON.diner, color: 'text-[var(--kkb-creme)]' },
 ]
 
-function MealStrip({ small = false }: { small?: boolean }) {
+function MealStrip() {
   return (
     <div className="flex gap-2" aria-hidden="true">
       {MEAL_STRIP.map(({ icon: Icon, color }, i) => (
-        <span
-          key={i}
-          className={`${small ? 'h-8 w-8' : 'h-10 w-10'} flex items-center justify-center rounded-full bg-white/10`}
-        >
-          <Icon className={`${small ? 'h-4 w-4' : 'h-5 w-5'} ${color}`} />
+        <span key={i} className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10">
+          <Icon className={`h-5 w-5 ${color}`} />
         </span>
       ))}
     </div>
@@ -117,11 +114,8 @@ function LoginShell({
       <div className="flex min-h-screen flex-col">
         {showMobileHero && (
           <header className="rounded-b-[var(--kkb-r-xl)] bg-[var(--kkb-foret)] px-5 pb-6 pt-[calc(env(safe-area-inset-top)+20px)] lg:hidden">
-            <div className="flex items-center justify-between gap-3">
-              <Logo variant="reversed" layout="horizontal" size={28} />
-              <MealStrip small />
-            </div>
-            <Signature className="mt-5 text-[24px] leading-[1.15]" />
+            <Logo variant="reversed" layout="horizontal" size={44} />
+            <Signature className="mt-4 text-[20px] leading-[1.2]" />
           </header>
         )}
         <main className="flex flex-1 justify-center px-5 py-6 lg:items-center lg:px-12 lg:py-8">
