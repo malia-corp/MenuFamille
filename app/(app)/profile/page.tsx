@@ -67,7 +67,7 @@ function SectionTitle({ icon: Icon, label, action }: { icon: LucideIcon; label: 
   return (
     <div className="flex items-center justify-between px-1">
       <p className="flex items-center gap-2 font-quicksand text-xs font-bold text-[var(--kkb-text-tertiary)]">
-        <Icon className="h-4 w-4 text-[var(--kkb-coral)]" /> {label}
+        <Icon className="h-4 w-4 text-[var(--kkb-foret)]" /> {label}
       </p>
       {action}
     </div>
@@ -79,8 +79,8 @@ const SETTING_ROW = 'flex min-h-[56px] w-full items-center gap-3 p-4 text-left t
 function SettingContent({ icon: Icon, label, sub, chevron = true }: { icon: LucideIcon; label: string; sub?: string; chevron?: boolean }) {
   return (
     <span className="flex w-full items-center gap-3">
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--kkb-coral-light)]">
-        <Icon className="h-4 w-4 text-[var(--kkb-coral)]" />
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--kkb-creme)]">
+        <Icon className="h-4 w-4 text-[var(--kkb-foret)]" />
       </span>
       <span className="min-w-0 flex-1">
         <span className="block font-quicksand text-[15px] font-semibold text-[var(--kkb-text-primary)]">{label}</span>
@@ -97,7 +97,7 @@ function Stat({ icon: Icon, value, label, tone }: { icon: LucideIcon; value: str
       <span className="mb-1.5 flex h-9 w-9 items-center justify-center rounded-full" style={{ backgroundColor: `color-mix(in srgb, ${tone} 14%, white)` }}>
         <Icon className="h-4 w-4" style={{ color: tone }} />
       </span>
-      <p className="font-dosis text-2xl font-extrabold text-[var(--kkb-coral)]">{value}</p>
+      <p className="font-dosis text-2xl font-extrabold tabular-nums text-[var(--kkb-foret)]">{value}</p>
       <p className="font-quicksand text-xs font-bold leading-tight text-[var(--kkb-text-tertiary)]">{label}</p>
     </div>
   )
@@ -254,7 +254,7 @@ export default function ProfilePage() {
           icon={Users}
           label={`Cercle familial${members.length ? ` (${members.length})` : ''}`}
           action={
-            <Link href="/circle" className="flex items-center gap-0.5 font-quicksand text-xs font-bold text-[var(--kkb-coral)]">
+            <Link href="/circle" className="-my-2 flex h-10 items-center gap-0.5 font-quicksand text-sm font-bold text-[var(--kkb-foret)]">
               Gérer <ChevronRight className="h-3.5 w-3.5" />
             </Link>
           }
@@ -265,7 +265,7 @@ export default function ProfilePage() {
               {members.slice(0, MEMBERS_SHOWN).map((m, i) => {
                 const name = m.users!.display_name || m.users!.email
                 return (
-                  <div key={m.id} className="flex min-w-0 items-center gap-2.5 rounded-[var(--kkb-radius-sm)] bg-[color-mix(in_srgb,var(--kkb-coral-light)_60%,transparent)] p-2.5">
+                  <div key={m.id} className="flex min-w-0 items-center gap-2.5 rounded-[var(--kkb-radius-sm)] bg-[var(--kkb-creme)] p-2.5">
                     <span
                       className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-dosis text-sm font-bold text-white"
                       style={{ backgroundColor: AVATAR_COLORS[i % AVATAR_COLORS.length] }}
@@ -288,9 +288,9 @@ export default function ProfilePage() {
           )}
           <Link
             href="/circle"
-            className="flex items-center justify-center gap-2 rounded-[var(--kkb-radius-sm)] border border-[var(--kkb-border)] bg-white py-3 font-quicksand text-sm font-semibold text-[var(--kkb-coral)] transition-colors hover:bg-[var(--kkb-coral-light)]"
+            className="flex h-12 items-center justify-center gap-2 rounded-full bg-[var(--kkb-orange-50)] font-quicksand text-[15px] font-bold text-[var(--kkb-orange-700)] transition-colors active:scale-[0.98]"
           >
-            <UserPlus className="h-4 w-4" /> Inviter un membre ou un invité du week-end
+            <UserPlus className="h-4 w-4" /> Inviter à ma table
           </Link>
         </div>
       </section>
@@ -301,7 +301,7 @@ export default function ProfilePage() {
           icon={UtensilsCrossed}
           label="Préférences & allergies"
           action={
-            <button type="button" onClick={() => setPrefsOpen(true)} className="flex items-center gap-1 font-quicksand text-xs font-bold text-[var(--kkb-coral)]">
+            <button type="button" onClick={() => setPrefsOpen(true)} className="-my-2 flex h-10 items-center gap-1 font-quicksand text-sm font-bold text-[var(--kkb-foret)]">
               Ajuster <SlidersHorizontal className="h-3.5 w-3.5" />
             </button>
           }

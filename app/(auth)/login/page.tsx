@@ -175,13 +175,13 @@ export default function LoginPage() {
 
         {/* Illustration */}
         <div className="flex justify-center py-2">
-          <div className="h-[120px] w-[120px] rounded-full bg-[var(--kkb-coral-light)] flex items-center justify-center">
-            <MailCheck className="h-12 w-12 text-[var(--kkb-coral)]" />
+          <div className="h-[120px] w-[120px] rounded-full bg-[var(--kkb-sauge-50)] flex items-center justify-center">
+            <MailCheck className="h-12 w-12 text-[var(--kkb-foret)]" />
           </div>
         </div>
 
         <div className="text-center space-y-1.5">
-          <h1 className="text-h1 text-[var(--kkb-coral)] flex items-center justify-center gap-2">Vérifiez votre boîte mail <Sparkles className="h-6 w-6" /></h1>
+          <h1 className="text-h1 text-[var(--kkb-foret)] flex items-center justify-center gap-2">Vérifie ta boîte mail <Sparkles className="h-6 w-6 text-[var(--kkb-jaune)]" /></h1>
           <p className="text-kkb-body text-[var(--kkb-text-secondary)]">
             Nous venons de glisser un code à 6 chiffres dans la boîte de
           </p>
@@ -238,7 +238,7 @@ export default function LoginPage() {
             <div className="flex items-start gap-2 bg-[var(--kkb-warning-light)] rounded-[var(--kkb-radius-sm)] p-3">
               <Lightbulb className="h-4 w-4 text-[var(--kkb-warning)] shrink-0 mt-0.5" />
               <p className="text-xs font-quicksand text-[var(--kkb-text-secondary)]">
-                Pensez à regarder dans vos courriers indésirables ou dans l&apos;onglet « Promotions » si la
+                Pense à regarder dans tes courriers indésirables ou dans l’onglet « Promotions » si la
                 tambouille tarde à arriver.
               </p>
             </div>
@@ -262,7 +262,7 @@ export default function LoginPage() {
                   </span>
                 </span>
               ) : (
-                <button type="button" onClick={handleResend} className="text-[var(--kkb-coral)] underline hover:no-underline">
+                <button type="button" onClick={handleResend} className="text-[var(--kkb-foret)] font-bold underline hover:no-underline">
                   Renvoyer le code
                 </button>
               )}
@@ -270,10 +270,10 @@ export default function LoginPage() {
           </form>
         ) : (
           <div className="space-y-4 py-2">
-            <div className="bg-[var(--kkb-coral-light)] rounded-[var(--kkb-radius-sm)] p-4 space-y-2 text-center">
-              <ExternalLink className="h-6 w-6 text-[var(--kkb-coral)] mx-auto" />
+            <div className="bg-white rounded-[var(--kkb-r-lg)] p-4 space-y-2 text-center">
+              <ExternalLink className="h-6 w-6 text-[var(--kkb-foret)] mx-auto" />
               <p className="text-sm text-[var(--kkb-text-secondary)] font-quicksand">
-                Cliquez sur le lien dans votre email pour vous connecter automatiquement.
+                Clique sur le lien reçu par courriel pour te connecter.
               </p>
               <p className="text-xs text-[var(--kkb-text-tertiary)] font-quicksand">Le lien est valable 60 minutes.</p>
             </div>
@@ -282,7 +282,7 @@ export default function LoginPage() {
               {countdown > 0 ? (
                 <span>Renvoyer dans {countdown}s</span>
               ) : (
-                <button type="button" onClick={handleResend} className="text-[var(--kkb-coral)] underline hover:no-underline">
+                <button type="button" onClick={handleResend} className="text-[var(--kkb-foret)] font-bold underline hover:no-underline">
                   Renvoyer l&apos;email
                 </button>
               )}
@@ -302,7 +302,7 @@ export default function LoginPage() {
           </p>
           <p className="text-[13px] text-[var(--kkb-text-secondary)] font-quicksand">
             Besoin d&apos;aide ?{' '}
-            <button type="button" onClick={() => setStubToast(true)} className="text-[var(--kkb-coral)] underline">
+            <button type="button" onClick={() => setStubToast(true)} className="text-[var(--kkb-foret)] underline">
               Contacter le support familial
             </button>
           </p>
@@ -321,8 +321,8 @@ export default function LoginPage() {
 
       {/* Textes */}
       <div className="text-center space-y-1">
-        <h1 className="text-h1 text-[var(--kkb-text-primary)]">Bienvenue dans la famille !</h1>
-        <p className="text-kkb-body text-[var(--kkb-text-secondary)]">Planifiez vos repas ensemble.</p>
+        <h1 className="text-h1 text-[var(--kkb-foret)]">Bienvenue à table&nbsp;!</h1>
+        <p className="text-[15px] font-quicksand text-[var(--kkb-texte-2)]">Planifie les repas, décidez ensemble.</p>
       </div>
 
       {/* Formulaire email */}
@@ -341,7 +341,7 @@ export default function LoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               required
               disabled={state === 'sending'}
-              className="w-full pl-11 pr-4 py-3.5 rounded-[var(--kkb-radius-sm)] border-[1.5px] border-[var(--kkb-border)] bg-white text-[var(--kkb-text-primary)] font-quicksand text-sm outline-none focus:border-[var(--kkb-coral)] disabled:opacity-50"
+              className="w-full h-12 pl-11 pr-4 rounded-full bg-white text-[var(--kkb-profond)] font-quicksand text-[15px] outline-none ring-[var(--kkb-foret-300)] focus:ring-2 disabled:opacity-50"
             />
           </div>
         </div>
@@ -362,7 +362,7 @@ export default function LoginPage() {
       <div className="flex items-center gap-3">
         <div className="flex-1 h-px bg-[var(--kkb-border)]" />
         <span className="text-xs font-quicksand font-semibold text-[var(--kkb-text-tertiary)]">
-          Ou connectez-vous avec
+          Ou continue avec
         </span>
         <div className="flex-1 h-px bg-[var(--kkb-border)]" />
       </div>
@@ -394,16 +394,16 @@ export default function LoginPage() {
 
       {/* Légal */}
       <p className="text-center text-[11px] text-[var(--kkb-text-tertiary)] font-quicksand leading-relaxed">
-        En continuant, vous acceptez nos{' '}
-        <span className="underline text-[var(--kkb-coral)]">Conditions d&apos;utilisation</span>, notre{' '}
-        <span className="underline text-[var(--kkb-coral)]">Politique de confidentialité</span> et nos{' '}
-        <span className="underline text-[var(--kkb-coral)]">Mentions légales</span>.
+        En continuant, tu acceptes nos{' '}
+        <span className="underline text-[var(--kkb-foret)]">Conditions d’utilisation</span>, notre{' '}
+        <span className="underline text-[var(--kkb-foret)]">Politique de confidentialité</span> et nos{' '}
+        <span className="underline text-[var(--kkb-foret)]">Mentions légales</span>.
       </p>
 
       {/* Pied */}
       <p className="text-center text-sm text-[var(--kkb-text-secondary)] font-quicksand">
         Nouveau ici ?{' '}
-        <span className="font-bold underline text-[var(--kkb-coral)]">Créer un compte</span>
+        <span className="font-bold underline text-[var(--kkb-foret)]">Créer un compte</span>
       </p>
     </div>
   )
