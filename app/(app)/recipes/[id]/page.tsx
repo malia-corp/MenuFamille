@@ -374,7 +374,7 @@ function RecipeDetail() {
             { icon: Clock, label: 'Temps total', value: formatDuration(totalTime) ?? '—' },
             { icon: Smile, label: 'Difficulté',  value: recipe.difficulty ? DIFFICULTY_LONG[recipe.difficulty] : '—' },
           ].map(m => (
-            <div key={m.label} className="flex items-center gap-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white p-4">
+            <div key={m.label} className="flex items-center gap-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white p-4">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--kkb-coral-light)] text-[var(--kkb-coral)]"><m.icon className="h-5 w-5" /></span>
               <div className="min-w-0">
                 <p className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--kkb-text-tertiary)]">{m.label}</p>
@@ -392,7 +392,7 @@ function RecipeDetail() {
             </div>
             {tipCard}
             {suggestions.length > 0 && (
-              <section className="space-y-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white p-5">
+              <section className="space-y-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white p-5">
                 <h2 className="font-dosis font-bold text-lg text-[var(--kkb-text-primary)]">Accompagnements &amp; Boissons suggérés</h2>
                 <ul className="space-y-2">
                   {suggestions.map(s => {
@@ -417,7 +417,7 @@ function RecipeDetail() {
 
           <div className="space-y-5">
             {recipe.recipe_ingredients.length > 0 && (
-              <section className="space-y-4 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white p-5">
+              <section className="space-y-4 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white p-5">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--kkb-text-tertiary)]">Du marché à la table</p>
@@ -452,7 +452,7 @@ function RecipeDetail() {
             )}
 
             {recipe.recipe_steps.length > 0 && (
-              <section className="space-y-4 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white p-5">
+              <section className="space-y-4 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white p-5">
                 <div className="flex items-end justify-between gap-3">
                   <div>
                     <p className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--kkb-text-tertiary)]">Méthode de préparation</p>

@@ -454,7 +454,7 @@ export default function CirclePage() {
       <button
         type="button"
         onClick={() => router.push('/circle/create')}
-        className="flex w-full items-center justify-center gap-2 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white py-3 font-quicksand text-sm font-semibold text-[var(--kkb-text-secondary)] transition-colors hover:bg-[var(--kkb-coral-light)]"
+        className="flex w-full items-center justify-center gap-2 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white py-3 font-quicksand text-sm font-semibold text-[var(--kkb-text-secondary)] transition-colors hover:bg-[var(--kkb-coral-light)]"
       >
         <Plus className="h-4 w-4" />
         Créer ou rejoindre un autre cercle
@@ -505,14 +505,14 @@ export default function CirclePage() {
   if (!circle.my_is_active) {
     return (
       <div className="mx-auto max-w-lg space-y-5 px-4 pb-8 pt-4 lg:pt-8">
-        <section className="space-y-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white p-4">
+        <section className="space-y-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white p-4">
           <CircleSwitcher {...switcherProps}>
             <span className="block truncate font-dosis text-lg font-bold text-[var(--kkb-text-primary)]">{circle.name}</span>
             <span className="block font-quicksand text-xs text-[var(--kkb-text-tertiary)]">{circles.length > 1 ? `${circles.length} cercles` : 'Mon cercle'}</span>
           </CircleSwitcher>
           {statusRow}
         </section>
-        <section className="rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white">
+        <section className="rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white">
           <EmptyState
             icon={Lock}
             title="Ton accès à ce cercle est désactivé"
@@ -523,7 +523,7 @@ export default function CirclePage() {
           />
         </section>
         {me && (
-          <section className="space-y-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white p-4">
+          <section className="space-y-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white p-4">
             <p className="font-dosis text-base font-bold text-[var(--kkb-text-primary)]">Mon assiette personnalisée</p>
             {prefChips(me, 'md')}
           </section>
@@ -541,7 +541,7 @@ export default function CirclePage() {
       {/* ─── Mobile ─────────────────────────────────────────────────────── */}
       <div className="mx-auto max-w-lg space-y-5 px-4 pb-6 pt-4 lg:hidden print:hidden">
         {/* Statut du cercle */}
-        <section className="space-y-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white p-4">
+        <section className="space-y-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white p-4">
           <CircleSwitcher {...switcherProps}>
             <span className="flex items-center gap-3">
               <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--kkb-coral-light)]">
@@ -567,7 +567,7 @@ export default function CirclePage() {
         </section>
 
         {/* Code d'invitation */}
-        <section className="space-y-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white p-4">
+        <section className="space-y-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white p-4">
           <p className="flex items-center gap-1.5 font-quicksand text-[10px] font-bold uppercase tracking-wider text-[var(--kkb-text-tertiary)]">
             <KeyRound className="h-3.5 w-3.5 text-[var(--kkb-coral)]" /> Code d&apos;invitation au cercle
           </p>
@@ -611,7 +611,7 @@ export default function CirclePage() {
               const u = m.users!
               const isCurrentUser = u.id === currentUserId
               return (
-                <div key={m.id} className="space-y-2.5 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white p-3">
+                <div key={m.id} className="space-y-2.5 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white p-3">
                   <div className="flex items-center gap-3">
                     {avatar(m, index, 40)}
                     <div className="min-w-0 flex-1">
@@ -638,7 +638,7 @@ export default function CirclePage() {
 
         {/* Moments de repas (lecture) */}
         {mealConfigs.length > 0 && (
-          <section className="space-y-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white p-4">
+          <section className="space-y-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white p-4">
             <div className="flex items-center justify-between">
               <p className="flex items-center gap-2 font-quicksand text-[13px] font-bold text-[var(--kkb-text-primary)]">
                 <Clock className="h-4 w-4 text-[var(--kkb-teal)]" />
@@ -673,7 +673,7 @@ export default function CirclePage() {
 
         {/* Mon assiette personnalisée */}
         {me && (
-          <section className="space-y-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white p-4">
+          <section className="space-y-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white p-4">
             <div className="flex items-center justify-between">
               <p className="font-dosis text-base font-bold text-[var(--kkb-text-primary)]">Mon assiette personnalisée</p>
               <button
@@ -697,7 +697,7 @@ export default function CirclePage() {
             { icon: ThumbsUp, value: stats?.meals_rated_month, label: 'Repas notés ce mois' },
             { icon: Heart,    value: stats?.favorites_count,   label: 'Plats favoris' },
           ].map(({ icon: Icon, value, label }) => (
-            <div key={label} className="rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white p-4">
+            <div key={label} className="rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white p-4">
               <Icon className="h-5 w-5 text-[var(--kkb-coral)]" />
               <p className="mt-2 font-dosis text-2xl font-bold text-[var(--kkb-text-primary)]">{value ?? '–'}</p>
               <p className="font-quicksand text-xs text-[var(--kkb-text-tertiary)]">{label}</p>
@@ -718,7 +718,7 @@ export default function CirclePage() {
             Réunissez votre tablée pour voter les repas de la semaine et partager les préférences de chacun.
           </p>
           </div>
-          <div className="w-72 shrink-0 space-y-2 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white p-3">
+          <div className="w-72 shrink-0 space-y-2 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white p-3">
             <CircleSwitcher {...switcherProps}>
               <span className="block truncate font-dosis text-base font-bold text-[var(--kkb-text-primary)]">{circle.name}</span>
               <span className="block font-quicksand text-xs text-[var(--kkb-text-tertiary)]">
@@ -748,7 +748,7 @@ export default function CirclePage() {
               />
             </section>
 
-            <section className="space-y-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white p-5 text-center print:border-0">
+            <section className="space-y-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white p-5 text-center print:border-0">
               <div className="flex items-center justify-between print:justify-center">
                 <p className="flex items-center gap-1.5 font-quicksand text-sm font-bold text-[var(--kkb-text-primary)]">
                   <QrCode className="h-4 w-4 text-[var(--kkb-teal)]" /> Scan direct à table
@@ -780,7 +780,7 @@ export default function CirclePage() {
 
             {aloneState}
 
-            <div className="overflow-hidden rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white">
+            <div className="overflow-hidden rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white">
               {members.map((m, index) => {
                 const u = m.users!
                 const isCurrentUser = u.id === currentUserId

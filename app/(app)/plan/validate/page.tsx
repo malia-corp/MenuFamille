@@ -165,7 +165,7 @@ function MealAccordionSection({ config, plan, open, onToggle }: {
   const totalCount = config.mode === 'template' ? 1 : 7
 
   return (
-    <div className="mx-4 bg-white border border-[var(--kkb-border)] rounded-[var(--kkb-radius-card)] overflow-hidden">
+    <div className="mx-4 bg-white border border-[var(--kkb-lin)] rounded-[var(--kkb-radius-card)] overflow-hidden">
       <button
         type="button"
         onClick={onToggle}
@@ -631,7 +631,7 @@ function ValidateInner() {
         </div>
 
         {/* Bannière */}
-        <div className="bg-white border border-[var(--kkb-border)] rounded-[var(--kkb-radius-card)] px-6 py-5 flex items-center gap-4">
+        <div className="bg-white border border-[var(--kkb-lin)] rounded-[var(--kkb-radius-card)] px-6 py-5 flex items-center gap-4">
           <div className="h-12 w-12 rounded-full bg-[var(--kkb-coral-light)] flex items-center justify-center shrink-0">
             <CheckCircle2 className="h-6 w-6 text-[var(--kkb-coral)]" />
           </div>

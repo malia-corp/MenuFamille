@@ -29,7 +29,7 @@ export function EmptyState({ icon = Inbox, title, message, action, children }: {
 }) {
   return (
     <div className="mx-auto max-w-md px-4 py-8">
-      <div className="rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white">
+      <div className="rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white">
         <BaseEmptyState
           icon={icon}
           title={title}

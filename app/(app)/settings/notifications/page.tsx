@@ -210,7 +210,7 @@ export default function NotificationsPage() {
             const pref = prefs[cfg.meal_type]
             if (!pref) return null
             return (
-              <div key={cfg.meal_type} className="rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white p-4">
+              <div key={cfg.meal_type} className="rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white p-4">
                 <div className="flex items-center justify-between gap-3">
                   <span className="flex items-center gap-2.5">
                     <MealTypeIcon type={cfg.meal_type} className="h-5 w-5 text-[var(--kkb-coral)]" />
@@ -268,7 +268,7 @@ export default function NotificationsPage() {
         {/* Feedback post-repas */}
         <section className="space-y-2">
           <p className={SECTION_LABEL}>Feedback post-repas</p>
-          <div className="divide-y divide-[var(--kkb-border-light)] rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white">
+          <div className="divide-y divide-[var(--kkb-border-light)] rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white">
             <p className="px-4 pb-1 pt-4 font-quicksand text-sm font-bold text-[var(--kkb-text-primary)]">Demande d&apos;avis après le repas</p>
             {configs.map(cfg => {
               const pref = prefs[cfg.meal_type]

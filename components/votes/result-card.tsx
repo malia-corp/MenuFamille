@@ -31,7 +31,7 @@ export function ResultCard({ item, dayLabel, onEdit, myReaction }: ResultCardPro
   const color    = MEAL_COLOR[item.meal_type]
 
   return (
-    <article className="bg-white border border-[var(--kkb-border)] rounded-[var(--kkb-radius-card)] p-4 flex flex-col gap-3 h-full">
+    <article className="bg-white border border-[var(--kkb-lin)] rounded-[var(--kkb-radius-card)] p-4 flex flex-col gap-3 h-full">
       {/* En-tête : type (+ jour sur desktop), adhésion (desktop), édition */}
       <div className="flex items-center gap-2">
         <span

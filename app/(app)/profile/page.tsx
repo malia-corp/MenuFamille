@@ -241,7 +241,7 @@ export default function ProfilePage() {
       {/* Mon impact */}
       <section className="space-y-2">
         <SectionTitle icon={Trophy} label="Mon impact & victoires" />
-        <div className="grid grid-cols-3 gap-2 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white p-4">
+        <div className="grid grid-cols-3 gap-2 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white p-4">
           <Stat icon={BookOpen}      value={stats ? String(stats.recipes_shared) : '–'} label="Recettes partagées" tone="var(--kkb-coral)" />
           <Stat icon={CalendarCheck} value={stats ? String(stats.meals_planned) : '–'}  label="Repas planifiés"   tone="var(--kkb-warning)" />
           <Stat icon={Smile}         value={stats?.approval_pct != null ? `${stats.approval_pct}%` : '–'} label="Approbation tablée" tone="var(--kkb-success)" />
@@ -259,7 +259,7 @@ export default function ProfilePage() {
             </Link>
           }
         />
-        <div className="space-y-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white p-3">
+        <div className="space-y-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white p-3">
           {members.length > 0 && (
             <div className="grid grid-cols-2 gap-2">
               {members.slice(0, MEMBERS_SHOWN).map((m, i) => {
@@ -306,7 +306,7 @@ export default function ProfilePage() {
             </button>
           }
         />
-        <div className="space-y-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white p-4">
+        <div className="space-y-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white p-4">
           {dietaryPrefs.length === 0 && cuisines.length === 0 ? (
             <p className="font-quicksand text-sm italic text-[var(--kkb-text-tertiary)]">Aucune préférence renseignée</p>
           ) : (
@@ -336,7 +336,7 @@ export default function ProfilePage() {
       {/* Paramètres de l'application */}
       <section className="space-y-2">
         <SectionTitle icon={Settings} label="Paramètres de l'application" />
-        <div className="divide-y-[0.5px] divide-[var(--kkb-border)] overflow-hidden rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white">
+        <div className="divide-y-[0.5px] divide-[var(--kkb-border)] overflow-hidden rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white">
           <Link href="/settings/notifications" className={SETTING_ROW}>
             <SettingContent icon={Bell} label="Notifications push" sub="Rappels de repas et avis après le repas" />
           </Link>

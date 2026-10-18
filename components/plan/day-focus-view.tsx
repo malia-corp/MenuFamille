@@ -47,7 +47,7 @@ export function DayFocusView({
         {cards}
       </div>
 
-      <div className="bg-white border border-[var(--kkb-border)] rounded-[var(--kkb-radius-card)] p-4 space-y-4 sticky top-28">
+      <div className="bg-white border border-[var(--kkb-lin)] rounded-[var(--kkb-radius-card)] p-4 space-y-4 sticky top-28">
         <div className="space-y-1.5">
           <p className="text-[10px] font-quicksand font-bold uppercase tracking-wide text-[var(--kkb-text-tertiary)]">
             Progression semaine

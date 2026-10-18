@@ -947,7 +947,7 @@ function PlanPageContent() {
                       />
                     </div>
                     {editTarget && (
-                      <div className="w-[380px] shrink-0 bg-white border border-[var(--kkb-border)] rounded-[var(--kkb-radius-card)] max-h-[calc(100vh-200px)] sticky top-28">
+                      <div className="w-[380px] shrink-0 bg-white border border-[var(--kkb-lin)] rounded-[var(--kkb-radius-card)] max-h-[calc(100vh-200px)] sticky top-28">
                         {renderPickerPanel()}
                       </div>
                     )}

@@ -401,7 +401,7 @@ export function SurveyPageClient({ token }: { token: string }) {
           {/* Hero — carte unique ; le panneau identité rejoint le texte de bienvenue
               en ligne à partir de xl: (comme la maquette desktop), plutôt qu'une
               colonne latérale fixe sur toute la hauteur de la page. */}
-          <section className="bg-white rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] p-6 lg:p-8 xl:p-10 mb-6">
+          <section className="bg-white rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] p-6 lg:p-8 xl:p-10 mb-6">
             <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-6 xl:gap-10">
               <div className="space-y-2 xl:max-w-2xl">
                 <span className="inline-block text-[11px] font-quicksand font-bold uppercase tracking-wide px-2.5 py-1 rounded-full bg-[var(--kkb-teal-light)] text-[var(--kkb-teal)]">

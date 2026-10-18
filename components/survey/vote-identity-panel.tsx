@@ -22,7 +22,7 @@ export function VoteIdentityPanel({
   const percent = totalCount > 0 ? Math.round((ratedCount / totalCount) * 100) : 0
 
   return (
-    <div className="bg-white border border-[var(--kkb-border)] rounded-[var(--kkb-radius-card)] p-4 space-y-3">
+    <div className="bg-white border border-[var(--kkb-lin)] rounded-[var(--kkb-radius-card)] p-4 space-y-3">
       <div className="flex items-center justify-between">
         <p className="text-[11px] font-quicksand font-bold uppercase tracking-wide text-[var(--kkb-text-tertiary)]">
           Identité de vote

@@ -120,7 +120,7 @@ export function RecipeCard({ recipe, variant, onOpen, onPlan, onToggleFavorite }
 
   if (variant === 'list') {
     return (
-      <div onClick={onOpen} className="flex cursor-pointer gap-4 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white p-3 transition-shadow hover:shadow-md">
+      <div onClick={onOpen} className="flex cursor-pointer gap-4 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white p-3 transition-shadow hover:shadow-md">
         <div className="relative shrink-0">
           <RecipeVisual recipe={recipe} className="h-[96px] w-[128px] rounded-[var(--kkb-radius-sm)]" />
           <FoyerFavorites count={recipe.foyer_favorites} />
@@ -141,7 +141,7 @@ export function RecipeCard({ recipe, variant, onOpen, onPlan, onToggleFavorite }
   }
 
   return (
-    <div onClick={onOpen} className="flex cursor-pointer flex-col overflow-hidden rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white transition-shadow hover:shadow-md">
+    <div onClick={onOpen} className="flex cursor-pointer flex-col overflow-hidden rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white transition-shadow hover:shadow-md">
       <div className="relative">
         <RecipeVisual recipe={recipe} className="h-[180px] w-full" />
         {recipe.categories && (

@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { ArrowRight, BarChart3, Check, CheckCircle, ChefHat, Clock, Hand, Lock, UtensilsCrossed, Users, Vote } from 'lucide-react'
+import { ArrowRight, BarChart3, Check, CheckCircle, ChefHat, Clock, Lock, UtensilsCrossed, Users, Vote } from 'lucide-react'
 import { EmptyState } from '@/components/ui/empty-state'
 import { SkeletonCard } from '@/components/ui/skeleton-card'
 import { MealTypeIcon } from '@/components/ui/meal-type-icon'
@@ -80,6 +80,13 @@ export function MemberHome({ firstName }: { firstName: string }) {
   const [vote,     setVote]     = useState<VoteStatus | null>(null)
   const [recent,   setRecent]   = useState<MyFeedback[]>([])
   const [loading,  setLoading]  = useState(true)
+  const weekRef = useRef<HTMLDivElement>(null)
+
+  // La semaine défile jusqu'au jour courant : les jours passés restent à gauche.
+  useEffect(() => {
+    const el = weekRef.current?.querySelector<HTMLElement>('[data-today]')
+    if (el && weekRef.current) weekRef.current.scrollLeft = el.offsetLeft - 16
+  }, [loading])
 
   useEffect(() => {
     let cancelled = false
@@ -116,13 +123,14 @@ export function MemberHome({ firstName }: { firstName: string }) {
   const todayIdx = DAY_OPTIONS.findIndex(d => d.val === today)
 
   const greeting = (
-    <section className="space-y-1 pt-2">
-      <h1 className="flex items-center gap-2 font-dosis text-2xl font-bold text-[var(--kkb-text-primary)]">
-        Bonjour{firstName ? ` ${firstName}` : ''} <Hand className="h-6 w-6 text-[var(--kkb-coral)]" />
-      </h1>
-      <p className="flex items-center gap-1.5 font-quicksand text-sm text-[var(--kkb-text-secondary)]">
-        <Users className="h-4 w-4 text-[var(--kkb-teal)]" />
-        {data?.circle_name ?? 'Ma famille'}{plan ? ` · Semaine du ${formatWeekRange(plan.week_start)}` : ''}
+    <section className="pt-3">
+      <p className="font-quicksand text-[15px] font-medium text-[var(--kkb-texte-2)]">
+        Bonjour{firstName ? `, ${firstName}` : ''}
+      </p>
+      <h1 className="mt-0.5 text-h1 text-[var(--kkb-foret)]">On mange quoi<br />aujourd’hui&nbsp;?</h1>
+      <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 font-quicksand text-xs font-semibold text-[var(--kkb-foret)]">
+        <Users className="h-3.5 w-3.5" />
+        {data?.circle_name ?? 'Ma table'}{plan ? ` · semaine du ${formatWeekRange(plan.week_start)}` : ''}
       </p>
     </section>
   )
@@ -130,9 +138,9 @@ export function MemberHome({ firstName }: { firstName: string }) {
   // Accès désactivé : plus de menu ni de vote, l'historique reste.
   if (data?.role === 'membre' && !data.is_active) {
     return (
-      <div className="mx-auto max-w-lg space-y-5 px-4 pb-32 lg:max-w-3xl lg:py-8">
+      <div className="mx-auto max-w-sm space-y-6 px-4 pb-8 lg:max-w-3xl lg:py-8">
         {greeting}
-        <div className="rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white">
+        <div className="rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white">
           <EmptyState
             icon={Lock}
             title="Ton accès au cercle est désactivé"
@@ -163,38 +171,35 @@ export function MemberHome({ firstName }: { firstName: string }) {
     vote.has_voted ? (
       <Link
         href="/votes/results/member"
-        className="flex items-center gap-3 rounded-[var(--kkb-radius-card)] border border-[color-mix(in_srgb,var(--kkb-teal)_30%,transparent)] bg-[var(--kkb-teal-light)] p-4"
+        className="flex items-center gap-3 rounded-[var(--kkb-r-xl)] bg-[var(--kkb-sauge-50)] p-4 active:scale-[0.99] transition-transform"
       >
-        <CheckCircle className="h-6 w-6 shrink-0 text-[var(--kkb-teal)]" />
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-[var(--kkb-foret)]">
+          <CheckCircle className="h-5 w-5" />
+        </span>
         <span className="min-w-0 flex-1">
-          <span className="block font-dosis text-base font-bold text-[var(--kkb-text-primary)]">Merci, ton avis est transmis !</span>
-          <span className="block font-quicksand text-xs text-[var(--kkb-text-secondary)]">
-            {vote.total_respondents}/{Math.max(vote.member_count, 1)} membres ont voté · découvre l&apos;harmonie de la famille
+          <span className="block font-dosis text-base font-bold text-[var(--kkb-profond)]">Merci, ton avis est transmis</span>
+          <span className="block font-quicksand text-sm text-[var(--kkb-texte-2)]">
+            <span className="tabular-nums">{vote.total_respondents}/{Math.max(vote.member_count, 1)}</span> ont voté · voir l’avis de la table
           </span>
         </span>
-        <BarChart3 className="h-5 w-5 shrink-0 text-[var(--kkb-teal)]" />
+        <BarChart3 className="h-5 w-5 shrink-0 text-[var(--kkb-foret)]" />
       </Link>
     ) : (
-      <section className="space-y-3 rounded-[var(--kkb-radius-card)] bg-[var(--kkb-coral)] p-4 text-white shadow-[var(--kkb-shadow-fab)]">
-        <div className="flex items-start gap-3">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/20">
-            <Vote className="h-5 w-5" />
-          </span>
-          <div>
-            <p className="font-dosis text-lg font-bold leading-tight">{planner} attend ton avis sur le menu !</p>
-            <p className="font-quicksand text-sm text-white/85">
-              {items.length} repas à valider ensemble pour préparer les courses du marché.
-            </p>
-          </div>
+      <section className="space-y-4 rounded-[var(--kkb-r-xl)] bg-[var(--kkb-orange)] p-5 text-white">
+        <div>
+          <p className="font-dosis text-[20px] font-extrabold leading-6">{planner} attend ton avis</p>
+          <p className="mt-1 font-quicksand text-sm text-white/90">
+            {items.length} repas à décider ensemble cette semaine.
+          </p>
         </div>
-        <div className="space-y-1.5 rounded-[var(--kkb-radius-sm)] bg-white/15 p-3">
+        <div className="space-y-1.5">
           <div className="flex items-center justify-between font-quicksand text-xs font-bold">
-            <span>Participation du foyer</span>
-            <span>{vote.total_respondents} / {Math.max(vote.member_count, 1)} ont voté</span>
+            <span>Participation de la table</span>
+            <span className="tabular-nums">{vote.total_respondents}/{Math.max(vote.member_count, 1)}</span>
           </div>
           <div className="h-2 overflow-hidden rounded-full bg-white/25">
             <div
-              className="h-full rounded-full bg-white"
+              className="h-full rounded-full bg-[var(--kkb-creme)]"
               style={{ width: `${Math.min(100, Math.round((vote.total_respondents / Math.max(vote.member_count, 1)) * 100))}%` }}
             />
           </div>
@@ -202,16 +207,16 @@ export function MemberHome({ firstName }: { firstName: string }) {
         <div className="flex items-center justify-between gap-3">
           <div className="flex -space-x-2">
             {vote.voter_names.slice(0, 4).map(n => (
-              <span key={n} className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-[var(--kkb-coral)] bg-white font-dosis text-xs font-bold text-[var(--kkb-coral)]">
+              <span key={n} className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-[var(--kkb-orange)] bg-[var(--kkb-creme)] font-dosis text-xs font-bold text-[var(--kkb-orange-700)]">
                 {n.charAt(0).toUpperCase()}
               </span>
             ))}
           </div>
           <Link
             href={`/s/${plan.share_token}`}
-            className="inline-flex items-center gap-1.5 rounded-[var(--kkb-radius-pill)] bg-white px-4 py-2.5 font-quicksand text-sm font-bold text-[var(--kkb-coral)]"
+            className="inline-flex h-12 items-center gap-1.5 rounded-full bg-[var(--kkb-creme)] px-5 font-quicksand text-[15px] font-bold text-[var(--kkb-orange-700)] active:scale-95 transition-transform"
           >
-            Voter maintenant <ArrowRight className="h-4 w-4" />
+            <Vote className="h-4 w-4" /> Voter
           </Link>
         </div>
       </section>
@@ -219,7 +224,7 @@ export function MemberHome({ firstName }: { firstName: string }) {
   )
 
   return (
-    <div className="mx-auto max-w-lg space-y-6 px-4 pb-32 lg:max-w-3xl lg:py-8">
+    <div className="mx-auto max-w-sm space-y-7 px-4 pb-8 lg:max-w-3xl lg:py-8">
       {greeting}
 
       {!plan ? (
@@ -237,60 +242,63 @@ export function MemberHome({ firstName }: { firstName: string }) {
 
           {/* Au programme aujourd'hui */}
           <section className="space-y-3">
-            <div className="flex items-center justify-between">
-              <p className="flex items-center gap-1.5 font-quicksand text-[11px] font-bold uppercase tracking-wider text-[var(--kkb-teal)]">
-                <UtensilsCrossed className="h-3.5 w-3.5" /> Au programme aujourd&apos;hui
-              </p>
-              <span className="font-quicksand text-xs text-[var(--kkb-text-tertiary)]">
+            <div className="flex items-baseline justify-between gap-2 px-1">
+              <h2 className="text-h2 text-[var(--kkb-profond)]">Au menu</h2>
+              <span className="inline-block font-quicksand text-sm font-semibold text-[var(--kkb-texte-2)] first-letter:uppercase">
                 {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
               </span>
             </div>
 
             {hero ? (
-              <article className="overflow-hidden rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white shadow-[var(--kkb-shadow-card)]">
-                <div className="relative h-48 bg-gradient-to-br from-[var(--kkb-coral)] to-[var(--kkb-teal)] lg:h-64">
-                  {hero.recipes?.photo_url && (
+              <article className="overflow-hidden rounded-[var(--kkb-r-xl)] bg-white">
+                <div className="relative m-1.5 aspect-[5/4] overflow-hidden rounded-[var(--kkb-r-lg)] bg-[var(--kkb-orange-50)] lg:aspect-[16/7]">
+                  {hero.recipes?.photo_url ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={hero.recipes.photo_url} alt="" className="absolute inset-0 h-full w-full object-cover" />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center">
+                      <MealTypeIcon type={hero.meal_type} className="h-14 w-14 text-[var(--kkb-orange-300)]" />
+                    </div>
                   )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                  <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-[var(--kkb-radius-pill)] bg-white/90 px-2.5 py-1 font-quicksand text-[11px] font-bold uppercase text-[var(--kkb-coral)]">
+                  <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-[rgba(31,58,46,0.85)] via-[rgba(31,58,46,0.35)] to-transparent" />
+                  <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 font-quicksand text-xs font-bold text-[var(--kkb-foret)] backdrop-blur-sm">
                     <MealTypeIcon type={hero.meal_type} className="h-3.5 w-3.5" />
                     {MOMENT[hero.meal_type]}{data?.meal_times[hero.meal_type] ? ` · ${data.meal_times[hero.meal_type].replace(':', 'h')}` : ''}
                   </span>
-                  <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between gap-2">
-                    <span className="inline-flex items-center gap-1.5 font-quicksand text-xs font-semibold text-white">
-                      <ChefHat className="h-4 w-4" /> Préparé avec amour par {planner}
-                    </span>
-                    {(hero.recipes?.prep_time_min || hero.recipes?.cook_time_min) && (
-                      <span className="inline-flex items-center gap-1 rounded-[var(--kkb-radius-pill)] bg-black/40 px-2 py-0.5 font-quicksand text-[11px] font-bold text-white">
-                        <Clock className="h-3 w-3" /> {(hero.recipes?.prep_time_min ?? 0) + (hero.recipes?.cook_time_min ?? 0)} min
-                      </span>
-                    )}
+                  <div className="absolute inset-x-4 bottom-4 text-[var(--kkb-creme)]">
+                    <h2 className="font-dosis text-[22px] font-extrabold leading-[26px]">{hero.recipes?.name ?? composedName(null, hero.meal_compositions)}</h2>
+                    <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 font-quicksand text-sm font-medium text-white/90">
+                      <span className="inline-flex items-center gap-1.5"><ChefHat className="h-4 w-4" /> Par {planner}</span>
+                      {(hero.recipes?.prep_time_min || hero.recipes?.cook_time_min) && (
+                        <span className="inline-flex items-center gap-1 tabular-nums">
+                          <Clock className="h-3.5 w-3.5" /> {(hero.recipes?.prep_time_min ?? 0) + (hero.recipes?.cook_time_min ?? 0)} min
+                        </span>
+                      )}
+                    </p>
                   </div>
                 </div>
-                <div className="space-y-3 p-4">
-                  <h2 className="font-dosis text-xl font-bold text-[var(--kkb-text-primary)]">{hero.recipes?.name ?? composedName(null, hero.meal_compositions)}</h2>
+                <div className="space-y-3 px-4 pb-4 pt-2.5">
                   {hero.recipes?.description && (
-                    <p className="line-clamp-2 font-quicksand text-sm text-[var(--kkb-text-secondary)]">{hero.recipes.description}</p>
+                    <p className="line-clamp-2 font-quicksand text-sm text-[var(--kkb-texte-2)]">{hero.recipes.description}</p>
                   )}
                   {sides(hero).length > 0 && (
-                    <div className="space-y-1.5 rounded-[var(--kkb-radius-sm)] bg-[var(--kkb-bg)] p-3">
-                      <p className="font-quicksand text-[10px] font-bold uppercase tracking-wider text-[var(--kkb-text-tertiary)]">Accompagnements</p>
-                      <div className="flex flex-wrap gap-1.5">
-                        {sides(hero).map(n => (
-                          <span key={n} className="rounded-[var(--kkb-radius-pill)] border border-[var(--kkb-border)] bg-white px-2.5 py-1 font-quicksand text-xs font-semibold text-[var(--kkb-text-secondary)]">{n}</span>
-                        ))}
-                      </div>
+                    <div className="flex flex-wrap gap-1.5" aria-label="Accompagnements">
+                      {sides(hero).map(n => (
+                        <span key={n} className="inline-flex h-8 items-center rounded-full bg-[var(--kkb-lin)] px-3 font-quicksand text-[13px] font-semibold text-[var(--kkb-profond)]">{n}</span>
+                      ))}
                     </div>
                   )}
                   {otherToday.length > 0 && (
-                    <ul className="space-y-1.5 border-t border-[var(--kkb-border-light)] pt-3">
+                    <ul className="divide-y divide-[var(--kkb-lin)] border-t border-[var(--kkb-lin)]">
                       {otherToday.map(i => (
-                        <li key={i.id} className="flex items-center gap-2 font-quicksand text-sm text-[var(--kkb-text-secondary)]">
-                          <MealTypeIcon type={i.meal_type} className="h-4 w-4 shrink-0 text-[var(--kkb-coral)]" />
-                          <span className="font-semibold text-[var(--kkb-text-primary)]">{MEAL_LABEL[i.meal_type]}</span>
-                          <span className="truncate">{composedName(i.recipes?.name, i.meal_compositions)}</span>
+                        <li key={i.id} className="flex items-center gap-3 py-2.5">
+                          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--kkb-creme)] text-[var(--kkb-foret)]">
+                            <MealTypeIcon type={i.meal_type} className="h-4 w-4" />
+                          </span>
+                          <span className="min-w-0">
+                            <span className="block font-quicksand text-xs font-semibold text-[var(--kkb-texte-2)]">{MEAL_LABEL[i.meal_type]}</span>
+                            <span className="block truncate font-quicksand text-sm font-bold text-[var(--kkb-profond)]">{composedName(i.recipes?.name, i.meal_compositions)}</span>
+                          </span>
                         </li>
                       ))}
                     </ul>
@@ -298,8 +306,8 @@ export function MemberHome({ firstName }: { firstName: string }) {
                 </div>
               </article>
             ) : (
-              <p className="rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white p-4 font-quicksand text-sm italic text-[var(--kkb-text-tertiary)]">
-                Pas de repas prévu aujourd&apos;hui.
+              <p className="rounded-[var(--kkb-r-xl)] bg-white p-5 font-quicksand text-sm text-[var(--kkb-texte-2)]">
+                Pas de repas prévu aujourd’hui.
               </p>
             )}
           </section>
@@ -307,26 +315,27 @@ export function MemberHome({ firstName }: { firstName: string }) {
           {/* Au menu cette semaine */}
           {week.length > 0 && (
             <section className="space-y-3">
-              <h2 className="font-dosis text-lg font-bold text-[var(--kkb-text-primary)]">Au menu cette semaine</h2>
-              <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-1 hide-scrollbar">
+              <h2 className="px-1 text-h2 text-[var(--kkb-profond)]">Cette semaine</h2>
+              <div ref={weekRef} className="-mx-4 flex snap-x gap-2.5 overflow-x-auto px-4 pb-1 hide-scrollbar">
                 {week.map(d => {
                   const isToday = d.val === today
                   const isPast  = todayIdx >= 0 && d.idx < todayIdx
                   return (
                     <div
                       key={d.val}
-                      className={`w-36 shrink-0 rounded-[var(--kkb-radius-card)] border bg-white p-3 ${
-                        isToday ? 'border-2 border-[var(--kkb-coral)] bg-[var(--kkb-coral-light)]' : 'border-[var(--kkb-border)]'
+                      data-today={isToday || undefined}
+                      className={`w-36 shrink-0 snap-start rounded-[var(--kkb-r-xl)] p-3.5 ${
+                        isToday ? 'bg-[var(--kkb-foret)] text-[var(--kkb-creme)]' : 'bg-white'
                       } ${isPast ? 'opacity-60' : ''}`}
                     >
-                      <p className="flex items-center justify-between font-quicksand text-[11px] font-bold uppercase text-[var(--kkb-text-tertiary)]">
-                        <span className={isToday ? 'text-[var(--kkb-coral)]' : ''}>{d.label}{isToday ? ' · Auj.' : ''}</span>
-                        {isPast && <Check className="h-3.5 w-3.5 text-[var(--kkb-success)]" />}
+                      <p className={`flex items-center justify-between font-quicksand text-xs font-bold ${isToday ? 'text-[var(--kkb-jaune)]' : 'text-[var(--kkb-texte-2)]'}`}>
+                        <span>{isToday ? 'Aujourd’hui' : d.full}</span>
+                        {isPast && <Check className="h-3.5 w-3.5 text-[var(--kkb-success)]" aria-label="Passé" />}
                       </p>
-                      <p className="mt-2 line-clamp-2 font-dosis text-sm font-semibold text-[var(--kkb-text-primary)]">
+                      <p className={`mt-2 line-clamp-2 font-dosis text-[15px] font-bold leading-5 ${isToday ? '' : 'text-[var(--kkb-profond)]'}`}>
                         {composedName(d.main!.recipes?.name, d.main!.meal_compositions)}
                       </p>
-                      <p className="mt-1 font-quicksand text-[11px] text-[var(--kkb-text-tertiary)]">{MEAL_LABEL[d.main!.meal_type]}</p>
+                      <p className={`mt-1 font-quicksand text-xs ${isToday ? 'text-white/80' : 'text-[var(--kkb-texte-2)]'}`}>{MEAL_LABEL[d.main!.meal_type]}</p>
                     </div>
                   )
                 })}
@@ -338,34 +347,39 @@ export function MemberHome({ firstName }: { firstName: string }) {
 
       {/* Mes retours récents */}
       <section className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="font-dosis text-lg font-bold text-[var(--kkb-text-primary)]">Mes retours récents</h2>
-          <Link href="/feedback" className="font-quicksand text-xs font-bold text-[var(--kkb-coral)]">Donner mon avis</Link>
+        <div className="flex items-center justify-between px-1">
+          <h2 className="text-h2 text-[var(--kkb-profond)]">Mes avis</h2>
+          <Link href="/feedback" className="-mr-2 inline-flex h-11 items-center gap-0.5 px-2 font-quicksand text-sm font-bold text-[var(--kkb-foret)]">
+            Donner mon avis <ArrowRight className="h-4 w-4" />
+          </Link>
         </div>
         {recent.length === 0 ? (
-          <p className="rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white p-4 font-quicksand text-sm italic text-[var(--kkb-text-tertiary)]">
+          <p className="rounded-[var(--kkb-r-xl)] bg-white p-5 font-quicksand text-sm text-[var(--kkb-texte-2)]">
             Tes avis sur les repas apparaîtront ici.
           </p>
         ) : (
-          <>
-            {recent.map(f => (
-              <div key={f.id} className="flex gap-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white p-3">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--kkb-coral-light)] text-xl leading-none">{RATING_EMOJI[f.rating]}</span>
-                <div className="min-w-0 flex-1">
-                  <p className="flex items-center justify-between gap-2">
-                    <span className="truncate font-quicksand text-sm font-bold text-[var(--kkb-text-primary)]">
-                      {MEAL_LABEL[f.item.meal_type]} · {composedName(f.item.recipes?.name, f.item.meal_compositions)}
-                    </span>
-                    <span className="shrink-0 font-quicksand text-[11px] text-[var(--kkb-text-tertiary)]">{relativeDay(f.created_at)}</span>
-                  </p>
-                  {f.message && <p className="mt-1 rounded-[var(--kkb-radius-sm)] bg-[var(--kkb-bg)] px-2.5 py-1.5 font-quicksand text-xs italic text-[var(--kkb-text-secondary)]">&ldquo;{f.message}&rdquo;</p>}
-                </div>
-              </div>
-            ))}
-            <Link href="/feedback" className="flex items-center justify-center gap-1.5 font-quicksand text-sm font-bold text-[var(--kkb-teal)]">
-              Voir l&apos;historique de tous mes avis <ArrowRight className="h-4 w-4" />
+          <div className="overflow-hidden rounded-[var(--kkb-r-xl)] bg-white">
+            <ul className="divide-y divide-[var(--kkb-lin)]">
+              {recent.map(f => (
+                <li key={f.id} className="flex gap-3 p-3.5">
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--kkb-creme)] text-xl leading-none">{RATING_EMOJI[f.rating]}</span>
+                  <div className="min-w-0 flex-1">
+                    <p className="flex items-center justify-between gap-2">
+                      <span className="truncate font-quicksand text-sm font-bold text-[var(--kkb-profond)]">
+                        {composedName(f.item.recipes?.name, f.item.meal_compositions)}
+                      </span>
+                      <span className="shrink-0 font-quicksand text-xs text-[var(--kkb-texte-2)]">{relativeDay(f.created_at)}</span>
+                    </p>
+                    <p className="font-quicksand text-xs text-[var(--kkb-texte-2)]">{MEAL_LABEL[f.item.meal_type]}</p>
+                    {f.message && <p className="mt-1.5 font-quicksand text-[13px] italic text-[var(--kkb-texte-2)]">« {f.message} »</p>}
+                  </div>
+                </li>
+              ))}
+            </ul>
+            <Link href="/feedback" className="flex h-12 items-center justify-center gap-1.5 border-t border-[var(--kkb-lin)] font-quicksand text-sm font-bold text-[var(--kkb-foret)]">
+              Tout l’historique <ArrowRight className="h-4 w-4" />
             </Link>
-          </>
+          </div>
         )}
       </section>
     </div>

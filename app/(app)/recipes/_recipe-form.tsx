@@ -414,7 +414,7 @@ export function RecipeForm({
                   const selected = visibility === o.value
                   return (
                     <button key={o.value} type="button" role="radio" aria-checked={selected} onClick={() => setVisibility(o.value)}
-                      className={`flex w-full items-center gap-3 rounded-[var(--kkb-radius-card)] px-4 py-3 text-left transition-colors ${selected ? 'border-2 border-[var(--kkb-coral)] bg-[var(--kkb-coral-light)]' : 'border border-[var(--kkb-border)] bg-white'}`}>
+                      className={`flex w-full items-center gap-3 rounded-[var(--kkb-radius-card)] px-4 py-3 text-left transition-colors ${selected ? 'border-2 border-[var(--kkb-coral)] bg-[var(--kkb-coral-light)]' : 'border border-[var(--kkb-lin)] bg-white'}`}>
                       <o.Icon className="h-5 w-5 shrink-0 text-[var(--kkb-teal)]" />
                       <span className="min-w-0 flex-1">
                         <span className="block text-sm font-quicksand font-bold text-[var(--kkb-text-primary)]">{o.label}</span>

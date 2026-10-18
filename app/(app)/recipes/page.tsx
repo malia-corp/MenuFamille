@@ -166,7 +166,7 @@ export default function RecipesPage() {
         </div>
 
         {showMobileOptions && (
-          <div className="space-y-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white p-3">
+          <div className="space-y-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white p-3">
             <label className="flex items-center justify-between gap-2 text-xs font-quicksand font-bold text-[var(--kkb-text-secondary)]">
               Trier par
               <select value={sort} onChange={e => setSort(e.target.value as RecipeSort)}
@@ -265,7 +265,7 @@ export default function RecipesPage() {
 
         <div className="flex items-start gap-8">
           {/* Panneau de filtres */}
-          <aside className="sticky top-24 w-[300px] shrink-0 space-y-6 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white p-5">
+          <aside className="sticky top-24 w-[300px] shrink-0 space-y-6 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white p-5">
             <section className="space-y-2">
               <p className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--kkb-text-tertiary)]">Recherche intelligente</p>
               <div className="flex items-center gap-2 rounded-[var(--kkb-radius-sm)] border border-[var(--kkb-border)] bg-white px-3 py-2.5 focus-within:border-[var(--kkb-coral)]">

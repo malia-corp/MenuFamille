@@ -184,7 +184,7 @@ function MemberResultsContent() {
       })}
 
       {data.status === 'finalized' ? (
-        <section className="space-y-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white p-4">
+        <section className="space-y-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white p-4">
           <div className="flex items-start gap-3">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--kkb-teal)] text-white">
               <CheckCircle className="h-5 w-5" />

@@ -43,7 +43,7 @@ export function MealDetailCard({
   }
 
   return (
-    <div className={`mx-4 bg-white border border-[var(--kkb-border)] rounded-[var(--kkb-radius-card)] overflow-hidden transition-opacity ${dimmed ? 'opacity-40' : ''}`}>
+    <div className={`mx-4 bg-white border border-[var(--kkb-lin)] rounded-[var(--kkb-radius-card)] overflow-hidden transition-opacity ${dimmed ? 'opacity-40' : ''}`}>
       {recipe ? (
         <div className="flex items-stretch">
           <div className="relative w-1/3 shrink-0 min-h-[116px] bg-[var(--kkb-coral-light)]">

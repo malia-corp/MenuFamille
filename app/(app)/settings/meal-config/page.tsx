@@ -276,7 +276,7 @@ function MealCard({ config, onToggle, onMode, onTime }: {
     : { label: config.meal_type === 'petit_dejeuner' ? 'Économique' : 'Gain de temps', cls: 'bg-[var(--kkb-warning-light)] text-[var(--kkb-text-secondary)]' }
 
   return (
-    <div className="rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white p-4">
+    <div className="rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white p-4">
       <div className="flex items-center gap-2">
         <Icon className="h-5 w-5 shrink-0" style={{ color: on ? MEAL_COLOR[config.meal_type].text : 'var(--kkb-text-tertiary)' }} />
         <h2 className="font-dosis text-base font-bold text-[var(--kkb-text-primary)]">{t.title}</h2>
