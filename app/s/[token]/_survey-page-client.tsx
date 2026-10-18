@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowRight, CalendarDays, ChevronDown, Clock, Loader2, Lock, Send, UnfoldHorizontal, UserCircle, XCircle, type LucideIcon } from 'lucide-react'
+import { LogoLoaderScreen } from '@/components/brand/logo-loader'
 import { PublicHeader } from '@/components/survey/public-header'
 import { MealVoteCard, type Reaction } from '@/components/survey/meal-vote-card'
 import { ViewToggle, type SurveyViewMode } from '@/components/survey/view-toggle'
@@ -236,9 +237,7 @@ export function SurveyPageClient({ token }: { token: string }) {
 
   if (loadState === 'loading') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[var(--kkb-bg)]">
-        <Loader2 className="h-6 w-6 text-[var(--kkb-coral)] animate-spin" />
-      </div>
+      <LogoLoaderScreen label="Le menu de la semaine arrive…" className="min-h-screen bg-[var(--kkb-bg)]" />
     )
   }
 
