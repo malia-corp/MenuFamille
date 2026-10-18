@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { categoryIcon } from '@/lib/constants/category-icon'
+import { Select } from '@/components/ui/select'
 
 // ── Types exportés ────────────────────────────────────────────
 export interface IngredientRow { _id: string; name: string; quantity: string; unit: string }
@@ -363,13 +364,14 @@ export function RecipeForm({
           <section className={`order-3 lg:order-3 ${CARD}`}>
             <div>
               <label htmlFor="recipe-category" className={LABEL}>Catégorie (optionnel)</label>
-              <div className="relative">
-                <select id="recipe-category" value={categoryId} onChange={e => setCategoryId(e.target.value)} className={`${INPUT} appearance-none pr-9`}>
-                  <option value="">Choisir une catégorie</option>
-                  {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                </select>
-                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--kkb-text-tertiary)]" />
-              </div>
+              <Select
+                id="recipe-category"
+                value={categoryId}
+                onChange={setCategoryId}
+                options={[...(categoryId ? [{ value: '', label: 'Aucune catégorie' }] : []), ...categories.map(c => ({ value: c.id, label: c.name }))]}
+                placeholder="Choisir une catégorie"
+                searchPlaceholder="Rechercher une catégorie…"
+              />
             </div>
             <div>
               <label htmlFor="recipe-description" className={LABEL}>Astuce ou description (optionnel)</label>
@@ -433,10 +435,15 @@ export function RecipeForm({
                 </p>
               ) : (
                 <div>
-                  <select value={circleId} onChange={e => { setCircleId(e.target.value); setCircleError(null) }} aria-label="Cercle familial" className={INPUT}>
-                    <option value="">Choisir un cercle *</option>
-                    {circles.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                  </select>
+                  <Select
+                    value={circleId}
+                    onChange={v => { setCircleId(v); setCircleError(null) }}
+                    options={circles.map(c => ({ value: c.id, label: c.name }))}
+                    ariaLabel="Cercle familial"
+                    placeholder="Choisir un cercle *"
+                    searchPlaceholder="Rechercher un cercle…"
+                    invalid={!!circleError}
+                  />
                   {circleError && <p className="mt-1 text-xs font-quicksand text-[var(--kkb-danger)]">{circleError}</p>}
                 </div>
               ))}

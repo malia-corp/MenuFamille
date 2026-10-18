@@ -1,6 +1,7 @@
 'use client'
 
-import { CalendarDays, ChevronDown, UtensilsCrossed } from 'lucide-react'
+import { CalendarDays, UtensilsCrossed } from 'lucide-react'
+import { Select } from '@/components/ui/select'
 
 export type ResultsViewMode = 'day' | 'type'
 export type ResultsSort = 'chrono' | 'best' | 'worst'
@@ -19,6 +20,12 @@ interface ResultsFiltersProps {
   sort:             ResultsSort
   onSortChange:     (s: ResultsSort) => void
 }
+
+const SORTS: { value: ResultsSort; label: string }[] = [
+  { value: 'chrono', label: 'Ordre de la semaine' },
+  { value: 'best',   label: 'Les plus appréciés d’abord' },
+  { value: 'worst',  label: 'Les moins appréciés d’abord' },
+]
 
 const MODES = [
   { value: 'day',  label: 'Par jour',  icon: CalendarDays },
@@ -62,21 +69,17 @@ export function ResultsFilters({
           })}
         </div>
 
-        <label className="flex items-center gap-2 font-quicksand text-xs text-[var(--kkb-texte-2)]">
-          <span className="hidden sm:inline">Trier</span>
-          <span className="relative">
-            <select
-              value={sort}
-              onChange={e => onSortChange(e.target.value as ResultsSort)}
-              className="h-9 appearance-none rounded-full bg-white pl-3.5 pr-8 font-quicksand text-xs font-semibold text-[var(--kkb-profond)] outline-none focus-visible:ring-2 focus-visible:ring-[var(--kkb-foret-300)]"
-            >
-              <option value="chrono">Ordre de la semaine</option>
-              <option value="best">Les plus appréciés d&apos;abord</option>
-              <option value="worst">Les moins appréciés d&apos;abord</option>
-            </select>
-            <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--kkb-texte-2)]" />
-          </span>
-        </label>
+        <div className="flex items-center gap-2 font-quicksand text-xs text-[var(--kkb-texte-2)]">
+          <span className="hidden sm:inline" aria-hidden="true">Trier</span>
+          <Select
+            value={sort}
+            onChange={onSortChange}
+            options={SORTS}
+            ariaLabel="Trier les repas"
+            size="sm"
+            className="w-56"
+          />
+        </div>
       </div>
 
       <div className="-mx-4 flex gap-1.5 overflow-x-auto px-4 hide-scrollbar lg:mx-0 lg:flex-wrap lg:px-0">

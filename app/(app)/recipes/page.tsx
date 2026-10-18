@@ -11,6 +11,7 @@ import { categoryIcon } from '@/lib/constants/category-icon'
 import { RecipeCard } from '@/components/recipes/recipe-card'
 import { Pagination } from '@/components/recipes/pagination'
 import type { RecipeCategory, RecipeListItem, RecipeOrigin, RecipePage, RecipeSort } from '@/components/recipes/types'
+import { Select } from '@/components/ui/select'
 import { EmptyState } from '@/components/ui/empty-state'
 import { SkeletonCard } from '@/components/ui/skeleton-card'
 import { toast } from '@/lib/stores/toast-store'
@@ -361,13 +362,10 @@ export default function RecipesPage() {
                 </div>
                 <span className="text-[var(--kkb-text-tertiary)]">{data?.total ?? 0} recette{(data?.total ?? 0) > 1 ? 's' : ''} affichée{(data?.total ?? 0) > 1 ? 's' : ''}</span>
               </div>
-              <label className="flex items-center gap-2 text-sm font-quicksand text-[var(--kkb-text-tertiary)]">
-                Trier par :
-                <select value={sort} onChange={e => setSort(e.target.value as RecipeSort)}
-                  className="rounded-[var(--kkb-radius-sm)] border border-[var(--kkb-border)] bg-white px-3 py-2 text-sm font-quicksand font-semibold text-[var(--kkb-text-primary)] outline-none focus:border-[var(--kkb-coral)]">
-                  {SORTS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-                </select>
-              </label>
+              <div className="flex items-center gap-2 text-sm font-quicksand text-[var(--kkb-text-tertiary)]">
+                <span aria-hidden="true" className="whitespace-nowrap">Trier par :</span>
+                <Select value={sort} onChange={setSort} options={SORTS} ariaLabel="Trier les recettes" className="w-52" />
+              </div>
             </div>
 
             {loading ? (
