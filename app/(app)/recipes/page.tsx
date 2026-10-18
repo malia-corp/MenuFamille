@@ -258,7 +258,7 @@ export default function RecipesPage() {
       <div className="mx-auto hidden max-w-[1400px] px-8 py-8 lg:block">
         <div className="mb-6 flex items-end justify-between gap-6">
           <div className="space-y-1">
-            <p className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--kkb-text-tertiary)]">
+            <p className="text-xs font-quicksand font-bold text-[var(--kkb-text-tertiary)]">
               Trésors gourmands · Transmission culinaire &amp; partage
             </p>
             <div className="flex items-center gap-3">
@@ -290,7 +290,7 @@ export default function RecipesPage() {
           {/* Panneau de filtres */}
           <aside className="sticky top-24 w-[300px] shrink-0 space-y-6 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white p-5">
             <section className="space-y-2">
-              <p className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--kkb-text-tertiary)]">Recherche intelligente</p>
+              <p className="text-xs font-quicksand font-bold text-[var(--kkb-text-tertiary)]">Recherche intelligente</p>
               <div className="flex items-center gap-2 rounded-[var(--kkb-radius-sm)] border border-[var(--kkb-border)] bg-white px-3 py-2.5 focus-within:border-[var(--kkb-coral)]">
                 <Search className="h-4 w-4 shrink-0 text-[var(--kkb-text-tertiary)]" />
                 <input type="search" value={search} onChange={e => setSearch(e.target.value)} placeholder="Plat, ingrédient..." aria-label="Rechercher une recette"
@@ -299,7 +299,7 @@ export default function RecipesPage() {
             </section>
 
             <section className="space-y-1">
-              <p className="mb-2 text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--kkb-text-tertiary)]">Origine du recueil</p>
+              <p className="mb-2 text-xs font-quicksand font-bold text-[var(--kkb-text-tertiary)]">Origine du recueil</p>
               {ORIGINS.map(o => {
                 const active = origin === o.value
                 return (
@@ -316,7 +316,7 @@ export default function RecipesPage() {
             {categories.length > 0 && (
               <section className="space-y-1">
                 <div className="mb-2 flex items-center justify-between">
-                  <p className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--kkb-text-tertiary)]">Type de préparation</p>
+                  <p className="text-xs font-quicksand font-bold text-[var(--kkb-text-tertiary)]">Type de préparation</p>
                   {categoryIds.length > 0 && (
                     <button type="button" onClick={() => setCategoryIds([])} className="text-[11px] font-quicksand font-bold text-[var(--kkb-coral)]">Tout afficher</button>
                   )}
@@ -339,7 +339,7 @@ export default function RecipesPage() {
             )}
 
             <section className="space-y-2">
-              <p className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--kkb-text-tertiary)]">Critères express</p>
+              <p className="text-xs font-quicksand font-bold text-[var(--kkb-text-tertiary)]">Critères express</p>
               <button type="button" onClick={() => setUnder30(v => !v)} className={pill(under30)}>
                 <Timer className="h-3.5 w-3.5" /> Moins de 30 min
               </button>

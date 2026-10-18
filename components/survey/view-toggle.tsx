@@ -97,10 +97,10 @@ export function ViewToggle({
           {viewMode === 'type' ? 'Repas groupés par moment de la journée' : 'Repas groupés par jour'}
         </p>
         <div className="hidden sm:flex items-center gap-1.5">
-          <span className="text-[10px] font-quicksand font-bold uppercase px-2 py-0.5 rounded-full bg-[var(--kkb-success-light)] text-[var(--kkb-success)]">
+          <span className="text-xs font-quicksand font-bold px-2 py-0.5 rounded-full bg-[var(--kkb-success-light)] text-[var(--kkb-success)]">
             {daysAvailableCount} jours disponibles
           </span>
-          <span className="text-[10px] font-quicksand font-bold uppercase px-2 py-0.5 rounded-full bg-[var(--kkb-teal-light)] text-[var(--kkb-teal)]">
+          <span className="text-xs font-quicksand font-bold px-2 py-0.5 rounded-full bg-[var(--kkb-teal-light)] text-[var(--kkb-teal)]">
             {categoriesCount} catégories
           </span>
         </div>

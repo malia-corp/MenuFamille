@@ -82,7 +82,7 @@ export function CircleSwitcher({ circles, selectedId, activeId, onSelect, childr
             </label>
           </div>
 
-          <p className="px-4 pb-1 pt-3 font-quicksand text-[10px] font-bold uppercase tracking-wider text-[var(--kkb-text-tertiary)]">Mes cercles</p>
+          <p className="px-4 pb-1 pt-3 font-quicksand text-xs font-bold text-[var(--kkb-text-tertiary)]">Mes cercles</p>
           <ul role="listbox" className="max-h-64 overflow-y-auto pb-1">
             {visible.map((c) => {
               const selected = c.id === selectedId

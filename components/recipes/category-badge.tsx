@@ -7,7 +7,7 @@ export function CategoryBadge({ category, solid = false }: { category: RecipeCat
   const color = categoryColor(category.color)
   return (
     <span
-      className="inline-flex max-w-full items-center gap-1 truncate rounded-[var(--kkb-radius-pill)] px-2 py-0.5 text-[10px] font-quicksand font-bold uppercase tracking-wide"
+      className="inline-flex max-w-full items-center gap-1 truncate rounded-[var(--kkb-radius-pill)] px-2 py-0.5 text-xs font-quicksand font-bold"
       style={solid ? { backgroundColor: color, color: '#fff', boxShadow: '0 0 0 1.5px rgba(255,255,255,0.85)' } : { backgroundColor: `${color}1F`, color }}
     >
       <Icon className="h-3 w-3 shrink-0" />

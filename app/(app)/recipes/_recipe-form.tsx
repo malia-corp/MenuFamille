@@ -102,7 +102,7 @@ function MinuteStepper({ id, label, icon: Icon, value, onChange }: {
   const step = (d: number) => onChange(String(Math.max(0, n + d)))
   return (
     <div className="rounded-[var(--kkb-radius-sm)] border border-[var(--kkb-border)] bg-white p-2.5">
-      <label htmlFor={id} className="flex items-center gap-1 text-[10px] font-quicksand font-bold uppercase tracking-wide text-[var(--kkb-text-tertiary)]">
+      <label htmlFor={id} className="flex items-center gap-1 text-xs font-quicksand font-bold text-[var(--kkb-text-tertiary)]">
         <Icon className="h-3 w-3" /> {label}
       </label>
       <div className="mt-1 flex items-center gap-1">
@@ -385,7 +385,7 @@ export function RecipeForm({
               <div className="relative overflow-hidden rounded-[var(--kkb-radius-card)]">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={photoPreview} alt="Aperçu de la photo" className="aspect-video w-full object-cover" />
-                <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-[var(--kkb-radius-pill)] bg-white/90 px-2.5 py-1 text-[10px] font-quicksand font-bold uppercase tracking-wide text-[var(--kkb-coral)]">
+                <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-[var(--kkb-radius-pill)] bg-white/90 px-2.5 py-1 text-xs font-quicksand font-bold text-[var(--kkb-coral)]">
                   <Star className="h-3 w-3" /> Photo principale
                 </span>
                 <button type="button" onClick={() => { setPhotoFile(null); setPhotoPreview(null) }} aria-label="Retirer la photo"
@@ -471,7 +471,7 @@ export function RecipeForm({
           <section className={`order-6 lg:order-2 ${CARD}`}>
             <div className="flex items-center justify-between">
               <h2 className={TITLE}>Préparation</h2>
-              <span className="rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-teal-light)] px-2.5 py-0.5 text-[11px] font-quicksand font-bold uppercase tracking-wide text-[var(--kkb-teal)]">
+              <span className="rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-teal-light)] px-2.5 py-0.5 text-xs font-quicksand font-bold text-[var(--kkb-teal)]">
                 {steps.length} étape{steps.length > 1 ? 's' : ''}
               </span>
             </div>
@@ -501,7 +501,7 @@ export function RecipeForm({
                 {(sideItems.length + drinkItems.length) > 0 && (
                   <span className="text-[11px] font-quicksand font-bold text-[var(--kkb-coral)]">{sideItems.length + drinkItems.length} sélectionné{sideItems.length + drinkItems.length > 1 ? 's' : ''}</span>
                 )}
-                <span className="rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-teal-light)] px-2 py-0.5 text-[10px] font-quicksand font-bold uppercase tracking-wide text-[var(--kkb-teal)]">Optionnel</span>
+                <span className="rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-teal-light)] px-2 py-0.5 text-xs font-quicksand font-bold text-[var(--kkb-teal)]">Optionnel</span>
                 <ChevronDown className={`h-4 w-4 shrink-0 text-[var(--kkb-text-tertiary)] transition-transform ${assocOpen ? 'rotate-180' : ''}`} />
               </button>
               {assocOpen && (

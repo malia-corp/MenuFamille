@@ -229,7 +229,7 @@ export function RecipePickerPanel({
                       )}
                     </div>
                     {recipe.visibility !== 'private' && (
-                      <span className={`text-[10px] font-quicksand font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full flex-shrink-0 ${
+                      <span className={`text-xs font-quicksand font-bold px-1.5 py-0.5 rounded-full flex-shrink-0 ${
                         recipe.visibility === 'circle' ? 'bg-[var(--kkb-warning-light)] text-[var(--kkb-warning)]' : 'bg-emerald-50 text-emerald-600'
                       }`}>
                         {recipe.visibility === 'circle' ? 'Cercle' : 'Commun.'}

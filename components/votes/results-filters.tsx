@@ -75,7 +75,7 @@ export function ResultsFilters({
           <span className="h-1.5 w-1.5 rounded-full bg-[var(--kkb-coral)]" />
           {viewMode === 'day' ? 'Vue chronologique par journée' : 'Vue groupée par type de repas'}
         </p>
-        <span className="shrink-0 rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-teal-light)] px-2 py-0.5 text-[10px] font-quicksand font-bold uppercase tracking-wide text-[var(--kkb-teal)]">
+        <span className="shrink-0 rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-teal-light)] px-2 py-0.5 text-xs font-quicksand font-bold text-[var(--kkb-teal)]">
           {votedCount} {votedCount > 1 ? 'repas votés' : 'repas voté'}
         </span>
       </div>

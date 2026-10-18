@@ -54,7 +54,7 @@ export function WeekGrid({ weekStart, configs, items, onCellClick }: WeekGridPro
         const complete = filled === configs.length
         return (
           <div key={d.val} className="text-center">
-            <p className="text-[11px] font-quicksand font-bold uppercase tracking-wide text-[var(--kkb-text-tertiary)]">
+            <p className="text-xs font-quicksand font-bold text-[var(--kkb-text-tertiary)]">
               {d.label} {date.getDate()}
             </p>
             <p className={`flex items-center justify-center gap-0.5 text-[11px] font-quicksand font-bold ${complete ? 'text-[var(--kkb-success)]' : 'text-[var(--kkb-warning)]'}`}>

@@ -175,7 +175,7 @@ function MealAccordionSection({ config, plan, open, onToggle }: {
         <span className="font-dosis font-semibold text-sm text-[var(--kkb-text-primary)]">
           {MEAL_LABEL[config.meal_type]}
         </span>
-        <span className={`text-[10px] font-quicksand font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full ${
+        <span className={`text-xs font-quicksand font-bold px-1.5 py-0.5 rounded-full ${
           config.mode === 'template'
             ? 'bg-[var(--kkb-warning-light)] text-[var(--kkb-warning)]'
             : 'bg-[var(--kkb-bg)] text-[var(--kkb-text-tertiary)]'
@@ -250,7 +250,7 @@ function DayAccordionSection({ day, dateLabel, configs, plan, open, onToggle }: 
         <span className="font-dosis font-semibold text-sm text-[var(--kkb-text-primary)] uppercase">
           {dateLabel}
         </span>
-        <span className={`text-[10px] font-quicksand font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full ${
+        <span className={`text-xs font-quicksand font-bold px-1.5 py-0.5 rounded-full ${
           complete ? 'bg-[var(--kkb-success-light)] text-[var(--kkb-success)]' : 'bg-[var(--kkb-warning-light)] text-[var(--kkb-warning)]'
         }`}>
           {complete
@@ -464,7 +464,7 @@ function ValidateInner() {
         <div key={stat.label} className="bg-white border border-[var(--kkb-border)] rounded-[var(--kkb-radius-sm)] py-2.5 flex flex-col items-center gap-0.5">
           <stat.icon className="h-3.5 w-3.5 text-[var(--kkb-coral)]" />
           <span className="font-dosis font-bold text-sm text-[var(--kkb-text-primary)]">{stat.value}</span>
-          <span className="text-[9px] font-quicksand font-bold uppercase tracking-wide text-[var(--kkb-text-tertiary)]">{stat.label}</span>
+          <span className="text-xs font-quicksand font-bold text-[var(--kkb-text-tertiary)]">{stat.label}</span>
         </div>
       ))}
     </div>
@@ -619,14 +619,14 @@ function ValidateInner() {
             <button type="button" onClick={() => router.push('/plan')} className="w-5 h-5 rounded-full bg-[var(--kkb-success)] flex items-center justify-center">
               <Check className="h-3 w-3 text-white" />
             </button>
-            <span className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--kkb-text-tertiary)]">Planifier</span>
+            <span className="text-xs font-quicksand font-bold text-[var(--kkb-text-tertiary)]">Planifier</span>
           </div>
           <ChevronRight className="h-3 w-3 text-[var(--kkb-border)]" />
           <div className="flex items-center gap-1.5">
             <div className="w-5 h-5 rounded-full bg-[var(--kkb-coral)] flex items-center justify-center">
               <span className="text-white text-[10px] font-bold">2</span>
             </div>
-            <span className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--kkb-coral)]">Synthèse &amp; Validation</span>
+            <span className="text-xs font-quicksand font-bold text-[var(--kkb-coral)]">Synthèse &amp; Validation</span>
           </div>
         </div>
 

@@ -361,7 +361,7 @@ export default function LoginPage() {
       {/* Séparateur */}
       <div className="flex items-center gap-3">
         <div className="flex-1 h-px bg-[var(--kkb-border)]" />
-        <span className="text-[11px] font-quicksand font-semibold uppercase text-[var(--kkb-text-tertiary)]">
+        <span className="text-xs font-quicksand font-semibold text-[var(--kkb-text-tertiary)]">
           Ou connectez-vous avec
         </span>
         <div className="flex-1 h-px bg-[var(--kkb-border)]" />

@@ -391,7 +391,7 @@ function RecipeDetail() {
         <div className="space-y-2">
           <div className="flex flex-wrap gap-2">
             {recipe.categories && <CategoryBadge category={recipe.categories} />}
-            <span className="rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-teal-light)] px-2 py-0.5 text-[10px] font-quicksand font-bold uppercase tracking-wide text-[var(--kkb-teal)]">{VISIBILITY_TAG[recipe.visibility]}</span>
+            <span className="rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-teal-light)] px-2 py-0.5 text-xs font-quicksand font-bold text-[var(--kkb-teal)]">{VISIBILITY_TAG[recipe.visibility]}</span>
           </div>
           <h1 className="font-dosis font-extrabold text-[32px] leading-tight text-[var(--kkb-text-primary)]">{recipe.name}</h1>
         </div>
@@ -406,7 +406,7 @@ function RecipeDetail() {
             <div key={m.label} className="flex items-center gap-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white p-4">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--kkb-coral-light)] text-[var(--kkb-coral)]"><m.icon className="h-5 w-5" /></span>
               <div className="min-w-0">
-                <p className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--kkb-text-tertiary)]">{m.label}</p>
+                <p className="text-xs font-quicksand font-bold text-[var(--kkb-text-tertiary)]">{m.label}</p>
                 <p className="truncate font-dosis font-bold text-lg text-[var(--kkb-text-primary)]">{m.value}</p>
               </div>
             </div>
@@ -434,7 +434,7 @@ function RecipeDetail() {
                             <span className="block text-sm font-quicksand font-bold text-[var(--kkb-text-primary)]">{s.name}</span>
                             {s.description && <span className="block truncate text-xs font-quicksand text-[var(--kkb-text-tertiary)]">{s.description}</span>}
                           </span>
-                          <span className="shrink-0 rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-teal-light)] px-2 py-0.5 text-[10px] font-quicksand font-bold uppercase tracking-wide text-[var(--kkb-teal)]">{suggestionLabel(s)}</span>
+                          <span className="shrink-0 rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-teal-light)] px-2 py-0.5 text-xs font-quicksand font-bold text-[var(--kkb-teal)]">{suggestionLabel(s)}</span>
                         </button>
                       </li>
                     )
@@ -449,7 +449,7 @@ function RecipeDetail() {
               <section className="space-y-4 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white p-5">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--kkb-text-tertiary)]">Du marché à la table</p>
+                    <p className="text-xs font-quicksand font-bold text-[var(--kkb-text-tertiary)]">Du marché à la table</p>
                     <h2 className="font-dosis font-bold text-lg text-[var(--kkb-text-primary)]">Ingrédients du marché</h2>
                   </div>
                   <ServingsControl value={servings} onChange={setServings} suffix="pers." />
@@ -484,7 +484,7 @@ function RecipeDetail() {
               <section className="space-y-4 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white p-5">
                 <div className="flex items-end justify-between gap-3">
                   <div>
-                    <p className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--kkb-text-tertiary)]">Méthode de préparation</p>
+                    <p className="text-xs font-quicksand font-bold text-[var(--kkb-text-tertiary)]">Méthode de préparation</p>
                     <h2 className="font-dosis font-bold text-lg text-[var(--kkb-text-primary)]">Étapes simples pas-à-pas</h2>
                   </div>
                   <span className="text-xs font-quicksand text-[var(--kkb-text-tertiary)]">

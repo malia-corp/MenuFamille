@@ -43,7 +43,7 @@ export function HarmonyWidget({ respondentCount, memberCount, agreementPct, plan
             <span className="font-dosis font-bold text-lg text-[var(--kkb-text-primary)] leading-none">
               {agreementPct !== null ? `${agreementPct}%` : '—'}
             </span>
-            <span className="text-[9px] font-quicksand text-[var(--kkb-success)] mt-0.5">D&apos;ACCORD</span>
+            <span className="text-xs font-quicksand text-[var(--kkb-success)] mt-0.5">d’accord</span>
           </div>
         </div>
         <div className="flex flex-col gap-1">

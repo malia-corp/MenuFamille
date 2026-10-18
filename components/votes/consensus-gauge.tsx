@@ -29,7 +29,7 @@ export function ConsensusGauge({ pct, label, size = 112 }: { pct: number | null;
         <span className="font-dosis font-extrabold text-[var(--kkb-coral)] leading-none" style={{ fontSize: Math.round(size * 0.22) }}>
           {pct === null ? '—' : `${pct}%`}
         </span>
-        <span className="mt-0.5 text-[10px] font-quicksand font-bold uppercase tracking-wide text-[var(--kkb-text-tertiary)]">
+        <span className="mt-0.5 text-xs font-quicksand font-bold text-[var(--kkb-text-tertiary)]">
           {label}
         </span>
       </div>

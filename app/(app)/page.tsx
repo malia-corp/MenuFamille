@@ -189,7 +189,7 @@ export default function HomePage() {
     d.setDate(d.getDate() + selectedIdx)
     return d
   }, [weekStart, selectedIdx])
-  const dayBadge = selectedDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }).toUpperCase()
+  const dayBadge = selectedDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
   const dayLong = selectedDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
 
   const heroConfig  = activeConfigs.find(c => c.meal_type === 'dejeuner')
@@ -220,7 +220,7 @@ export default function HomePage() {
       d.setDate(d.getDate() + idx)
       out.push({
         key:         item.id,
-        dayLabel:    `${opt.full.slice(0, 3).toUpperCase()} ${d.getDate()}`,
+        dayLabel:    `${opt.full.slice(0, 3)} ${d.getDate()}`,
         mealLabel:   MEAL_LABEL.dejeuner,
         title:       item.recipes.name,
         photoUrl:    item.recipes.photo_url,
@@ -494,7 +494,7 @@ export default function HomePage() {
                 <UtensilsCrossed className="h-5 w-5 text-[var(--kkb-coral)]" />
                 {isToday ? "Au menu aujourd'hui" : `Au menu — ${dayOpt.full}`}
               </h2>
-              <span className="text-[10px] font-quicksand font-bold px-2.5 py-1 rounded-full bg-[var(--kkb-coral-light)] text-[var(--kkb-coral)] uppercase">
+              <span className="inline-block text-sm font-quicksand font-semibold px-3 py-1 rounded-full bg-white text-[var(--kkb-texte-2)] first-letter:uppercase">
                 {dayBadge}
               </span>
             </div>

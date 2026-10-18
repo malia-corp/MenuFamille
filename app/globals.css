@@ -155,7 +155,7 @@
     @apply font-main font-semibold text-[22px] leading-tight;
   }
   .text-kkb-label {
-    @apply font-quicksand font-bold text-[10px] uppercase tracking-[0.08em];
+    @apply font-quicksand font-semibold text-xs;
   }
   .text-kkb-body {
     @apply font-quicksand font-normal text-sm;

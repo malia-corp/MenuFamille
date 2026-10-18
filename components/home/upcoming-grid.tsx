@@ -27,7 +27,7 @@ export function UpcomingGrid({ days }: { days: UpcomingGridDay[] }) {
                 <UtensilsCrossed className="h-8 w-8 text-[var(--kkb-coral)]" />
               </div>
             )}
-            <span className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-white/90 text-[var(--kkb-text-secondary)] text-[10px] font-quicksand font-semibold uppercase">
+            <span className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-white/90 text-[var(--kkb-text-secondary)] text-xs font-quicksand font-semibold">
               {d.dateLabel}
             </span>
           </div>

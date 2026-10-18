@@ -148,7 +148,7 @@ function MemberResultsContent() {
       {/* Indice d'harmonie */}
       <section className="space-y-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-coral)] bg-[var(--kkb-coral-light)] p-4">
         <div className="flex items-center justify-between gap-2">
-          <p className="text-[11px] font-quicksand font-bold uppercase tracking-wider text-[var(--kkb-coral)]">Indice d&apos;harmonie</p>
+          <p className="text-xs font-quicksand font-bold text-[var(--kkb-coral)]">Indice d&apos;harmonie</p>
           <span className="rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-success-light)] px-2.5 py-0.5 text-[11px] font-quicksand font-bold text-[var(--kkb-success)]">
             {data.total_respondents}/{Math.max(data.member_count, 1)} votants
           </span>

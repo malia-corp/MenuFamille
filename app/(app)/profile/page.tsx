@@ -66,7 +66,7 @@ const MEMBERS_SHOWN = 4
 function SectionTitle({ icon: Icon, label, action }: { icon: LucideIcon; label: string; action?: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between px-1">
-      <p className="flex items-center gap-2 font-quicksand text-[11px] font-bold uppercase tracking-wider text-[var(--kkb-text-tertiary)]">
+      <p className="flex items-center gap-2 font-quicksand text-xs font-bold text-[var(--kkb-text-tertiary)]">
         <Icon className="h-4 w-4 text-[var(--kkb-coral)]" /> {label}
       </p>
       {action}
@@ -98,7 +98,7 @@ function Stat({ icon: Icon, value, label, tone }: { icon: LucideIcon; value: str
         <Icon className="h-4 w-4" style={{ color: tone }} />
       </span>
       <p className="font-dosis text-2xl font-extrabold text-[var(--kkb-coral)]">{value}</p>
-      <p className="font-quicksand text-[10px] font-bold uppercase leading-tight tracking-wide text-[var(--kkb-text-tertiary)]">{label}</p>
+      <p className="font-quicksand text-xs font-bold leading-tight text-[var(--kkb-text-tertiary)]">{label}</p>
     </div>
   )
 }
@@ -190,7 +190,7 @@ export default function ProfilePage() {
             {initial}
           </div>
           {isPlanner && (
-            <span className="absolute -right-6 -top-1 inline-flex items-center gap-1 rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-warning)] px-2 py-0.5 font-quicksand text-[10px] font-bold uppercase text-white shadow-sm">
+            <span className="absolute -right-6 -top-1 inline-flex items-center gap-1 rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-warning)] px-2 py-0.5 font-quicksand text-xs font-bold text-white shadow-sm">
               <Star className="h-3 w-3 fill-current" /> Chef
             </span>
           )}

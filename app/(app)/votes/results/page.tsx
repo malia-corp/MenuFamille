@@ -232,7 +232,7 @@ function VotesResultsContent() {
       <div className="hidden lg:block space-y-6">
         <div className="flex items-start justify-between gap-6">
           <div className="space-y-1.5">
-            <p className="flex items-center gap-3 text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--kkb-text-tertiary)]">
+            <p className="flex items-center gap-3 text-xs font-quicksand font-bold text-[var(--kkb-text-tertiary)]">
               Session de consultation hebdomadaire
               <span className="flex items-center gap-1.5 normal-case tracking-normal text-xs font-normal text-[var(--kkb-success)]">
                 <span className="h-1.5 w-1.5 rounded-full bg-[var(--kkb-success)]" /> Semaine du {weekRange}
@@ -423,7 +423,7 @@ function StatColumn({ eyebrow, title, icon, children, footer }: {
     <div className="flex flex-col rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white p-5">
       <div className="mb-4 flex items-start justify-between gap-2">
         <div>
-          <p className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--kkb-text-tertiary)]">{eyebrow}</p>
+          <p className="text-xs font-quicksand font-bold text-[var(--kkb-text-tertiary)]">{eyebrow}</p>
           <p className="font-dosis font-bold text-xl text-[var(--kkb-text-primary)]">{title}</p>
         </div>
         <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--kkb-coral-light)] text-[var(--kkb-coral)]">{icon}</span>

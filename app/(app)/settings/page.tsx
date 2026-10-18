@@ -46,7 +46,7 @@ function RowContent({ icon: Icon, label, sub, chevron = true }: {
 function Section({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <section className="space-y-2">
-      <p className="px-1 font-quicksand text-[11px] font-bold uppercase tracking-wider text-[var(--kkb-text-tertiary)]">{label}</p>
+      <p className="px-1 font-quicksand text-xs font-bold text-[var(--kkb-text-tertiary)]">{label}</p>
       <div className="divide-y-[0.5px] divide-[var(--kkb-border)] overflow-hidden rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white">
         {children}
       </div>

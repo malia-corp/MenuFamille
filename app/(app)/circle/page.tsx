@@ -389,7 +389,7 @@ export default function CirclePage() {
 
   function roleBadge(role: string) {
     return (
-      <span className={`rounded-[var(--kkb-radius-pill)] px-2 py-0.5 font-quicksand text-[10px] font-bold uppercase tracking-wide ${ROLE_BADGE[role] ?? ROLE_BADGE.membre}`}>
+      <span className={`rounded-[var(--kkb-radius-pill)] px-2 py-0.5 font-quicksand text-xs font-bold ${ROLE_BADGE[role] ?? ROLE_BADGE.membre}`}>
         {ROLE_LABEL[role] ?? role}
       </span>
     )
@@ -434,7 +434,7 @@ export default function CirclePage() {
 
   const inactiveBadge = (m: Member) =>
     m.is_active === false ? (
-      <span className="rounded-[var(--kkb-radius-pill)] border border-[var(--kkb-border)] bg-[var(--kkb-bg)] px-2 py-0.5 font-quicksand text-[10px] font-bold uppercase text-[var(--kkb-text-tertiary)]">Désactivé</span>
+      <span className="rounded-[var(--kkb-radius-pill)] border border-[var(--kkb-border)] bg-[var(--kkb-bg)] px-2 py-0.5 font-quicksand text-xs font-bold text-[var(--kkb-text-tertiary)]">Désactivé</span>
     ) : null
 
   const aloneState = members.length <= 1 && (
@@ -568,7 +568,7 @@ export default function CirclePage() {
 
         {/* Code d'invitation */}
         <section className="space-y-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white p-4">
-          <p className="flex items-center gap-1.5 font-quicksand text-[10px] font-bold uppercase tracking-wider text-[var(--kkb-text-tertiary)]">
+          <p className="flex items-center gap-1.5 font-quicksand text-xs font-bold text-[var(--kkb-text-tertiary)]">
             <KeyRound className="h-3.5 w-3.5 text-[var(--kkb-coral)]" /> Code d&apos;invitation au cercle
           </p>
           <p className="font-dosis text-[28px] font-extrabold tracking-wider text-[var(--kkb-coral)]">{inviteCode}</p>
@@ -712,7 +712,7 @@ export default function CirclePage() {
       <div className="mx-auto hidden max-w-[1200px] px-8 py-8 lg:block print:block print:p-0">
         <div className="mb-6 flex items-start justify-between gap-6 print:hidden">
           <div>
-          <p className="font-quicksand text-[11px] font-bold uppercase tracking-wider text-[var(--kkb-coral)]">Tablée &amp; gouvernance</p>
+          <p className="font-quicksand text-xs font-bold text-[var(--kkb-coral)]">Tablée &amp; gouvernance</p>
           <h1 className="font-dosis text-3xl font-bold text-[var(--kkb-text-primary)]">Cercle familial · {circle.name}</h1>
           <p className="mt-1 max-w-2xl font-quicksand text-sm text-[var(--kkb-text-secondary)]">
             Réunissez votre tablée pour voter les repas de la semaine et partager les préférences de chacun.
@@ -734,7 +734,7 @@ export default function CirclePage() {
           {/* Colonne gauche : invitation */}
           <aside className="space-y-4">
             <section className="space-y-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-coral)] bg-[var(--kkb-coral-light)] p-5 print:hidden">
-              <p className="font-quicksand text-[10px] font-bold uppercase tracking-wider text-[var(--kkb-text-tertiary)]">Code unique du foyer</p>
+              <p className="font-quicksand text-xs font-bold text-[var(--kkb-text-tertiary)]">Code unique du foyer</p>
               <p className="font-dosis text-[32px] font-extrabold leading-none tracking-wider text-[var(--kkb-coral)]">{inviteCode}</p>
               <p className="font-quicksand text-xs text-[var(--kkb-text-secondary)]">
                 Partage ce code avec les enfants ou ton conjoint(e) pour rejoindre la tablée.
@@ -793,7 +793,7 @@ export default function CirclePage() {
                           <span className="font-dosis text-lg font-semibold text-[var(--kkb-text-primary)]">{u.display_name || u.email}</span>
                           {roleBadge(m.role)}
                           {isCurrentUser && (
-                            <span className="rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-coral-light)] px-2 py-0.5 font-quicksand text-[10px] font-bold uppercase text-[var(--kkb-coral)]">Vous</span>
+                            <span className="rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-coral-light)] px-2 py-0.5 font-quicksand text-xs font-bold text-[var(--kkb-coral)]">Vous</span>
                           )}
                           {inactiveBadge(m)}
                         </p>

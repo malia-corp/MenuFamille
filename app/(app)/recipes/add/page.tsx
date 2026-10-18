@@ -174,7 +174,7 @@ function RecipeAddInner() {
             <ArrowLeft className="h-4 w-4" /> {isPlanCtx ? 'Menu' : 'Carnet'} <span className="text-[var(--kkb-text-tertiary)]">/</span>
             <span className="font-bold text-[var(--kkb-coral)]">Nouvelle recette</span>
           </button>
-          <p className="flex items-center gap-1.5 text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--kkb-coral)] lg:hidden">
+          <p className="flex items-center gap-1.5 text-xs font-quicksand font-bold text-[var(--kkb-coral)] lg:hidden">
             <BookOpen className="h-3.5 w-3.5" /> {planHeader ? `Nouveau repas · ${planHeader}` : 'Transmission culinaire'}
           </p>
           <h1 className="font-dosis font-extrabold text-[22px] leading-tight text-[var(--kkb-text-primary)] lg:text-[28px]">
@@ -191,7 +191,7 @@ function RecipeAddInner() {
             <div className="flex items-center gap-2">
               <Wand2 className="h-4 w-4 text-[var(--kkb-jaune-text)]" />
               <p className="flex-1 text-sm font-quicksand font-bold text-[var(--kkb-text-primary)]">Magie Express</p>
-              <span className="rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-success-light)] px-2 py-0.5 text-[10px] font-quicksand font-bold uppercase tracking-wide text-[var(--kkb-success)]">Gain de temps</span>
+              <span className="rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-success-light)] px-2 py-0.5 text-xs font-quicksand font-bold text-[var(--kkb-success)]">Gain de temps</span>
             </div>
             <p className="text-[13px] font-quicksand text-[var(--kkb-text-secondary)]">
               Importe automatiquement une recette depuis un lien web, ou numérise une page de ton carnet manuscrit.
@@ -212,7 +212,7 @@ function RecipeAddInner() {
             {importDomain && <p className="text-[11px] font-quicksand text-[var(--kkb-text-tertiary)]">Importée depuis {importDomain} : vérifie et complète si nécessaire.</p>}
             {importWarning && <p className="flex items-center gap-1 text-[11px] font-quicksand text-[var(--kkb-jaune-text)]"><AlertTriangle className="h-3.5 w-3.5" /> {importWarning}</p>}
             {importError && <p className="text-xs font-quicksand text-[var(--kkb-danger)]">{importError}</p>}
-            <p className="text-center text-[10px] font-quicksand font-bold uppercase tracking-widest text-[var(--kkb-text-tertiary)]">Ou bien</p>
+            <p className="text-center text-xs font-quicksand font-boldst text-[var(--kkb-text-tertiary)]">Ou bien</p>
             <button type="button" onClick={() => toast.info('Bientôt disponible')}
               className="flex w-full items-center justify-center gap-2 rounded-[var(--kkb-radius-sm)] border border-[var(--kkb-border)] bg-white py-2.5 text-sm font-quicksand font-semibold text-[var(--kkb-text-secondary)]">
               <ScanLine className="h-4 w-4" /> Numériser un carnet de notes ou une photo

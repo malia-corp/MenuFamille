@@ -35,7 +35,7 @@ export function ResultCard({ item, dayLabel, onEdit, myReaction }: ResultCardPro
       {/* En-tête : type (+ jour sur desktop), adhésion (desktop), édition */}
       <div className="flex items-center gap-2">
         <span
-          className="inline-flex items-center px-2 py-0.5 rounded-[var(--kkb-radius-pill)] text-[10px] font-quicksand font-bold uppercase tracking-wide"
+          className="inline-flex items-center px-2 py-0.5 rounded-[var(--kkb-radius-pill)] text-xs font-quicksand font-bold"
           style={{ backgroundColor: color.bg, color: color.text }}
         >
           {MEAL_LABEL[item.meal_type]}
@@ -117,7 +117,7 @@ export function ResultCard({ item, dayLabel, onEdit, myReaction }: ResultCardPro
           ) : (
             'Tu n’as pas voté pour ce repas'
           )}
-          <span className="ml-auto inline-flex items-center gap-1 rounded-[var(--kkb-radius-pill)] bg-white px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide">
+          <span className="ml-auto inline-flex items-center gap-1 rounded-[var(--kkb-radius-pill)] bg-white px-2 py-0.5 text-xs font-bold">
             <Lock className="h-3 w-3" /> Privé
           </span>
         </p>
