@@ -1,6 +1,8 @@
 'use client'
 
-import { Logo, LogoMark } from '@/components/brand/logo'
+import { useEffect, useState } from 'react'
+import Link from 'next/link'
+import { LogoMark } from '@/components/brand/logo'
 import { usePathname, useRouter } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
 import { UserMenu } from './user-menu'
@@ -40,10 +42,26 @@ export function MobileHeader({ displayName, circleName, title: titleProp, showBa
   const title     = titleProp ?? backRoute?.title
   const subtitle  = showBack ? null : subtitleFor(pathname, circleName)
 
+  // Transparent en haut de page ; fond flouté et filet une fois la page
+  // défilée, pour détacher l'en-tête du contenu qui passe dessous.
+  const [scrolled, setScrolled] = useState(false)
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
   return (
-    <header className="lg:hidden print:hidden fixed top-0 left-0 right-0 z-40 h-14 flex items-center px-4 bg-[color-mix(in_srgb,var(--kkb-creme)_85%,transparent)] backdrop-blur-md">
+    <header
+      className={`lg:hidden print:hidden fixed top-0 left-0 right-0 z-40 h-14 flex items-center px-4 transition-[background-color,box-shadow] duration-200 ${
+        scrolled
+          ? 'bg-[color-mix(in_srgb,var(--kkb-creme)_85%,transparent)] backdrop-blur-md shadow-[0_1px_0_var(--kkb-filet)]'
+          : 'bg-transparent'
+      }`}
+    >
       <div className="flex items-center justify-between w-full max-w-sm mx-auto">
-        <div className="flex min-w-0 items-center gap-2">
+        <div className="flex min-w-0 items-center gap-2.5">
           {showBack && (
             <button
               type="button"
@@ -54,9 +72,23 @@ export function MobileHeader({ displayName, circleName, title: titleProp, showBa
               <ArrowLeft className="h-5 w-5" />
             </button>
           )}
-          {title ? <LogoMark size={22} /> : <Logo layout="horizontal" size={26} />}
+          {title ? (
+            <LogoMark size={22} />
+          ) : (
+            <Link href="/" aria-label="KeskonBouf, accueil" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white">
+              <LogoMark size={24} />
+            </Link>
+          )}
           <span className="flex min-w-0 flex-col leading-tight">
             {title && <span className="truncate font-dosis font-extrabold text-[17px] text-[var(--kkb-foret)]">{title}</span>}
+            {!title && !subtitle && (
+              <>
+                <span className="font-quicksand text-[11px] font-semibold text-[var(--kkb-texte-2)]">Foyer</span>
+                <span className="max-w-[180px] truncate font-dosis text-[15px] font-extrabold text-[var(--kkb-foret)]">
+                  {circleName ?? 'KeskonBouf'}
+                </span>
+              </>
+            )}
             {subtitle && (
               <span className={subtitle.caps
                 ? 'font-quicksand text-[10px] font-bold uppercase tracking-wider text-[var(--kkb-text-tertiary)]'
