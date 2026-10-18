@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { ArrowLeft } from 'lucide-react'
+import { RecipeFormHero } from '@/components/recipes/recipe-form-hero'
 import { RecipeForm, emptyIngredient, emptyStep, uid, type RecipeFormValues } from '../../_recipe-form'
 import { RecipeFormSkeleton } from '@/components/skeletons/page-skeletons'
 
@@ -90,7 +90,7 @@ export default function RecipeEditPage() {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 px-4">
         <p className="text-center text-sm font-quicksand text-[var(--kkb-danger)]">{initError}</p>
-        <button type="button" onClick={() => router.back()} className="text-xs font-quicksand font-bold text-[var(--kkb-coral)] underline">Retour</button>
+        <button type="button" onClick={() => router.back()} className="text-xs font-quicksand font-bold text-[var(--kkb-foret)] underline">Retour</button>
       </div>
     )
   }
@@ -99,15 +99,15 @@ export default function RecipeEditPage() {
   }
 
   return (
-    <div className="mx-auto max-w-[1300px] px-4 pb-44 pt-3 lg:max-w-none lg:px-0 lg:pb-28 lg:pt-0">
-      <div className="mb-5 space-y-1">
-        <button type="button" onClick={() => router.push(`/recipes/${id}`)}
-          className="hidden items-center gap-1.5 text-sm font-quicksand text-[var(--kkb-text-tertiary)] hover:text-[var(--kkb-coral)] lg:flex">
-          <ArrowLeft className="h-4 w-4" /> Recette <span>/</span> <span className="font-bold text-[var(--kkb-coral)]">Modifier</span>
-        </button>
-        <h1 className="font-dosis font-extrabold text-[22px] leading-tight text-[var(--kkb-text-primary)] lg:text-[28px] lg:leading-[32px] lg:text-[var(--kkb-foret)]">Modifier la recette</h1>
-        <p className="text-sm font-quicksand text-[var(--kkb-text-secondary)]">{defaultValues.name}</p>
-      </div>
+    <div className="mx-auto max-w-lg px-4 pb-44 pt-2 lg:max-w-none lg:px-0 lg:pb-32 lg:pt-0">
+      <RecipeFormHero
+        className="mb-4 lg:mb-5"
+        onBack={() => router.push(`/recipes/${id}`)}
+        backLabel="Retour à la recette"
+        eyebrow="Modifier la recette"
+        title={defaultValues.name ?? 'Recette'}
+        subtitle="Ajuste la fiche : tes changements apparaissent dès l’enregistrement."
+      />
 
       <RecipeForm defaultValues={defaultValues} onSubmit={handleSubmit} loading={loading} apiError={error} submitLabel="Enregistrer les modifications" />
     </div>

@@ -648,31 +648,27 @@ function FieldBones({ tall = false }: { tall?: boolean }) {
 }
 
 export function RecipeFormSkeleton() {
+  const title = <div className="flex items-center gap-2.5"><Bone className="h-8 w-8 rounded-full" /><Bone className="h-4 w-32 rounded" /></div>
   return (
-    <SkeletonPage label="Chargement de la recette" className="mx-auto max-w-[1300px] px-4 pb-44 pt-3 lg:max-w-none lg:px-0 lg:pb-28 lg:pt-0">
-      <div className="mb-5 space-y-2">
-        <Bone className="h-3 w-32 rounded" />
-        <Bone className="h-7 w-64 rounded-lg" />
+    <SkeletonPage label="Chargement de la recette" className="mx-auto max-w-lg px-4 pb-44 pt-2 lg:max-w-none lg:px-0 lg:pb-32 lg:pt-0">
+      <div className="mb-4 flex flex-col rounded-[var(--kkb-r-xl)] bg-[var(--kkb-foret)] p-5 lg:mb-5 lg:p-6">
+        <Bone dark className="h-10 w-10 rounded-full" />
+        <Bone dark className="mt-4 h-3.5 w-36 rounded" />
+        <Bone dark className="mt-2 h-8 w-64 rounded-lg" />
+        <Bone dark className="mt-2 h-3.5 w-full max-w-md rounded" />
       </div>
-      <div className="flex flex-col gap-5 lg:grid lg:grid-cols-[55fr_45fr] lg:items-start lg:gap-6">
-        <BoneCard className="space-y-5 p-5">
-          <Bone className="aspect-[16/9] rounded-[var(--kkb-r-lg)]" />
+      <div className="flex flex-col gap-4 lg:grid lg:grid-cols-12 lg:items-start lg:gap-5">
+        <BoneCard className="space-y-4 p-5 lg:col-span-5 lg:p-6">
+          {title}
+          <Bone className="aspect-[4/3] rounded-[var(--kkb-r-lg)]" />
           <FieldBones />
-          <div className="grid grid-cols-2 gap-3">
-            <FieldBones />
-            <FieldBones />
-          </div>
+          <FieldBones />
           <FieldBones tall />
         </BoneCard>
-        <BoneCard className="space-y-4 p-5">
-          <Bone className="h-5 w-36 rounded" />
-          {range(5).map((i) => (
-            <div key={i} className="flex gap-2">
-              <Bone className="h-11 flex-1 rounded-[var(--kkb-r-sm)]" />
-              <Bone className="h-11 w-24 rounded-[var(--kkb-r-sm)]" />
-            </div>
-          ))}
-          <Bone className="h-10 w-44 rounded-full" />
+        <BoneCard className="space-y-4 p-5 lg:col-span-7 lg:p-6">
+          {title}
+          {range(5).map((i) => <Bone key={i} className="h-[52px] rounded-[var(--kkb-r-lg)]" />)}
+          <Bone className="h-11 rounded-[var(--kkb-r-lg)]" />
         </BoneCard>
       </div>
     </SkeletonPage>
