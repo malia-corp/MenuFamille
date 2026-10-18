@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowRight, CalendarDays, ChevronDown, Clock, Hand, Loader2, Lock, Send, UnfoldHorizontal, UserCircle, XCircle, type LucideIcon } from 'lucide-react'
+import { ArrowRight, CalendarDays, ChevronDown, Clock, Loader2, Lock, Send, UnfoldHorizontal, UserCircle, XCircle, type LucideIcon } from 'lucide-react'
 import { PublicHeader } from '@/components/survey/public-header'
 import { MealVoteCard, type Reaction } from '@/components/survey/meal-vote-card'
 import { ViewToggle, type SurveyViewMode } from '@/components/survey/view-toggle'
@@ -393,7 +393,7 @@ export function SurveyPageClient({ token }: { token: string }) {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--kkb-bg)] pb-32">
+    <div className="min-h-screen bg-[var(--kkb-bg)] pb-48 lg:pb-32">
       <PublicHeader plannerName={data.plan.planner_name} familyName={data.plan.family_name} viewer={data.viewer} />
 
       <div className="max-w-7xl mx-auto px-4 lg:px-6 xl:px-10 py-5 lg:py-10">
@@ -401,18 +401,17 @@ export function SurveyPageClient({ token }: { token: string }) {
           {/* Hero — carte unique ; le panneau identité rejoint le texte de bienvenue
               en ligne à partir de xl: (comme la maquette desktop), plutôt qu'une
               colonne latérale fixe sur toute la hauteur de la page. */}
-          <section className="bg-white rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] p-6 lg:p-8 xl:p-10 mb-6">
+          <section className="mb-6 px-1 xl:rounded-[var(--kkb-r-xl)] xl:bg-white xl:p-10">
             <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-6 xl:gap-10">
               <div className="space-y-2 xl:max-w-2xl">
-                <span className="inline-block text-[11px] font-quicksand font-bold uppercase tracking-wide px-2.5 py-1 rounded-full bg-[var(--kkb-teal-light)] text-[var(--kkb-teal)]">
-                  <CalendarDays className="inline h-3.5 w-3.5 -mt-0.5 mr-1" />Semaine en cours · {formatWeekRange(data.plan.week_start)}
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-xs font-quicksand font-semibold text-[var(--kkb-foret)] xl:bg-[var(--kkb-creme)]">
+                  <CalendarDays className="h-3.5 w-3.5" /> Semaine du {formatWeekRange(data.plan.week_start)}
                 </span>
-                <h1 className="font-dosis font-extrabold text-2xl xl:text-3xl text-[var(--kkb-text-primary)]">
+                <h1 className="text-h1 xl:text-[34px] xl:leading-[40px] text-[var(--kkb-foret)]">
                   Le menu de {plannerFirstName}
                 </h1>
-                <p className="text-sm xl:text-base font-quicksand text-[var(--kkb-text-secondary)]">
-                  Salut ! <Hand className="inline h-4 w-4 -mt-0.5 text-[var(--kkb-coral)]" /> Dis-nous ce qui te fait envie pour les repas de cette semaine. Ton avis
-                  compte beaucoup pour la cuisine de la maison !
+                <p className="text-[15px] xl:text-base font-quicksand leading-6 text-[var(--kkb-texte-2)]">
+                  Dis ce qui te fait envie cette semaine&nbsp;: la table décide ensemble.
                 </p>
               </div>
 
@@ -433,27 +432,27 @@ export function SurveyPageClient({ token }: { token: string }) {
 
           {/* Champ prénom — masqué sur xl: (déplacé dans le panneau identité du hero) */}
           <section className="mb-6 xl:hidden">
-            <p className="text-[11px] font-quicksand font-bold uppercase tracking-wide text-[var(--kkb-text-tertiary)] mb-1.5">
-              Ton prénom ?
-            </p>
-            <div className={`lg:max-w-[400px] flex items-center gap-2.5 border-[1.5px] border-[var(--kkb-border)] rounded-[var(--kkb-radius-sm)] px-3.5 py-3 transition-colors ${
-              nameLocked ? 'bg-[var(--kkb-border-light)]' : 'bg-white focus-within:border-[var(--kkb-coral)]'
+            <label htmlFor="kkb-vote-name" className="block px-1 text-sm font-quicksand font-semibold text-[var(--kkb-texte-2)] mb-2">
+              Ton prénom
+            </label>
+            <div className={`lg:max-w-[400px] flex h-12 items-center gap-2.5 rounded-full px-4 transition-shadow ${
+              nameLocked ? 'bg-[var(--kkb-lin)]' : 'bg-white ring-[var(--kkb-foret-300)] focus-within:ring-2'
             }`}>
-              <UserCircle className="h-4 w-4 text-[var(--kkb-text-tertiary)] shrink-0" />
+              <UserCircle className="h-5 w-5 text-[var(--kkb-texte-2)] shrink-0" />
               <input
                 type="text"
                 value={name}
                 onChange={e => setName(e.target.value)}
                 onBlur={handleNameBlur}
                 disabled={nameLocked}
-                placeholder="Comment vous appelez-vous ?"
-                aria-label="Ton prénom"
-                className="flex-1 text-sm font-quicksand text-[var(--kkb-text-primary)] bg-transparent outline-none placeholder:text-[var(--kkb-text-tertiary)] disabled:cursor-not-allowed disabled:text-[var(--kkb-text-secondary)]"
+                id="kkb-vote-name"
+                placeholder="Comment tu t’appelles ?"
+                className="flex-1 min-w-0 text-[15px] font-quicksand text-[var(--kkb-profond)] bg-transparent outline-none placeholder:text-[var(--kkb-texte-2)] disabled:cursor-not-allowed disabled:text-[var(--kkb-texte-2)]"
               />
               {nameLocked && <Lock className="h-3.5 w-3.5 text-[var(--kkb-text-tertiary)] shrink-0" />}
             </div>
             {nameLocked && (
-              <p className="mt-1 text-[11px] font-quicksand text-[var(--kkb-text-tertiary)]">Connecté(e) : ton nom vient de ton profil.</p>
+              <p className="mt-1.5 px-1 text-xs font-quicksand text-[var(--kkb-texte-2)]">Ton nom vient de ton profil.</p>
             )}
           </section>
 
@@ -506,10 +505,11 @@ export function SurveyPageClient({ token }: { token: string }) {
                 <button
                   type="button"
                   onClick={() => toggleSection(section.key)}
-                  className="w-full flex items-center justify-between gap-2 mb-2 lg:cursor-pointer"
+                  className="w-full flex items-center justify-between gap-2 mb-3 px-1 lg:cursor-pointer"
                 >
-                  <h2 className="font-dosis font-bold text-xl text-[var(--kkb-text-primary)]">
-                    <section.icon className="inline h-5 w-5 -mt-1 mr-1.5 text-[var(--kkb-coral)]" />{section.title}
+                  <h2 className="flex items-center gap-2.5 text-h2 text-[var(--kkb-profond)]">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-[var(--kkb-foret)]"><section.icon className="h-[18px] w-[18px]" /></span>
+                    {section.title}
                   </h2>
                   <ChevronDown className={`hidden lg:block h-5 w-5 text-[var(--kkb-text-tertiary)] transition-transform ${collapsed ? '-rotate-90' : ''}`} />
                 </button>
@@ -546,18 +546,18 @@ export function SurveyPageClient({ token }: { token: string }) {
       </div>
 
       {/* Barre sticky en bas */}
-      <div className="fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-[var(--kkb-border)] lg:rounded-t-[var(--kkb-radius-card)] lg:shadow-[0_-4px_20px_rgba(22,25,26,0.08)]">
-        <div className="max-w-[720px] mx-auto px-5 py-3 lg:flex lg:items-center lg:justify-between lg:gap-4" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
+      <div className="fixed inset-x-3 z-30 mx-auto max-w-[720px] rounded-[var(--kkb-r-xl)] bg-white shadow-[var(--kkb-shadow-sheet)]" style={{ bottom: 'calc(12px + env(safe-area-inset-bottom))' }}>
+        <div className="px-4 py-3.5 lg:flex lg:items-center lg:justify-between lg:gap-4 lg:px-5">
           {/* Progression — mobile uniquement, dupliquée dans le panneau identité sur xl: */}
           <div className="xl:hidden">
-            <div className="flex items-center justify-between mb-1">
-              <p className="text-xs font-quicksand text-[var(--kkb-text-tertiary)]">
-                {ratedCount} / {totalCount} repas notés
+            <div className="flex items-center justify-between mb-1.5">
+              <p className="text-sm font-quicksand text-[var(--kkb-texte-2)]">
+                <span className="font-bold tabular-nums text-[var(--kkb-profond)]">{ratedCount}/{totalCount}</span> repas notés
               </p>
             </div>
-            <div className="h-1 w-full rounded-full bg-[var(--kkb-border)] overflow-hidden">
+            <div className="h-2 w-full rounded-full bg-[var(--kkb-sauge-50)] overflow-hidden">
               <div
-                className="h-full rounded-full bg-[var(--kkb-coral)] transition-all duration-300"
+                className="h-full rounded-full bg-[var(--kkb-sauge)] transition-all duration-300"
                 style={{ width: `${totalCount > 0 ? Math.round((ratedCount / totalCount) * 100) : 0}%` }}
               />
             </div>
@@ -568,7 +568,7 @@ export function SurveyPageClient({ token }: { token: string }) {
               <button
                 type="button"
                 onClick={handleModify}
-                className="w-full lg:w-auto mt-3 lg:mt-0 flex items-center justify-center gap-2 rounded-[var(--kkb-radius-pill)] bg-white border-[1.5px] border-[var(--kkb-coral)] text-[var(--kkb-coral)] font-quicksand font-bold text-[15px] px-6 py-3"
+                className="w-full lg:w-auto mt-3 lg:mt-0 flex h-12 items-center justify-center gap-2 rounded-full bg-[var(--kkb-lin)] text-[var(--kkb-foret)] font-quicksand font-bold text-base px-6"
               >
                 Modifier mes votes
               </button>
@@ -577,19 +577,19 @@ export function SurveyPageClient({ token }: { token: string }) {
                 type="button"
                 onClick={handleSubmit}
                 disabled={ratedCount === 0 || !name.trim() || submitting}
-                className={`w-full lg:w-auto mt-3 lg:mt-0 flex items-center justify-center gap-2 rounded-[var(--kkb-radius-pill)] font-quicksand font-bold text-[15px] px-6 py-3 transition-opacity ${
+                className={`w-full lg:w-auto mt-3 lg:mt-0 flex h-12 items-center justify-center gap-2 rounded-full font-quicksand font-bold text-base px-6 transition-opacity ${
                   ratedCount === 0 || !name.trim() ? 'bg-[var(--kkb-coral)] text-white opacity-50 pointer-events-none' : 'bg-[var(--kkb-coral)] text-white'
                 }`}
               >
                 {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                Envoyer mes votes
+                Envoyer
               </button>
             )}
           </div>
 
           {!submitted && (
-            <p className="text-center text-[11px] font-quicksand text-[var(--kkb-text-tertiary)] mt-2 lg:mt-0">
-              Modifiable à tout moment avant vendredi soir · Zéro gaspillage alimentaire
+            <p className="text-center text-xs font-quicksand text-[var(--kkb-texte-2)] mt-2 lg:mt-0">
+              Tu pourras modifier tes votes ensuite.
             </p>
           )}
           {/* Membres du cercle : résultats agrégés (connexion requise) */}
@@ -597,9 +597,9 @@ export function SurveyPageClient({ token }: { token: string }) {
             <button
               type="button"
               onClick={() => router.push('/votes/results/member')}
-              className="mx-auto mt-2 lg:mt-0 flex items-center gap-1 text-xs font-quicksand font-bold text-[var(--kkb-teal)]"
+              className="mx-auto mt-1 lg:mt-0 flex h-10 items-center gap-1 text-sm font-quicksand font-bold text-[var(--kkb-foret)]"
             >
-              Voir les résultats de la famille <ArrowRight className="h-3.5 w-3.5" />
+              Voir l’avis de la table <ArrowRight className="h-4 w-4" />
             </button>
           )}
         </div>
@@ -612,8 +612,10 @@ export function SurveyPageClient({ token }: { token: string }) {
 
 function SectionSeparator({ label }: { label: string }) {
   return (
-    <p className="text-center text-[11px] font-quicksand font-bold uppercase tracking-wide text-[var(--kkb-text-tertiary)] my-4">
-      ── {label} ──
+    <p className="my-5 flex items-center gap-3 text-xs font-quicksand font-bold text-[var(--kkb-texte-2)]">
+      <span className="h-px flex-1 bg-[var(--kkb-filet)]" aria-hidden="true" />
+      {label}
+      <span className="h-px flex-1 bg-[var(--kkb-filet)]" aria-hidden="true" />
     </p>
   )
 }
@@ -633,9 +635,9 @@ function StatusScreen({ icon, title, message, onBack }: {
         <button
           type="button"
           onClick={onBack}
-          className="text-sm font-quicksand font-semibold text-[var(--kkb-coral)] underline"
+          className="mx-auto flex h-12 items-center rounded-full bg-[var(--kkb-foret)] px-6 text-[15px] font-quicksand font-bold text-[var(--kkb-creme)]"
         >
-          Retour à l&apos;accueil
+          Retour à l’accueil
         </button>
       </div>
     </div>

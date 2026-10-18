@@ -87,21 +87,21 @@ export function FAB({ role }: { role?: string | null }) {
   // Sur /plan, le bouton d'ancrage (en haut de page) est plus discret —
   // petit et aligne a gauche plutot que pleine largeur. Sa version flottante
   // (apres defilement) reste a gauche : c'est le bouton "Passer a ..." de la
-  // page qui se contracte et glisse a droite en miroir (meme bottom-[88px]),
+  // page qui se contracte et glisse a droite en miroir (meme bottom-[var(--kkb-nav-offset)]),
   // les deux animes pour atterrir cote a cote plutot que de se superposer.
   const isPlan = pathname === '/plan'
 
   const dockedClass = isPlan
     ? 'relative inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-white bg-[var(--kkb-coral)] shadow-[var(--kkb-shadow-fab)] transition-transform active:scale-[0.97]'
-    : 'relative w-full flex items-center justify-center gap-1.5 rounded-full px-4 py-2 text-white bg-[var(--kkb-coral)] shadow-[var(--kkb-shadow-fab)] transition-transform active:scale-[0.97]'
+    : 'relative w-full h-12 flex items-center justify-center gap-2 rounded-full px-5 text-white bg-[var(--kkb-coral)] transition-transform active:scale-[0.97]'
 
   // h-[40px] explicite (pas py-2) sur /plan pour matcher exactement la
-  // hauteur du bouton compact "Passer a ..." (meme bottom-[88px]) — avec
+  // hauteur du bouton compact "Passer a ..." (meme bottom-[var(--kkb-nav-offset)]) — avec
   // des hauteurs fixees par le padding de part et d'autre, les deux boutons
   // n'etaient pas rendus a la meme hauteur malgre le meme `bottom`.
   const floatingClass = isPlan
-    ? 'lg:hidden fixed z-[45] bottom-[88px] left-4 h-[40px] flex items-center gap-1 px-3.5 rounded-full text-white bg-[var(--kkb-coral)] shadow-[var(--kkb-shadow-fab)] transition-transform hover:scale-[1.03] active:scale-[0.97] whitespace-nowrap'
-    : 'lg:hidden fixed z-[45] bottom-[88px] left-1/2 -translate-x-1/2 flex items-center gap-1.5 rounded-full px-4 py-2 text-white bg-[var(--kkb-coral)] shadow-[var(--kkb-shadow-fab)] transition-transform hover:scale-[1.03] active:scale-[0.97] whitespace-nowrap'
+    ? 'lg:hidden fixed z-[45] bottom-[var(--kkb-nav-offset)] left-4 h-[40px] flex items-center gap-1 px-3.5 rounded-full text-white bg-[var(--kkb-coral)] shadow-[var(--kkb-shadow-fab)] transition-transform hover:scale-[1.03] active:scale-[0.97] whitespace-nowrap'
+    : 'lg:hidden fixed z-[45] bottom-[var(--kkb-nav-offset)] left-1/2 -translate-x-1/2 h-12 flex items-center gap-2 rounded-full px-5 text-white bg-[var(--kkb-coral)] shadow-[var(--kkb-shadow-fab)] transition-transform hover:scale-[1.03] active:scale-[0.97] whitespace-nowrap'
 
   const button = (
     <button
@@ -109,8 +109,8 @@ export function FAB({ role }: { role?: string | null }) {
       onClick={handleClick}
       className={docked ? dockedClass : floatingClass}
     >
-      <Zap className={isPlan ? 'h-3.5 w-3.5 shrink-0' : 'h-4 w-4 shrink-0'} />
-      <span className={`font-quicksand font-semibold ${isPlan ? 'text-[12px]' : 'text-[13px]'}`}>
+      <Zap className={isPlan ? 'h-3.5 w-3.5 shrink-0' : 'h-5 w-5 shrink-0'} />
+      <span className={`font-quicksand ${isPlan ? 'font-semibold text-[12px]' : 'font-bold text-[16px]'}`}>
         Générer ma semaine
       </span>
     </button>

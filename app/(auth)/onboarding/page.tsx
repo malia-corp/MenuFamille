@@ -70,7 +70,7 @@ export default function OnboardingPage() {
 
         <div className="space-y-4">
           {/* Carte A — Planificatrice */}
-          <div className="bg-white border border-[var(--kkb-border)] rounded-[var(--kkb-radius-card)] p-5 space-y-3">
+          <div className="bg-white border border-[var(--kkb-lin)] rounded-[var(--kkb-radius-card)] p-5 space-y-3">
             <div className="flex items-center gap-3">
               <span className="h-10 w-10 rounded-full bg-[var(--kkb-coral-light)] flex items-center justify-center shrink-0">
                 <Crown className="h-5 w-5 text-[var(--kkb-coral)]" />
@@ -92,7 +92,7 @@ export default function OnboardingPage() {
           </div>
 
           {/* Carte B — Membre */}
-          <div className="bg-white border border-[var(--kkb-border)] rounded-[var(--kkb-radius-card)] p-5 space-y-3">
+          <div className="bg-white border border-[var(--kkb-lin)] rounded-[var(--kkb-radius-card)] p-5 space-y-3">
             <div className="flex items-center gap-3">
               <span className="h-10 w-10 rounded-full bg-[var(--kkb-teal-light)] flex items-center justify-center shrink-0">
                 <Users className="h-5 w-5 text-[var(--kkb-teal)]" />

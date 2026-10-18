@@ -71,7 +71,7 @@ export function AddToMenuSheet({ recipeId, open, onClose }: { recipeId: string; 
         <p className="font-dosis font-bold text-lg text-[var(--kkb-text-primary)]">Ajouter à mon menu</p>
 
         <div className="space-y-1.5">
-          <p className="text-[11px] font-quicksand font-bold uppercase tracking-wide text-[var(--kkb-text-tertiary)]">Semaine</p>
+          <p className="text-xs font-quicksand font-bold text-[var(--kkb-text-tertiary)]">Semaine</p>
           <div className="flex gap-2">
             {([['current', 'Cette semaine'], ['next', 'Semaine prochaine']] as const).map(([v, label]) => (
               <button key={v} type="button" onClick={() => setWeek(v)} className={`flex-1 ${choice(week === v)}`}>{label}</button>
@@ -80,14 +80,14 @@ export function AddToMenuSheet({ recipeId, open, onClose }: { recipeId: string; 
         </div>
 
         <div className="space-y-1.5">
-          <p className="text-[11px] font-quicksand font-bold uppercase tracking-wide text-[var(--kkb-text-tertiary)]">Jour</p>
+          <p className="text-xs font-quicksand font-bold text-[var(--kkb-text-tertiary)]">Jour</p>
           <div className="flex flex-wrap gap-1.5">
             {DAY_OPTIONS.map(d => <button key={d.val} type="button" onClick={() => setDay(d.val)} className={choice(day === d.val)}>{d.label}</button>)}
           </div>
         </div>
 
         <div className="space-y-1.5">
-          <p className="text-[11px] font-quicksand font-bold uppercase tracking-wide text-[var(--kkb-text-tertiary)]">Repas</p>
+          <p className="text-xs font-quicksand font-bold text-[var(--kkb-text-tertiary)]">Repas</p>
           <div className="flex flex-wrap gap-1.5">
             {(mealConfig ?? []).map(m => <button key={m.meal_type} type="button" onClick={() => setMeal(m.meal_type)} className={choice(meal === m.meal_type)}>{m.label}</button>)}
           </div>

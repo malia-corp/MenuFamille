@@ -1,7 +1,7 @@
 'use client'
 
-import { Pencil, type LucideIcon } from 'lucide-react'
-import { CompositionCarousel, type ChipItem } from './composition-carousel'
+import { Pencil, Plus, type LucideIcon } from 'lucide-react'
+import type { ChipItem } from './composition-carousel'
 import { FramedPhoto } from './framed-photo'
 
 interface MealCardCompactProps {
@@ -18,6 +18,9 @@ interface MealCardCompactProps {
   onAddComposition: () => void
 }
 
+// Repas secondaire du jour : une ligne compacte (vignette, moment, plat),
+// les extras en petites puces dessous. Toute la ligne reste lisible d'un
+// coup d'œil, le repas principal garde la grande photo.
 export function MealCardCompact({
   icon: Icon,
   badgeLabel,
@@ -32,38 +35,54 @@ export function MealCardCompact({
   onAddComposition,
 }: MealCardCompactProps) {
   return (
-    <div className="bg-white rounded-xl border-[0.5px] border-[var(--kkb-border)] shadow-sm overflow-hidden">
-      <div className="relative aspect-[4/3] w-full">
-        {photoUrl ? (
-          <FramedPhoto src={photoUrl} alt={title} />
-        ) : (
-          <div className="h-full w-full flex items-center justify-center bg-[var(--kkb-coral)]">
-            <Icon className="h-12 w-12 text-white" />
-          </div>
-        )}
-        <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/75 to-transparent" />
-        <div className="absolute top-1.5 left-1.5">
+    <article className="rounded-[var(--kkb-r-xl)] bg-white p-2.5">
+      <div className="flex items-center gap-3">
+        <div className="relative h-[72px] w-[72px] shrink-0 overflow-hidden rounded-[var(--kkb-r-lg)]" style={{ backgroundColor: badgeBg }}>
+          {photoUrl ? (
+            <FramedPhoto src={photoUrl} alt={title} />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center" style={{ color: badgeText }}>
+              <Icon className="h-7 w-7" />
+            </div>
+          )}
+        </div>
+
+        <div className="min-w-0 flex-1">
           <span
-            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-quicksand font-bold border border-[var(--kkb-border)]"
+            className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-quicksand text-[11px] font-bold"
             style={{ backgroundColor: badgeBg, color: badgeText }}
           >
             <Icon className="h-3 w-3" /> {badgeLabel}
           </span>
+          <h4 className="mt-1 truncate font-dosis text-[17px] font-bold leading-[22px] text-[var(--kkb-profond)]">{title}</h4>
+          {subtitle && <p className="font-quicksand text-xs text-[var(--kkb-texte-2)]">{subtitle}</p>}
         </div>
+
         <button
           type="button"
           onClick={onEdit}
-          aria-label="Modifier"
-          className="absolute top-1.5 right-1.5 h-7 w-7 rounded-full bg-white/90 hover:bg-white flex items-center justify-center text-[var(--kkb-text-secondary)] active:scale-95 transition-transform"
+          aria-label={`Modifier ${title}`}
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--kkb-creme)] text-[var(--kkb-foret)] transition-transform active:scale-95"
         >
-          <Pencil className="h-3.5 w-3.5" />
+          <Pencil className="h-4 w-4" />
         </button>
-        <div className="absolute bottom-1.5 left-2.5 right-2.5 text-white">
-          <h4 className="font-dosis font-bold text-lg leading-tight">{title}</h4>
-          <p className="text-[11px] font-quicksand text-white/90">{subtitle}</p>
-        </div>
       </div>
-      <CompositionCarousel title={compositionTitle} items={compositions} onAdd={onAddComposition} addLabel="Extra" />
-    </div>
+
+      <div className="mt-2.5 flex flex-wrap items-center gap-1.5 border-t border-[var(--kkb-lin)] px-1 pt-2.5" aria-label={compositionTitle}>
+        {compositions.map((c, i) => (
+          <span key={i} className="inline-flex h-7 max-w-[160px] items-center gap-1 rounded-full bg-[var(--kkb-lin)] px-2.5 font-quicksand text-xs font-semibold text-[var(--kkb-profond)]">
+            <c.icon className="h-3 w-3 shrink-0 text-[var(--kkb-foret)]" />
+            <span className="truncate">{c.name}</span>
+          </span>
+        ))}
+        <button
+          type="button"
+          onClick={onAddComposition}
+          className="inline-flex h-9 items-center gap-1 rounded-full px-2.5 font-quicksand text-xs font-semibold text-[var(--kkb-foret)] active:scale-95"
+        >
+          <Plus className="h-3.5 w-3.5" /> {compositions.length ? 'Extra' : 'Ajouter un extra'}
+        </button>
+      </div>
+    </article>
   )
 }

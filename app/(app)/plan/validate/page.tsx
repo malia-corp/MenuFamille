@@ -88,7 +88,7 @@ function RecipeRow({ recipe, label, compositions, warnings }: {
   const drink = drinkComp ? { id: 'drink', name: drinkComp.recipes!.name } : null
 
   return (
-    <div className="flex items-center gap-3 px-3 py-2.5 border-b border-[var(--kkb-border)]/30 last:border-0">
+    <div className="flex items-center gap-3 px-3 py-2.5 border-b border-[color-mix(in_srgb,var(--kkb-border)_30%,transparent)] last:border-0">
       <p className="w-20 text-[10px] font-quicksand font-semibold text-[var(--kkb-text-tertiary)] flex-shrink-0">
         {label}
       </p>
@@ -165,7 +165,7 @@ function MealAccordionSection({ config, plan, open, onToggle }: {
   const totalCount = config.mode === 'template' ? 1 : 7
 
   return (
-    <div className="mx-4 bg-white border border-[var(--kkb-border)] rounded-[var(--kkb-radius-card)] overflow-hidden">
+    <div className="mx-4 bg-white border border-[var(--kkb-lin)] rounded-[var(--kkb-radius-card)] overflow-hidden">
       <button
         type="button"
         onClick={onToggle}
@@ -175,7 +175,7 @@ function MealAccordionSection({ config, plan, open, onToggle }: {
         <span className="font-dosis font-semibold text-sm text-[var(--kkb-text-primary)]">
           {MEAL_LABEL[config.meal_type]}
         </span>
-        <span className={`text-[10px] font-quicksand font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full ${
+        <span className={`text-xs font-quicksand font-bold px-1.5 py-0.5 rounded-full ${
           config.mode === 'template'
             ? 'bg-[var(--kkb-warning-light)] text-[var(--kkb-warning)]'
             : 'bg-[var(--kkb-bg)] text-[var(--kkb-text-tertiary)]'
@@ -191,7 +191,7 @@ function MealAccordionSection({ config, plan, open, onToggle }: {
       </button>
 
       {open && (
-        <div className="border-t border-[var(--kkb-border)]/50">
+        <div className="border-t border-[color-mix(in_srgb,var(--kkb-border)_50%,transparent)]">
           {config.mode === 'template' ? (
             <RecipeRow
               recipe={templateItem?.recipes ?? null}
@@ -241,7 +241,7 @@ function DayAccordionSection({ day, dateLabel, configs, plan, open, onToggle }: 
   const warningsCount = rows.reduce((acc, r) => acc + (r.item?.allergy_warnings?.length ?? 0), 0)
 
   return (
-    <div className={`mx-4 bg-white border rounded-[var(--kkb-radius-card)] overflow-hidden ${complete ? 'border-[var(--kkb-border)]' : 'border-[var(--kkb-warning)]/60'}`}>
+    <div className={`mx-4 bg-white border rounded-[var(--kkb-radius-card)] overflow-hidden ${complete ? 'border-[var(--kkb-border)]' : 'border-[color-mix(in_srgb,var(--kkb-warning)_60%,transparent)]'}`}>
       <button
         type="button"
         onClick={onToggle}
@@ -250,7 +250,7 @@ function DayAccordionSection({ day, dateLabel, configs, plan, open, onToggle }: 
         <span className="font-dosis font-semibold text-sm text-[var(--kkb-text-primary)] uppercase">
           {dateLabel}
         </span>
-        <span className={`text-[10px] font-quicksand font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full ${
+        <span className={`text-xs font-quicksand font-bold px-1.5 py-0.5 rounded-full ${
           complete ? 'bg-[var(--kkb-success-light)] text-[var(--kkb-success)]' : 'bg-[var(--kkb-warning-light)] text-[var(--kkb-warning)]'
         }`}>
           {complete
@@ -266,9 +266,9 @@ function DayAccordionSection({ day, dateLabel, configs, plan, open, onToggle }: 
       </button>
 
       {open && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-3 border-t border-[var(--kkb-border)]/50">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-3 border-t border-[color-mix(in_srgb,var(--kkb-border)_50%,transparent)]">
           {rows.map(({ config, item }) => (
-            <div key={config.meal_type} className="relative overflow-hidden rounded-xl border border-[var(--kkb-border)]/60 min-h-[132px]">
+            <div key={config.meal_type} className="relative overflow-hidden rounded-xl border border-[color-mix(in_srgb,var(--kkb-border)_60%,transparent)] min-h-[132px]">
               {item?.recipes?.photo_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={item.recipes.photo_url} alt="" className="absolute inset-0 h-full w-full object-cover" />
@@ -464,7 +464,7 @@ function ValidateInner() {
         <div key={stat.label} className="bg-white border border-[var(--kkb-border)] rounded-[var(--kkb-radius-sm)] py-2.5 flex flex-col items-center gap-0.5">
           <stat.icon className="h-3.5 w-3.5 text-[var(--kkb-coral)]" />
           <span className="font-dosis font-bold text-sm text-[var(--kkb-text-primary)]">{stat.value}</span>
-          <span className="text-[9px] font-quicksand font-bold uppercase tracking-wide text-[var(--kkb-text-tertiary)]">{stat.label}</span>
+          <span className="text-xs font-quicksand font-bold text-[var(--kkb-text-tertiary)]">{stat.label}</span>
         </div>
       ))}
     </div>
@@ -546,7 +546,7 @@ function ValidateInner() {
 
       <ShareActions
         getPayload={surveySharePayload}
-        shareButtonClassName="flex-1 flex items-center justify-center gap-1.5 border border-[var(--kkb-coral)] text-[var(--kkb-coral)] rounded-2xl py-3 font-dosis font-bold text-sm disabled:opacity-60 hover:bg-[var(--kkb-coral)]/5 transition-colors"
+        shareButtonClassName="flex-1 flex items-center justify-center gap-1.5 border border-[var(--kkb-coral)] text-[var(--kkb-coral)] rounded-2xl py-3 font-dosis font-bold text-sm disabled:opacity-60 hover:bg-[color-mix(in_srgb,var(--kkb-coral)_5%,transparent)] transition-colors"
       />
 
       <button
@@ -619,19 +619,19 @@ function ValidateInner() {
             <button type="button" onClick={() => router.push('/plan')} className="w-5 h-5 rounded-full bg-[var(--kkb-success)] flex items-center justify-center">
               <Check className="h-3 w-3 text-white" />
             </button>
-            <span className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--kkb-text-tertiary)]">Planifier</span>
+            <span className="text-xs font-quicksand font-bold text-[var(--kkb-text-tertiary)]">Planifier</span>
           </div>
           <ChevronRight className="h-3 w-3 text-[var(--kkb-border)]" />
           <div className="flex items-center gap-1.5">
             <div className="w-5 h-5 rounded-full bg-[var(--kkb-coral)] flex items-center justify-center">
               <span className="text-white text-[10px] font-bold">2</span>
             </div>
-            <span className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--kkb-coral)]">Synthèse &amp; Validation</span>
+            <span className="text-xs font-quicksand font-bold text-[var(--kkb-coral)]">Synthèse &amp; Validation</span>
           </div>
         </div>
 
         {/* Bannière */}
-        <div className="bg-white border border-[var(--kkb-border)] rounded-[var(--kkb-radius-card)] px-6 py-5 flex items-center gap-4">
+        <div className="bg-white border border-[var(--kkb-lin)] rounded-[var(--kkb-radius-card)] px-6 py-5 flex items-center gap-4">
           <div className="h-12 w-12 rounded-full bg-[var(--kkb-coral-light)] flex items-center justify-center shrink-0">
             <CheckCircle2 className="h-6 w-6 text-[var(--kkb-coral)]" />
           </div>

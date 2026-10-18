@@ -22,12 +22,12 @@ export function VoteIdentityPanel({
   const percent = totalCount > 0 ? Math.round((ratedCount / totalCount) * 100) : 0
 
   return (
-    <div className="bg-white border border-[var(--kkb-border)] rounded-[var(--kkb-radius-card)] p-4 space-y-3">
+    <div className="bg-white border border-[var(--kkb-lin)] rounded-[var(--kkb-radius-card)] p-4 space-y-3">
       <div className="flex items-center justify-between">
-        <p className="text-[11px] font-quicksand font-bold uppercase tracking-wide text-[var(--kkb-text-tertiary)]">
+        <p className="text-xs font-quicksand font-bold text-[var(--kkb-text-tertiary)]">
           Identité de vote
         </p>
-        <span className={`text-[10px] font-quicksand font-bold uppercase px-2 py-0.5 rounded-full ${
+        <span className={`text-xs font-quicksand font-bold px-2 py-0.5 rounded-full ${
           submitted ? 'bg-[var(--kkb-teal-light)] text-[var(--kkb-teal)]' : 'bg-[var(--kkb-success-light)] text-[var(--kkb-success)]'
         }`}>
           {submitted ? 'Enregistré' : 'Prêt'}
@@ -35,7 +35,7 @@ export function VoteIdentityPanel({
       </div>
 
       <div>
-        <p className="text-[10px] font-quicksand font-bold uppercase tracking-wide text-[var(--kkb-text-tertiary)] mb-1">
+        <p className="text-xs font-quicksand font-bold text-[var(--kkb-text-tertiary)] mb-1">
           Ton prénom
         </p>
         <div className={`flex items-center gap-2 border-[1.5px] border-[var(--kkb-border)] rounded-[var(--kkb-radius-sm)] px-3 py-2.5 transition-colors ${locked ? 'bg-[var(--kkb-border-light)]' : 'bg-[var(--kkb-bg)] focus-within:border-[var(--kkb-coral)]'}`}>

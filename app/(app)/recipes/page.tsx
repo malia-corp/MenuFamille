@@ -126,6 +126,12 @@ export default function RecipesPage() {
         : 'border border-[var(--kkb-border)] bg-white text-[var(--kkb-text-secondary)]'
     }`
 
+  // Puces mobiles : vert forêt quand choisies, l'orange reste au bouton « + » (C-02).
+  const chip = (active: boolean) =>
+    `flex h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-4 text-[13px] font-quicksand font-bold transition-colors ${
+      active ? 'bg-[var(--kkb-foret)] text-[var(--kkb-creme)]' : 'bg-white text-[var(--kkb-texte-2)]'
+    }`
+
   const filtersActive = origin !== 'all' || !!search.trim() || categoryIds.length > 0 || under30
   function resetFilters() {
     setOrigin('all'); setSearch(''); setCategoryIds([]); setUnder30(false)
@@ -146,57 +152,74 @@ export default function RecipesPage() {
   return (
     <>
       {/* ── Mobile ─────────────────────────────────────────────────────── */}
-      <div className="mx-auto max-w-lg space-y-4 px-4 pb-32 pt-3 lg:hidden">
-        <div>
-          <h1 className="font-dosis font-extrabold text-2xl text-[var(--kkb-text-primary)]">Carnet Culinaire</h1>
-          <p className="text-sm font-quicksand text-[var(--kkb-text-secondary)]">{totalAll} recette{totalAll > 1 ? 's' : ''} authentique{totalAll > 1 ? 's' : ''}</p>
+      <div className="mx-auto max-w-sm space-y-5 px-4 pb-8 pt-3 lg:hidden">
+        <div className="px-1">
+          <h1 className="text-h1 text-[var(--kkb-foret)]">Mes recettes</h1>
+          <p className="mt-0.5 font-quicksand text-sm text-[var(--kkb-texte-2)]">
+            <span className="tabular-nums">{totalAll}</span> recette{totalAll > 1 ? 's' : ''} dans le carnet
+          </p>
         </div>
 
-        <div className="flex items-center gap-2 rounded-[var(--kkb-radius-pill)] border-[1.5px] border-[var(--kkb-border)] bg-white px-4 py-3 focus-within:border-[var(--kkb-coral)]">
-          <Search className="h-4 w-4 shrink-0 text-[var(--kkb-text-tertiary)]" />
-          <input
-            type="search" value={search} onChange={e => setSearch(e.target.value)}
-            placeholder="Rechercher un plat, ingrédient..." aria-label="Rechercher une recette"
-            className="min-w-0 flex-1 bg-transparent text-sm font-quicksand text-[var(--kkb-text-primary)] outline-none placeholder:text-[var(--kkb-text-tertiary)]"
-          />
-          <button type="button" onClick={() => setShowMobileOptions(o => !o)} aria-label="Options de tri et filtres" aria-expanded={showMobileOptions}
-            className={`shrink-0 ${showMobileOptions || under30 || sort !== 'recent' ? 'text-[var(--kkb-coral)]' : 'text-[var(--kkb-text-tertiary)]'}`}>
-            <SlidersHorizontal className="h-4 w-4" />
+        <div className="flex items-center gap-2">
+          <div className="flex h-12 min-w-0 flex-1 items-center gap-2.5 rounded-full bg-white px-4 ring-[var(--kkb-foret-300)] focus-within:ring-2">
+            <Search className="h-[18px] w-[18px] shrink-0 text-[var(--kkb-texte-2)]" />
+            <input
+              type="search" value={search} onChange={e => setSearch(e.target.value)}
+              placeholder="Un plat, un ingrédient…" aria-label="Rechercher une recette"
+              className="min-w-0 flex-1 bg-transparent text-[15px] font-quicksand text-[var(--kkb-profond)] outline-none placeholder:text-[var(--kkb-texte-2)]"
+            />
+          </div>
+          <button type="button" onClick={() => setShowMobileOptions(o => !o)} aria-label="Tri et filtres" aria-expanded={showMobileOptions}
+            className={`relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full transition-colors ${
+              showMobileOptions ? 'bg-[var(--kkb-foret)] text-[var(--kkb-creme)]' : 'bg-white text-[var(--kkb-foret)]'
+            }`}>
+            <SlidersHorizontal className="h-5 w-5" />
+            {(under30 || sort !== 'recent') && <span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-[var(--kkb-orange)] ring-2 ring-white" />}
           </button>
         </div>
 
         {showMobileOptions && (
-          <div className="space-y-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white p-3">
-            <label className="flex items-center justify-between gap-2 text-xs font-quicksand font-bold text-[var(--kkb-text-secondary)]">
-              Trier par
-              <select value={sort} onChange={e => setSort(e.target.value as RecipeSort)}
-                className="rounded-[var(--kkb-radius-sm)] border border-[var(--kkb-border)] bg-white px-2 py-1.5 text-xs font-quicksand text-[var(--kkb-text-primary)]">
-                {SORTS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-              </select>
-            </label>
-            <button type="button" onClick={() => setUnder30(v => !v)} className={pill(under30)}>
+          <div className="space-y-3 rounded-[var(--kkb-r-xl)] bg-white p-4">
+            <p className="font-quicksand text-xs font-semibold text-[var(--kkb-texte-2)]">Trier par</p>
+            <div className="flex flex-wrap gap-2">
+              {SORTS.map(s => (
+                <button key={s.value} type="button" onClick={() => setSort(s.value)} aria-pressed={sort === s.value} className={chip(sort === s.value)}>
+                  {sort === s.value && <Check className="h-3.5 w-3.5" />} {s.label}
+                </button>
+              ))}
+            </div>
+            <p className="pt-1 font-quicksand text-xs font-semibold text-[var(--kkb-texte-2)]">Temps</p>
+            <button type="button" onClick={() => setUnder30(v => !v)} aria-pressed={under30} className={chip(under30)}>
               <Timer className="h-3.5 w-3.5" /> Moins de 30 min
             </button>
           </div>
         )}
 
-        <div className="-mx-4 flex gap-2 overflow-x-auto px-4 hide-scrollbar">
+        <div className="-mx-4 flex gap-2 overflow-x-auto px-4 hide-scrollbar" role="tablist" aria-label="Origine des recettes">
           {ORIGINS.map(o => (
-            <button key={o.value} type="button" onClick={() => setOrigin(o.value)} className={pill(origin === o.value)}>
-              <o.icon className="h-3.5 w-3.5" /> {o.label}
+            <button key={o.value} type="button" role="tab" aria-selected={origin === o.value} onClick={() => setOrigin(o.value)} className={chip(origin === o.value)}>
+              <o.icon className="h-4 w-4" /> {o.label}
             </button>
           ))}
         </div>
 
         {categories.length > 0 && (
-          <div className="-mx-4 flex gap-1.5 overflow-x-auto px-4 hide-scrollbar">
-            <button type="button" onClick={() => setCategoryIds([])} className={`${pill(categoryIds.length === 0, 'teal')} !px-3 !py-1 text-[11px] uppercase`}>Tout</button>
-            {categories.map(c => {
-              const Icon = categoryIcon(c.slug)
-              const active = categoryIds.length === 1 && categoryIds[0] === c.id
+          <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 hide-scrollbar" aria-label="Catégories">
+            {[{ id: '', name: 'Tout', slug: null as string | null }, ...categories].map(c => {
+              const Icon = c.id ? categoryIcon(c.slug) : BookOpen
+              const active = c.id ? (categoryIds.length === 1 && categoryIds[0] === c.id) : categoryIds.length === 0
               return (
-                <button key={c.id} type="button" onClick={() => setCategoryIds(active ? [] : [c.id])} className={`${pill(active, 'teal')} !px-3 !py-1 text-[11px] uppercase`}>
-                  <Icon className="h-3 w-3" /> {c.name}
+                <button
+                  key={c.id || 'tout'} type="button" aria-pressed={active}
+                  onClick={() => setCategoryIds(!c.id || active ? [] : [c.id])}
+                  className={`flex w-[76px] shrink-0 flex-col items-center gap-1.5 rounded-[var(--kkb-r-lg)] px-1 py-3 transition-colors ${
+                    active ? 'bg-[var(--kkb-sauge-50)]' : 'bg-white'
+                  }`}
+                >
+                  <span className={`flex h-10 w-10 items-center justify-center rounded-full ${active ? 'bg-[var(--kkb-foret)] text-[var(--kkb-creme)]' : 'bg-[var(--kkb-creme)] text-[var(--kkb-foret)]'}`}>
+                    <Icon className="h-5 w-5" />
+                  </span>
+                  <span className={`line-clamp-2 text-center font-quicksand text-[11px] leading-tight ${active ? 'font-bold text-[var(--kkb-foret)]' : 'font-semibold text-[var(--kkb-texte-2)]'}`}>{c.name}</span>
                 </button>
               )
             })}
@@ -216,8 +239,8 @@ export default function RecipesPage() {
             </div>
             {data && data.page < data.page_count && (
               <button type="button" disabled={loadingMore} onClick={() => void load(data.page + 1, true)}
-                className="mx-auto flex items-center gap-2 rounded-[var(--kkb-radius-pill)] border border-[var(--kkb-border)] bg-white px-5 py-2.5 text-sm font-quicksand font-bold text-[var(--kkb-coral)] disabled:opacity-60">
-                {loadingMore && <Loader2 className="h-4 w-4 animate-spin" />} Voir plus de recettes
+                className="mx-auto flex h-12 items-center gap-2 rounded-full bg-white px-6 text-sm font-quicksand font-bold text-[var(--kkb-foret)] disabled:opacity-60">
+                {loadingMore && <Loader2 className="h-4 w-4 animate-spin" />} Voir plus
               </button>
             )}
           </>
@@ -225,7 +248,7 @@ export default function RecipesPage() {
 
         <button
           type="button" onClick={() => router.push('/recipes/add')} aria-label="Ajouter une recette"
-          className="fixed bottom-[88px] right-5 z-40 flex h-[52px] w-[52px] items-center justify-center rounded-full bg-[var(--kkb-coral)] text-white shadow-[var(--kkb-shadow-fab)] transition-transform active:scale-95"
+          className="fixed bottom-[var(--kkb-nav-offset)] right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--kkb-coral)] text-white shadow-[var(--kkb-shadow-fab)] transition-transform active:scale-95"
         >
           <Plus className="h-6 w-6" />
         </button>
@@ -235,7 +258,7 @@ export default function RecipesPage() {
       <div className="mx-auto hidden max-w-[1400px] px-8 py-8 lg:block">
         <div className="mb-6 flex items-end justify-between gap-6">
           <div className="space-y-1">
-            <p className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--kkb-text-tertiary)]">
+            <p className="text-xs font-quicksand font-bold text-[var(--kkb-text-tertiary)]">
               Trésors gourmands · Transmission culinaire &amp; partage
             </p>
             <div className="flex items-center gap-3">
@@ -265,9 +288,9 @@ export default function RecipesPage() {
 
         <div className="flex items-start gap-8">
           {/* Panneau de filtres */}
-          <aside className="sticky top-24 w-[300px] shrink-0 space-y-6 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white p-5">
+          <aside className="sticky top-24 w-[300px] shrink-0 space-y-6 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white p-5">
             <section className="space-y-2">
-              <p className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--kkb-text-tertiary)]">Recherche intelligente</p>
+              <p className="text-xs font-quicksand font-bold text-[var(--kkb-text-tertiary)]">Recherche intelligente</p>
               <div className="flex items-center gap-2 rounded-[var(--kkb-radius-sm)] border border-[var(--kkb-border)] bg-white px-3 py-2.5 focus-within:border-[var(--kkb-coral)]">
                 <Search className="h-4 w-4 shrink-0 text-[var(--kkb-text-tertiary)]" />
                 <input type="search" value={search} onChange={e => setSearch(e.target.value)} placeholder="Plat, ingrédient..." aria-label="Rechercher une recette"
@@ -276,7 +299,7 @@ export default function RecipesPage() {
             </section>
 
             <section className="space-y-1">
-              <p className="mb-2 text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--kkb-text-tertiary)]">Origine du recueil</p>
+              <p className="mb-2 text-xs font-quicksand font-bold text-[var(--kkb-text-tertiary)]">Origine du recueil</p>
               {ORIGINS.map(o => {
                 const active = origin === o.value
                 return (
@@ -293,7 +316,7 @@ export default function RecipesPage() {
             {categories.length > 0 && (
               <section className="space-y-1">
                 <div className="mb-2 flex items-center justify-between">
-                  <p className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--kkb-text-tertiary)]">Type de préparation</p>
+                  <p className="text-xs font-quicksand font-bold text-[var(--kkb-text-tertiary)]">Type de préparation</p>
                   {categoryIds.length > 0 && (
                     <button type="button" onClick={() => setCategoryIds([])} className="text-[11px] font-quicksand font-bold text-[var(--kkb-coral)]">Tout afficher</button>
                   )}
@@ -316,7 +339,7 @@ export default function RecipesPage() {
             )}
 
             <section className="space-y-2">
-              <p className="text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--kkb-text-tertiary)]">Critères express</p>
+              <p className="text-xs font-quicksand font-bold text-[var(--kkb-text-tertiary)]">Critères express</p>
               <button type="button" onClick={() => setUnder30(v => !v)} className={pill(under30)}>
                 <Timer className="h-3.5 w-3.5" /> Moins de 30 min
               </button>

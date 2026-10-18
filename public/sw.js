@@ -5,7 +5,7 @@
 
 const CACHE_DISABLED = new URL(self.location.href).searchParams.get('dev') === '1'
 
-const VERSION = 'v2' // v2 : identité v1.0 (logo et icônes aux mêmes URL)
+const VERSION = 'v3' // v3 : symbole « carnet » du guide v1.0 (icônes aux mêmes URL)
 const CACHES = {
   static: `kkb-static-${VERSION}`,
   images: `kkb-images-${VERSION}`,

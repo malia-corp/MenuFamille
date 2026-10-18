@@ -18,7 +18,7 @@ export function DayTabs({ weekStart, selectedDay, onSelect, configs, items, orie
 
   return (
     <div className={orientation === 'horizontal'
-      ? 'flex gap-2 overflow-x-auto hide-scrollbar px-4 py-1'
+      ? 'mx-4 grid grid-cols-7 gap-1 rounded-[var(--kkb-r-xl)] bg-white p-1.5'
       : 'flex flex-col gap-1.5'
     }>
       {DAY_OPTIONS.map((d, i) => {
@@ -33,19 +33,19 @@ export function DayTabs({ weekStart, selectedDay, onSelect, configs, items, orie
               key={d.val}
               type="button"
               onClick={() => onSelect(d.val)}
-              className={`flex items-center justify-between gap-2 px-3 py-2.5 rounded-[var(--kkb-radius-sm)] text-left transition-colors border-l-[3px] ${
+              className={`flex items-center justify-between gap-2 px-3 py-2.5 rounded-[var(--kkb-r-md)] text-left transition-colors ${
                 active
-                  ? 'bg-white border-[var(--kkb-coral)] text-[var(--kkb-coral)]'
-                  : 'bg-transparent border-transparent text-[var(--kkb-text-secondary)] hover:bg-white/60'
+                  ? 'bg-[var(--kkb-foret)] text-[var(--kkb-creme)]'
+                  : 'bg-transparent text-[var(--kkb-texte-2)] hover:bg-white'
               }`}
             >
               <span className="font-quicksand font-semibold text-[13px]">
                 {d.full} {date.getDate()}
               </span>
               {complete ? (
-                <Check className="h-4 w-4 text-[var(--kkb-success)] shrink-0" />
+                <Check className={`h-4 w-4 shrink-0 ${active ? 'text-[var(--kkb-jaune)]' : 'text-[var(--kkb-success)]'}`} />
               ) : (
-                <span className="text-[11px] font-quicksand text-[var(--kkb-text-tertiary)] shrink-0">
+                <span className="text-[11px] font-quicksand opacity-70 shrink-0">
                   {date.getDate()}
                 </span>
               )}
@@ -58,18 +58,20 @@ export function DayTabs({ weekStart, selectedDay, onSelect, configs, items, orie
             key={d.val}
             type="button"
             onClick={() => onSelect(d.val)}
-            className={`shrink-0 w-11 h-[52px] rounded-[var(--kkb-radius-sm)] flex flex-col items-center justify-center gap-0.5 font-quicksand font-semibold text-xs transition-colors ${
+            aria-pressed={active}
+            aria-label={`${d.full} ${date.getDate()}${complete ? ', complet' : ''}`}
+            className={`h-[60px] rounded-[var(--kkb-r-md)] flex flex-col items-center justify-center gap-0.5 font-quicksand transition-colors ${
               active
-                ? 'bg-[var(--kkb-coral)] text-white'
+                ? 'bg-[var(--kkb-foret)] text-[var(--kkb-creme)]'
                 : complete
-                  ? 'bg-[var(--kkb-success-light)] text-[var(--kkb-success)]'
-                  : 'bg-white border border-[var(--kkb-border)] text-[var(--kkb-text-tertiary)]'
+                  ? 'bg-[var(--kkb-sauge-50)] text-[var(--kkb-foret)]'
+                  : 'text-[var(--kkb-texte-2)]'
             }`}
           >
             {complete && !active
-              ? <Check className="h-4 w-4" />
-              : <span className="text-[10px] uppercase">{d.label}</span>}
-            <span className="text-sm">{date.getDate()}</span>
+              ? <Check className="h-3.5 w-3.5" />
+              : <span className="text-[11px] font-semibold leading-none">{d.label}</span>}
+            <span className={`font-dosis text-[17px] font-extrabold leading-none tabular-nums ${active ? '' : 'text-[var(--kkb-profond)]'}`}>{date.getDate()}</span>
           </button>
         )
       })}

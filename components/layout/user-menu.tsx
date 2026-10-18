@@ -42,7 +42,7 @@ export function UserMenu({ trigger, align = 'below', side = 'right' }: UserMenuP
 
       {open && (
         <div
-          className={`absolute w-44 rounded-xl bg-white shadow-lg border border-[var(--kkb-border)]/60 py-1.5 z-50 ${
+          className={`absolute w-44 rounded-xl bg-white shadow-lg border border-[color-mix(in_srgb,var(--kkb-border)_60%,transparent)] py-1.5 z-50 ${
             align === 'above' ? 'bottom-full mb-2' : 'top-full mt-2'
           } ${side === 'right' ? 'right-0' : 'left-0'}`}
         >

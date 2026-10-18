@@ -1,14 +1,14 @@
 import type { Metadata, Viewport } from 'next'
-import { DynaPuff, Montserrat, Quicksand } from 'next/font/google'
+import { Bricolage_Grotesque, Montserrat, Quicksand } from 'next/font/google'
 import './globals.css'
 import { Toaster } from '@/components/ui/toaster'
 import { ServiceWorkerRegister } from '@/components/layout/service-worker-register'
 
 // Guide de marque v1.0, chapitre 04 : Montserrat titre, Quicksand lit
-// (T-01), DynaPuff en accent rare. Auto-hébergées par next/font, sous-ensemble
+// (T-01), Bricolage Grotesque en accent rare. Auto-hébergées par next/font, sous-ensemble
 // latin, font-display: swap (T-02), repli system-ui (T-04).
 // Les noms de variables (--font-dosis, --font-quicksand) sont historiques :
-// font-dosis = titres, font-quicksand = texte, font-main = accent manuscrit.
+// font-dosis = titres, font-quicksand = texte, font-main = accent expressif.
 const montserrat = Montserrat({
   subsets: ['latin'],
   weight: ['600', '700', '800', '900'],
@@ -25,11 +25,11 @@ const quicksand = Quicksand({
   variable: '--font-quicksand',
 })
 
-const dynaPuff = DynaPuff({
+const bricolage = Bricolage_Grotesque({
   subsets: ['latin'],
-  weight: ['500', '600'],
+  weight: ['600', '700'],
   display: 'swap',
-  fallback: ['cursive'],
+  fallback: ['system-ui', 'sans-serif'],
   variable: '--font-main',
 })
 
@@ -73,7 +73,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr">
-      <body className={`${montserrat.variable} ${quicksand.variable} ${dynaPuff.variable} font-quicksand antialiased`}>
+      <body className={`${montserrat.variable} ${quicksand.variable} ${bricolage.variable} font-quicksand antialiased`}>
         {children}
         <Toaster />
         <ServiceWorkerRegister />

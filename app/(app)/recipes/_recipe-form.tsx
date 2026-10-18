@@ -102,7 +102,7 @@ function MinuteStepper({ id, label, icon: Icon, value, onChange }: {
   const step = (d: number) => onChange(String(Math.max(0, n + d)))
   return (
     <div className="rounded-[var(--kkb-radius-sm)] border border-[var(--kkb-border)] bg-white p-2.5">
-      <label htmlFor={id} className="flex items-center gap-1 text-[10px] font-quicksand font-bold uppercase tracking-wide text-[var(--kkb-text-tertiary)]">
+      <label htmlFor={id} className="flex items-center gap-1 text-xs font-quicksand font-bold text-[var(--kkb-text-tertiary)]">
         <Icon className="h-3 w-3" /> {label}
       </label>
       <div className="mt-1 flex items-center gap-1">
@@ -385,7 +385,7 @@ export function RecipeForm({
               <div className="relative overflow-hidden rounded-[var(--kkb-radius-card)]">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={photoPreview} alt="Aperçu de la photo" className="aspect-video w-full object-cover" />
-                <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-[var(--kkb-radius-pill)] bg-white/90 px-2.5 py-1 text-[10px] font-quicksand font-bold uppercase tracking-wide text-[var(--kkb-coral)]">
+                <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-[var(--kkb-radius-pill)] bg-white/90 px-2.5 py-1 text-xs font-quicksand font-bold text-[var(--kkb-coral)]">
                   <Star className="h-3 w-3" /> Photo principale
                 </span>
                 <button type="button" onClick={() => { setPhotoFile(null); setPhotoPreview(null) }} aria-label="Retirer la photo"
@@ -414,7 +414,7 @@ export function RecipeForm({
                   const selected = visibility === o.value
                   return (
                     <button key={o.value} type="button" role="radio" aria-checked={selected} onClick={() => setVisibility(o.value)}
-                      className={`flex w-full items-center gap-3 rounded-[var(--kkb-radius-card)] px-4 py-3 text-left transition-colors ${selected ? 'border-2 border-[var(--kkb-coral)] bg-[var(--kkb-coral-light)]' : 'border border-[var(--kkb-border)] bg-white'}`}>
+                      className={`flex w-full items-center gap-3 rounded-[var(--kkb-radius-card)] px-4 py-3 text-left transition-colors ${selected ? 'border-2 border-[var(--kkb-coral)] bg-[var(--kkb-coral-light)]' : 'border border-[var(--kkb-lin)] bg-white'}`}>
                       <o.Icon className="h-5 w-5 shrink-0 text-[var(--kkb-teal)]" />
                       <span className="min-w-0 flex-1">
                         <span className="block text-sm font-quicksand font-bold text-[var(--kkb-text-primary)]">{o.label}</span>
@@ -471,7 +471,7 @@ export function RecipeForm({
           <section className={`order-6 lg:order-2 ${CARD}`}>
             <div className="flex items-center justify-between">
               <h2 className={TITLE}>Préparation</h2>
-              <span className="rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-teal-light)] px-2.5 py-0.5 text-[11px] font-quicksand font-bold uppercase tracking-wide text-[var(--kkb-teal)]">
+              <span className="rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-teal-light)] px-2.5 py-0.5 text-xs font-quicksand font-bold text-[var(--kkb-teal)]">
                 {steps.length} étape{steps.length > 1 ? 's' : ''}
               </span>
             </div>
@@ -501,7 +501,7 @@ export function RecipeForm({
                 {(sideItems.length + drinkItems.length) > 0 && (
                   <span className="text-[11px] font-quicksand font-bold text-[var(--kkb-coral)]">{sideItems.length + drinkItems.length} sélectionné{sideItems.length + drinkItems.length > 1 ? 's' : ''}</span>
                 )}
-                <span className="rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-teal-light)] px-2 py-0.5 text-[10px] font-quicksand font-bold uppercase tracking-wide text-[var(--kkb-teal)]">Optionnel</span>
+                <span className="rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-teal-light)] px-2 py-0.5 text-xs font-quicksand font-bold text-[var(--kkb-teal)]">Optionnel</span>
                 <ChevronDown className={`h-4 w-4 shrink-0 text-[var(--kkb-text-tertiary)] transition-transform ${assocOpen ? 'rotate-180' : ''}`} />
               </button>
               {assocOpen && (
@@ -532,7 +532,7 @@ export function RecipeForm({
       {apiError && <p className="mt-4 text-sm font-quicksand text-[var(--kkb-danger)]">{apiError}</p>}
 
       {/* Enregistrer : pastille compacte centrée au-dessus de la bottom nav (mobile), barre pleine largeur (desktop) */}
-      <div className="fixed bottom-[88px] left-1/2 z-30 -translate-x-1/2 lg:inset-x-0 lg:bottom-0 lg:left-60 lg:translate-x-0 lg:border-t lg:border-[var(--kkb-border)] lg:bg-white lg:px-8 lg:py-3">
+      <div className="fixed bottom-[var(--kkb-nav-offset)] left-1/2 z-30 -translate-x-1/2 lg:inset-x-0 lg:bottom-0 lg:left-60 lg:translate-x-0 lg:border-t lg:border-[var(--kkb-border)] lg:bg-white lg:px-8 lg:py-3">
         <div className="mx-auto flex max-w-[1300px] items-center gap-4">
           {draftKey && (
             <p className="hidden flex-1 items-center gap-1.5 text-xs font-quicksand text-[var(--kkb-success)] lg:flex" aria-live="polite">
@@ -604,7 +604,7 @@ export function RecipeForm({
                 const selected = (assocPicker === 'side' ? sideItems : drinkItems).some(i => i.id === recipe.id)
                 return (
                   <button key={recipe.id} type="button" onClick={() => toggleAssocItem(recipe)} aria-pressed={selected}
-                    className="flex w-full items-center gap-3 border-b border-[var(--kkb-border)]/40 px-4 py-3 text-left last:border-0 hover:bg-[var(--kkb-coral-light)]">
+                    className="flex w-full items-center gap-3 border-b border-[color-mix(in_srgb,var(--kkb-border)_40%,transparent)] px-4 py-3 text-left last:border-0 hover:bg-[var(--kkb-coral-light)]">
                     <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border-[1.5px] ${selected ? 'border-[var(--kkb-coral)] bg-[var(--kkb-coral)] text-white' : 'border-[var(--kkb-border)] bg-white'}`}>
                       {selected && <Check className="h-3 w-3" />}
                     </span>

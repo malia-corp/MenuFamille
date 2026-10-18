@@ -66,8 +66,8 @@ const MEMBERS_SHOWN = 4
 function SectionTitle({ icon: Icon, label, action }: { icon: LucideIcon; label: string; action?: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between px-1">
-      <p className="flex items-center gap-2 font-quicksand text-[11px] font-bold uppercase tracking-wider text-[var(--kkb-text-tertiary)]">
-        <Icon className="h-4 w-4 text-[var(--kkb-coral)]" /> {label}
+      <p className="flex items-center gap-2 font-quicksand text-xs font-bold text-[var(--kkb-text-tertiary)]">
+        <Icon className="h-4 w-4 text-[var(--kkb-foret)]" /> {label}
       </p>
       {action}
     </div>
@@ -79,8 +79,8 @@ const SETTING_ROW = 'flex min-h-[56px] w-full items-center gap-3 p-4 text-left t
 function SettingContent({ icon: Icon, label, sub, chevron = true }: { icon: LucideIcon; label: string; sub?: string; chevron?: boolean }) {
   return (
     <span className="flex w-full items-center gap-3">
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--kkb-coral-light)]">
-        <Icon className="h-4 w-4 text-[var(--kkb-coral)]" />
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--kkb-creme)]">
+        <Icon className="h-4 w-4 text-[var(--kkb-foret)]" />
       </span>
       <span className="min-w-0 flex-1">
         <span className="block font-quicksand text-[15px] font-semibold text-[var(--kkb-text-primary)]">{label}</span>
@@ -97,8 +97,8 @@ function Stat({ icon: Icon, value, label, tone }: { icon: LucideIcon; value: str
       <span className="mb-1.5 flex h-9 w-9 items-center justify-center rounded-full" style={{ backgroundColor: `color-mix(in srgb, ${tone} 14%, white)` }}>
         <Icon className="h-4 w-4" style={{ color: tone }} />
       </span>
-      <p className="font-dosis text-2xl font-extrabold text-[var(--kkb-coral)]">{value}</p>
-      <p className="font-quicksand text-[10px] font-bold uppercase leading-tight tracking-wide text-[var(--kkb-text-tertiary)]">{label}</p>
+      <p className="font-dosis text-2xl font-extrabold tabular-nums text-[var(--kkb-foret)]">{value}</p>
+      <p className="font-quicksand text-xs font-bold leading-tight text-[var(--kkb-text-tertiary)]">{label}</p>
     </div>
   )
 }
@@ -190,7 +190,7 @@ export default function ProfilePage() {
             {initial}
           </div>
           {isPlanner && (
-            <span className="absolute -right-6 -top-1 inline-flex items-center gap-1 rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-warning)] px-2 py-0.5 font-quicksand text-[10px] font-bold uppercase text-white shadow-sm">
+            <span className="absolute -right-6 -top-1 inline-flex items-center gap-1 rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-warning)] px-2 py-0.5 font-quicksand text-xs font-bold text-white shadow-sm">
               <Star className="h-3 w-3 fill-current" /> Chef
             </span>
           )}
@@ -241,7 +241,7 @@ export default function ProfilePage() {
       {/* Mon impact */}
       <section className="space-y-2">
         <SectionTitle icon={Trophy} label="Mon impact & victoires" />
-        <div className="grid grid-cols-3 gap-2 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white p-4">
+        <div className="grid grid-cols-3 gap-2 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white p-4">
           <Stat icon={BookOpen}      value={stats ? String(stats.recipes_shared) : '–'} label="Recettes partagées" tone="var(--kkb-coral)" />
           <Stat icon={CalendarCheck} value={stats ? String(stats.meals_planned) : '–'}  label="Repas planifiés"   tone="var(--kkb-warning)" />
           <Stat icon={Smile}         value={stats?.approval_pct != null ? `${stats.approval_pct}%` : '–'} label="Approbation tablée" tone="var(--kkb-success)" />
@@ -254,18 +254,18 @@ export default function ProfilePage() {
           icon={Users}
           label={`Cercle familial${members.length ? ` (${members.length})` : ''}`}
           action={
-            <Link href="/circle" className="flex items-center gap-0.5 font-quicksand text-xs font-bold text-[var(--kkb-coral)]">
+            <Link href="/circle" className="-my-2 flex h-10 items-center gap-0.5 font-quicksand text-sm font-bold text-[var(--kkb-foret)]">
               Gérer <ChevronRight className="h-3.5 w-3.5" />
             </Link>
           }
         />
-        <div className="space-y-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white p-3">
+        <div className="space-y-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white p-3">
           {members.length > 0 && (
             <div className="grid grid-cols-2 gap-2">
               {members.slice(0, MEMBERS_SHOWN).map((m, i) => {
                 const name = m.users!.display_name || m.users!.email
                 return (
-                  <div key={m.id} className="flex min-w-0 items-center gap-2.5 rounded-[var(--kkb-radius-sm)] bg-[var(--kkb-coral-light)]/60 p-2.5">
+                  <div key={m.id} className="flex min-w-0 items-center gap-2.5 rounded-[var(--kkb-radius-sm)] bg-[var(--kkb-creme)] p-2.5">
                     <span
                       className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-dosis text-sm font-bold text-white"
                       style={{ backgroundColor: AVATAR_COLORS[i % AVATAR_COLORS.length] }}
@@ -288,9 +288,9 @@ export default function ProfilePage() {
           )}
           <Link
             href="/circle"
-            className="flex items-center justify-center gap-2 rounded-[var(--kkb-radius-sm)] border border-[var(--kkb-border)] bg-white py-3 font-quicksand text-sm font-semibold text-[var(--kkb-coral)] transition-colors hover:bg-[var(--kkb-coral-light)]"
+            className="flex h-12 items-center justify-center gap-2 rounded-full bg-[var(--kkb-orange-50)] font-quicksand text-[15px] font-bold text-[var(--kkb-orange-700)] transition-colors active:scale-[0.98]"
           >
-            <UserPlus className="h-4 w-4" /> Inviter un membre ou un invité du week-end
+            <UserPlus className="h-4 w-4" /> Inviter à ma table
           </Link>
         </div>
       </section>
@@ -301,12 +301,12 @@ export default function ProfilePage() {
           icon={UtensilsCrossed}
           label="Préférences & allergies"
           action={
-            <button type="button" onClick={() => setPrefsOpen(true)} className="flex items-center gap-1 font-quicksand text-xs font-bold text-[var(--kkb-coral)]">
+            <button type="button" onClick={() => setPrefsOpen(true)} className="-my-2 flex h-10 items-center gap-1 font-quicksand text-sm font-bold text-[var(--kkb-foret)]">
               Ajuster <SlidersHorizontal className="h-3.5 w-3.5" />
             </button>
           }
         />
-        <div className="space-y-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white p-4">
+        <div className="space-y-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white p-4">
           {dietaryPrefs.length === 0 && cuisines.length === 0 ? (
             <p className="font-quicksand text-sm italic text-[var(--kkb-text-tertiary)]">Aucune préférence renseignée</p>
           ) : (
@@ -336,7 +336,7 @@ export default function ProfilePage() {
       {/* Paramètres de l'application */}
       <section className="space-y-2">
         <SectionTitle icon={Settings} label="Paramètres de l'application" />
-        <div className="divide-y-[0.5px] divide-[var(--kkb-border)] overflow-hidden rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white">
+        <div className="divide-y-[0.5px] divide-[var(--kkb-border)] overflow-hidden rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white">
           <Link href="/settings/notifications" className={SETTING_ROW}>
             <SettingContent icon={Bell} label="Notifications push" sub="Rappels de repas et avis après le repas" />
           </Link>

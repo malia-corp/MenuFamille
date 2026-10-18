@@ -86,15 +86,15 @@ const RATING_EMOJI: Record<Rating, string> = {
 // Puces "impressions rapides" : couleur selon la réaction choisie.
 const CHIP_TONE: Record<Rating, { idle: string; active: string }> = {
   excellent: {
-    idle:   'border-[var(--kkb-success)]/40 bg-[var(--kkb-success-light)] text-[var(--kkb-success)]',
+    idle:   'border-[color-mix(in_srgb,var(--kkb-success)_40%,transparent)] bg-[var(--kkb-success-light)] text-[var(--kkb-success)]',
     active: 'border-[var(--kkb-success)] bg-[var(--kkb-success)] text-white',
   },
   correct: {
-    idle:   'border-[var(--kkb-warning)]/50 bg-[var(--kkb-warning-light)] text-[var(--kkb-text-secondary)]',
+    idle:   'border-[color-mix(in_srgb,var(--kkb-warning)_50%,transparent)] bg-[var(--kkb-warning-light)] text-[var(--kkb-text-secondary)]',
     active: 'border-[var(--kkb-warning)] bg-[var(--kkb-warning)] text-white',
   },
   decevant: {
-    idle:   'border-[var(--kkb-danger)]/40 bg-[var(--kkb-danger-light)] text-[var(--kkb-danger)]',
+    idle:   'border-[color-mix(in_srgb,var(--kkb-danger)_40%,transparent)] bg-[var(--kkb-danger-light)] text-[var(--kkb-danger)]',
     active: 'border-[var(--kkb-danger)] bg-[var(--kkb-danger)] text-white',
   },
 }
@@ -280,7 +280,7 @@ export default function FeedbackPage() {
         <History className="h-3.5 w-3.5" /> Mon historique d&apos;avis
       </p>
       {pastHistory.map(h => (
-        <div key={h.id} className="flex gap-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white p-3">
+        <div key={h.id} className="flex gap-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white p-3">
           <Thumb item={h.item} size="h-12 w-12" />
           <div className="min-w-0 flex-1">
             <p className="font-quicksand text-[11px] font-semibold text-[var(--kkb-text-tertiary)]">
@@ -302,7 +302,7 @@ export default function FeedbackPage() {
     return (
       <div className="mx-auto max-w-lg space-y-6 px-4 pb-8 pt-5 lg:max-w-2xl lg:pt-2">
         <h1 className="font-dosis text-[22px] font-extrabold text-[var(--kkb-text-primary)]">Mes avis sur les repas</h1>
-        <div className="rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white">
+        <div className="rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white">
           <EmptyState
             icon={Lock}
             title="Ton accès au cercle est désactivé"
@@ -360,7 +360,7 @@ export default function FeedbackPage() {
   const featuredTime = featured ? formatTime(mealTimes[featured.meal_type]) : null
 
   const progressCard = rateable.length > 0 && (
-    <div className="flex items-center gap-4 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white p-4">
+    <div className="flex items-center gap-4 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white p-4">
       <div
         className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-full"
         style={{ background: `conic-gradient(var(--kkb-coral) ${pct * 3.6}deg, var(--kkb-bg) 0deg)` }}
@@ -520,7 +520,7 @@ export default function FeedbackPage() {
               </article>
             </section>
           ) : (
-            <div className="rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white">
+            <div className="rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white">
               <EmptyState
                 icon={Check}
                 title={rateable.length > 0 ? 'Tout est noté, merci !' : 'Rien à noter pour l\'instant'}
@@ -541,7 +541,7 @@ export default function FeedbackPage() {
                   key={item.id}
                   type="button"
                   onClick={() => focus(item)}
-                  className="flex w-full items-center gap-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white p-3 text-left transition-colors hover:border-[var(--kkb-coral)]"
+                  className="flex w-full items-center gap-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white p-3 text-left transition-colors hover:border-[var(--kkb-coral)]"
                 >
                   <MealTypeIcon type={item.meal_type} className="h-5 w-5 shrink-0 text-[var(--kkb-coral)]" />
                   <span className="min-w-0 flex-1">
@@ -577,7 +577,7 @@ export default function FeedbackPage() {
               {rated.map(item => {
                 const fb = feedbackMap.get(item.id)!
                 return (
-                  <div key={item.id} className="relative flex gap-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white p-3">
+                  <div key={item.id} className="relative flex gap-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white p-3">
                     <Thumb item={item} size="h-16 w-16" />
                     <div className="min-w-0 flex-1 pr-16">
                       <span className="inline-flex items-center gap-1 rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-bg)] px-2 py-0.5 font-quicksand text-[10px] font-bold text-[var(--kkb-text-secondary)]">
@@ -610,7 +610,7 @@ export default function FeedbackPage() {
                 {upcoming.map(item => {
                   const time = formatTime(mealTimes[item.meal_type])
                   return (
-                    <div key={item.id} className="flex items-center gap-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white p-3">
+                    <div key={item.id} className="flex items-center gap-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white p-3">
                       <Lock className="h-4 w-4 shrink-0 text-[var(--kkb-text-tertiary)]" />
                       <span className="min-w-0 flex-1">
                         <span className="block truncate font-quicksand text-sm font-semibold text-[var(--kkb-text-primary)]">
@@ -630,7 +630,7 @@ export default function FeedbackPage() {
             </section>
           )}
 
-          <footer className="flex items-start gap-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white p-4">
+          <footer className="flex items-start gap-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white p-4">
             <Heart className="mt-0.5 h-5 w-5 shrink-0 text-[var(--kkb-coral)]" />
             <p className="font-quicksand text-[13px] text-[var(--kkb-text-secondary)]">
               Chaque retour aide {cook} à doser les condiments, éviter le gaspillage et dresser la liste du grand marché du samedi avec l&apos;esprit léger.

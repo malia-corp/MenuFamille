@@ -54,7 +54,7 @@ export function WeekGrid({ weekStart, configs, items, onCellClick }: WeekGridPro
         const complete = filled === configs.length
         return (
           <div key={d.val} className="text-center">
-            <p className="text-[11px] font-quicksand font-bold uppercase tracking-wide text-[var(--kkb-text-tertiary)]">
+            <p className="text-xs font-quicksand font-bold text-[var(--kkb-text-tertiary)]">
               {d.label} {date.getDate()}
             </p>
             <p className={`flex items-center justify-center gap-0.5 text-[11px] font-quicksand font-bold ${complete ? 'text-[var(--kkb-success)]' : 'text-[var(--kkb-warning)]'}`}>
@@ -115,7 +115,7 @@ export function WeekGrid({ weekStart, configs, items, onCellClick }: WeekGridPro
                   className={`relative overflow-hidden rounded-[var(--kkb-radius-sm)] border min-h-[104px] transition-colors ${
                     item?.recipes
                       ? 'border-[var(--kkb-border)] hover:border-[var(--kkb-coral)]'
-                      : 'border-dashed border-[var(--kkb-border)] bg-[var(--kkb-coral-light)]/40 hover:border-[var(--kkb-coral)] flex items-center justify-center'
+                      : 'border-dashed border-[var(--kkb-border)] bg-[color-mix(in_srgb,var(--kkb-coral-light)_40%,transparent)] hover:border-[var(--kkb-coral)] flex items-center justify-center'
                   }`}
                 >
                   {item?.is_locked && (

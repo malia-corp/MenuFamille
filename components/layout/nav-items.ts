@@ -18,7 +18,7 @@ const HEAD: NavItem[] = [
 // l'avatar (UserMenu). Cet emplacement (fin de liste) est reserve a
 // Garde-manger, qui remplacera "Profil" ici plus tard.
 const TAIL: NavItem[] = [
-  { href: '/circle', icon: Users, label: 'Cercle' },
+  { href: '/circle', icon: Users, label: 'Ma table' },
 ]
 
 // Planificatrice : Menu + Recettes. Membre : Votes + Avis — il ne planifie
@@ -27,7 +27,7 @@ export function navItemsForRole(role: Role): NavItem[] {
   if (role === 'membre') {
     return [
       HEAD[0],
-      { href: '/votes/results/member', icon: Vote,          label: 'Votes' },
+      { href: '/votes/results/member', icon: Vote,          label: 'Sondages' },
       { href: '/feedback',             icon: MessageSquare, label: 'Avis' },
       ...TAIL,
     ]

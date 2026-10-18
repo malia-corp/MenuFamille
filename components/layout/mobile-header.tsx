@@ -41,22 +41,22 @@ export function MobileHeader({ displayName, circleName, title: titleProp, showBa
   const subtitle  = showBack ? null : subtitleFor(pathname, circleName)
 
   return (
-    <header className="lg:hidden print:hidden fixed top-0 left-0 right-0 z-40 bg-white border-b border-[var(--kkb-border)]/50 h-14 flex items-center px-4">
+    <header className="lg:hidden print:hidden fixed top-0 left-0 right-0 z-40 h-14 flex items-center px-4 bg-[color-mix(in_srgb,var(--kkb-creme)_85%,transparent)] backdrop-blur-md">
       <div className="flex items-center justify-between w-full max-w-sm mx-auto">
-        <div className="flex items-center gap-1.5 -ml-1">
+        <div className="flex min-w-0 items-center gap-2">
           {showBack && (
             <button
               type="button"
               onClick={() => router.back()}
-              className="p-1 mr-0.5 text-[var(--kkb-teal)]"
+              className="h-10 w-10 shrink-0 rounded-full bg-white flex items-center justify-center text-[var(--kkb-foret)] active:scale-95 transition-transform"
               aria-label="Retour"
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
           )}
-          {title ? <LogoMark size={18} /> : <Logo layout="horizontal" size={20} />}
+          {title ? <LogoMark size={22} /> : <Logo layout="horizontal" size={26} />}
           <span className="flex min-w-0 flex-col leading-tight">
-            {title && <span className="font-dosis font-bold text-[var(--kkb-foret)]">{title}</span>}
+            {title && <span className="truncate font-dosis font-extrabold text-[17px] text-[var(--kkb-foret)]">{title}</span>}
             {subtitle && (
               <span className={subtitle.caps
                 ? 'font-quicksand text-[10px] font-bold uppercase tracking-wider text-[var(--kkb-text-tertiary)]'
@@ -68,12 +68,12 @@ export function MobileHeader({ displayName, circleName, title: titleProp, showBa
           </span>
         </div>
 
-        <div className="flex items-center gap-2 -mr-1">
-          <NotificationBell className="p-1" />
+        <div className="flex shrink-0 items-center gap-2">
+          <NotificationBell className="h-10 w-10 rounded-full bg-white flex items-center justify-center active:scale-95 transition-transform" />
           <UserMenu
             trigger={
               <span
-                className="h-7 w-7 rounded-full bg-[var(--kkb-coral)] text-white text-xs font-quicksand font-bold flex items-center justify-center"
+                className="h-10 w-10 rounded-full bg-[var(--kkb-foret)] text-[var(--kkb-creme)] text-sm font-dosis font-extrabold flex items-center justify-center"
                 aria-label="Mon compte"
               >
                 {initial}

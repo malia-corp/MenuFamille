@@ -67,7 +67,7 @@ export function CircleSwitcher({ circles, selectedId, activeId, onSelect, childr
       </button>
 
       {open && (
-        <div className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white shadow-[var(--kkb-shadow-sheet)] lg:right-auto lg:w-80">
+        <div className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white shadow-[var(--kkb-shadow-sheet)] lg:right-auto lg:w-80">
           <div className="border-b border-[var(--kkb-border-light)] p-2">
             <label className="flex items-center gap-2 rounded-[var(--kkb-radius-sm)] bg-[var(--kkb-bg)] px-3 py-2">
               <Search className="h-4 w-4 shrink-0 text-[var(--kkb-text-tertiary)]" />
@@ -82,7 +82,7 @@ export function CircleSwitcher({ circles, selectedId, activeId, onSelect, childr
             </label>
           </div>
 
-          <p className="px-4 pb-1 pt-3 font-quicksand text-[10px] font-bold uppercase tracking-wider text-[var(--kkb-text-tertiary)]">Mes cercles</p>
+          <p className="px-4 pb-1 pt-3 font-quicksand text-xs font-bold text-[var(--kkb-text-tertiary)]">Mes cercles</p>
           <ul role="listbox" className="max-h-64 overflow-y-auto pb-1">
             {visible.map((c) => {
               const selected = c.id === selectedId
@@ -97,7 +97,7 @@ export function CircleSwitcher({ circles, selectedId, activeId, onSelect, childr
                     aria-selected={selected}
                     onClick={() => void choose(c.id)}
                     disabled={pending !== null}
-                    className={`flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-[var(--kkb-bg)] ${selected ? 'bg-[var(--kkb-coral-light)]/50' : ''}`}
+                    className={`flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-[var(--kkb-bg)] ${selected ? 'bg-[color-mix(in_srgb,var(--kkb-coral-light)_50%,transparent)]' : ''}`}
                   >
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--kkb-teal-light)]">
                       <Users className="h-4 w-4 text-[var(--kkb-teal)]" />

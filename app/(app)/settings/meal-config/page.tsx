@@ -189,7 +189,7 @@ export default function MealConfigPage() {
       </div>
 
       <div className="space-y-1">
-        <p className="font-quicksand text-[10px] font-bold uppercase tracking-wider text-[var(--kkb-coral)]">Organisation familiale</p>
+        <p className="font-quicksand text-xs font-bold text-[var(--kkb-coral)]">Organisation familiale</p>
         <p className="font-quicksand text-sm text-[var(--kkb-text-secondary)]">
           Activez vos repas et choisissez leur fréquence pour un quotidien allégé et serein.
         </p>
@@ -224,7 +224,7 @@ export default function MealConfigPage() {
         <div className="mt-3 grid grid-cols-[40px_repeat(7,minmax(0,1fr))] gap-1">
           <span />
           {DAYS.map(d => (
-            <span key={d} className="text-center font-quicksand text-[10px] font-bold uppercase text-[var(--kkb-text-tertiary)]">{d}</span>
+            <span key={d} className="text-center font-quicksand text-xs font-bold text-[var(--kkb-text-tertiary)]">{d}</span>
           ))}
           {gridRows.map(c => (
             <GridRow key={c.meal_type} config={c} />
@@ -276,16 +276,16 @@ function MealCard({ config, onToggle, onMode, onTime }: {
     : { label: config.meal_type === 'petit_dejeuner' ? 'Économique' : 'Gain de temps', cls: 'bg-[var(--kkb-warning-light)] text-[var(--kkb-text-secondary)]' }
 
   return (
-    <div className="rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white p-4">
+    <div className="rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white p-4">
       <div className="flex items-center gap-2">
         <Icon className="h-5 w-5 shrink-0" style={{ color: on ? MEAL_COLOR[config.meal_type].text : 'var(--kkb-text-tertiary)' }} />
         <h2 className="font-dosis text-base font-bold text-[var(--kkb-text-primary)]">{t.title}</h2>
         {pillar ? (
-          <span className="rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-teal-light)] px-2 py-0.5 font-quicksand text-[10px] font-bold uppercase text-[var(--kkb-teal)]">Pilier</span>
+          <span className="rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-teal-light)] px-2 py-0.5 font-quicksand text-xs font-bold text-[var(--kkb-teal)]">Pilier</span>
         ) : on ? (
-          <span className="rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-success-light)] px-2 py-0.5 font-quicksand text-[10px] font-bold uppercase text-[var(--kkb-success)]">Actif</span>
+          <span className="rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-success-light)] px-2 py-0.5 font-quicksand text-xs font-bold text-[var(--kkb-success)]">Actif</span>
         ) : (
-          <span className="rounded-[var(--kkb-radius-pill)] border border-[var(--kkb-border)] bg-[var(--kkb-bg)] px-2 py-0.5 font-quicksand text-[10px] font-bold uppercase text-[var(--kkb-text-tertiary)]">Inactif</span>
+          <span className="rounded-[var(--kkb-radius-pill)] border border-[var(--kkb-border)] bg-[var(--kkb-bg)] px-2 py-0.5 font-quicksand text-xs font-bold text-[var(--kkb-text-tertiary)]">Inactif</span>
         )}
         <div className="ml-auto">
           {pillar ? (
@@ -366,7 +366,7 @@ function ModePill({ label, icon: Icon, active, tone, disabled, onClick }: {
 
 function GridRow({ config }: { config: MealConfig }) {
   const label = (
-    <span className="self-center font-quicksand text-[10px] font-bold uppercase text-[var(--kkb-text-tertiary)]">
+    <span className="self-center font-quicksand text-xs font-bold text-[var(--kkb-text-tertiary)]">
       {GRID_LABEL[config.meal_type]}
     </span>
   )
@@ -384,7 +384,7 @@ function GridRow({ config }: { config: MealConfig }) {
     return (
       <>
         {label}
-        <span className="col-span-7 flex h-6 items-center justify-center rounded border border-[var(--kkb-teal)]/30 bg-white/70 font-quicksand text-[10px] font-bold text-[var(--kkb-teal)]">
+        <span className="col-span-7 flex h-6 items-center justify-center rounded border border-[color-mix(in_srgb,var(--kkb-teal)_30%,transparent)] bg-white/70 font-quicksand text-[10px] font-bold text-[var(--kkb-teal)]">
           1 formule unique
         </span>
       </>
