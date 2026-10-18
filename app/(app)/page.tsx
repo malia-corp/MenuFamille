@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { CalendarDays, ChevronRight, CupSoda, Hand, Plus, PlusCircle, Salad, Settings, SlidersHorizontal, UtensilsCrossed, Zap } from 'lucide-react'
+import { CalendarDays, ChevronRight, CupSoda, Hand, Plus, Salad, Settings, SlidersHorizontal, UtensilsCrossed, Zap } from 'lucide-react'
 import { DAY_OPTIONS, getMondayISO, formatWeekRange, dayOfWeekFromDate, type DayOfWeek } from '@/lib/utils/week'
 import { MEAL_LABEL, MEAL_COLOR, type MealType } from '@/lib/constants/meal-type'
 import { MEAL_ICON } from '@/lib/constants/meal-type-icon'
@@ -10,7 +10,9 @@ import { sortByMealType } from '@/lib/utils/sort-meal-configs'
 import { agreementPct as agreementOf, sumCounts } from '@/lib/utils/survey-score'
 import { MealCardHero } from '@/components/home/meal-card-hero'
 import { MealCardCompact } from '@/components/home/meal-card-compact'
-import { WeekDayPicker } from '@/components/home/week-day-picker'
+import { HomeHero } from '@/components/home/home-hero'
+import { DayTimeline, type TimelineEntry } from '@/components/home/day-timeline'
+import { FamilyPulseCard } from '@/components/home/family-pulse-card'
 import { UpcomingCarousel, type UpcomingDay } from '@/components/home/upcoming-carousel'
 import { UpcomingGrid, type UpcomingGridDay } from '@/components/home/upcoming-grid'
 import { HarmonyWidget } from '@/components/home/harmony-widget'
@@ -256,6 +258,49 @@ export default function HomePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [plan, heroConfig, dinerConfig, today, weekStart, surveyResults])
 
+  // Cases repas x jours remplies cette semaine (un repas « modèle » compte
+  // pour les 7 jours).
+  const plannedCount = useMemo(
+    () => activeConfigs.reduce(
+      (n, config) => n + DAY_OPTIONS.filter(d => getItemForDay(config, d.val)?.recipes).length,
+      0
+    ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [activeConfigs, plan]
+  )
+
+  const timelineEntries: TimelineEntry[] = useMemo(() => {
+    const now = new Date()
+    const nowHHMM = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
+    const next = isToday
+      ? activeConfigs.find(c => c.default_time && c.default_time.slice(0, 5) > nowHHMM)?.meal_type
+      : undefined
+    return activeConfigs.map(config => {
+      const item = getItemForDay(config, selectedDay)
+      return {
+        mealType: config.meal_type,
+        time:     config.default_time ? formatTime(config.default_time) : null,
+        isNext:   config.meal_type === next,
+        meal: item?.recipes
+          ? {
+              title:       item.recipes.name,
+              photoUrl:    item.recipes.photo_url,
+              prepTimeMin: item.recipes.prep_time_min,
+              servings:    item.servings || null,
+              chips:       toChips(item.meal_compositions),
+            }
+          : null,
+      }
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeConfigs, plan, selectedDay, isToday])
+
+  // Avis de la famille sur toute la semaine (pas seulement le déjeuner).
+  const weekAgreementPct = useMemo(
+    () => (surveyResults?.items.length ? agreementOf(sumCounts(surveyResults.items)) : null),
+    [surveyResults]
+  )
+
   function goToPlan() { router.push('/plan') }
 
   const hasAnyItem = (plan?.meal_plan_items.length ?? 0) > 0
@@ -372,64 +417,54 @@ export default function HomePage() {
 
   return (
     <>
-    <div className="max-w-sm mx-auto px-4 pb-8 space-y-7 lg:hidden">
-      {/* Salutation : la question de la marque, posée au jour choisi */}
-      <section className="pt-3">
-        <p className="font-quicksand text-[15px] font-medium text-[var(--kkb-texte-2)]">
-          Bonjour{firstName ? `, ${firstName}` : ''}
-        </p>
-        <h1 className="mt-0.5 text-h1 text-[var(--kkb-foret)]">
-          {isToday ? <>On mange quoi<br />aujourd’hui&nbsp;?</> : <>Au menu<br />{dayOpt.full.toLowerCase()}</>}
-        </h1>
-      </section>
+    <div className="max-w-sm mx-auto px-4 pt-2 pb-8 space-y-6 lg:hidden">
+      {/* Bandeau : salutation, question du jour, semaine, repères */}
+      <HomeHero
+        firstName={firstName}
+        title={isToday ? <>On mange quoi<br />aujourd’hui&nbsp;?</> : <>Au menu<br />{dayOpt.full.toLowerCase()}</>}
+        weekLabel={formatWeekRange(weekStart)}
+        weekStart={weekStart}
+        selectedDay={selectedDay}
+        onSelectDay={setSelectedDay}
+        plannedCount={plannedCount}
+        slotCount={activeConfigs.length * 7}
+        respondentCount={plan?.share_token ? (surveyResults?.respondent_count ?? 0) : null}
+        memberCount={memberCount}
+      />
 
-      {/* Semaine */}
-      <section className="space-y-2.5">
-        <div className="flex items-center justify-between px-1">
-          <span className="font-quicksand text-sm font-semibold text-[var(--kkb-texte-2)]">Semaine du {formatWeekRange(weekStart)}</span>
-          <CalendarDays className="h-4 w-4 text-[var(--kkb-texte-2)]" />
-        </div>
-        <WeekDayPicker weekStart={weekStart} selectedDay={selectedDay} onSelect={setSelectedDay} />
-      </section>
-
-      {/* Repas du jour sélectionné */}
+      {/* Repas du jour sélectionné, sur une ligne de temps */}
       <section className="space-y-3">
-        <div className="flex items-baseline justify-between gap-2 px-1">
-          <h2 className="text-h2 text-[var(--kkb-profond)]">Au menu</h2>
-          <span className="inline-block font-quicksand text-sm font-semibold text-[var(--kkb-texte-2)] first-letter:uppercase">{dayLong}</span>
+        <div className="flex items-center justify-between gap-2 px-1">
+          <h2 className="text-h2 text-[var(--kkb-profond)] first-letter:uppercase">
+            {isToday ? 'Aujourd’hui' : dayLong}
+          </h2>
+          <button
+            type="button"
+            onClick={() => router.push('/settings/meal-config')}
+            className="-mr-2 flex h-11 items-center gap-1.5 px-2 font-quicksand text-sm font-bold text-[var(--kkb-foret)]"
+          >
+            <SlidersHorizontal className="h-4 w-4" /> Horaires
+          </button>
         </div>
 
-        {mealCardsContent}
+        {hasAnyItem && activeConfigs.length > 0 ? (
+          <DayTimeline entries={timelineEntries} onOpen={goToPlan} />
+        ) : (
+          mealCardsContent
+        )}
       </section>
 
       {/* Emplacement d'ancrage du FAB (cf. components/layout/fab.tsx) */}
       <div id="generate-slot" className="min-h-[48px]" />
 
-      {/* Raccourcis : tuiles teintées, l'orange reste au bouton de génération */}
-      <section className="grid grid-cols-2 gap-3">
-        <button
-          type="button"
-          onClick={goToPlan}
-          className="rounded-[var(--kkb-r-xl)] bg-[var(--kkb-sauge-50)] p-4 text-left active:scale-[0.98] transition-transform"
-        >
-          <span className="h-10 w-10 rounded-full bg-white flex items-center justify-center text-[var(--kkb-foret)]">
-            <PlusCircle className="h-5 w-5" />
-          </span>
-          <span className="mt-3 block font-dosis text-[15px] font-bold text-[var(--kkb-profond)]">Ajouter un repas</span>
-          <span className="block font-quicksand text-xs text-[var(--kkb-texte-2)]">Dans le menu de la semaine</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => router.push('/settings/meal-config')}
-          className="rounded-[var(--kkb-r-xl)] bg-[var(--kkb-jaune-50)] p-4 text-left active:scale-[0.98] transition-transform"
-        >
-          <span className="h-10 w-10 rounded-full bg-white flex items-center justify-center text-[var(--kkb-jaune-text)]">
-            <SlidersHorizontal className="h-5 w-5" />
-          </span>
-          <span className="mt-3 block font-dosis text-[15px] font-bold text-[var(--kkb-profond)]">Rythme des repas</span>
-          <span className="block font-quicksand text-xs text-[var(--kkb-texte-2)]">Repas et horaires</span>
-        </button>
-      </section>
+      <FamilyPulseCard
+        planId={plan?.id ?? null}
+        shareToken={plan?.share_token ?? null}
+        onShareToken={(token) => setPlan((p) => (p ? { ...p, share_token: token } : p))}
+        respondentCount={surveyResults?.respondent_count ?? 0}
+        memberCount={memberCount}
+        agreementPct={weekAgreementPct}
+      />
 
       {/* À venir */}
       {upcomingDays.length > 0 && (
