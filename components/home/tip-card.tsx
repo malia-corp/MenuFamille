@@ -1,7 +1,7 @@
 'use client'
 
-import { Heart, Lightbulb } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { ChevronRight, Lightbulb } from 'lucide-react'
 
 interface TipCardProps {
   recipeId: string
@@ -9,24 +9,24 @@ interface TipCardProps {
   tip: string
 }
 
+// Astuce du jour, tirée d'une recette de la communauté.
 export function TipCard({ recipeId, recipeName, tip }: TipCardProps) {
-  const router = useRouter()
-
   return (
-    <div className="bg-[var(--kkb-bg)] rounded-xl p-6 shadow-sm flex flex-col gap-3">
-      <div className="flex items-center gap-3">
-        <span className="h-8 w-8 rounded-full bg-[var(--kkb-warning)] text-white flex items-center justify-center shrink-0">
-          <Lightbulb className="h-4 w-4" />
+    <section className="rounded-[var(--kkb-r-xl)] bg-white p-4">
+      <p className="flex items-center gap-2 font-quicksand text-xs font-bold text-[var(--kkb-jaune-text)]">
+        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--kkb-jaune-50)]">
+          <Lightbulb className="h-4 w-4 text-[var(--kkb-jaune-700)]" />
         </span>
-        <span className="text-kkb-label text-[var(--kkb-warning)]">Astuce sérénité du jour</span>
-      </div>
-      <p className="font-quicksand text-sm text-[var(--kkb-text-secondary)] line-clamp-4">{tip}</p>
-      <button type="button" onClick={() => router.push(`/recipes/${recipeId}`)} className="flex items-center justify-between pt-2 text-left">
-        <span className="text-sm font-quicksand font-semibold text-[var(--kkb-coral)] truncate">
-          Astuce de « {recipeName} »
-        </span>
-        <Heart className="h-5 w-5 text-[var(--kkb-coral)] opacity-40 shrink-0" />
-      </button>
-    </div>
+        Astuce du jour
+      </p>
+      <p className="mt-2 line-clamp-4 font-quicksand text-sm text-[var(--kkb-texte-2)]">{tip}</p>
+      <Link
+        href={`/recipes/${recipeId}`}
+        className="mt-1 flex min-h-11 items-center gap-0.5 font-quicksand text-sm font-bold text-[var(--kkb-foret)]"
+      >
+        <span className="truncate">Voir « {recipeName} »</span>
+        <ChevronRight className="h-4 w-4 shrink-0" />
+      </Link>
+    </section>
   )
 }

@@ -2,25 +2,18 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { CalendarDays, ChevronRight, CupSoda, Hand, Plus, Salad, Settings, SlidersHorizontal, UtensilsCrossed, Zap } from 'lucide-react'
+import { ChevronRight, CupSoda, Salad, Settings, SlidersHorizontal, UtensilsCrossed, Zap } from 'lucide-react'
 import { DAY_OPTIONS, getMondayISO, formatWeekRange, dayOfWeekFromDate, type DayOfWeek } from '@/lib/utils/week'
-import { MEAL_LABEL, MEAL_COLOR, type MealType } from '@/lib/constants/meal-type'
-import { MEAL_ICON } from '@/lib/constants/meal-type-icon'
+import { type MealType } from '@/lib/constants/meal-type'
 import { sortByMealType } from '@/lib/utils/sort-meal-configs'
 import { agreementPct as agreementOf, sumCounts } from '@/lib/utils/survey-score'
-import { MealCardHero } from '@/components/home/meal-card-hero'
-import { MealCardCompact } from '@/components/home/meal-card-compact'
 import { HomeHero } from '@/components/home/home-hero'
-import { DayTimeline, type TimelineEntry } from '@/components/home/day-timeline'
+import { DayTimeline, type TimelineChip, type TimelineEntry } from '@/components/home/day-timeline'
 import { FamilyPulseCard } from '@/components/home/family-pulse-card'
-import { UpcomingCarousel, type UpcomingDay } from '@/components/home/upcoming-carousel'
-import { UpcomingGrid, type UpcomingGridDay } from '@/components/home/upcoming-grid'
-import { HarmonyWidget } from '@/components/home/harmony-widget'
+import { UpcomingList, type UpcomingListDay } from '@/components/home/upcoming-list'
 import { MemberHome } from '@/components/home/member-home'
 import { TipCard } from '@/components/home/tip-card'
-import type { ChipItem } from '@/components/home/composition-carousel'
 import { EmptyState } from '@/components/ui/empty-state'
-import { MealTypeIcon } from '@/components/ui/meal-type-icon'
 import { SkeletonCard } from '@/components/ui/skeleton-card'
 import { pickActiveCircle } from '@/lib/utils/active-circle'
 
@@ -102,7 +95,7 @@ function formatTime(hhmm: string | null): string {
   return hhmm.slice(0, 5).replace(':', 'h')
 }
 
-function toChips(compositions: Composition[]): ChipItem[] {
+function toChips(compositions: Composition[]): TimelineChip[] {
   return compositions
     .slice()
     .sort((a, b) => a.sort_order - b.sort_order)
@@ -191,72 +184,38 @@ export default function HomePage() {
     d.setDate(d.getDate() + selectedIdx)
     return d
   }, [weekStart, selectedIdx])
-  const dayBadge = selectedDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
   const dayLong = selectedDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
 
-  const heroConfig  = activeConfigs.find(c => c.meal_type === 'dejeuner')
-  const dinerConfig = activeConfigs.find(c => c.meal_type === 'diner')
-  const heroItem    = heroConfig ? getItemForDay(heroConfig, selectedDay) : undefined
+  const lunchConfig  = activeConfigs.find(c => c.meal_type === 'dejeuner')
+  const dinnerConfig = activeConfigs.find(c => c.meal_type === 'diner')
 
   function agreementForDay(day: DayOfWeek): number | null {
     if (!surveyResults) return null
     return agreementOf(sumCounts(surveyResults.items.filter(i => i.day_of_week === day)))
   }
 
-  const agreementPct = useMemo(() => {
-    if (!surveyResults || !heroItem) return null
-    const match = surveyResults.items.find(i => i.id === heroItem.id)
-    return match ? agreementOf(match) : null
-  }, [surveyResults, heroItem])
-
-  const upcomingDays: UpcomingDay[] = useMemo(() => {
-    if (!plan || !heroConfig) return []
-    const todayIdx = DAY_OPTIONS.findIndex(d => d.val === today)
-    const out: UpcomingDay[] = []
-    for (let i = 1; i <= 6 && out.length < 2; i++) {
-      const idx = (todayIdx + i) % 7
-      const opt = DAY_OPTIONS[idx]
-      const item = getItemForDay(heroConfig, opt.val)
-      if (!item?.recipes) continue
-      const d = new Date(weekStart + 'T00:00:00')
-      d.setDate(d.getDate() + idx)
-      out.push({
-        key:         item.id,
-        dayLabel:    `${opt.full.slice(0, 3)} ${d.getDate()}`,
-        mealLabel:   MEAL_LABEL.dejeuner,
-        title:       item.recipes.name,
-        photoUrl:    item.recipes.photo_url,
-        icon:        MEAL_ICON.dejeuner,
-        prepTimeMin: item.recipes.prep_time_min,
-      })
-    }
-    return out
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [plan, heroConfig, today, weekStart])
-
-  const upcomingGridDays: UpcomingGridDay[] = useMemo(() => {
+  // Les trois jours suivants (midi et soir), à partir d'aujourd'hui.
+  const upcomingDays: UpcomingListDay[] = useMemo(() => {
     if (!plan) return []
     const todayIdx = DAY_OPTIONS.findIndex(d => d.val === today)
-    const out: UpcomingGridDay[] = []
+    const out: UpcomingListDay[] = []
     for (let i = 1; i <= 3; i++) {
       const idx = (todayIdx + i) % 7
       const opt = DAY_OPTIONS[idx]
-      const lunchItem  = heroConfig  ? getItemForDay(heroConfig, opt.val)  : undefined
-      const dinnerItem = dinerConfig ? getItemForDay(dinerConfig, opt.val) : undefined
       const d = new Date(weekStart + 'T00:00:00')
       d.setDate(d.getDate() + idx)
       out.push({
         key:          opt.val,
-        dateLabel:    `${opt.full} ${d.getDate()}`,
-        lunchTitle:   lunchItem?.recipes?.name ?? null,
-        lunchPhoto:   lunchItem?.recipes?.photo_url ?? null,
-        dinnerTitle:  dinnerItem?.recipes?.name ?? null,
+        dayShort:     opt.label,
+        dayNum:       d.getDate(),
+        lunchTitle:   lunchConfig  ? getItemForDay(lunchConfig, opt.val)?.recipes?.name ?? null  : null,
+        dinnerTitle:  dinnerConfig ? getItemForDay(dinnerConfig, opt.val)?.recipes?.name ?? null : null,
         agreementPct: agreementForDay(opt.val),
       })
     }
     return out
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [plan, heroConfig, dinerConfig, today, weekStart, surveyResults])
+  }, [plan, lunchConfig, dinnerConfig, today, weekStart, surveyResults])
 
   // Cases repas x jours remplies cette semaine (un repas « modèle » compte
   // pour les 7 jours).
@@ -295,7 +254,7 @@ export default function HomePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeConfigs, plan, selectedDay, isToday])
 
-  // Avis de la famille sur toute la semaine (pas seulement le déjeuner).
+  // Avis de la famille sur toute la semaine.
   const weekAgreementPct = useMemo(
     () => (surveyResults?.items.length ? agreementOf(sumCounts(surveyResults.items)) : null),
     [surveyResults]
@@ -304,103 +263,6 @@ export default function HomePage() {
   function goToPlan() { router.push('/plan') }
 
   const hasAnyItem = (plan?.meal_plan_items.length ?? 0) > 0
-
-  const mealCardsContent = !hasAnyItem ? (
-    <div className="rounded-[var(--kkb-radius-card)] border border-dashed border-[var(--kkb-border)] bg-white">
-      {/* Génération via le parcours existant de /plan (écran d'attente + affichage du résultat) */}
-      <EmptyState
-        icon={UtensilsCrossed}
-        title="Pas encore de menu cette semaine"
-        description="Génère ton menu en un clic et régale ta famille !"
-        ctaLabel="Générer ma semaine"
-        ctaIcon={Zap}
-        ctaAction={() => router.push('/plan?generate=1')}
-        className="py-8"
-      />
-    </div>
-  ) : activeConfigs.length === 0 ? (
-    <div className="rounded-[var(--kkb-radius-card)] border border-dashed border-[var(--kkb-border)] bg-white">
-      <EmptyState
-        icon={Settings}
-        title="Aucun repas activé"
-        description="Choisis les repas à planifier pour ta famille."
-        ctaLabel="Régler le rythme des repas"
-        ctaHref="/settings/meal-config"
-        className="py-8"
-      />
-    </div>
-  ) : (
-    <div className="space-y-3">
-      {activeConfigs.map(config => {
-        const item  = getItemForDay(config, selectedDay)
-        const icon  = MEAL_ICON[config.meal_type]
-        const label = MEAL_LABEL[config.meal_type]
-
-        if (!item?.recipes) {
-          return (
-            <button
-              key={config.meal_type}
-              type="button"
-              onClick={goToPlan}
-              className="w-full rounded-[var(--kkb-r-xl)] border border-dashed border-[var(--kkb-filet)] p-2.5 flex items-center gap-3 text-left active:scale-[0.99] transition-transform"
-            >
-              <span
-                className="h-[72px] w-[72px] shrink-0 rounded-[var(--kkb-r-lg)] flex items-center justify-center"
-                style={{ backgroundColor: MEAL_COLOR[config.meal_type].bg, color: MEAL_COLOR[config.meal_type].text }}
-              >
-                <MealTypeIcon type={config.meal_type} className="h-7 w-7" />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block font-dosis text-[17px] font-bold text-[var(--kkb-profond)]">{label}</span>
-                <span className="block font-quicksand text-sm text-[var(--kkb-texte-2)]">Pas encore planifié</span>
-              </span>
-              <span className="h-11 w-11 shrink-0 rounded-full bg-white flex items-center justify-center text-[var(--kkb-foret)]" aria-hidden="true">
-                <Plus className="h-5 w-5" />
-              </span>
-            </button>
-          )
-        }
-
-        if (config.meal_type === 'dejeuner') {
-          return (
-            <MealCardHero
-              key={config.meal_type}
-              icon={icon}
-              timeLabel={`${label} · ${formatTime(config.default_time)}`}
-              photoUrl={item.recipes.photo_url}
-              recipeId={item.recipes.id}
-              title={item.recipes.name}
-              prepTimeMin={item.recipes.prep_time_min}
-              difficulty={item.recipes.difficulty}
-              respondentCount={surveyResults?.respondent_count ?? 0}
-              memberCount={memberCount}
-              agreementPct={agreementPct}
-              compositionTitle="Accompagnements et boissons"
-              compositions={toChips(item.meal_compositions)}
-              onAddComposition={goToPlan}
-            />
-          )
-        }
-
-        return (
-          <MealCardCompact
-            key={config.meal_type}
-            icon={icon}
-            badgeLabel={`${label} · ${formatTime(config.default_time)}`}
-            badgeBg={MEAL_COLOR[config.meal_type].bg}
-            badgeText={MEAL_COLOR[config.meal_type].text}
-            photoUrl={item.recipes.photo_url}
-            title={item.recipes.name}
-            subtitle={item.servings ? `${item.servings} pers.` : ''}
-            compositionTitle="Extras"
-            compositions={toChips(item.meal_compositions)}
-            onEdit={goToPlan}
-            onAddComposition={goToPlan}
-          />
-        )
-      })}
-    </div>
-  )
 
   if (loading) {
     return (
@@ -415,153 +277,133 @@ export default function HomePage() {
   // Membre (ne planifie pas) : accueil dédié sur le menu de la famille.
   if (isMember) return <MemberHome firstName={firstName} />
 
-  return (
-    <>
-    <div className="max-w-sm mx-auto px-4 pt-2 pb-8 space-y-6 lg:hidden">
-      {/* Bandeau : salutation, question du jour, semaine, repères */}
-      <HomeHero
-        firstName={firstName}
-        title={isToday ? <>On mange quoi<br />aujourd’hui&nbsp;?</> : <>Au menu<br />{dayOpt.full.toLowerCase()}</>}
-        weekLabel={formatWeekRange(weekStart)}
-        weekStart={weekStart}
-        selectedDay={selectedDay}
-        onSelectDay={setSelectedDay}
-        plannedCount={plannedCount}
-        slotCount={activeConfigs.length * 7}
-        respondentCount={plan?.share_token ? (surveyResults?.respondent_count ?? 0) : null}
-        memberCount={memberCount}
-      />
-
-      {/* Repas du jour sélectionné, sur une ligne de temps */}
-      <section className="space-y-3">
-        <div className="flex items-center justify-between gap-2 px-1">
-          <h2 className="text-h2 text-[var(--kkb-profond)] first-letter:uppercase">
-            {isToday ? 'Aujourd’hui' : dayLong}
-          </h2>
-          <button
-            type="button"
-            onClick={() => router.push('/settings/meal-config')}
-            className="-mr-2 flex h-11 items-center gap-1.5 px-2 font-quicksand text-sm font-bold text-[var(--kkb-foret)]"
-          >
-            <SlidersHorizontal className="h-4 w-4" /> Horaires
-          </button>
-        </div>
-
-        {hasAnyItem && activeConfigs.length > 0 ? (
-          <DayTimeline entries={timelineEntries} onOpen={goToPlan} />
-        ) : (
-          mealCardsContent
-        )}
-      </section>
-
-      {/* Emplacement d'ancrage du FAB (cf. components/layout/fab.tsx) */}
-      <div id="generate-slot" className="min-h-[48px]" />
-
-      <FamilyPulseCard
-        planId={plan?.id ?? null}
-        shareToken={plan?.share_token ?? null}
-        onShareToken={(token) => setPlan((p) => (p ? { ...p, share_token: token } : p))}
-        respondentCount={surveyResults?.respondent_count ?? 0}
-        memberCount={memberCount}
-        agreementPct={weekAgreementPct}
-      />
-
-      {/* À venir */}
-      {upcomingDays.length > 0 && (
-        <section className="space-y-3">
-          <div className="flex items-center justify-between px-1">
-            <h3 className="text-h2 text-[var(--kkb-profond)]">À venir</h3>
-            <button type="button" onClick={goToPlan} className="-mr-2 h-11 px-2 font-quicksand text-sm font-bold text-[var(--kkb-foret)] flex items-center gap-0.5">
-              Tout voir <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
-          <UpcomingCarousel days={upcomingDays} />
-        </section>
-      )}
+  // Un seul bouton orange par vue : « Générer ma semaine » vit dans le
+  // bandeau sur desktop, dans le bouton flottant (FAB) sur mobile.
+  const heroActions = (
+    <div className="hidden shrink-0 items-center gap-2 lg:flex">
+      <button
+        type="button"
+        onClick={() => router.push('/settings/meal-config')}
+        aria-label="Rythme des repas"
+        title="Rythme des repas"
+        className="flex h-12 min-w-12 items-center justify-center gap-2 rounded-full bg-white/10 px-3.5 font-quicksand text-sm font-semibold text-[var(--kkb-creme)] transition-colors hover:bg-white/20 xl:px-4"
+      >
+        <SlidersHorizontal className="h-4 w-4" /> <span className="hidden xl:inline">Rythme des repas</span>
+      </button>
+      <button
+        type="button"
+        onClick={() => router.push('/plan?generate=1')}
+        className="flex h-12 items-center gap-2 rounded-full bg-[var(--kkb-coral)] px-5 text-btn-primary text-white transition-colors hover:bg-[var(--kkb-coral-hover)] active:scale-95"
+      >
+        <Zap className="h-5 w-5" /> Générer ma semaine
+      </button>
     </div>
+  )
 
-    {/* ─── Desktop (>=1024px) ─────────────────────────────────────────────── */}
-    <div className="hidden lg:block px-8 py-8 max-w-[1400px] mx-auto">
-      <section className="flex flex-row items-end justify-between gap-6 pb-8">
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-3">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--kkb-teal-light)] text-[var(--kkb-teal)] text-sm font-quicksand font-semibold">
-              <CalendarDays className="h-4 w-4" /> Semaine du {formatWeekRange(weekStart)}
-            </span>
-            {agreementPct !== null && (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[var(--kkb-success-light)] text-[var(--kkb-success)] text-kkb-label">
-                <span className="h-1.5 w-1.5 rounded-full bg-[var(--kkb-success)]" />
-                Harmonie familiale {agreementPct}%
-              </span>
-            )}
-          </div>
-          <h1 className="text-h1 text-[var(--kkb-text-primary)] text-3xl flex items-center gap-2">
-            Bonjour{firstName ? ` ${firstName}` : ''} <Hand className="h-7 w-7 text-[var(--kkb-coral)]" />
-          </h1>
-          <p className="text-kkb-body text-base text-[var(--kkb-text-secondary)] max-w-xl">
-            On mange quoi cette semaine&nbsp;? On décide ensemble.
-          </p>
-        </div>
-        <div className="flex items-center gap-3 shrink-0">
-          <button
-            type="button"
-            onClick={() => router.push('/settings/meal-config')}
-            className="h-12 px-4 rounded-lg bg-white hover:bg-[var(--kkb-bg)] text-[var(--kkb-text-primary)] text-btn-secondary flex items-center gap-2 shadow-sm transition-colors"
-          >
-            <Settings className="h-5 w-5 text-[var(--kkb-teal)]" /> Ajuster préférences
-          </button>
-          <button
-            type="button"
-            onClick={() => router.push('/plan?generate=1')}
-            className="h-12 px-6 rounded-lg bg-[var(--kkb-coral)] hover:bg-[var(--kkb-coral-hover)] text-white text-btn-primary flex items-center gap-2 shadow-md transition-all active:scale-95"
-          >
-            <Zap className="h-5 w-5" /> Générer ma semaine
-          </button>
-        </div>
-      </section>
+  return (
+    <div className="mx-auto max-w-sm px-4 pt-2 pb-8 lg:max-w-[1280px] lg:px-8 lg:pt-0">
+      <div className="space-y-6 lg:grid lg:grid-cols-12 lg:items-start lg:gap-6 lg:space-y-0">
+        {/* ─── Colonne principale ─────────────────────────────────────────── */}
+        <div className="space-y-6 lg:col-span-8">
+          <HomeHero
+            firstName={firstName}
+            title={isToday
+              ? <>On mange quoi<br className="lg:hidden" /> aujourd’hui&nbsp;?</>
+              : <>Au menu<br className="lg:hidden" /> {dayOpt.full.toLowerCase()}</>}
+            weekLabel={formatWeekRange(weekStart)}
+            weekStart={weekStart}
+            selectedDay={selectedDay}
+            onSelectDay={setSelectedDay}
+            plannedCount={plannedCount}
+            slotCount={activeConfigs.length * 7}
+            respondentCount={plan?.share_token ? (surveyResults?.respondent_count ?? 0) : null}
+            memberCount={memberCount}
+            actions={heroActions}
+          />
 
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        <div className="lg:col-span-8 flex flex-col gap-10 min-w-0">
-          <section className="flex flex-col gap-5">
-            <div className="flex items-center justify-between">
-              <h2 className="text-h2 text-[var(--kkb-text-primary)] flex items-center gap-2">
-                <UtensilsCrossed className="h-5 w-5 text-[var(--kkb-coral)]" />
-                {isToday ? "Au menu aujourd'hui" : `Au menu — ${dayOpt.full}`}
+          {/* Repas du jour sélectionné, sur une ligne de temps */}
+          <section className="space-y-3">
+            <div className="flex items-center justify-between gap-2 px-1">
+              <h2 className="text-h2 text-[var(--kkb-profond)] first-letter:uppercase">
+                {isToday ? 'Aujourd’hui' : dayLong}
               </h2>
-              <span className="inline-block text-sm font-quicksand font-semibold px-3 py-1 rounded-full bg-white text-[var(--kkb-texte-2)] first-letter:uppercase">
-                {dayBadge}
-              </span>
+              <button
+                type="button"
+                onClick={() => router.push('/settings/meal-config')}
+                className="-mr-2 flex h-11 items-center gap-1.5 px-2 font-quicksand text-sm font-bold text-[var(--kkb-foret)] lg:hidden"
+              >
+                <SlidersHorizontal className="h-4 w-4" /> Horaires
+              </button>
+              <button
+                type="button"
+                onClick={goToPlan}
+                className="-mr-2 hidden h-11 items-center gap-0.5 px-2 font-quicksand text-sm font-bold text-[var(--kkb-foret)] lg:flex"
+              >
+                Menu de la semaine <ChevronRight className="h-4 w-4" />
+              </button>
             </div>
-            {mealCardsContent}
+
+            {!hasAnyItem ? (
+              <div className="rounded-[var(--kkb-r-xl)] border-[1.5px] border-dashed border-[var(--kkb-filet)]">
+                <EmptyState
+                  icon={UtensilsCrossed}
+                  title="Pas encore de menu cette semaine"
+                  description="Appuie sur « Générer ma semaine » : le menu de la famille est prêt en un clic."
+                  className="py-8"
+                />
+              </div>
+            ) : activeConfigs.length === 0 ? (
+              <div className="rounded-[var(--kkb-r-xl)] border-[1.5px] border-dashed border-[var(--kkb-filet)]">
+                <EmptyState
+                  icon={Settings}
+                  title="Aucun repas activé"
+                  description="Choisis les repas à planifier pour ta famille."
+                  ctaLabel="Régler le rythme des repas"
+                  ctaHref="/settings/meal-config"
+                  className="py-8"
+                />
+              </div>
+            ) : (
+              <DayTimeline entries={timelineEntries} onOpen={goToPlan} />
+            )}
           </section>
 
-          {upcomingGridDays.length > 0 && (
-            <section className="flex flex-col gap-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-h2 text-[var(--kkb-text-primary)]">Aperçu des jours à venir</h2>
-                <button type="button" onClick={goToPlan} className="text-sm font-quicksand text-[var(--kkb-coral)] flex items-center gap-1">
-                  Planning complet →
-                </button>
-              </div>
-              <UpcomingGrid days={upcomingGridDays} />
-            </section>
-          )}
+          {/* Emplacement d'ancrage du FAB, mobile (cf. components/layout/fab.tsx) */}
+          <div id="generate-slot" className="min-h-[48px] lg:hidden" />
         </div>
 
-        <div className="lg:col-span-4 flex flex-col gap-6">
-          <HarmonyWidget
+        {/* ─── Colonne latérale ───────────────────────────────────────────── */}
+        <aside className="space-y-6 lg:col-span-4">
+          <FamilyPulseCard
+            planId={plan?.id ?? null}
+            shareToken={plan?.share_token ?? null}
+            onShareToken={(token) => setPlan((p) => (p ? { ...p, share_token: token } : p))}
             respondentCount={surveyResults?.respondent_count ?? 0}
             memberCount={memberCount}
-            agreementPct={agreementPct}
-            planId={plan?.id ?? null}
+            agreementPct={weekAgreementPct}
           />
+
+          {upcomingDays.length > 0 && (
+            <section className="space-y-3">
+              <div className="flex items-center justify-between px-1">
+                <h2 className="text-h2 text-[var(--kkb-profond)]">À venir</h2>
+                <button
+                  type="button"
+                  onClick={goToPlan}
+                  className="-mr-2 flex h-11 items-center gap-0.5 px-2 font-quicksand text-sm font-bold text-[var(--kkb-foret)]"
+                >
+                  Tout voir <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+              <UpcomingList days={upcomingDays} onOpen={goToPlan} />
+            </section>
+          )}
+
           {communityTip && (
             <TipCard recipeId={communityTip.id} recipeName={communityTip.name} tip={communityTip.description} />
           )}
-        </div>
+        </aside>
       </div>
     </div>
-    </>
   )
 }

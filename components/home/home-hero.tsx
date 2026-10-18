@@ -15,6 +15,7 @@ interface HomeHeroProps {
   slotCount: number
   respondentCount: number | null // null : sondage pas encore partagé
   memberCount: number
+  actions?: React.ReactNode // en haut à droite (desktop)
 }
 
 // Bandeau d'accueil (mobile) : salutation, question du jour, semaine et deux
@@ -30,24 +31,26 @@ export function HomeHero({
   slotCount,
   respondentCount,
   memberCount,
+  actions,
 }: HomeHeroProps) {
   return (
-    <section className="rounded-[var(--kkb-r-xl)] bg-[var(--kkb-foret)] p-4 pt-5">
+    <section className="rounded-[var(--kkb-r-xl)] bg-[var(--kkb-foret)] p-4 pt-5 lg:p-6">
       <div className="px-1">
         <p className="font-quicksand text-[15px] font-medium text-[var(--kkb-foret-100)]">
           Bonjour{firstName ? `, ${firstName}` : ''}
         </p>
         <h1 className="mt-0.5 text-h1 text-[var(--kkb-creme)]">{title}</h1>
-        <p className="mt-3 font-quicksand text-sm font-semibold text-[var(--kkb-foret-100)]">
-          Semaine du {weekLabel}
-        </p>
       </div>
 
-      <div className="mt-2">
+      <div className="mt-3 flex items-end justify-between gap-4 px-1 lg:mt-4">
+        <p className="font-quicksand text-sm font-semibold text-[var(--kkb-foret-100)] lg:whitespace-nowrap">Semaine du {weekLabel}</p>
+        {actions}
+      </div>
+
+      <div className="mt-2 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,300px)] lg:gap-3">
         <WeekDayPicker weekStart={weekStart} selectedDay={selectedDay} onSelect={onSelectDay} tone="onDark" />
-      </div>
 
-      <dl className="mt-3 grid grid-cols-2 gap-2">
+      <dl className="mt-3 grid grid-cols-2 gap-2 lg:mt-0">
         <div className="rounded-[var(--kkb-r-md)] bg-white/10 px-3 py-2.5">
           <dt className="flex items-center gap-1.5 font-quicksand text-xs text-[var(--kkb-foret-100)]">
             <UtensilsCrossed className="h-3.5 w-3.5 text-[var(--kkb-sauge)]" /> Repas planifiés
@@ -73,6 +76,7 @@ export function HomeHero({
           </dd>
         </div>
       </dl>
+      </div>
     </section>
   )
 }
