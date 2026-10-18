@@ -42,7 +42,7 @@ export function HomeHero({
         <h1 className="mt-0.5 text-h1 text-[var(--kkb-creme)]">{title}</h1>
       </div>
 
-      <div className="mt-3 flex items-end justify-between gap-4 px-1 lg:mt-4">
+      <div className="mt-3 flex flex-wrap items-end justify-between gap-x-4 gap-y-3 px-1 lg:mt-4">
         <p className="font-quicksand text-sm font-semibold text-[var(--kkb-foret-100)] lg:whitespace-nowrap">Semaine du {weekLabel}</p>
         {actions}
       </div>

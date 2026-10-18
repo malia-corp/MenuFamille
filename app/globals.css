@@ -59,6 +59,11 @@
     /* Bas des éléments flottants : au-dessus de la barre basse (64 px à 16 px
        du bas) et de la zone sûre iOS. */
     --kkb-nav-offset: calc(88px + env(safe-area-inset-bottom));
+    /* Desktop : place occupée à gauche par le rail de navigation (12 + rail
+       + 12), réduit ou déplié (html[data-rail="expanded"], cf. Sidebar), et
+       marge latérale du contenu, partagée avec l'en-tête pour l'aligner. */
+    --kkb-rail-offset: 96px;
+    --kkb-gutter: 24px;
 
     /* ── Jetons historiques de l'app, réaffectés sur la palette du guide ── */
     --kkb-coral:          var(--kkb-orange);
@@ -98,6 +103,15 @@
     --kkb-shadow-fab:   0 4px 20px rgba(230, 107, 67, 0.35);
   }
 
+  :root[data-rail='expanded'] {
+    --kkb-rail-offset: 256px;
+  }
+  @media (min-width: 1280px) {
+    :root {
+      --kkb-gutter: 40px;
+    }
+  }
+
   .dark {
     --background: 195 8% 9%;
     --foreground: 36 18% 95%;
@@ -126,7 +140,10 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground;
+    /* Crème exacte du guide (la conversion HSL de --background s'en écarte
+       d'un cheveu, visible à côté des zones en var(--kkb-bg)). */
+    background-color: var(--kkb-creme);
     font-feature-settings: 'rlig' 1, 'calt' 1;
   }
 }

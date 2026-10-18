@@ -21,7 +21,7 @@ export function OfflineBanner() {
   if (!offline) return null
 
   return (
-    <div role="status" className="fixed inset-x-0 top-14 z-30 flex items-center justify-center gap-1.5 border-b-[0.5px] border-[var(--kkb-border)] bg-[var(--kkb-bg)] px-4 py-2 text-center text-xs font-quicksand text-[var(--kkb-text-tertiary)] lg:left-24 lg:top-16 print:hidden">
+    <div role="status" className="fixed inset-x-0 top-14 z-30 flex items-center justify-center gap-1.5 border-b-[0.5px] border-[var(--kkb-border)] bg-[var(--kkb-bg)] px-4 py-2 text-center text-xs font-quicksand text-[var(--kkb-text-tertiary)] lg:left-[var(--kkb-rail-offset)] lg:top-[76px] print:hidden">
       <WifiOff className="h-3.5 w-3.5 shrink-0" />
       Mode hors connexion · Données mises en cache
     </div>

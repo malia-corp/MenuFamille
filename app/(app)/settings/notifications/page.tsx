@@ -328,7 +328,7 @@ export default function NotificationsPage() {
       </div>
 
       {/* Enregistrer : fixe en bas (pas de bottom nav sur les pages réglages) */}
-      <div className="fixed bottom-5 left-4 right-4 z-40 mx-auto max-w-lg lg:left-24 lg:px-4">
+      <div className="fixed bottom-5 left-4 right-4 z-40 mx-auto max-w-lg lg:left-[var(--kkb-rail-offset)] lg:px-4">
         <button
           type="button"
           onClick={() => void handleSave()}
