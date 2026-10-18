@@ -70,6 +70,7 @@ function RecipeDetail() {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleting,    setDeleting]    = useState(false)
   const [favPop,      setFavPop]      = useState(0)
+  const [tab,         setTab]         = useState<'ingredients' | 'steps'>('ingredients')
   const mobileMenuRef  = useRef<HTMLDivElement>(null)
   const desktopMenuRef = useRef<HTMLDivElement>(null)
 
@@ -149,12 +150,12 @@ function RecipeDetail() {
   const qtyOf      = (ing: Ingredient) => [scaleQuantity(ing.quantity, servings, recipe.servings), ing.unit].filter(Boolean).join(' ') || 'Q.S.'
 
   const visual = (className: string, iconSize: string) => (
-    <div className={`relative overflow-hidden bg-[linear-gradient(135deg,var(--kkb-coral),var(--kkb-coral-hover))] ${className}`}>
+    <div className={`relative overflow-hidden bg-[var(--kkb-orange-50)] ${className}`}>
       {recipe.photo_url ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={recipe.photo_url} alt={recipe.name} className="absolute inset-0 h-full w-full object-cover" />
       ) : (
-        <div className="absolute inset-0 flex items-center justify-center"><CatIcon className={`${iconSize} text-white/90`} aria-hidden="true" /></div>
+        <div className="absolute inset-0 flex items-center justify-center"><CatIcon className={`${iconSize} text-[var(--kkb-orange-300)]`} aria-hidden="true" /></div>
       )}
     </div>
   )
@@ -185,11 +186,11 @@ function RecipeDetail() {
   )
 
   const tipCard = recipe.description && (
-    <section className="space-y-2 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-warning)] bg-[var(--kkb-warning-light)] p-4 lg:p-5">
-      <p className="flex items-center gap-2 text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--kkb-jaune-text)]">
-        <BookHeart className="h-4 w-4" /> Astuces de Maman · Transmission
+    <section className="space-y-2 rounded-[var(--kkb-r-xl)] bg-[var(--kkb-jaune-50)] p-5">
+      <p className="flex items-center gap-2 text-sm font-quicksand font-bold text-[var(--kkb-jaune-text)]">
+        <BookHeart className="h-4 w-4" /> Le mot de la cuisine
       </p>
-      <p className="text-sm font-quicksand italic leading-relaxed text-[var(--kkb-text-secondary)]">« {recipe.description} »</p>
+      <p className="text-[15px] font-quicksand leading-relaxed text-[var(--kkb-profond)]">« {recipe.description} »</p>
     </section>
   )
 
@@ -200,8 +201,8 @@ function RecipeDetail() {
     <ol className="space-y-5">
       {recipe.recipe_steps.map(step => (
         <li key={step.id} className="flex gap-3">
-          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--kkb-coral)] font-dosis font-bold text-sm text-white">{step.step_number}</span>
-          <p className="min-w-0 flex-1 pt-0.5 text-sm font-quicksand leading-relaxed text-[var(--kkb-text-secondary)]">{step.description}</p>
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--kkb-foret)] font-dosis font-bold text-sm text-[var(--kkb-creme)]">{step.step_number}</span>
+          <p className="min-w-0 flex-1 pt-1 text-[15px] font-quicksand leading-relaxed text-[var(--kkb-profond)]">{step.description}</p>
         </li>
       ))}
     </ol>
@@ -226,102 +227,130 @@ function RecipeDetail() {
 
       <div className="print:hidden">
       {/* ── Mobile ─────────────────────────────────────────────────────── */}
-      <div className="pb-40 lg:hidden">
+      <div className="pb-8 lg:hidden">
         <div className="relative">
-          {visual('h-[260px] w-full', 'h-16 w-16')}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/60" />
-          {(
-            <div ref={mobileMenuRef} className="absolute right-4 top-4 print:hidden">
-              <button type="button" onClick={() => setMenuOpen(o => !o)} aria-label="Options de la recette" aria-expanded={menuOpen} className="flex h-10 w-10 items-center justify-center rounded-full bg-black/25 text-white">
-                <Menu className="h-6 w-6" />
-              </button>
-              {menuOpen && optionsMenu}
-            </div>
-          )}
-          <div className="absolute inset-x-4 bottom-9 space-y-1.5">
-            <span className="inline-block rounded-[var(--kkb-radius-pill)] bg-white/20 px-2.5 py-0.5 text-[10px] font-quicksand font-bold uppercase tracking-wider text-white backdrop-blur-sm">
-              {recipe.categories?.name ?? VISIBILITY_TAG[recipe.visibility]}
-            </span>
-            <h1 className="font-dosis font-extrabold text-[22px] leading-tight text-white">{recipe.name}</h1>
+          {visual('h-[300px] w-full', 'h-16 w-16')}
+          <div className="absolute inset-0 bg-gradient-to-b from-[rgba(31,58,46,0.35)] via-transparent to-transparent" />
+          <div ref={mobileMenuRef} className="absolute right-4 top-4 print:hidden">
+            <button type="button" onClick={() => setMenuOpen(o => !o)} aria-label="Options de la recette" aria-expanded={menuOpen} className="flex h-11 w-11 items-center justify-center rounded-full bg-white/90 text-[var(--kkb-foret)] backdrop-blur-sm">
+              <Menu className="h-5 w-5" />
+            </button>
+            {menuOpen && optionsMenu}
           </div>
         </div>
 
-        <div className="relative z-10 mx-4 -mt-5 grid grid-cols-4 divide-x divide-[var(--kkb-border)] rounded-[var(--kkb-radius-sm)] bg-white px-2 py-3 shadow-md">
-          {[
-            { icon: Clock,      value: formatDuration(totalTime) ?? '—', label: 'Temps' },
-            { icon: Users,      value: `${recipe.servings} pers.`,         label: 'Portions' },
-            { icon: ChefHat,    value: recipe.difficulty ? DIFFICULTY_SHORT[recipe.difficulty] : '—', label: 'Niveau' },
-            { icon: CatIcon,    value: recipe.categories?.name ?? '—',     label: 'Type' },
-          ].map(m => (
-            <div key={m.label} className="flex min-w-0 flex-col items-center gap-0.5 px-1 text-center">
-              <m.icon className="h-4 w-4 text-[var(--kkb-coral)]" />
-              <span className="w-full truncate text-[13px] font-quicksand font-bold text-[var(--kkb-text-primary)]">{m.value}</span>
-              <span className="text-[10px] font-quicksand text-[var(--kkb-text-tertiary)]">{m.label}</span>
-            </div>
-          ))}
-        </div>
+        {/* Feuille de la recette, posée sur la photo */}
+        <div className="relative z-10 -mt-8 space-y-6 rounded-t-[28px] bg-[var(--kkb-creme)] px-4 pt-3">
+          <div className="mx-auto h-1 w-10 rounded-full bg-[var(--kkb-filet)]" aria-hidden="true" />
 
-        <div className="space-y-7 px-4 pt-5">
+          <div className="space-y-1.5 px-1">
+            <p className="font-quicksand text-sm font-semibold text-[var(--kkb-texte-2)]">
+              {recipe.categories?.name ?? VISIBILITY_TAG[recipe.visibility]}
+            </p>
+            <h1 className="text-h1 text-[var(--kkb-foret)]">{recipe.name}</h1>
+            {recipe.foyer_favorites > 0 && (
+              <p className="inline-flex items-center gap-1.5 font-quicksand text-sm text-[var(--kkb-texte-2)]">
+                <Heart className="h-4 w-4 fill-[var(--kkb-orange)] text-[var(--kkb-orange)]" />
+                <span><span className="font-bold tabular-nums text-[var(--kkb-profond)]">{recipe.foyer_favorites}</span> à la table l’adore{recipe.foyer_favorites > 1 ? 'nt' : ''}</span>
+              </p>
+            )}
+          </div>
 
-          {recipe.recipe_ingredients.length > 0 && (
-            <section className="space-y-2">
-              <div className="flex items-center justify-between gap-3 border-b border-[var(--kkb-border)] pb-2">
-                <h2 className="font-dosis font-bold text-lg text-[var(--kkb-text-primary)]">Ingrédients</h2>
-                <ServingsControl value={servings} onChange={setServings} />
+          <div className="grid grid-cols-4 gap-2">
+            {[
+              { icon: Clock,   value: formatDuration(totalTime) ?? '—', label: 'Temps' },
+              { icon: Users,   value: `${recipe.servings}`,              label: 'Portions' },
+              { icon: ChefHat, value: recipe.difficulty ? DIFFICULTY_SHORT[recipe.difficulty] : '—', label: 'Niveau' },
+              { icon: CatIcon, value: recipe.categories?.name ?? '—',     label: 'Type' },
+            ].map(m => (
+              <div key={m.label} className="flex min-w-0 flex-col items-center gap-1 rounded-[var(--kkb-r-lg)] bg-white px-1 py-3 text-center">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--kkb-creme)] text-[var(--kkb-foret)]">
+                  <m.icon className="h-4 w-4" />
+                </span>
+                <span className="w-full truncate font-quicksand text-[13px] font-bold tabular-nums text-[var(--kkb-profond)]">{m.value}</span>
+                <span className="font-quicksand text-[11px] text-[var(--kkb-texte-2)]">{m.label}</span>
               </div>
-              <ul>
-                {recipe.recipe_ingredients.map(ing => (
-                  <li key={ing.id} className="flex items-center justify-between gap-3 border-b-[0.5px] border-[var(--kkb-border)] py-2.5 last:border-0">
-                    <span className="text-sm font-quicksand text-[var(--kkb-text-primary)]">{ing.name}</span>
-                    <span className="shrink-0 text-sm font-quicksand font-bold text-[var(--kkb-coral)]">{qtyOf(ing)}</span>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
+            ))}
+          </div>
 
-          {recipe.recipe_steps.length > 0 && (
-            <section className="space-y-3">
-              <h2 className="border-b border-[var(--kkb-border)] pb-2 font-dosis font-bold text-lg text-[var(--kkb-text-primary)]">Préparation</h2>
-              {steps}
+          {(recipe.recipe_ingredients.length > 0 || recipe.recipe_steps.length > 0) && (
+            <section className="space-y-4">
+              <div className="grid grid-cols-2 rounded-full bg-white p-1" role="tablist" aria-label="Contenu de la recette">
+                {([['ingredients', 'Ingrédients', recipe.recipe_ingredients.length], ['steps', 'Préparation', recipe.recipe_steps.length]] as const).map(([v, label, n]) => (
+                  <button key={v} type="button" role="tab" aria-selected={tab === v} onClick={() => setTab(v)}
+                    className={`h-11 rounded-full font-quicksand text-sm font-bold transition-colors ${tab === v ? 'bg-[var(--kkb-foret)] text-[var(--kkb-creme)]' : 'text-[var(--kkb-texte-2)]'}`}>
+                    {label} <span className="tabular-nums opacity-70">{n}</span>
+                  </button>
+                ))}
+              </div>
+
+              {tab === 'ingredients' ? (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between gap-3 px-1">
+                    <p className="font-quicksand text-sm text-[var(--kkb-texte-2)]">
+                      {allChecked ? 'Tout est prêt' : 'Coche au fur et à mesure'}
+                    </p>
+                    <ServingsControl value={servings} onChange={setServings} />
+                  </div>
+                  <ul className="overflow-hidden rounded-[var(--kkb-r-xl)] bg-white">
+                    {recipe.recipe_ingredients.map(ing => {
+                      const done = checked.has(ing.id)
+                      return (
+                        <li key={ing.id} className="border-b border-[var(--kkb-lin)] last:border-0">
+                          <button type="button" onClick={() => toggleIngredient(ing.id)} aria-pressed={done}
+                            className="flex min-h-[52px] w-full items-center gap-3 px-4 py-2 text-left">
+                            <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${done ? 'border-[var(--kkb-foret)] bg-[var(--kkb-foret)] text-[var(--kkb-creme)]' : 'border-[var(--kkb-filet)]'}`}>
+                              {done && <Check className="h-3.5 w-3.5" />}
+                            </span>
+                            <span className={`min-w-0 flex-1 font-quicksand text-[15px] ${done ? 'text-[var(--kkb-texte-2)] line-through' : 'text-[var(--kkb-profond)]'}`}>{ing.name}</span>
+                            <span className="shrink-0 font-quicksand text-sm font-bold tabular-nums text-[var(--kkb-foret)]">{qtyOf(ing)}</span>
+                          </button>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                </div>
+              ) : (
+                <div className="rounded-[var(--kkb-r-xl)] bg-white p-4">{steps}</div>
+              )}
             </section>
           )}
 
           {tipCard}
 
           {suggestions.length > 0 && (
-            <section className="space-y-2">
-              <h2 className="font-dosis font-semibold text-base text-[var(--kkb-text-primary)]">Accompagnements &amp; Boissons suggérés</h2>
+            <section className="space-y-3">
+              <h2 className="px-1 text-h3 text-[var(--kkb-profond)]">Pour l’accompagner</h2>
               <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 hide-scrollbar">
                 {suggestions.map(s => {
                   const Icon = suggestionIcon(s)
                   return (
                     <button key={`${s.role}-${s.id}`} type="button" onClick={() => router.push(`/recipes/${s.id}`)}
-                      className="flex shrink-0 items-center gap-2 rounded-[var(--kkb-radius-pill)] border border-[var(--kkb-border)] bg-white px-3.5 py-2.5 text-left">
-                      <Icon className={`h-4 w-4 ${s.role === 'drink' ? 'text-[var(--kkb-teal)]' : 'text-[var(--kkb-coral)]'}`} />
-                      <span className="text-sm font-quicksand font-bold text-[var(--kkb-text-primary)]">{s.name}</span>
-                      <span className="text-[9px] font-quicksand font-bold uppercase tracking-wide text-[var(--kkb-text-tertiary)]">{suggestionLabel(s)}</span>
+                      className="flex shrink-0 items-center gap-2.5 rounded-full bg-white py-1.5 pl-1.5 pr-4 text-left">
+                      <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--kkb-creme)] text-[var(--kkb-foret)]"><Icon className="h-4 w-4" /></span>
+                      <span>
+                        <span className="block font-quicksand text-sm font-bold text-[var(--kkb-profond)]">{s.name}</span>
+                        <span className="block font-quicksand text-[11px] text-[var(--kkb-texte-2)]">{suggestionLabel(s)}</span>
+                      </span>
                     </button>
                   )
                 })}
               </div>
             </section>
           )}
+
+          {/* Réserve la place de la barre d'action flottante */}
+          <div className="h-16" aria-hidden="true" />
         </div>
 
-        <div className="fixed bottom-[var(--kkb-nav-offset)] left-1/2 z-30 flex -translate-x-1/2 items-center gap-1.5 rounded-[var(--kkb-radius-pill)] border border-[var(--kkb-border)] bg-white p-1.5 shadow-[var(--kkb-shadow-fab)]">
+        <div className="fixed inset-x-4 bottom-[var(--kkb-nav-offset)] z-30 mx-auto flex max-w-sm items-center gap-2 rounded-full bg-white p-1.5 shadow-[var(--kkb-shadow-sheet)]">
           <button type="button" onClick={() => void toggleFavorite()} aria-label={recipe.is_favorited ? 'Retirer des favoris' : 'Ajouter aux favoris'} aria-pressed={recipe.is_favorited}
-            className={`relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors ${recipe.is_favorited ? 'bg-[var(--kkb-coral-light)]' : 'bg-[var(--kkb-bg)]'}`}>
-            <Heart key={favPop} className={`h-5 w-5 ${favPop ? 'motion-safe:animate-kkb-react-pop' : ''} ${recipe.is_favorited ? 'fill-[var(--kkb-coral)] text-[var(--kkb-coral)]' : 'text-[var(--kkb-text-secondary)]'}`} />
-            {recipe.foyer_favorites > 0 && (
-              <span className="absolute -right-1 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[var(--kkb-coral)] px-1 text-[10px] font-quicksand font-bold text-white" aria-label={`${recipe.foyer_favorites} favori(s) dans le foyer`}>
-                {recipe.foyer_favorites}
-              </span>
-            )}
+            className={`relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full transition-colors ${recipe.is_favorited ? 'bg-[var(--kkb-orange-50)]' : 'bg-[var(--kkb-creme)]'}`}>
+            <Heart key={favPop} className={`h-5 w-5 ${favPop ? 'motion-safe:animate-kkb-react-pop' : ''} ${recipe.is_favorited ? 'fill-[var(--kkb-orange)] text-[var(--kkb-orange)]' : 'text-[var(--kkb-foret)]'}`} />
           </button>
           <button type="button" onClick={() => setAddOpen(true)}
-            className="flex h-10 items-center gap-1.5 whitespace-nowrap rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-coral)] px-5 text-sm font-quicksand font-bold text-white active:scale-[0.97]">
-            <CalendarPlus className="h-4 w-4" /> Ajouter au menu
+            className="flex h-12 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-[var(--kkb-coral)] px-5 font-quicksand text-base font-bold text-white active:scale-[0.98] transition-transform">
+            <CalendarPlus className="h-5 w-5" /> Ajouter au menu
           </button>
         </div>
       </div>
