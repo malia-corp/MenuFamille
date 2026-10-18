@@ -41,55 +41,60 @@ export function ViewToggle({
 
   return (
     <section className="mb-4">
-      <div className="flex items-center gap-2">
+      {/* Contrôle segmenté : vert forêt, l'orange reste au bouton d'envoi (C-02). */}
+      <div className="grid grid-cols-2 rounded-full bg-white p-1 sm:inline-grid" role="tablist" aria-label="Regrouper les repas">
         <button
           type="button"
+          role="tab"
+          aria-selected={viewMode === 'type'}
           onClick={() => onViewModeChange('type')}
-          className={`flex items-center gap-1.5 rounded-[var(--kkb-radius-pill)] px-3.5 py-2 text-[13px] font-quicksand font-bold transition-colors ${
-            viewMode === 'type' ? 'bg-[var(--kkb-coral)] text-white' : 'bg-white border border-[var(--kkb-border)] text-[var(--kkb-text-secondary)]'
+          className={`flex h-11 items-center justify-center gap-1.5 rounded-full px-4 text-sm font-quicksand font-bold transition-colors ${
+            viewMode === 'type' ? 'bg-[var(--kkb-foret)] text-[var(--kkb-creme)]' : 'text-[var(--kkb-texte-2)]'
           }`}
         >
-          <Utensils className="h-3.5 w-3.5" /> Par Type de repas
+          <Utensils className="h-4 w-4" /> Par repas
         </button>
         <button
           type="button"
+          role="tab"
+          aria-selected={viewMode === 'day'}
           onClick={() => onViewModeChange('day')}
-          className={`flex items-center gap-1.5 rounded-[var(--kkb-radius-pill)] px-3.5 py-2 text-[13px] font-quicksand font-bold transition-colors ${
-            viewMode === 'day' ? 'bg-[var(--kkb-coral)] text-white' : 'bg-white border border-[var(--kkb-border)] text-[var(--kkb-text-secondary)]'
+          className={`flex h-11 items-center justify-center gap-1.5 rounded-full px-4 text-sm font-quicksand font-bold transition-colors ${
+            viewMode === 'day' ? 'bg-[var(--kkb-foret)] text-[var(--kkb-creme)]' : 'text-[var(--kkb-texte-2)]'
           }`}
         >
-          <CalendarDays className="h-3.5 w-3.5" /> Par Jour<span className="hidden lg:inline"> (Semainier)</span>
+          <CalendarDays className="h-4 w-4" /> Par jour
         </button>
       </div>
 
-      <div className="flex gap-1.5 overflow-x-auto hide-scrollbar mt-2.5">
+      <div className="-mx-4 flex gap-2 overflow-x-auto px-4 hide-scrollbar mt-3 lg:mx-0 lg:px-0">
         <button
           type="button"
           onClick={() => onFilterChange(null)}
-          className={`flex-shrink-0 px-3 py-1 rounded-full text-[11px] font-quicksand font-bold transition-colors ${
-            activeFilter === null ? 'bg-[var(--kkb-teal)] text-white' : 'bg-white border border-[var(--kkb-border)] text-[var(--kkb-text-secondary)]'
+          className={`flex h-9 flex-shrink-0 items-center px-3.5 rounded-full text-[13px] font-quicksand font-bold transition-colors ${
+            activeFilter === null ? 'bg-[var(--kkb-sauge-50)] text-[var(--kkb-foret)] ring-1 ring-[var(--kkb-foret-300)]' : 'bg-white text-[var(--kkb-texte-2)]'
           }`}
         >
-          Tous ({totalCount})
+          Tous <span className="ml-1 tabular-nums opacity-70">{totalCount}</span>
         </button>
         {chips.map(c => (
           <button
             key={c.value}
             type="button"
             onClick={() => onFilterChange(c.value)}
-            className={`flex-shrink-0 inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-quicksand font-bold whitespace-nowrap transition-colors ${
-              activeFilter === c.value ? 'bg-[var(--kkb-teal)] text-white' : 'bg-white border border-[var(--kkb-border)] text-[var(--kkb-text-secondary)]'
+            className={`flex h-9 flex-shrink-0 items-center gap-1.5 px-3.5 rounded-full text-[13px] font-quicksand font-bold whitespace-nowrap transition-colors ${
+              activeFilter === c.value ? 'bg-[var(--kkb-sauge-50)] text-[var(--kkb-foret)] ring-1 ring-[var(--kkb-foret-300)]' : 'bg-white text-[var(--kkb-texte-2)]'
             }`}
           >
-            {c.icon && <c.icon className="h-3 w-3" />}
-            {c.label} ({c.count})
+            {c.icon && <c.icon className="h-3.5 w-3.5" />}
+            {c.label} <span className="tabular-nums opacity-70">{c.count}</span>
           </button>
         ))}
       </div>
 
       <div className="flex items-center justify-between mt-2">
-        <p className="text-[11px] font-quicksand text-[var(--kkb-text-tertiary)]">
-          {viewMode === 'type' ? 'Vue groupée par moment de dégustation' : 'Vue groupée par jour de la semaine'}
+        <p className="sr-only">
+          {viewMode === 'type' ? 'Repas groupés par moment de la journée' : 'Repas groupés par jour'}
         </p>
         <div className="hidden sm:flex items-center gap-1.5">
           <span className="text-[10px] font-quicksand font-bold uppercase px-2 py-0.5 rounded-full bg-[var(--kkb-success-light)] text-[var(--kkb-success)]">
