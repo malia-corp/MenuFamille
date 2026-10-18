@@ -31,6 +31,9 @@ type AuthMode = 'code' | 'link'
 
 const EMPTY_CODE = ['', '', '', '', '', '']
 
+const formatCountdown = (s: number) =>
+  `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`
+
 const PROMISES: { icon: LucideIcon; text: string }[] = [
   { icon: CalendarDays,       text: 'Le menu de la semaine en 2 minutes' },
   { icon: MessageCircleHeart, text: 'Toute la famille donne son avis' },
@@ -45,12 +48,12 @@ const MEAL_STRIP = [
   { icon: MEAL_ICON.diner,          color: 'text-[var(--kkb-creme)]' },
 ]
 
-function MealStrip() {
+function MealStrip({ small = false }: { small?: boolean }) {
   return (
     <div className="flex gap-2" aria-hidden="true">
       {MEAL_STRIP.map(({ icon: Icon, color }, i) => (
-        <span key={i} className="h-10 w-10 rounded-full bg-white/10 flex items-center justify-center">
-          <Icon className={`h-5 w-5 ${color}`} />
+        <span key={i} className={`${small ? 'h-8 w-8' : 'h-10 w-10'} rounded-full bg-white/10 flex items-center justify-center`}>
+          <Icon className={`${small ? 'h-4 w-4' : 'h-5 w-5'} ${color}`} />
         </span>
       ))}
     </div>
@@ -63,7 +66,7 @@ function Signature({ className }: { className: string }) {
     <p className={`font-main font-semibold text-[var(--kkb-creme)] ${className}`}>
       On mange quoi ?<br />
       On décide ensemble.
-      <span className="mt-3 block h-1 w-16 rounded-full bg-[var(--kkb-orange)]" aria-hidden="true" />
+      <span className="mt-2.5 block h-1 w-14 rounded-full bg-[var(--kkb-orange)]" aria-hidden="true" />
     </p>
   )
 }
@@ -98,15 +101,15 @@ function LoginShell({ showMobileHero, children }: { showMobileHero: boolean; chi
 
       <div className="flex min-h-screen flex-col">
         {showMobileHero && (
-          <header className="lg:hidden bg-[var(--kkb-foret)] rounded-b-[var(--kkb-r-xl)] px-6 pb-8 pt-[calc(env(safe-area-inset-top)+28px)]">
-            <Logo variant="reversed" layout="horizontal" size={32} />
-            <Signature className="mt-6 text-[26px] leading-[1.15]" />
-            <div className="mt-6">
-              <MealStrip />
+          <header className="lg:hidden bg-[var(--kkb-foret)] rounded-b-[var(--kkb-r-xl)] px-5 pb-6 pt-[calc(env(safe-area-inset-top)+20px)]">
+            <div className="flex items-center justify-between gap-3">
+              <Logo variant="reversed" layout="horizontal" size={28} />
+              <MealStrip small />
             </div>
+            <Signature className="mt-5 text-[24px] leading-[1.15]" />
           </header>
         )}
-        <main className="flex flex-1 justify-center px-4 py-8 lg:items-center lg:px-12">
+        <main className="flex flex-1 justify-center px-5 py-6 lg:items-center lg:px-12 lg:py-8">
           <div className="w-full max-w-sm">{children}</div>
         </main>
       </div>
@@ -245,7 +248,7 @@ export default function LoginPage() {
   if (state === 'otp' || state === 'verifying') {
     return (
       <LoginShell showMobileHero={false}>
-        <div className="space-y-6">
+        <div className="space-y-5">
           {/* Barre de navigation */}
           <div className="flex items-center justify-between">
             <button
@@ -271,19 +274,19 @@ export default function LoginPage() {
 
           {/* Illustration */}
           <div className="flex justify-center">
-            <div className="h-24 w-24 rounded-full bg-[var(--kkb-sauge-50)] flex items-center justify-center">
-              <MailCheck className="h-10 w-10 text-[var(--kkb-foret)]" />
+            <div className="h-20 w-20 rounded-full bg-[var(--kkb-sauge-50)] flex items-center justify-center">
+              <MailCheck className="h-9 w-9 text-[var(--kkb-foret)]" />
             </div>
           </div>
 
           <div className="text-center space-y-2">
-            <h1 className="text-h1 text-[var(--kkb-foret)] flex items-center justify-center gap-2">
-              Vérifie ta boîte mail <Sparkles className="h-6 w-6 text-[var(--kkb-jaune)]" />
+            <h1 className="text-h1 max-[380px]:text-[24px] max-[380px]:leading-[30px] text-[var(--kkb-foret)] flex items-center justify-center gap-2">
+              Vérifie ta boîte mail <Sparkles className="h-6 w-6 shrink-0 text-[var(--kkb-jaune)]" />
             </h1>
             <p className="text-[15px] text-[var(--kkb-text-secondary)]">
               {authMode === 'code'
-                ? 'On vient de glisser un code à 6 chiffres dans la boîte de'
-                : 'On vient de glisser un lien de connexion dans la boîte de'}
+                ? 'On t’a envoyé un code à 6 chiffres sur'
+                : 'On t’a envoyé un lien de connexion sur'}
             </p>
             <button
               type="button"
@@ -342,7 +345,7 @@ export default function LoginPage() {
                   <span>
                     Nouveau code possible dans{' '}
                     <span className="font-bold text-[var(--kkb-foret)] tabular-nums">
-                      00:{String(countdown).padStart(2, '0')}
+                      {formatCountdown(countdown)}
                     </span>
                   </span>
                 ) : (
@@ -406,7 +409,7 @@ export default function LoginPage() {
   // ── Écran Email ────────────────────────────────────────────────────────────
   return (
     <LoginShell showMobileHero>
-      <div className="space-y-7">
+      <div className="space-y-6">
         <div className="space-y-2">
           <h1 className="text-h1 text-[var(--kkb-foret)]">Bienvenue à table&nbsp;!</h1>
           <p className="text-base text-[var(--kkb-text-secondary)]">
