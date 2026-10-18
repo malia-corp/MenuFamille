@@ -40,7 +40,7 @@ const AVATAR_COLORS = ['var(--kkb-orange)', 'var(--kkb-foret-500)', 'var(--kkb-j
 
 const ROLE_LABEL: Record<string, string> = { planificatrice: 'Planificatrice', membre: 'Membre' }
 const ROLE_BADGE: Record<string, string> = {
-  planificatrice: 'bg-[var(--kkb-coral)] text-white',
+  planificatrice: 'bg-[var(--kkb-foret)] text-[var(--kkb-creme)]',
   membre:         'bg-[var(--kkb-teal-light)] text-[var(--kkb-teal)]',
 }
 const ROLE_DESCRIPTION: Record<string, string> = {
@@ -377,7 +377,7 @@ export default function CirclePage() {
           <button
             type="button"
             onClick={() => openPrefSheet(circle.id, u.id, u.display_name || u.email)}
-            className={`inline-flex items-center gap-1 rounded-[var(--kkb-radius-pill)] border border-dashed border-[color-mix(in_srgb,var(--kkb-coral)_50%,transparent)] font-quicksand font-semibold text-[var(--kkb-coral)] ${chip}`}
+            className={`inline-flex items-center gap-1 rounded-[var(--kkb-radius-pill)] border border-dashed border-[var(--kkb-foret-300)] font-quicksand font-semibold text-[var(--kkb-foret)] ${chip}`}
           >
             <Plus className={icon} />
             Ajouter
@@ -489,7 +489,7 @@ export default function CirclePage() {
           type="button"
           onClick={() => void activateCircle(circle.id)}
           disabled={activating}
-          className="inline-flex items-center gap-1.5 rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-coral)] px-3 py-1 font-quicksand text-xs font-bold text-white transition-colors hover:bg-[var(--kkb-coral-hover)] disabled:opacity-60"
+          className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[var(--kkb-coral)] px-4 font-quicksand text-sm font-bold text-white transition-colors hover:bg-[var(--kkb-coral-hover)] disabled:opacity-60"
         >
           {activating ? <Loader2 className="h-3 w-3 animate-spin" /> : <Power className="h-3 w-3" />}
           Activer ce cercle
@@ -544,8 +544,8 @@ export default function CirclePage() {
         <section className="space-y-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white p-4">
           <CircleSwitcher {...switcherProps}>
             <span className="flex items-center gap-3">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--kkb-coral-light)]">
-                <Users className="h-5 w-5 text-[var(--kkb-coral)]" />
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--kkb-foret-50)]">
+                <Users className="h-5 w-5 text-[var(--kkb-foret)]" />
               </span>
               <span className="min-w-0">
                 <span className="block truncate font-dosis text-lg font-bold text-[var(--kkb-text-primary)]">{circle.name}</span>
@@ -569,9 +569,9 @@ export default function CirclePage() {
         {/* Code d'invitation */}
         <section className="space-y-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white p-4">
           <p className="flex items-center gap-1.5 font-quicksand text-xs font-bold text-[var(--kkb-text-tertiary)]">
-            <KeyRound className="h-3.5 w-3.5 text-[var(--kkb-coral)]" /> Code d&apos;invitation au cercle
+            <KeyRound className="h-3.5 w-3.5 text-[var(--kkb-foret)]" /> Code d&apos;invitation au cercle
           </p>
-          <p className="font-dosis text-[28px] font-extrabold tracking-wider text-[var(--kkb-coral)]">{inviteCode}</p>
+          <p className="font-dosis text-[28px] font-extrabold tracking-wider text-[var(--kkb-foret)]">{inviteCode}</p>
           <p className="font-quicksand text-[13px] text-[var(--kkb-text-secondary)]">
             Partage ce code avec un proche ou un invité du dimanche pour qu&apos;il vote et donne son avis sur les repas.
           </p>
@@ -618,7 +618,7 @@ export default function CirclePage() {
                       <p className="flex flex-wrap items-center gap-1.5">
                         <span className="truncate font-quicksand text-sm font-bold text-[var(--kkb-text-primary)]">{u.display_name || u.email}</span>
                         {isCurrentUser && (
-                          <span className="rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-coral-light)] px-2 py-0.5 font-quicksand text-[10px] font-bold text-[var(--kkb-coral)]">Moi</span>
+                          <span className="rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-foret-50)] px-2 py-0.5 font-quicksand text-xs font-bold text-[var(--kkb-foret)]">Moi</span>
                         )}
                         {inactiveBadge(m)}
                       </p>
@@ -645,7 +645,7 @@ export default function CirclePage() {
                 Moments de repas · {mealConfigs.filter((c) => c.is_active).length} créneaux
               </p>
               {isPlanificatrice && (
-                <Link href="/settings/meal-config" className="font-quicksand text-xs font-bold text-[var(--kkb-coral)]">Ajuster</Link>
+                <Link href="/settings/meal-config" className="font-quicksand text-xs font-bold text-[var(--kkb-foret)]">Ajuster</Link>
               )}
             </div>
             <div className="grid grid-cols-2 gap-2">
@@ -655,7 +655,7 @@ export default function CirclePage() {
                   className={`rounded-[var(--kkb-radius-sm)] border p-2.5 ${c.is_active ? 'border-[var(--kkb-border)] bg-[var(--kkb-bg)]' : 'border-dashed border-[var(--kkb-border)] opacity-60'}`}
                 >
                   <p className="flex items-center gap-1.5 font-quicksand text-xs font-bold text-[var(--kkb-text-primary)]">
-                    <MealTypeIcon type={c.meal_type} className="h-3.5 w-3.5 text-[var(--kkb-coral)]" />
+                    <MealTypeIcon type={c.meal_type} className="h-3.5 w-3.5 text-[var(--kkb-foret)]" />
                     {MEAL_LABEL[c.meal_type]}
                     <span className={`ml-auto h-2 w-2 rounded-full ${c.is_active ? 'bg-[var(--kkb-success)]' : 'bg-[var(--kkb-border)]'}`} aria-label={c.is_active ? 'Actif' : 'Inactif'} />
                   </p>
@@ -679,7 +679,7 @@ export default function CirclePage() {
               <button
                 type="button"
                 onClick={() => openPrefSheet(circle.id, me.users!.id, me.users!.display_name || me.users!.email)}
-                className="flex items-center gap-1 font-quicksand text-xs font-bold text-[var(--kkb-coral)]"
+                className="flex items-center gap-1 font-quicksand text-xs font-bold text-[var(--kkb-foret)]"
               >
                 <Pencil className="h-3.5 w-3.5" /> {myPrefs.length} critère{myPrefs.length > 1 ? 's' : ''}
               </button>
@@ -698,7 +698,7 @@ export default function CirclePage() {
             { icon: Heart,    value: stats?.favorites_count,   label: 'Plats favoris' },
           ].map(({ icon: Icon, value, label }) => (
             <div key={label} className="rounded-[var(--kkb-radius-card)] border border-[var(--kkb-lin)] bg-white p-4">
-              <Icon className="h-5 w-5 text-[var(--kkb-coral)]" />
+              <Icon className="h-5 w-5 text-[var(--kkb-foret)]" />
               <p className="mt-2 font-dosis text-2xl font-bold text-[var(--kkb-text-primary)]">{value ?? '–'}</p>
               <p className="font-quicksand text-xs text-[var(--kkb-text-tertiary)]">{label}</p>
             </div>
@@ -712,7 +712,7 @@ export default function CirclePage() {
       <div className="mx-auto hidden max-w-[1200px] px-8 py-8 lg:block print:block print:p-0">
         <div className="mb-6 flex items-start justify-between gap-6 print:hidden">
           <div>
-          <p className="font-quicksand text-xs font-bold text-[var(--kkb-coral)]">Tablée &amp; gouvernance</p>
+          <p className="font-quicksand text-xs font-bold text-[var(--kkb-foret)]">Tablée &amp; gouvernance</p>
           <h1 className="font-dosis text-3xl font-bold text-[var(--kkb-text-primary)]">Cercle familial · {circle.name}</h1>
           <p className="mt-1 max-w-2xl font-quicksand text-sm text-[var(--kkb-text-secondary)]">
             Réunissez votre tablée pour voter les repas de la semaine et partager les préférences de chacun.
@@ -733,9 +733,9 @@ export default function CirclePage() {
         <div className="grid grid-cols-[280px_minmax(0,1fr)] items-start gap-8 print:block">
           {/* Colonne gauche : invitation */}
           <aside className="space-y-4">
-            <section className="space-y-3 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-coral)] bg-[var(--kkb-coral-light)] p-5 print:hidden">
+            <section className="space-y-3 rounded-[var(--kkb-radius-card)] bg-[var(--kkb-orange-50)] p-5 print:hidden">
               <p className="font-quicksand text-xs font-bold text-[var(--kkb-text-tertiary)]">Code unique du foyer</p>
-              <p className="font-dosis text-[32px] font-extrabold leading-none tracking-wider text-[var(--kkb-coral)]">{inviteCode}</p>
+              <p className="font-dosis text-[32px] font-extrabold leading-none tracking-wider text-[var(--kkb-foret)]">{inviteCode}</p>
               <p className="font-quicksand text-xs text-[var(--kkb-text-secondary)]">
                 Partage ce code avec les enfants ou ton conjoint(e) pour rejoindre la tablée.
               </p>
@@ -756,7 +756,7 @@ export default function CirclePage() {
                 <button
                   type="button"
                   onClick={() => window.print()}
-                  className="flex items-center gap-1 font-quicksand text-xs font-bold text-[var(--kkb-coral)] print:hidden"
+                  className="flex items-center gap-1 font-quicksand text-xs font-bold text-[var(--kkb-foret)] print:hidden"
                 >
                   <Printer className="h-3.5 w-3.5" /> Imprimer
                 </button>
@@ -793,11 +793,11 @@ export default function CirclePage() {
                           <span className="font-dosis text-lg font-semibold text-[var(--kkb-text-primary)]">{u.display_name || u.email}</span>
                           {roleBadge(m.role)}
                           {isCurrentUser && (
-                            <span className="rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-coral-light)] px-2 py-0.5 font-quicksand text-xs font-bold text-[var(--kkb-coral)]">Vous</span>
+                            <span className="rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-foret-50)] px-2 py-0.5 font-quicksand text-xs font-bold text-[var(--kkb-foret)]">Vous</span>
                           )}
                           {inactiveBadge(m)}
                         </p>
-                        <p className="font-quicksand text-sm text-[var(--kkb-coral)]">{m.role === 'planificatrice' ? 'Cheffe du foyer' : 'Membre votant'}</p>
+                        <p className="font-quicksand text-sm text-[var(--kkb-foret)]">{m.role === 'planificatrice' ? 'Cheffe du foyer' : 'Membre votant'}</p>
                       </div>
                       {removeButton(m)}
                     </div>
@@ -852,7 +852,7 @@ export default function CirclePage() {
                   onClick={() => setPrefType(opt.value)}
                   className={`rounded-xl border py-2 font-quicksand text-xs font-medium transition-colors ${
                     prefType === opt.value
-                      ? 'border-[var(--kkb-coral)] bg-[var(--kkb-coral)] text-white'
+                      ? 'border-[var(--kkb-foret)] bg-[var(--kkb-foret)] text-[var(--kkb-creme)]'
                       : 'border-[var(--kkb-border)] bg-white text-[var(--kkb-text-secondary)]'
                   }`}
                 >
