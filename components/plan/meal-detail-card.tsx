@@ -19,7 +19,7 @@ interface PlanRecipeLike {
 }
 
 interface MealDetailCardProps {
-  eyebrow:      string // "PETIT-DÉJEUNER · 07H00"
+  eyebrow:      string // "Petit-déj. · 07h00"
   mealType?:    MealType // icône affichée devant l'eyebrow
   emptyLabel:   string // "petit-déjeuner" — pour "+ Ajouter un petit-déjeuner"
   recipe:       PlanRecipeLike | null
@@ -43,25 +43,25 @@ export function MealDetailCard({
   }
 
   return (
-    <div className={`mx-4 bg-white border border-[var(--kkb-lin)] rounded-[var(--kkb-radius-card)] overflow-hidden transition-opacity ${dimmed ? 'opacity-40' : ''}`}>
+    <div className={`mx-4 rounded-[var(--kkb-r-xl)] transition-opacity ${recipe ? 'bg-white p-2' : ''} ${dimmed ? 'opacity-40' : ''}`}>
       {recipe ? (
-        <div className="flex items-stretch">
-          <div className="relative w-1/3 shrink-0 min-h-[116px] bg-[var(--kkb-coral-light)]">
+        <div className="flex items-stretch gap-3">
+          <div className="relative w-[96px] shrink-0 min-h-[112px] overflow-hidden rounded-[var(--kkb-r-lg)] bg-[var(--kkb-orange-50)]">
             {recipe.photo_url ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={recipe.photo_url} alt={recipe.name} className="absolute inset-0 h-full w-full object-cover" />
             ) : (
-              <div className="absolute inset-0 flex items-center justify-center"><UtensilsCrossed className="h-8 w-8 text-[var(--kkb-coral)]" /></div>
+              <div className="absolute inset-0 flex items-center justify-center"><UtensilsCrossed className="h-7 w-7 text-[var(--kkb-orange-300)]" /></div>
             )}
           </div>
 
-          <div className="min-w-0 flex-1 p-3 flex flex-col justify-between">
+          <div className="min-w-0 flex-1 py-1 pr-1 flex flex-col justify-between">
             <div>
-              <p className="flex items-center gap-1 text-[10px] font-quicksand font-bold uppercase text-[var(--kkb-coral)] tracking-wide">
-                {mealType && <MealTypeIcon type={mealType} className="h-3 w-3 shrink-0" />}
+              <p className="flex items-center gap-1.5 text-xs font-quicksand font-bold text-[var(--kkb-texte-2)]">
+                {mealType && <MealTypeIcon type={mealType} className="h-3.5 w-3.5 shrink-0 text-[var(--kkb-foret)]" />}
                 <span className="truncate">{eyebrow}</span>
               </p>
-              <p className="font-dosis font-bold text-[15px] text-[var(--kkb-text-primary)] leading-tight truncate">
+              <p className="mt-0.5 font-dosis font-bold text-[16px] text-[var(--kkb-profond)] leading-tight line-clamp-2">
                 {recipe.name}
               </p>
 
@@ -75,11 +75,11 @@ export function MealDetailCard({
             <div className="flex items-center justify-between gap-2 mt-1.5">
               <div className="flex items-center gap-2 min-w-0">
                 {recipe.prep_time_min && (
-                  <span className="flex items-center gap-0.5 text-[11px] font-quicksand text-[var(--kkb-text-secondary)] shrink-0">
+                  <span className="flex items-center gap-1 text-xs font-quicksand tabular-nums text-[var(--kkb-texte-2)] shrink-0">
                     <Clock className="h-3 w-3" /> {recipe.prep_time_min} min
                   </span>
                 )}
-                <span className="text-[11px] font-quicksand text-[var(--kkb-text-secondary)] shrink-0">
+                <span className="text-xs font-quicksand text-[var(--kkb-texte-2)] shrink-0">
                   · {servings} pers.
                 </span>
               </div>
@@ -91,22 +91,23 @@ export function MealDetailCard({
                   disabled={locking}
                   aria-label={isLocked ? 'Déverrouiller ce repas' : 'Verrouiller ce repas'}
                   title={isLocked ? 'Déverrouiller ce repas' : 'Verrouiller ce repas'}
-                  className={`h-7 w-7 rounded-lg flex items-center justify-center border transition-colors disabled:opacity-40 ${
+                  aria-pressed={isLocked}
+                  className={`h-10 w-10 rounded-full flex items-center justify-center transition-colors disabled:opacity-40 ${
                     isLocked
-                      ? 'bg-[var(--kkb-teal)] border-[var(--kkb-teal)] text-white'
-                      : 'bg-[var(--kkb-bg)] border-[var(--kkb-border)] text-[var(--kkb-text-tertiary)] hover:text-[var(--kkb-teal)]'
+                      ? 'bg-[var(--kkb-foret)] text-[var(--kkb-creme)]'
+                      : 'bg-[var(--kkb-creme)] text-[var(--kkb-foret)]'
                   }`}
                 >
-                  {locking ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : isLocked ? <Lock className="h-3.5 w-3.5" /> : <LockOpen className="h-3.5 w-3.5" />}
+                  {locking ? <Loader2 className="h-4 w-4 animate-spin" /> : isLocked ? <Lock className="h-4 w-4" /> : <LockOpen className="h-4 w-4" />}
                 </button>
                 <button
                   type="button"
                   onClick={onEdit}
                   aria-label="Modifier le repas"
                   title="Modifier le repas"
-                  className="h-7 w-7 rounded-lg flex items-center justify-center border border-[var(--kkb-border)] bg-[var(--kkb-bg)] text-[var(--kkb-text-tertiary)] hover:text-[var(--kkb-coral)] transition-colors"
+                  className="h-10 w-10 rounded-full flex items-center justify-center bg-[var(--kkb-creme)] text-[var(--kkb-foret)] transition-colors"
                 >
-                  <Pencil className="h-3.5 w-3.5" />
+                  <Pencil className="h-4 w-4" />
                 </button>
               </div>
             </div>
@@ -116,17 +117,17 @@ export function MealDetailCard({
         <button
           type="button"
           onClick={onEdit}
-          className="w-full flex flex-col items-center justify-center gap-2 p-4 text-center border-2 border-dashed border-[var(--kkb-border)] rounded-[var(--kkb-radius-card)]"
+          className="w-full flex items-center gap-3 p-2 text-left border-2 border-dashed border-[var(--kkb-filet)] rounded-[var(--kkb-r-xl)] active:scale-[0.99] transition-transform"
         >
-          <p className="flex items-center gap-1 text-[10px] font-quicksand font-bold uppercase text-[var(--kkb-text-tertiary)] tracking-wide">
-            {mealType && <MealTypeIcon type={mealType} className="h-3 w-3 shrink-0" />}
-            {eyebrow}
-          </p>
-          <span className="inline-block bg-[var(--kkb-bg)] text-[var(--kkb-text-tertiary)] rounded-full px-2 py-0.5 text-[10px] font-quicksand font-semibold">
-            Non planifié
+          <span className="flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-[var(--kkb-r-lg)] bg-white text-[var(--kkb-foret)]">
+            {mealType ? <MealTypeIcon type={mealType} className="h-6 w-6" /> : <UtensilsCrossed className="h-6 w-6" />}
           </span>
-          <span className="flex items-center gap-1 text-sm font-quicksand font-semibold text-[var(--kkb-coral)]">
-            <Plus className="h-4 w-4" /> Ajouter un {emptyLabel}
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-xs font-quicksand font-bold text-[var(--kkb-texte-2)]">{eyebrow}</span>
+            <span className="block font-dosis text-[15px] font-bold text-[var(--kkb-profond)]">Ajouter un {emptyLabel}</span>
+          </span>
+          <span className="mr-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--kkb-foret)] text-[var(--kkb-creme)]" aria-hidden="true">
+            <Plus className="h-5 w-5" />
           </span>
         </button>
       )}
