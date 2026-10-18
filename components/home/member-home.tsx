@@ -4,11 +4,11 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { ArrowRight, BarChart3, Check, CheckCircle, ChefHat, Clock, Lock, UtensilsCrossed, Users, Vote } from 'lucide-react'
 import { EmptyState } from '@/components/ui/empty-state'
-import { SkeletonCard } from '@/components/ui/skeleton-card'
 import { MealTypeIcon } from '@/components/ui/meal-type-icon'
 import { composedName } from '@/lib/utils/composed-name'
 import { MEAL_LABEL, MEAL_TYPE_ORDER, type MealType } from '@/lib/constants/meal-type'
 import { DAY_OPTIONS, dayOfWeekFromDate, formatWeekRange, getMondayISO, type DayOfWeek } from '@/lib/utils/week'
+import { MemberHomeSkeleton } from '@/components/skeletons/page-skeletons'
 
 type Rating = 'excellent' | 'correct' | 'decevant'
 
@@ -107,15 +107,7 @@ export function MemberHome({ firstName }: { firstName: string }) {
     return () => { cancelled = true }
   }, [])
 
-  if (loading) {
-    return (
-      <div className="mx-auto max-w-lg space-y-4 px-4 pt-4 lg:max-w-none lg:px-0 lg:pt-0" aria-busy="true">
-        <SkeletonCard variant="list" />
-        <SkeletonCard variant="recipe" />
-        <SkeletonCard variant="list" />
-      </div>
-    )
-  }
+  if (loading) return <MemberHomeSkeleton />
 
   const planner  = data?.planner_name ?? 'La cuisine'
   const plan     = data?.plan ?? null

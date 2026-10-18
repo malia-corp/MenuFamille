@@ -4,10 +4,10 @@ import { useEffect, useMemo, useState } from 'react'
 import { CalendarDays, Check, Clock, Info, LayoutGrid, Loader2, Repeat, SlidersHorizontal, WifiOff } from 'lucide-react'
 import { Switch } from '@/components/ui/switch'
 import { EmptyState } from '@/components/ui/empty-state'
-import { SkeletonCard } from '@/components/ui/skeleton-card'
 import { toast } from '@/lib/stores/toast-store'
 import { MEAL_COLOR, MEAL_TYPE_ORDER, type MealType } from '@/lib/constants/meal-type'
 import { MEAL_ICON } from '@/lib/constants/meal-type-icon'
+import { MealConfigSkeleton } from '@/components/skeletons/page-skeletons'
 
 type Mode = 'daily' | 'template'
 
@@ -157,16 +157,7 @@ export default function MealConfigPage() {
   const savedMinutes = (active.length * 7 - dishes) * MINUTES_PER_DECISION
   const dirty       = !sameRhythm(draft, saved)
 
-  if (loading) {
-    return (
-      <div className="mx-auto max-w-lg space-y-3 px-4 py-6 lg:max-w-none lg:px-0 lg:pt-0" aria-busy="true">
-        <SkeletonCard variant="list" />
-        <SkeletonCard variant="meal" />
-        <SkeletonCard variant="meal" />
-        <SkeletonCard variant="meal" />
-      </div>
-    )
-  }
+  if (loading) return <MealConfigSkeleton />
 
   if (failed) {
     return (

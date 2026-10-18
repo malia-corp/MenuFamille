@@ -6,9 +6,9 @@ import { ArrowLeft, Bell, Check, Info, Loader2 } from 'lucide-react'
 import { MEAL_LABEL, type MealType } from '@/lib/constants/meal-type'
 import { MealTypeIcon } from '@/components/ui/meal-type-icon'
 import { Switch } from '@/components/ui/switch'
-import { SkeletonCard } from '@/components/ui/skeleton-card'
 import { toast } from '@/lib/stores/toast-store'
 import { registerServiceWorker } from '@/lib/utils/service-worker'
+import { NotificationsSkeleton } from '@/components/skeletons/page-skeletons'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -181,15 +181,7 @@ export default function NotificationsPage() {
     }
   }
 
-  if (loading) {
-    return (
-      <div className="mx-auto max-w-lg space-y-3 px-4 py-6 lg:max-w-none lg:px-0 lg:pt-0" aria-busy="true">
-        <SkeletonCard variant="list" />
-        <SkeletonCard variant="list" />
-        <SkeletonCard variant="list" />
-      </div>
-    )
-  }
+  if (loading) return <NotificationsSkeleton />
 
   return (
     <div className="pb-28">

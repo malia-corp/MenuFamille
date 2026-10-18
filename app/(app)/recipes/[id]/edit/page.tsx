@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { ArrowLeft, Loader2 } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { RecipeForm, emptyIngredient, emptyStep, uid, type RecipeFormValues } from '../../_recipe-form'
+import { RecipeFormSkeleton } from '@/components/skeletons/page-skeletons'
 
 interface ApiRecipe {
   id: string
@@ -94,7 +95,7 @@ export default function RecipeEditPage() {
     )
   }
   if (!defaultValues) {
-    return <div className="flex min-h-[60vh] items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-[var(--kkb-coral)]" /></div>
+    return <RecipeFormSkeleton />
   }
 
   return (

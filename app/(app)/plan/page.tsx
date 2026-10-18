@@ -11,7 +11,6 @@ import {
   ChevronRight,
   ChevronUp,
   LayoutGrid,
-  Loader2,
   Minus,
   Plus,
   Settings,
@@ -30,6 +29,7 @@ import { MealDetailCard, type CompositionChip } from '@/components/plan/meal-det
 import { WeekGrid } from '@/components/plan/week-grid'
 import { DayFocusView } from '@/components/plan/day-focus-view'
 import { RecipePickerPanel } from '@/components/plan/recipe-picker-panel'
+import { PlanSkeleton, PlanBodySkeleton } from '@/components/skeletons/page-skeletons'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -187,9 +187,7 @@ function readDeepLink(params: URLSearchParams) {
 export default function PlanPage() {
   return (
     <Suspense fallback={
-      <div className="flex items-center justify-center min-h-[50vh]">
-        <Loader2 className="h-6 w-6 text-[var(--kkb-coral)] animate-spin" />
-      </div>
+      <PlanSkeleton />
     }>
       <PlanPageContent />
     </Suspense>
@@ -744,9 +742,7 @@ function PlanPageContent() {
 
       {/* ── Chargement ── */}
       {viewState === 'loading' && (
-        <div className="flex items-center justify-center min-h-[50vh]">
-          <Loader2 className="h-6 w-6 text-[var(--kkb-coral)] animate-spin" />
-        </div>
+        <PlanBodySkeleton />
       )}
 
       {/* ── Overlay génération ── */}

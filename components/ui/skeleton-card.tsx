@@ -1,6 +1,6 @@
 type SkeletonVariant = 'recipe' | 'meal' | 'stat' | 'list'
 
-const BLOCK = 'animate-kkb-skeleton bg-[var(--kkb-border)]'
+const BLOCK = 'kkb-bone'
 
 // Squelette de chargement aux proportions des cartes réelles.
 export function SkeletonCard({ variant, className = '' }: { variant: SkeletonVariant; className?: string }) {

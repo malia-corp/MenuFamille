@@ -28,13 +28,13 @@ import {
 import { ShareActions, circleInvitePayload, circleJoinLinkPayload, circleJoinUrl } from '@/components/ui/share-actions'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Switch } from '@/components/ui/switch'
-import { SkeletonCard } from '@/components/ui/skeleton-card'
 import { MealTypeIcon } from '@/components/ui/meal-type-icon'
 import { MEAL_LABEL, type MealType } from '@/lib/constants/meal-type'
 import { PREF_TYPE_OPTIONS, prefChipStyle, type Pref, type PrefType, type Severity } from '@/lib/constants/dietary-pref'
 import { pickActiveCircle } from '@/lib/utils/active-circle'
 import { toast } from '@/lib/stores/toast-store'
 import { CircleSwitcher } from '@/components/circle/circle-switcher'
+import { CircleSkeleton } from '@/components/skeletons/page-skeletons'
 
 const AVATAR_COLORS = ['var(--kkb-orange)', 'var(--kkb-foret-500)', 'var(--kkb-jaune-900)', 'var(--kkb-foret)', 'var(--kkb-texte-2)']
 
@@ -298,15 +298,7 @@ export default function CirclePage() {
     }
   }
 
-  if (loading) {
-    return (
-      <div className="mx-auto max-w-lg space-y-3 px-4 py-6 lg:max-w-none lg:px-0" aria-busy="true">
-        <SkeletonCard variant="list" />
-        <SkeletonCard variant="meal" />
-        <SkeletonCard variant="meal" />
-      </div>
-    )
-  }
+  if (loading) return <CircleSkeleton />
 
   if (circles.length === 0) {
     return (

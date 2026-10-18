@@ -25,13 +25,13 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
-import { SkeletonCard } from '@/components/ui/skeleton-card'
 import { DietaryPrefsSheet } from '@/components/settings/dietary-prefs-sheet'
 import { ShareActions, appSharePayload } from '@/components/ui/share-actions'
 import { toast } from '@/lib/stores/toast-store'
 import { logout } from '@/lib/utils/logout'
 import { pickActiveCircle } from '@/lib/utils/active-circle'
 import { prefChipStyle, type Pref } from '@/lib/constants/dietary-pref'
+import { ProfileSkeleton } from '@/components/skeletons/page-skeletons'
 
 interface UserProfile {
   id:            string
@@ -163,15 +163,7 @@ export default function ProfilePage() {
     router.push('/login')
   }
 
-  if (loading) {
-    return (
-      <div className="mx-auto max-w-lg space-y-4 px-4 py-6 lg:max-w-none lg:px-0 lg:pt-0" aria-busy="true">
-        <SkeletonCard variant="stat" className="mx-auto w-40" />
-        <SkeletonCard variant="list" />
-        <SkeletonCard variant="list" />
-      </div>
-    )
-  }
+  if (loading) return <ProfileSkeleton />
 
   const initial   = (profile?.display_name || '?')[0].toUpperCase()
   const isPlanner = circle?.my_role === 'planificatrice'

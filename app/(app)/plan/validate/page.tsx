@@ -26,6 +26,7 @@ import { DAY_OPTIONS, formatWeekRange, type DayOfWeek } from '@/lib/utils/week'
 import { sortByMealType } from '@/lib/utils/sort-meal-configs'
 import { countFilledSlots, isDayComplete } from '@/lib/utils/plan-progress'
 import { CompositionChipsRow } from '@/components/plan/composition-chips-row'
+import { ValidateSkeleton } from '@/components/skeletons/page-skeletons'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -424,9 +425,7 @@ function ValidateInner() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[50vh]">
-        <Loader2 className="h-6 w-6 text-[var(--kkb-coral)] animate-spin" />
-      </div>
+      <ValidateSkeleton />
     )
   }
 
@@ -660,9 +659,7 @@ function ValidateInner() {
 export default function ValidatePage() {
   return (
     <Suspense fallback={
-      <div className="flex items-center justify-center min-h-[50vh]">
-        <Loader2 className="h-6 w-6 text-[var(--kkb-coral)] animate-spin" />
-      </div>
+      <ValidateSkeleton />
     }>
       <ValidateInner />
     </Suspense>

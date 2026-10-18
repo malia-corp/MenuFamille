@@ -6,9 +6,9 @@ import { composedName } from '@/lib/utils/composed-name'
 import { MEAL_LABEL, type MealType } from '@/lib/constants/meal-type'
 import { MealTypeIcon } from '@/components/ui/meal-type-icon'
 import { EmptyState } from '@/components/ui/empty-state'
-import { SkeletonCard } from '@/components/ui/skeleton-card'
 import { toast } from '@/lib/stores/toast-store'
 import { formatWeekRange } from '@/lib/utils/week'
+import { FeedbackSkeleton } from '@/components/skeletons/page-skeletons'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -261,15 +261,7 @@ export default function FeedbackPage() {
   const cook      = planner ?? 'la cuisine du foyer'
   const mealTimes = family?.meal_times ?? {}
 
-  if (loading) {
-    return (
-      <div className="mx-auto max-w-lg space-y-3 px-4 py-6 lg:max-w-none lg:px-0" aria-busy="true">
-        <SkeletonCard variant="list" />
-        <SkeletonCard variant="recipe" />
-        <SkeletonCard variant="list" />
-      </div>
-    )
-  }
+  if (loading) return <FeedbackSkeleton />
 
   // Historique de mes avis (hors menu affiché), regroupé par semaine.
   const currentItemIds = new Set(plan?.meal_plan_items.map(i => i.id) ?? [])

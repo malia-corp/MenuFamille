@@ -8,6 +8,7 @@ import type { SimilarRecipe } from '@/lib/utils/recipe-similarity'
 import { DuplicateDialog } from '@/components/recipes/duplicate-dialog'
 import { toast } from '@/lib/stores/toast-store'
 import { RecipeForm, clearRecipeDraft, emptyStep, uid, type IngredientRow, type RecipeFormValues, type StepRow } from '../_recipe-form'
+import { RecipeFormSkeleton } from '@/components/skeletons/page-skeletons'
 
 const DRAFT_KEY = 'kkb_recipe_draft_new'
 
@@ -250,7 +251,7 @@ function RecipeAddInner() {
 
 export default function RecipeAddPage() {
   return (
-    <Suspense fallback={<div className="flex min-h-[60vh] items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-[var(--kkb-coral)]" /></div>}>
+    <Suspense fallback={<RecipeFormSkeleton />}>
       <RecipeAddInner />
     </Suspense>
   )

@@ -2,8 +2,8 @@
 // proportions que la page chargée (bandeau, ligne de temps, colonne
 // latérale), pour que rien ne saute à l'arrivée des données.
 
-const BLOCK = 'animate-kkb-skeleton bg-[var(--kkb-border)]'
-const ON_DARK = 'animate-kkb-skeleton bg-white/15'
+const BLOCK = 'kkb-bone'
+const ON_DARK = 'kkb-bone-dark'
 
 function HeroSkeleton() {
   return (

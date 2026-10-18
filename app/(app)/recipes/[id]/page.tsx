@@ -14,6 +14,7 @@ import { ShareActions } from '@/components/ui/share-actions'
 import { RecipePrintSheet } from '@/components/recipes/recipe-print-sheet'
 import { toast } from '@/lib/stores/toast-store'
 import { formatDuration, type RecipeCategory } from '@/components/recipes/types'
+import { RecipeDetailSkeleton } from '@/components/skeletons/page-skeletons'
 
 interface Ingredient { id: string; name: string; quantity: number | null; unit: string | null; sort_order: number }
 interface Step { id: string; step_number: number; description: string }
@@ -45,7 +46,7 @@ const VISIBILITY_TAG: Record<Recipe['visibility'], string> = { private: 'Ma rece
 
 export default function RecipeDetailPage() {
   return (
-    <Suspense fallback={<Centered><Loader2 className="h-6 w-6 animate-spin text-[var(--kkb-coral)]" /></Centered>}>
+    <Suspense fallback={<RecipeDetailSkeleton />}>
       <RecipeDetail />
     </Suspense>
   )
@@ -141,7 +142,7 @@ function RecipeDetail() {
       </Centered>
     )
   }
-  if (!recipe) return <Centered><Loader2 className="h-6 w-6 animate-spin text-[var(--kkb-coral)]" /></Centered>
+  if (!recipe) return <RecipeDetailSkeleton />
 
   const totalTime  = (recipe.prep_time_min ?? 0) + (recipe.cook_time_min ?? 0)
   const CatIcon    = categoryIcon(recipe.categories?.slug)
