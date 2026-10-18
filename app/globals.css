@@ -4,57 +4,95 @@
 
 @layer base {
   :root {
-    --background: 36 18% 95%;      /* --kkb-bg #F4F2EF */
-    --foreground: 195 8% 9%;       /* --kkb-text-primary #16191A */
-    --card: 0 0% 100%;             /* --kkb-surface #FFFFFF */
-    --card-foreground: 195 8% 9%;
+    /* Variables shadcn — alignées sur la palette du guide de marque v1.0 */
+    --background: 32 100% 97%;     /* crème #FFF7EE */
+    --foreground: 153 30% 17%;     /* vert profond #1F3A2E */
+    --card: 0 0% 100%;             /* carte #FFFFFF */
+    --card-foreground: 153 30% 17%;
     --popover: 0 0% 100%;
-    --popover-foreground: 195 8% 9%;
-    --primary: 10 87% 62%;         /* --kkb-coral #F2664A */
-    --primary-foreground: 0 0% 100%;
-    --secondary: 183 74% 21%;      /* --kkb-teal #0E5A5E */
-    --secondary-foreground: 0 0% 100%;
-    --muted: 36 18% 95%;
-    --muted-foreground: 16 12% 46%; /* --kkb-text-secondary #5A4A43 */
-    --accent: 147 50% 33%;         /* --kkb-success #2A7D4F */
-    --accent-foreground: 0 0% 100%;
-    --destructive: 6 63% 46%;      /* --kkb-danger #C0392B */
+    --popover-foreground: 153 30% 17%;
+    --primary: 15 77% 58%;         /* orange tomate #E66B43 */
+    --primary-foreground: 32 100% 97%;
+    --secondary: 149 31% 23%;      /* vert forêt #294E3B */
+    --secondary-foreground: 32 100% 97%;
+    --muted: 32 100% 97%;
+    --muted-foreground: 141 9% 39%; /* texte 2 #5A6B60 */
+    --accent: 143 23% 39%;         /* forêt 500 #4C7A5E */
+    --accent-foreground: 32 100% 97%;
+    --destructive: 6 63% 46%;      /* #C0392B — pas de rouge dans le guide */
     --destructive-foreground: 0 0% 100%;
-    --border: 36 63% 76%;          /* --kkb-border #E8C99A */
-    --input: 36 63% 76%;
-    --ring: 10 87% 62%;
+    --border: 35 41% 84%;          /* filet #E7D9C6 */
+    --input: 35 41% 84%;
+    --ring: 15 77% 58%;
     --radius: 0.875rem;
 
-    /* KeskonBouf design tokens */
-    --kkb-coral:          #F2664A;
-    --kkb-coral-hover:    #E0573C;
-    --kkb-coral-light:    #FBE9E3;
-    --kkb-teal:           #0E5A5E;
-    --kkb-teal-light:     #E4F0EE;
+    /* ── Guide de marque v1.0 (jetons sources, cf. tokens.css du guide) ── */
+    --kkb-foret:      #294E3B;  /* maîtresse : titres, liens, fonds de marque */
+    --kkb-profond:    #1F3A2E;  /* encre : texte courant, jamais de noir pur */
+    --kkb-orange:     #E66B43;  /* action : un bouton orange par vue (C-02) */
+    --kkb-orange-700: #B84A27;  /* seule teinte orange pour du texte sur crème */
+    --kkb-jaune:      #F7C24A;  /* accent : favoris, notes, « en cours » */
+    --kkb-sauge:      #8CBF96;  /* accent : équilibre, succès doux */
+    --kkb-creme:      #FFF7EE;  /* fond par défaut de toute vue (C-01) */
+    --kkb-carte:      #FFFFFF;  /* cartes */
+    --kkb-texte-2:    #5A6B60;
+    --kkb-filet:      #E7D9C6;
+    --kkb-lin:        #F5EADB;
 
-    --kkb-bg:             #F4F2EF;
-    --kkb-surface:        #FFFFFF;
-    --kkb-border:         #E8C99A;
-    --kkb-border-light:   #F0E6DC;
+    /* Échelles (interfaces uniquement) */
+    --kkb-foret-50:  #EEF3EF; --kkb-foret-100: #D6E3D9; --kkb-foret-300: #8FAE98;
+    --kkb-foret-500: #4C7A5E; --kkb-foret-700: #294E3B; --kkb-foret-900: #1F3A2E;
+    --kkb-orange-50: #FDEEE8; --kkb-orange-100: #FAD5C6; --kkb-orange-300: #F09A7A;
+    --kkb-orange-500: #E66B43; --kkb-orange-900: #7E3018;
+    --kkb-jaune-50:  #FEF6E1; --kkb-jaune-100: #FCEBBF; --kkb-jaune-300: #FADB8F;
+    --kkb-jaune-500: #F7C24A; --kkb-jaune-700: #C99520; --kkb-jaune-900: #7A5A0E;
+    --kkb-sauge-50:  #EFF6F0; --kkb-sauge-300: #B8D9BE; --kkb-sauge-500: #8CBF96;
 
-    --kkb-text-primary:   #16191A;
-    --kkb-text-secondary: #5A4A43;
-    --kkb-text-tertiary:  #8c7169;
+    /* Texte sur fonds d'accent (paires de la matrice WCAG, C-13) */
+    --kkb-jaune-text:  #7A5A0E;
+    --kkb-orange-text: #B84A27;
 
-    --kkb-success:        #2A7D4F;
-    --kkb-success-light:  #EAF5EE;
-    --kkb-warning:        #F5A623;
-    --kkb-warning-light:  #FEF3E0;
+    /* Forme */
+    --kkb-r-sm: 8px; --kkb-r-md: 14px; --kkb-r-lg: 20px; --kkb-r-xl: 24px; --kkb-r-pill: 999px;
+    --kkb-espace: 4px;   /* multiples uniquement */
+    --kkb-tactile: 44px; /* cible tactile minimale (I-01) */
+
+    /* ── Jetons historiques de l'app, réaffectés sur la palette du guide ── */
+    --kkb-coral:          var(--kkb-orange);
+    --kkb-coral-hover:    var(--kkb-orange-700);
+    --kkb-coral-light:    var(--kkb-orange-50);
+    --kkb-teal:           var(--kkb-foret);
+    --kkb-teal-light:     var(--kkb-foret-50);
+
+    --kkb-bg:             var(--kkb-creme);
+    --kkb-surface:        var(--kkb-carte);
+    --kkb-border:         var(--kkb-filet);
+    --kkb-border-light:   var(--kkb-lin);
+
+    --kkb-text-primary:   var(--kkb-profond);
+    --kkb-text-secondary: var(--kkb-texte-2);
+    /* Pas de teinte plus claire dans la matrice WCAG : hiérarchie par la taille. */
+    --kkb-text-tertiary:  var(--kkb-texte-2);
+
+    /* La sauge ne porte pas de texte (C-03) : succès textuel en forêt 500. */
+    --kkb-success:        var(--kkb-foret-500);
+    --kkb-success-light:  var(--kkb-sauge-50);
+    /* Jaune : aplats et icônes ; le texte passe par --kkb-jaune-text. */
+    --kkb-warning:        var(--kkb-jaune);
+    --kkb-warning-light:  var(--kkb-jaune-50);
     --kkb-danger:         #C0392B;
     --kkb-danger-light:   #FCEBEB;
 
-    --kkb-radius-pill:    999px;
-    --kkb-radius-card:    14px;
-    --kkb-radius-sm:      10px;
-    --kkb-radius-xs:      8px;
+    --kkb-radius-pill:    var(--kkb-r-pill);
+    --kkb-radius-card:    var(--kkb-r-md);
+    --kkb-radius-sm:      var(--kkb-r-sm);
+    --kkb-radius-xs:      var(--kkb-r-sm);
 
-    --kkb-shadow-card: 0 2px 12px rgba(22,25,26,0.07);
-    --kkb-shadow-fab:  0 4px 20px rgba(242,102,74,0.35);
+    /* Cartes sans ombre (I-02) : elles se détachent par le blanc sur crème.
+       Ombre douce réservée aux feuilles modales. */
+    --kkb-shadow-card:  none;
+    --kkb-shadow-sheet: 0 -8px 32px rgba(31, 58, 46, 0.12);
+    --kkb-shadow-fab:   0 4px 20px rgba(230, 107, 67, 0.35);
   }
 
   .dark {

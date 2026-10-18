@@ -43,7 +43,7 @@ export function DuplicateDialog({ duplicate, busy, error, onUseExisting, onVaria
             <p className="text-xs font-quicksand text-[var(--kkb-text-tertiary)]">
               Ajoutée{duplicate.author_name ? ` par ${duplicate.author_name}` : ''} · {formatDistanceToNow(new Date(duplicate.created_at), { addSuffix: true, locale: fr })}
             </p>
-            <span className="inline-block rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-warning-light)] px-2 py-0.5 text-[11px] font-quicksand font-bold text-[#B07A12]">
+            <span className="inline-block rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-warning-light)] px-2 py-0.5 text-[11px] font-quicksand font-bold text-[var(--kkb-jaune-text)]">
               {duplicate.similarity}% de similarité
             </span>
           </div>

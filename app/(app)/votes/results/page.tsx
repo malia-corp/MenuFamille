@@ -255,7 +255,7 @@ function VotesResultsContent() {
           {/* Climat culinaire */}
           <StatColumn eyebrow="Climat culinaire" title="Consensus global" icon={<Smile className="h-4 w-4" />}
             footer={
-              <span className={`rounded-[var(--kkb-radius-pill)] px-2.5 py-1 text-[11px] font-quicksand font-bold ${rejected.length === 0 ? 'bg-[var(--kkb-success-light)] text-[var(--kkb-success)]' : 'bg-[var(--kkb-warning-light)] text-[#B07A12]'}`}>
+              <span className={`rounded-[var(--kkb-radius-pill)] px-2.5 py-1 text-[11px] font-quicksand font-bold ${rejected.length === 0 ? 'bg-[var(--kkb-success-light)] text-[var(--kkb-success)]' : 'bg-[var(--kkb-warning-light)] text-[var(--kkb-jaune-text)]'}`}>
                 {rejected.length === 0 ? 'Aucun plat rejeté' : `${rejected.length} plat${rejected.length > 1 ? 's' : ''} à revoir`}
               </span>
             }>
@@ -274,7 +274,7 @@ function VotesResultsContent() {
           {/* Favoris */}
           <StatColumn eyebrow="Favoris de la semaine" title="Plats plébiscités" icon={<Star className="h-4 w-4" />}
             footer={
-              <span className={`rounded-[var(--kkb-radius-pill)] px-2.5 py-1 text-[11px] font-quicksand font-bold ${rejected.length === 0 ? 'bg-[var(--kkb-success-light)] text-[var(--kkb-success)]' : 'bg-[var(--kkb-warning-light)] text-[#B07A12]'}`}>
+              <span className={`rounded-[var(--kkb-radius-pill)] px-2.5 py-1 text-[11px] font-quicksand font-bold ${rejected.length === 0 ? 'bg-[var(--kkb-success-light)] text-[var(--kkb-success)]' : 'bg-[var(--kkb-warning-light)] text-[var(--kkb-jaune-text)]'}`}>
                 {rejected.length} plat{rejected.length > 1 ? 's' : ''} rejeté{rejected.length > 1 ? 's' : ''} cette semaine{rejected.length === 0 && ' · succès total'}
               </span>
             }>
@@ -406,7 +406,7 @@ function ParticipationBadge({ allVoted, respondents, members, long }: {
 }) {
   return (
     <span className={`inline-flex items-center gap-1.5 rounded-[var(--kkb-radius-pill)] px-3 py-1 text-[13px] font-quicksand font-semibold ${
-      allVoted ? 'bg-[var(--kkb-success-light)] text-[var(--kkb-success)]' : 'bg-[var(--kkb-warning-light)] text-[#B07A12]'
+      allVoted ? 'bg-[var(--kkb-success-light)] text-[var(--kkb-success)]' : 'bg-[var(--kkb-warning-light)] text-[var(--kkb-jaune-text)]'
     }`}>
       <CheckCircle2 className="h-4 w-4" />
       {allVoted

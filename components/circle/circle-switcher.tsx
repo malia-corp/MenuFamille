@@ -67,7 +67,7 @@ export function CircleSwitcher({ circles, selectedId, activeId, onSelect, childr
       </button>
 
       {open && (
-        <div className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white shadow-[var(--kkb-shadow-card)] lg:right-auto lg:w-80">
+        <div className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-[var(--kkb-radius-card)] border border-[var(--kkb-border)] bg-white shadow-[var(--kkb-shadow-sheet)] lg:right-auto lg:w-80">
           <div className="border-b border-[var(--kkb-border-light)] p-2">
             <label className="flex items-center gap-2 rounded-[var(--kkb-radius-sm)] bg-[var(--kkb-bg)] px-3 py-2">
               <Search className="h-4 w-4 shrink-0 text-[var(--kkb-text-tertiary)]" />

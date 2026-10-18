@@ -16,7 +16,7 @@ const REACTION_CONFIG: { value: Reaction; emoji: string; label: string }[] = [
 
 const REACTION_ACTIVE_CLASS: Record<Reaction, string> = {
   aime:      'bg-[var(--kkb-success-light)] border-[var(--kkb-success)] text-[var(--kkb-success)]',
-  bof:       'bg-[var(--kkb-warning-light)] border-[var(--kkb-warning)] text-[#B07A12]',
+  bof:       'bg-[var(--kkb-warning-light)] border-[var(--kkb-warning)] text-[var(--kkb-jaune-text)]',
   naime_pas: 'bg-[var(--kkb-danger-light)] border-[var(--kkb-danger)] text-[var(--kkb-danger)]',
 }
 
