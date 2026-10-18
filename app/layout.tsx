@@ -34,14 +34,17 @@ const dynaPuff = DynaPuff({
 })
 
 export const metadata: Metadata = {
-  title: 'KeskonBouf — Saveurs & Partage',
+  title: 'KeskonBouf — On mange quoi ? On décide ensemble.',
   description:
-    'PWA mobile-first de planification de menus hebdomadaires pour familles béninoises et africaines francophones.',
+    'Planifie les repas de la semaine, réunis ta table et décidez ensemble de ce qu\'on mange.',
   manifest: '/manifest.json',
+  // Sous 48 px, seul le visage orange subsiste (guide, chapitre 07).
   icons: {
-    icon: '/logo-icon.svg',
-    shortcut: '/logo.ico',
-    apple: '/logo-icon-192.png',
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/icons/favicon-32.png', sizes: '32x32', type: 'image/png' },
+    ],
+    apple: { url: '/icons/apple-touch-icon.png', sizes: '180x180' },
   },
   appleWebApp: {
     capable: true,
@@ -49,9 +52,8 @@ export const metadata: Metadata = {
     title: 'KeskonBouf',
   },
   openGraph: {
-    title: 'KeskonBouf — Saveurs & Partage',
-    description:
-      'PWA mobile-first de planification de menus hebdomadaires pour familles béninoises et africaines francophones.',
+    title: 'KeskonBouf — On mange quoi ? On décide ensemble.',
+    description: 'Planifie les repas de la semaine, réunis ta table et décidez ensemble de ce qu\'on mange.',
   },
 }
 
@@ -61,7 +63,7 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
-  themeColor: '#F2664A',
+  themeColor: '#294E3B', // vert forêt (manifeste, guide chapitre 07)
 }
 
 export default function RootLayout({

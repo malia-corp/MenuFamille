@@ -1,6 +1,6 @@
 'use client'
 
-import Image from 'next/image'
+import { Logo } from '@/components/brand/logo'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { UserMenu } from '@/components/layout/user-menu'
@@ -26,9 +26,8 @@ export function PublicHeader({ plannerName, familyName, viewer }: PublicHeaderPr
         <div className="max-w-7xl mx-auto px-4 lg:px-6 xl:px-10 h-14 lg:h-16 flex items-center justify-between">
           <Link href="/" className="flex min-w-0 items-center gap-2" aria-label="Retour à l'accueil">
             <ArrowLeft className="h-5 w-5 shrink-0 text-[var(--kkb-teal)]" />
-            <Image src="/logo-icon.svg" alt="" width={24} height={24} className="h-6 w-6" />
-            <span className="flex min-w-0 flex-col leading-tight">
-              <span className="font-dosis font-bold text-[18px] text-[var(--kkb-coral)]">KeskonBouf</span>
+            <span className="flex min-w-0 flex-col gap-1 leading-tight">
+              <Logo layout="horizontal" size={20} />
               {label && <span className="truncate font-quicksand text-xs text-[var(--kkb-teal)]">{label}</span>}
             </span>
           </Link>
@@ -58,10 +57,7 @@ export function PublicHeader({ plannerName, familyName, viewer }: PublicHeaderPr
   return (
     <header className="sticky top-0 z-30 bg-white border-b border-[var(--kkb-border)]/50">
       <div className="max-w-7xl mx-auto px-4 lg:px-6 xl:px-10 h-14 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Image src="/logo-icon.svg" alt="" width={24} height={24} className="h-6 w-6" />
-          <span className="font-dosis font-bold text-[18px] text-[var(--kkb-coral)]">KeskonBouf</span>
-        </div>
+        <Logo layout="horizontal" size={22} />
 
         {label && (
           <div className="flex items-center gap-2">

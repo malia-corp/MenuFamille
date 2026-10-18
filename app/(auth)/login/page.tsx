@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import Image from 'next/image'
+import { Logo } from '@/components/brand/logo'
 import { useRouter } from 'next/navigation'
 import {
   ArrowLeft,
@@ -315,9 +315,8 @@ export default function LoginPage() {
   return (
     <div className="space-y-7">
       {/* Logo */}
-      <div className="flex items-center justify-center gap-2 pt-2">
-        <Image src="/logo-icon.svg" alt="" width={28} height={28} className="h-7 w-7" />
-        <span className="text-h2 text-[var(--kkb-coral)] text-[22px]">KeskonBouf</span>
+      <div className="flex items-center justify-center pt-2">
+        <Logo layout="stacked" size={56} tagline />
       </div>
 
       {/* Textes */}

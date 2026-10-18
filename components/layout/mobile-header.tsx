@@ -1,6 +1,6 @@
 'use client'
 
-import Image from 'next/image'
+import { Logo, LogoMark } from '@/components/brand/logo'
 import { usePathname, useRouter } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
 import { UserMenu } from './user-menu'
@@ -54,9 +54,9 @@ export function MobileHeader({ displayName, circleName, title: titleProp, showBa
               <ArrowLeft className="h-5 w-5" />
             </button>
           )}
-          <Image src="/logo-icon.svg" alt="" width={20} height={20} className="h-5 w-5" />
+          {title ? <LogoMark size={18} /> : <Logo layout="horizontal" size={20} />}
           <span className="flex min-w-0 flex-col leading-tight">
-            <span className="font-dosis font-bold text-[var(--kkb-coral)]">{title ?? 'KeskonBouf'}</span>
+            {title && <span className="font-dosis font-bold text-[var(--kkb-foret)]">{title}</span>}
             {subtitle && (
               <span className={subtitle.caps
                 ? 'font-quicksand text-[10px] font-bold uppercase tracking-wider text-[var(--kkb-text-tertiary)]'

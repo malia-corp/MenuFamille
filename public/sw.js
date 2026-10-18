@@ -5,7 +5,7 @@
 
 const CACHE_DISABLED = new URL(self.location.href).searchParams.get('dev') === '1'
 
-const VERSION = 'v1'
+const VERSION = 'v2' // v2 : identité v1.0 (logo et icônes aux mêmes URL)
 const CACHES = {
   static: `kkb-static-${VERSION}`,
   images: `kkb-images-${VERSION}`,
@@ -151,8 +151,8 @@ self.addEventListener('push', (event) => {
   event.waitUntil(
     self.registration.showNotification(title, {
       body,
-      icon:  '/logo-icon-192.png',
-      badge: '/logo-icon-192.png',
+      icon:  '/icons/192.png',
+      badge: '/icons/favicon-32.png',
       data:  { url },
     })
   )
