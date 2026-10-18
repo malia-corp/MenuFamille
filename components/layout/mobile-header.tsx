@@ -75,8 +75,8 @@ export function MobileHeader({ displayName, circleName, title: titleProp, showBa
           {title ? (
             <LogoMark size={22} />
           ) : (
-            <Link href="/" aria-label="KeskonBouf, accueil" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white">
-              <LogoMark size={24} />
+            <Link href="/" aria-label="KeskonBouf, accueil" className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white">
+              <LogoMark size={30} />
             </Link>
           )}
           <span className="flex min-w-0 flex-col leading-tight">

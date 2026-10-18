@@ -14,7 +14,7 @@ import { UpcomingList, type UpcomingListDay } from '@/components/home/upcoming-l
 import { MemberHome } from '@/components/home/member-home'
 import { TipCard } from '@/components/home/tip-card'
 import { EmptyState } from '@/components/ui/empty-state'
-import { SkeletonCard } from '@/components/ui/skeleton-card'
+import { HomeSkeleton } from '@/components/home/home-skeleton'
 import { pickActiveCircle } from '@/lib/utils/active-circle'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -264,15 +264,7 @@ export default function HomePage() {
 
   const hasAnyItem = (plan?.meal_plan_items.length ?? 0) > 0
 
-  if (loading) {
-    return (
-      <div className="mx-auto max-w-sm space-y-4 px-4 pt-4 lg:grid lg:max-w-[1400px] lg:grid-cols-3 lg:gap-6 lg:space-y-0 lg:px-8 lg:py-8" aria-busy="true" aria-label="Chargement de l'accueil">
-        <SkeletonCard variant="list" />
-        <SkeletonCard variant="meal" />
-        <SkeletonCard variant="meal" />
-      </div>
-    )
-  }
+  if (loading) return <HomeSkeleton />
 
   // Membre (ne planifie pas) : accueil dédié sur le menu de la famille.
   if (isMember) return <MemberHome firstName={firstName} />
