@@ -19,5 +19,5 @@ export function categoryIcon(slug: string | null | undefined): LucideIcon {
 
 // Couleur de la catégorie (categories.color, hex) avec repli corail.
 export function categoryColor(color: string | null | undefined): string {
-  return color && /^#[0-9a-f]{6}$/i.test(color) ? color : '#D4572A'
+  return color && /^#[0-9a-f]{6}$/i.test(color) ? color : '#E66B43'
 }

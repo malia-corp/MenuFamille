@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import Image from 'next/image'
+import { Logo } from '@/components/brand/logo'
 import { usePathname } from 'next/navigation'
 import { navItemsForRole, isNavItemActive, type Role } from './nav-items'
 import { UserMenu } from './user-menu'
@@ -17,11 +17,7 @@ export function Sidebar({ role, displayName }: { role: Role; displayName?: strin
       style={{ background: 'var(--kkb-teal)' }}
     >
       <div className="px-5 pt-6 pb-5">
-        <div className="flex items-center gap-2.5">
-          <Image src="/logo-icon.svg" alt="" width={36} height={36} className="h-9 w-9 shrink-0" />
-          <span className="font-dosis font-bold text-white text-base">KeskonBouf</span>
-        </div>
-        <p className="font-quicksand text-xs text-white/70 mt-1">Saveurs &amp; Partage</p>
+        <Logo variant="reversed" layout="horizontal" size={26} />
       </div>
 
       <nav className="flex-1 px-3 space-y-1">
@@ -59,9 +55,12 @@ export function Sidebar({ role, displayName }: { role: Role; displayName?: strin
         />
       </div>
 
-      <div className="px-5 py-4 border-t border-white/15">
-        <p className="font-dosis font-semibold text-sm text-white">Cuisinons Ensemble</p>
-        <p className="font-quicksand text-[11px] text-white/60 mt-0.5">Planifiez, partagez, savourez.</p>
+      {/* Signature officielle : DynaPuff, seconde phrase en jaune sur vert. */}
+      <div className="px-5 py-5 border-t border-white/15">
+        <p className="text-signature origin-left text-[var(--kkb-creme)]">
+          On mange quoi ?<br />
+          <span className="text-[var(--kkb-jaune)]">On décide ensemble.</span>
+        </p>
       </div>
     </aside>
   )

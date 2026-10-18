@@ -36,15 +36,15 @@ export const MEAL_EMOJI: Record<MealType, string> = {
   diner:          '\u{1F319}',  // croissant de lune
 }
 
-// Couleurs badge type de repas — palette KeskonBouf (hex litteral partout,
+// Couleurs badge type de repas — palette du guide de marque v1.0 (hex litteral partout,
 // pas de var() : certains appelants composent une bordure en derivant une
 // transparence de la couleur, ex. `${color}30`, qui ne fonctionne qu'avec
 // un hex).
 export const MEAL_COLOR: Record<MealType, { text: string; bg: string }> = {
-  petit_dejeuner: { text: '#B07A12', bg: '#FEF3E0' },
-  dejeuner:       { text: '#F2664A', bg: '#FBE9E3' },
-  gouter:         { text: '#2A7D4F', bg: '#EAF5EE' },
-  diner:          { text: '#3A2E28', bg: '#F3ECE2' },
+  petit_dejeuner: { text: '#7A5A0E', bg: '#FEF6E1' },  // jaune 900 / jaune 50
+  dejeuner:       { text: '#B84A27', bg: '#FDEEE8' },  // orange 700 / orange 50
+  gouter:         { text: '#4C7A5E', bg: '#EFF6F0' },  // forêt 500 / sauge 50
+  diner:          { text: '#294E3B', bg: '#EEF3EF' },  // forêt / forêt 50
 }
 
 // Config de repas par defaut pour un nouveau compte — ordre chronologique

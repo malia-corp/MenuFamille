@@ -36,7 +36,7 @@ import { pickActiveCircle } from '@/lib/utils/active-circle'
 import { toast } from '@/lib/stores/toast-store'
 import { CircleSwitcher } from '@/components/circle/circle-switcher'
 
-const AVATAR_COLORS = ['var(--kkb-coral)', 'var(--kkb-success)', 'var(--kkb-warning)', 'var(--kkb-teal)', 'var(--kkb-text-secondary)']
+const AVATAR_COLORS = ['var(--kkb-orange)', 'var(--kkb-foret-500)', 'var(--kkb-jaune-900)', 'var(--kkb-foret)', 'var(--kkb-texte-2)']
 
 const ROLE_LABEL: Record<string, string> = { planificatrice: 'Planificatrice', membre: 'Membre' }
 const ROLE_BADGE: Record<string, string> = {
@@ -762,7 +762,7 @@ export default function CirclePage() {
                 </button>
               </div>
               <div className="mx-auto w-fit rounded-[var(--kkb-radius-sm)] bg-white p-3">
-                <QRCodeSVG value={circleJoinUrl(inviteCode)} size={160} fgColor="#0E5A5E" />
+                <QRCodeSVG value={circleJoinUrl(inviteCode)} size={160} fgColor="#294E3B" />
               </div>
               <p className="hidden font-dosis text-2xl font-extrabold text-[var(--kkb-coral)] print:block">{inviteCode}</p>
               <p className="font-quicksand text-xs text-[var(--kkb-text-secondary)]">

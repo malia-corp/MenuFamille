@@ -90,7 +90,7 @@ export function RecipePrintSheet(p: RecipePrintSheetProps) {
 
       {p.description && (
         <section className="mt-6 break-inside-avoid rounded-[var(--kkb-radius-sm)] border border-[var(--kkb-warning)] bg-[var(--kkb-warning-light)] px-4 py-3">
-          <p className="mb-1 flex items-center gap-1.5 text-[8.5pt] font-bold uppercase tracking-wider text-[#B07A12]">
+          <p className="mb-1 flex items-center gap-1.5 text-[8.5pt] font-bold uppercase tracking-wider text-[var(--kkb-jaune-text)]">
             <BookHeart className="h-3.5 w-3.5" /> Astuces de Maman
           </p>
           <p className="italic leading-relaxed text-[var(--kkb-text-secondary)]">« {p.description} »</p>

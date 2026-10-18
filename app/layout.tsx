@@ -1,30 +1,50 @@
 import type { Metadata, Viewport } from 'next'
-import { Bricolage_Grotesque, Nunito_Sans } from 'next/font/google'
+import { DynaPuff, Montserrat, Quicksand } from 'next/font/google'
 import './globals.css'
 import { Toaster } from '@/components/ui/toaster'
 import { ServiceWorkerRegister } from '@/components/layout/service-worker-register'
 
-const bricolageGrotesque = Bricolage_Grotesque({
+// Guide de marque v1.0, chapitre 04 : Montserrat titre, Quicksand lit
+// (T-01), DynaPuff en accent rare. Auto-hébergées par next/font, sous-ensemble
+// latin, font-display: swap (T-02), repli system-ui (T-04).
+// Les noms de variables (--font-dosis, --font-quicksand) sont historiques :
+// font-dosis = titres, font-quicksand = texte, font-main = accent manuscrit.
+const montserrat = Montserrat({
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700', '800'],
+  weight: ['600', '700', '800', '900'],
+  display: 'swap',
+  fallback: ['system-ui', 'sans-serif'],
   variable: '--font-dosis',
 })
 
-const nunitoSans = Nunito_Sans({
+const quicksand = Quicksand({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700'],
+  display: 'swap',
+  fallback: ['system-ui', 'sans-serif'],
   variable: '--font-quicksand',
 })
 
+const dynaPuff = DynaPuff({
+  subsets: ['latin'],
+  weight: ['500', '600'],
+  display: 'swap',
+  fallback: ['cursive'],
+  variable: '--font-main',
+})
+
 export const metadata: Metadata = {
-  title: 'KeskonBouf — Saveurs & Partage',
+  title: 'KeskonBouf — On mange quoi ? On décide ensemble.',
   description:
-    'PWA mobile-first de planification de menus hebdomadaires pour familles béninoises et africaines francophones.',
+    'Planifie les repas de la semaine, réunis ta table et décidez ensemble de ce qu\'on mange.',
   manifest: '/manifest.json',
+  // Sous 48 px, seul le visage orange subsiste (guide, chapitre 07).
   icons: {
-    icon: '/logo-icon.svg',
-    shortcut: '/logo.ico',
-    apple: '/logo-icon-192.png',
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/icons/favicon-32.png', sizes: '32x32', type: 'image/png' },
+    ],
+    apple: { url: '/icons/apple-touch-icon.png', sizes: '180x180' },
   },
   appleWebApp: {
     capable: true,
@@ -32,9 +52,8 @@ export const metadata: Metadata = {
     title: 'KeskonBouf',
   },
   openGraph: {
-    title: 'KeskonBouf — Saveurs & Partage',
-    description:
-      'PWA mobile-first de planification de menus hebdomadaires pour familles béninoises et africaines francophones.',
+    title: 'KeskonBouf — On mange quoi ? On décide ensemble.',
+    description: 'Planifie les repas de la semaine, réunis ta table et décidez ensemble de ce qu\'on mange.',
   },
 }
 
@@ -44,7 +63,7 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
-  themeColor: '#F2664A',
+  themeColor: '#294E3B', // vert forêt (manifeste, guide chapitre 07)
 }
 
 export default function RootLayout({
@@ -54,7 +73,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr">
-      <body className={`${bricolageGrotesque.variable} ${nunitoSans.variable} font-quicksand antialiased`}>
+      <body className={`${montserrat.variable} ${quicksand.variable} ${dynaPuff.variable} font-quicksand antialiased`}>
         {children}
         <Toaster />
         <ServiceWorkerRegister />

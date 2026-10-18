@@ -59,7 +59,7 @@ interface Circle {
   family_circle_members: CircleMember[]
 }
 
-const AVATAR_COLORS = ['var(--kkb-coral)', 'var(--kkb-success)', 'var(--kkb-warning)', 'var(--kkb-teal)', 'var(--kkb-text-secondary)']
+const AVATAR_COLORS = ['var(--kkb-orange)', 'var(--kkb-foret-500)', 'var(--kkb-jaune-900)', 'var(--kkb-foret)', 'var(--kkb-texte-2)']
 const ROLE_LABEL: Record<string, string> = { planificatrice: 'Organisatrice', membre: 'Membre' }
 const MEMBERS_SHOWN = 4
 

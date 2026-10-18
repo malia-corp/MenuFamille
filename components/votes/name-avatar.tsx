@@ -1,4 +1,4 @@
-const PALETTE = ['var(--kkb-coral)', 'var(--kkb-teal)', 'var(--kkb-success)', '#B07A12', '#3A2E28']
+const PALETTE = ['var(--kkb-orange)', 'var(--kkb-foret)', 'var(--kkb-foret-500)', 'var(--kkb-jaune-900)', 'var(--kkb-profond)']
 
 // Couleur stable par prénom : un même prénom garde sa couleur partout.
 function colorFor(name: string): string {

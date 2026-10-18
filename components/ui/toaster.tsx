@@ -26,7 +26,7 @@ export function Toaster() {
           <div
             key={t.id}
             role={t.variant === 'error' ? 'alert' : 'status'}
-            className={`pointer-events-auto flex animate-kkb-toast-in items-center gap-2.5 rounded-[var(--kkb-radius-sm)] border px-4 py-3 shadow-[var(--kkb-shadow-card)] ${box}`}
+            className={`pointer-events-auto flex animate-kkb-toast-in items-center gap-2.5 rounded-[var(--kkb-radius-sm)] border px-4 py-3 shadow-[var(--kkb-shadow-sheet)] ${box}`}
           >
             <Icon className={`h-4 w-4 shrink-0 ${iconColor}`} />
             <p className="min-w-0 flex-1 text-sm font-quicksand font-semibold text-[var(--kkb-text-primary)]">{t.message}</p>

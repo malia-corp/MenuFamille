@@ -186,7 +186,7 @@ function RecipeDetail() {
 
   const tipCard = recipe.description && (
     <section className="space-y-2 rounded-[var(--kkb-radius-card)] border border-[var(--kkb-warning)] bg-[var(--kkb-warning-light)] p-4 lg:p-5">
-      <p className="flex items-center gap-2 text-[10px] font-quicksand font-bold uppercase tracking-wider text-[#B07A12]">
+      <p className="flex items-center gap-2 text-[10px] font-quicksand font-bold uppercase tracking-wider text-[var(--kkb-jaune-text)]">
         <BookHeart className="h-4 w-4" /> Astuces de Maman · Transmission
       </p>
       <p className="text-sm font-quicksand italic leading-relaxed text-[var(--kkb-text-secondary)]">« {recipe.description} »</p>
