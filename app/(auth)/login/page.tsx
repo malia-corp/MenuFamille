@@ -88,9 +88,9 @@ function LoginShell({
   return (
     <div className="min-h-screen lg:grid lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
       <aside className="hidden flex-col justify-between bg-[var(--kkb-foret)] p-12 lg:flex xl:p-16">
-        <Logo variant="reversed" layout="horizontal" size={40} />
+        <Logo variant="reversed" layout="horizontal" size={64} />
         <div className="space-y-10">
-          <Signature className="text-[44px] leading-[1.05]" />
+          <Signature className="text-[32px] leading-[1.1]" />
           <ul className="space-y-4">
             {PROMISES.map(({ icon: Icon, text }) => (
               <li
