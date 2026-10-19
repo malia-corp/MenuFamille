@@ -499,69 +499,52 @@ export function PlanSkeleton() {
 
 // ─── Validation du menu ──────────────────────────────────────────────────────
 
-function DayAccordionBones() {
-  return (
-    <BoneCard className="flex items-center justify-between p-4">
-      <div className="flex items-center gap-3">
-        <Bone className="h-4 w-40 rounded" />
-        <Bone className="h-5 w-24 rounded-full" />
-      </div>
-      <Bone className="h-4 w-4 rounded" />
-    </BoneCard>
-  )
-}
-
 export function ValidateSkeleton() {
   return (
-    <SkeletonPage label="Chargement de la validation">
-      {/* Mobile */}
-      <div className="space-y-4 py-4 lg:hidden">
-        <div className="mx-4 grid grid-cols-3 gap-2">
-          {range(3).map((i) => <Bone key={i} className="h-[76px] rounded-[var(--kkb-r-lg)]" />)}
-        </div>
-        <div className="mx-4 flex gap-2">
-          <Bone className="h-8 w-24 rounded-full" />
-          <Bone className="h-8 w-36 rounded-full" />
-        </div>
-        <div className="space-y-2.5 px-4">{range(5).map((i) => <DayAccordionBones key={i} />)}</div>
-        <div className="mx-4 space-y-3">
-          <Bone className="h-12 rounded-full" />
-          <Bone className="h-12 rounded-full" />
-        </div>
-      </div>
-      {/* Desktop */}
-      <div className="hidden space-y-6 pb-8 lg:block">
-        <div className="flex justify-center gap-3">
-          <Bone className="h-5 w-24 rounded-full" />
-          <Bone className="h-5 w-40 rounded-full" />
-        </div>
-        <BoneCard className="flex items-center gap-4 px-6 py-5">
-          <Bone className="h-12 w-12 shrink-0 rounded-full" />
-          <div className="space-y-2">
-            <Bone className="h-7 w-[26rem] rounded-lg" />
-            <Bone className="h-3.5 w-28 rounded" />
+    <SkeletonPage label="Chargement de la validation" className="mx-auto max-w-lg px-4 pb-10 pt-2 lg:max-w-none lg:px-0 lg:pb-8 lg:pt-0">
+      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-12 lg:gap-5">
+        {/* Bandeau vert */}
+        <div className="rounded-[var(--kkb-r-xl)] bg-[var(--kkb-foret)] p-5 lg:col-span-8 lg:p-6">
+          <div className="flex items-center justify-between">
+            <Bone dark className="h-8 w-48 rounded-full" />
+            <Bone dark className="h-10 w-10 rounded-full" />
           </div>
+          <Bone dark className="mt-4 h-3.5 w-40 rounded" />
+          <Bone dark className="mt-2 h-8 w-64 rounded-lg" />
+          <Bone dark className="mt-2 h-3.5 w-full max-w-md rounded" />
+          <div className="mt-5 grid grid-cols-3 gap-2">
+            {range(3).map((i) => <Bone dark key={i} className="h-[62px] rounded-[var(--kkb-r-md)]" />)}
+          </div>
+        </div>
+        {/* Valider et partager */}
+        <BoneCard className="order-last space-y-4 p-5 lg:order-none lg:col-span-4 lg:col-start-9 lg:row-span-2 lg:row-start-1 lg:p-6">
+          {range(2).map((i) => (
+            <div key={i} className="space-y-3">
+              <div className="flex gap-3">
+                <Bone className="h-9 w-9 shrink-0 rounded-full" />
+                <div className="flex-1 space-y-2">
+                  <Bone className="h-4 w-36 rounded" />
+                  <Bone className="h-3 w-full rounded" />
+                </div>
+              </div>
+              <Bone className="h-12 rounded-full" />
+            </div>
+          ))}
         </BoneCard>
-        <div className="grid grid-cols-12 items-start gap-6">
-          <div className="col-span-8 space-y-6">
-            <div className="grid grid-cols-3 gap-2">
-              {range(3).map((i) => <Bone key={i} className="h-[76px] rounded-[var(--kkb-r-lg)]" />)}
-            </div>
-            <div className="flex gap-2">
-              <Bone className="h-8 w-24 rounded-full" />
-              <Bone className="h-8 w-36 rounded-full" />
-            </div>
-            <div className="space-y-2.5">{range(7).map((i) => <DayAccordionBones key={i} />)}</div>
-          </div>
-          <BoneCard className="col-span-4 space-y-3 p-5">
-            <Bone className="h-16 rounded-[var(--kkb-r-lg)]" />
-            <div className="grid grid-cols-2 gap-2">
-              <Bone className="h-11 rounded-full" />
-              <Bone className="h-11 rounded-full" />
-            </div>
-            <Bone className="h-12 rounded-full" />
-            <Bone className="h-11 rounded-full" />
-          </BoneCard>
+        {/* Menu jour par jour */}
+        <div className="space-y-3 lg:col-span-8">
+          <Bone className="h-11 w-60 rounded-full" />
+          {range(3).map((i) => (
+            <BoneCard key={i} className="space-y-3 p-4">
+              <div className="flex items-center justify-between">
+                <Bone className="h-5 w-40 rounded" />
+                <Bone className="h-5 w-12 rounded-full" />
+              </div>
+              <div className={`${i === 0 ? 'grid' : 'hidden'} grid-cols-2 gap-2 sm:grid-cols-4 lg:grid`}>
+                {range(4).map((j) => <Bone key={j} className="h-[150px] rounded-[var(--kkb-r-lg)]" />)}
+              </div>
+            </BoneCard>
+          ))}
         </div>
       </div>
     </SkeletonPage>
