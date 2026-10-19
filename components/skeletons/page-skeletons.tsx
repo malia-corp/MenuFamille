@@ -7,11 +7,6 @@ import { Bone, BoneCard, SkeletonPage } from '@/components/ui/skeleton'
 
 const range = (n: number) => Array.from({ length: n }, (_, i) => i)
 
-// Titre de page desktop (text-h1) ; masqué sur mobile où l'en-tête le porte.
-function DesktopTitle({ width = 'w-72' }: { width?: string }) {
-  return <Bone className={`hidden h-8 rounded-lg lg:block ${width}`} />
-}
-
 // Ligne de réglage : icône, libellé, sous-libellé.
 function RowBones({ trailing = 'chevron' }: { trailing?: 'chevron' | 'switch' }) {
   return (
@@ -132,29 +127,42 @@ export function MealConfigSkeleton() {
 
 export function NotificationsSkeleton() {
   return (
-    <SkeletonPage label="Chargement des notifications" className="mx-auto max-w-lg space-y-6 px-4 py-5 lg:grid lg:max-w-none lg:grid-cols-2 lg:items-start lg:gap-6 lg:space-y-0 lg:px-0 lg:pt-0">
-      <div className="hidden lg:col-span-2 lg:block"><DesktopTitle width="w-60" /></div>
-      <section className="space-y-2">
-        <Bone className="h-3 w-32 rounded" />
-        {range(4).map((i) => (
-          <BoneCard key={i} className="flex items-center justify-between p-4">
-            <Bone className="h-4 w-28 rounded" />
-            <Bone className="h-6 w-11 rounded-full" />
-          </BoneCard>
-        ))}
-      </section>
-      <section className="space-y-2">
-        <Bone className="h-3 w-36 rounded" />
-        <BoneCard className="divide-y divide-[var(--kkb-lin)]">
-          <div className="p-4"><Bone className="h-4 w-52 rounded" /></div>
-          {range(4).map((i) => (
-            <div key={i} className="flex items-center justify-between px-4 py-3">
-              <Bone className="h-3.5 w-24 rounded" />
-              <Bone className="h-6 w-11 rounded-full" />
-            </div>
-          ))}
+    <SkeletonPage label="Chargement des notifications" className="mx-auto max-w-lg px-4 pb-32 pt-2 lg:max-w-none lg:px-0 lg:pt-0">
+      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-12 lg:gap-5">
+        {/* Bandeau vert */}
+        <div className="rounded-[var(--kkb-r-xl)] bg-[var(--kkb-foret)] p-5 lg:col-span-8 lg:p-6">
+          <div className="flex items-center justify-between">
+            <Bone dark className="h-3.5 w-24 rounded" />
+            <Bone dark className="h-10 w-10 rounded-full" />
+          </div>
+          <Bone dark className="mt-2 h-8 w-48 rounded-lg" />
+          <Bone dark className="mt-2 h-3.5 w-full max-w-md rounded" />
+          <div className="mt-5 grid grid-cols-3 gap-2">
+            {range(3).map((i) => <Bone dark key={i} className="h-[62px] rounded-[var(--kkb-r-md)]" />)}
+          </div>
+        </div>
+        {/* Bon à savoir */}
+        <BoneCard className="order-last space-y-3 p-5 lg:order-none lg:col-span-4 lg:col-start-9 lg:row-span-2 lg:row-start-1">
+          <div className="flex items-center gap-2.5"><Bone className="h-8 w-8 rounded-full" /><Bone className="h-4 w-28 rounded" /></div>
+          {range(3).map((i) => <Bone key={i} className="h-10 rounded" />)}
         </BoneCard>
-      </section>
+        {/* Un repas par carte */}
+        <div className="grid gap-3 sm:grid-cols-2 lg:col-span-8 lg:gap-4">
+          {range(4).map((i) => (
+            <BoneCard key={i} className="space-y-3 p-5">
+              <div className="flex items-center gap-3">
+                <Bone className="h-11 w-11 shrink-0 rounded-full" />
+                <div className="flex-1 space-y-1.5">
+                  <Bone className="h-4 w-24 rounded" />
+                  <Bone className="h-3 w-20 rounded" />
+                </div>
+              </div>
+              <Bone className="h-[52px] rounded-[var(--kkb-r-lg)]" />
+              <Bone className="h-[52px] rounded-[var(--kkb-r-lg)]" />
+            </BoneCard>
+          ))}
+        </div>
+      </div>
     </SkeletonPage>
   )
 }
