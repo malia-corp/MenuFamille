@@ -1,6 +1,10 @@
-# CLAUDE.md — MenuFamille
+# CLAUDE.md
 
-Guide de travail pour les sessions de développement pair-programmeur (Claude Code).
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+# MenuFamille (nom commercial : KeskonBouf)
+
+Guide de travail pour les sessions de développement pair-programmeur (Claude Code). PWA mobile-first, interface en français. Le code et la doc mélangent « MenuFamille » (nom du projet/repo) et « KeskonBouf » (marque affichée, préfixe `kkb-` des caches du service worker).
 
 ---
 
@@ -124,20 +128,50 @@ npm run build        # Build de production
 supabase db push     # Appliquer les migrations sur le projet lié
 supabase gen types typescript --linked > lib/supabase/database.types.ts
 
-# Tests
-# (à définir au Sprint 1)
 ```
+
+Pas de framework de tests : la vérification passe par `npm run lint` et `npm run build` (le build fait le contrôle de types TypeScript). La CLI `supabase` est une devDependency : `npx supabase ...` si elle n'est pas installée globalement.
+
+Variables d'environnement (`.env.local.example` ne liste que les trois premières) : `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_EMAIL` (push), `CRON_SECRET` (tâches planifiées), `APP_URL` (origine publique, optionnelle).
+
+---
+
+## Architecture
+
+Next.js 14 App Router + Supabase (Postgres, Auth OTP, Storage) + Zustand, déployé sur Vercel.
+
+- **Routes** : `app/(auth)` (login, onboarding), `app/(app)` (écrans connectés), `app/s/[token]` (page publique de sondage, sans compte), `app/api/**` (Route Handlers REST — toute la logique métier est là, les pages client appellent ces API via `fetch`).
+- **Trois clients Supabase** (`lib/supabase/`) :
+  - `server.ts` → `createClient()` : client de session (cookies), soumis à la RLS. Sert surtout à `auth.getUser()`.
+  - `service.ts` → `createServiceClient()` : service role, **contourne la RLS**. Utilisé dans la plupart des routes API, uniquement après le contrôle d'authentification ; les droits (membre actif, rôle planificatrice…) sont alors vérifiés dans le code.
+  - `client.ts` : client navigateur.
+  - Patron d'une route : `createClient()` → `auth.getUser()` → 401 si absent → `createServiceClient()` pour les requêtes.
+- **Middleware** (`lib/supabase/middleware.ts`) : rafraîchit la session et redirige vers `/login`, sauf chemins publics (`/login`, `/api/auth`, `/s/`, `/api/surveys`, `/api/jobs/`). Toute nouvelle route publique doit être ajoutée ici.
+- **Cercle actif** : `resolveActiveCircleId()` (`lib/utils/active-circle.ts`) pilote toute l'app (accueil, menus via `meal_plans.circle_id`, allergènes). `familyContext()` (`lib/utils/family-plan.ts`) donne rôle, statut et planificatrice du cercle actif. Un membre désactivé (`family_circle_members.is_active = false`) perd l'accès : voir `lib/utils/circle-access.ts`.
+- **Sondage public** : tout accès par token passe par `resolveSurveyPlan()` (`lib/utils/survey-token.ts`) ; `token_expires_at` NULL = n'expire jamais. Ne pas refaire la requête dans une route.
+- **Tâches planifiées** : `app/api/jobs/*` (rappels, demandes de feedback, envoi push via `web-push`), appelées par un cron externe avec l'en-tête `x-cron-secret`.
+- **Hors connexion / push** : `public/sw.js` écrit à la main (pas de next-pwa), enregistré via `lib/utils/service-worker.ts` (`?dev=1` en dev désactive le cache). Incrémenter `VERSION` dans `sw.js` quand la stratégie de cache ou les ressources statiques changent. Les caches `kkb-user-*` sont vidés à la déconnexion (`lib/utils/logout.ts`).
+- **Types DB** : `lib/supabase/database.types.ts` est généré — le régénérer après chaque migration plutôt que l'éditer à la main.
+
+### Documentation de référence (`docs/`)
+
+- `decisions.md` — décisions de cadrage (résumées plus bas)
+- `ecarts-implementation.md` — écarts connus entre CDC/prompts et code réel, lacunes reportées. À lire avant de chercher une structure « attendue » ; y ajouter tout nouvel écart.
+- `api_et_vues_menufamille.md` — inventaire vues front / API back par domaine
+- `design_menufamille.md` — brief de design (palette et typographie implémentées dans `app/globals.css`)
+- `docs/sql/` — schéma SQL historique ; la source de vérité est `supabase/migrations/`
 
 ---
 
 ## Structure de migration
 
-Les migrations sont découpées par domaine fonctionnel dans `supabase/migrations/` :
+Les migrations sont dans `supabase/migrations/`, nommées `<horodatage>_<lettre>_<slug>.sql`. Le schéma initial est découpé par domaine fonctionnel :
 
 - `*_a_users_circles.sql` — profils, cercles familiaux
 - `*_b_recipes_contribution.sql` — recettes, catégories
 - `*_c_config_planning.sql` — configuration repas, planification
 - `*_d_survey_feedback.sql` — sondage, feedback, notifications
 - `*_e_shopping_pantry.sql` — courses, garde-manger
+- `*_f_rls_policies.sql` — politiques RLS
 
-Ne jamais créer une migration monolithique.
+Chaque évolution suivante est une migration courte et ciblée qui prend la lettre suivante (`g`, `h`… jusqu'à `x` actuellement ; la prochaine est `y`). Ne jamais modifier une migration déjà appliquée ni créer une migration monolithique. Seed : `supabase/seed/`.
