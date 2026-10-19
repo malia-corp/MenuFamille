@@ -283,6 +283,13 @@
   84%, 100% { opacity: 0; }
 }
 
+/* Temps restant d'un message (components/ui/toaster) : lancé en style inline,
+   donc déclaré ici (Tailwind n'émet que les keyframes de ses classes animate-*). */
+@keyframes kkb-toast-progress {
+  from { transform: scaleX(1); }
+  to   { transform: scaleX(0); }
+}
+
 @keyframes kkb-shimmer {
   from { background-position: 130% 0; }
   to   { background-position: -30% 0; }
