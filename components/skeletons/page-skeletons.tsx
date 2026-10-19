@@ -7,69 +7,62 @@ import { Bone, BoneCard, SkeletonPage } from '@/components/ui/skeleton'
 
 const range = (n: number) => Array.from({ length: n }, (_, i) => i)
 
-// Ligne de réglage : icône, libellé, sous-libellé.
-function RowBones({ trailing = 'chevron' }: { trailing?: 'chevron' | 'switch' }) {
-  return (
-    <div className="flex items-center gap-3 px-4 py-3.5">
-      <Bone className="h-9 w-9 shrink-0 rounded-full" />
-      <div className="flex-1 space-y-2">
-        <Bone className="h-3.5 w-2/5 rounded" />
-        <Bone className="h-3 w-3/5 rounded" />
-      </div>
-      {trailing === 'switch' ? <Bone className="h-6 w-11 rounded-full" /> : <Bone className="h-4 w-4 rounded" />}
-    </div>
-  )
-}
-
 // ─── Profil ──────────────────────────────────────────────────────────────────
 
 export function ProfileSkeleton() {
+  const title = <div className="flex items-center gap-2.5"><Bone className="h-8 w-8 rounded-full" /><Bone className="h-4 w-28 rounded" /></div>
   return (
-    <SkeletonPage label="Chargement du profil" className="mx-auto max-w-lg px-4 pb-10 pt-6 lg:max-w-none lg:px-0 lg:pt-0">
-      <div className="space-y-6 lg:grid lg:grid-cols-12 lg:items-start lg:gap-6 lg:space-y-0">
-        <div className="flex flex-col items-center gap-3 lg:col-span-4 lg:rounded-[var(--kkb-r-xl)] lg:bg-white lg:p-6">
-          <Bone className="h-20 w-20 rounded-full" />
-          <Bone className="h-5 w-36 rounded" />
-          <Bone className="h-3.5 w-48 rounded" />
-          <Bone className="h-6 w-40 rounded-full" />
+    <SkeletonPage label="Chargement du profil" className="mx-auto max-w-lg px-4 pb-10 pt-2 lg:max-w-none lg:px-0 lg:pt-0">
+      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-12 lg:gap-5">
+        <div className="space-y-4 lg:col-span-8 lg:space-y-5">
+        {/* Bandeau vert */}
+        <div className="rounded-[var(--kkb-r-xl)] bg-[var(--kkb-foret)] p-5 lg:p-6">
+          <div className="flex items-center gap-4">
+            <Bone dark className="h-[72px] w-[72px] shrink-0 rounded-full" />
+            <div className="flex-1 space-y-2">
+              <Bone dark className="h-3.5 w-20 rounded" />
+              <Bone dark className="h-8 w-44 rounded-lg" />
+              <Bone dark className="h-6 w-40 rounded-full" />
+            </div>
+          </div>
+          <div className="mt-5 grid grid-cols-3 gap-2">
+            {range(3).map((i) => <Bone dark key={i} className="h-[62px] rounded-[var(--kkb-r-md)]" />)}
+          </div>
         </div>
-        <div className="space-y-6 lg:col-span-8 lg:grid lg:grid-cols-2 lg:items-start lg:gap-6 lg:space-y-0">
-          <section className="space-y-2">
-            <Bone className="h-3.5 w-40 rounded" />
-            <BoneCard className="grid grid-cols-3 gap-2 p-4">
-              {range(3).map((i) => (
-                <div key={i} className="flex flex-col items-center gap-2">
-                  <Bone className="h-9 w-9 rounded-full" />
-                  <Bone className="h-6 w-10 rounded" />
-                  <Bone className="h-3 w-16 rounded" />
-                </div>
-              ))}
-            </BoneCard>
-          </section>
-          <section className="space-y-2">
-            <Bone className="h-3.5 w-36 rounded" />
-            <BoneCard className="space-y-3 p-3">
-              <div className="grid grid-cols-2 gap-2">
-                {range(4).map((i) => <Bone key={i} className="h-14 rounded-[var(--kkb-r-sm)]" />)}
+        {/* Mon assiette */}
+        <BoneCard className="space-y-3 p-5">
+          {title}
+          <div className="flex flex-wrap gap-1.5">
+            {range(5).map((i) => <Bone key={i} className="h-7 w-20 rounded-full" />)}
+          </div>
+          <Bone className="h-3 w-3/4 rounded" />
+        </BoneCard>
+        </div>
+        <div className="space-y-4 lg:col-span-4 lg:space-y-5">
+        {/* Mon cercle */}
+        <BoneCard className="space-y-3 p-5">
+          {title}
+          {range(3).map((i) => (
+            <div key={i} className="flex items-center gap-3">
+              <Bone className="h-9 w-9 shrink-0 rounded-full" />
+              <Bone className="h-3.5 flex-1 rounded" />
+            </div>
+          ))}
+          <Bone className="h-11 rounded-full" />
+        </BoneCard>
+        {/* Réglages */}
+        <BoneCard className="space-y-2 p-5">
+          {title}
+          {range(4).map((i) => (
+            <div key={i} className="flex items-center gap-3 py-2">
+              <Bone className="h-10 w-10 shrink-0 rounded-full" />
+              <div className="flex-1 space-y-1.5">
+                <Bone className="h-3.5 w-1/2 rounded" />
+                <Bone className="h-3 w-2/3 rounded" />
               </div>
-              <Bone className="h-12 rounded-full" />
-            </BoneCard>
-          </section>
-          <section className="space-y-2">
-            <Bone className="h-3.5 w-44 rounded" />
-            <BoneCard className="space-y-3 p-4">
-              <div className="flex flex-wrap gap-1.5">
-                {['w-20', 'w-24', 'w-16', 'w-28'].map((w) => <Bone key={w} className={`h-6 rounded-full ${w}`} />)}
-              </div>
-              <Bone className="h-3 w-4/5 rounded" />
-            </BoneCard>
-          </section>
-          <section className="space-y-2">
-            <Bone className="h-3.5 w-48 rounded" />
-            <BoneCard className="divide-y divide-[var(--kkb-lin)] overflow-hidden">
-              {range(4).map((i) => <RowBones key={i} />)}
-            </BoneCard>
-          </section>
+            </div>
+          ))}
+        </BoneCard>
         </div>
       </div>
     </SkeletonPage>

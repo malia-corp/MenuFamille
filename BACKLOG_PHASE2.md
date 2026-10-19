@@ -23,3 +23,4 @@ Fonctionnalités identifiées comme utiles mais hors scope du MVP (CDC section 5
 | Réinitialisation du code d'invitation | Maquette desktop du cercle (sprint 4). Le QR code est implémenté, pas la régénération. |
 | Heure de service sur l'avis post-repas (« Servi à 12h30 ») | Maquette /feedback (sprint 4). L'heure n'est pas chargée avec le plan. |
 | Dictée vocale du commentaire d'avis | Icône micro de la maquette /feedback (sprint 4), en « Bientôt disponible ». |
+| Aide & astuces familiales (guide d'utilisation, conseils) | Page Profil, ligne « Bientôt ». Aucun contenu ni page d'aide prévus au MVP. |
