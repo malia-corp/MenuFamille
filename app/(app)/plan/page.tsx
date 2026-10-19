@@ -2,21 +2,7 @@
 
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import {
-  ArrowRight,
-  CalendarDays,
-  Check,
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  ChevronUp,
-  LayoutGrid,
-  Minus,
-  Plus,
-  Settings,
-  Timer,
-  Users,
-} from 'lucide-react'
+import { ArrowRight, CalendarDays, Check, ChevronDown, LayoutGrid } from 'lucide-react'
 import { MEAL_FULL_LABEL, MEAL_LABEL, type MealType } from '@/lib/constants/meal-type'
 import { DAY_OPTIONS, getMondayISO, shiftWeek, formatWeekRange, dayOfWeekFromDate, type DayOfWeek } from '@/lib/utils/week'
 import { sortByMealType } from '@/lib/utils/sort-meal-configs'
@@ -29,6 +15,7 @@ import { MealDetailCard, type CompositionChip } from '@/components/plan/meal-det
 import { WeekGrid } from '@/components/plan/week-grid'
 import { DayFocusView } from '@/components/plan/day-focus-view'
 import { RecipePickerPanel } from '@/components/plan/recipe-picker-panel'
+import { PlanHero, ServiceProgressCard } from '@/components/plan/plan-hero'
 import { PlanSkeleton, PlanBodySkeleton } from '@/components/skeletons/page-skeletons'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -669,287 +656,181 @@ function PlanPageContent() {
     })
   }
 
+  const hasPlan    = !!plan && plan.meal_plan_items.length > 0
+  const validated  = plan?.status === 'finalized' || plan?.status === 'shared'
+  const activeCell = editTarget ? { mealType: editTarget.mealType, day: editTarget.dayOfWeek, isTemplate: editTarget.isTemplate } : null
+  const showStats  = !!plan && activeConfigs.length > 0
+
   return (
     <>
-      {/* Sous-header : navigation semaine */}
-      <div className="sticky top-14 z-30 bg-[color-mix(in_srgb,var(--kkb-creme)_88%,transparent)] backdrop-blur-md px-4 py-2 lg:top-[76px] lg:px-0">
-        <div className="mx-auto flex max-w-sm items-center gap-2 lg:max-w-none">
-          <button type="button" onClick={goToPrevWeek} className="h-10 w-10 shrink-0 rounded-full bg-white flex items-center justify-center text-[var(--kkb-foret)] active:scale-95 transition-transform" aria-label="Semaine précédente">
-            <ChevronLeft className="h-5 w-5" />
-          </button>
-          <p className="min-w-0 flex-1 text-center">
-            <span className="block font-quicksand text-xs font-semibold text-[var(--kkb-texte-2)]">Semaine du</span>
-            <span className="block truncate font-dosis text-[15px] font-extrabold text-[var(--kkb-foret)]">{formatWeekRange(selectedWeek)}</span>
-          </p>
-          <button type="button" onClick={goToNextWeek} className="h-10 w-10 shrink-0 rounded-full bg-white flex items-center justify-center text-[var(--kkb-foret)] active:scale-95 transition-transform" aria-label="Semaine suivante">
-            <ChevronRight className="h-5 w-5" />
-          </button>
-          <button type="button" onClick={() => router.push('/settings/meal-config')} className="h-10 w-10 shrink-0 rounded-full bg-white flex items-center justify-center text-[var(--kkb-foret)] active:scale-95 transition-transform" aria-label="Rythme des repas">
-            <Settings className="h-[18px] w-[18px]" />
-          </button>
+      <div className="mx-auto max-w-lg space-y-4 px-4 pb-40 pt-2 lg:max-w-none lg:space-y-5 lg:px-0 lg:pb-8 lg:pt-0">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:gap-5">
+          <PlanHero
+            className={showStats ? 'lg:col-span-8' : 'lg:col-span-12'}
+            loading={viewState === 'loading'}
+            weekLabel={formatWeekRange(selectedWeek)}
+            onPrevWeek={goToPrevWeek}
+            onNextWeek={goToNextWeek}
+            onSettings={() => router.push('/settings/meal-config')}
+            hasPlan={hasPlan}
+            validated={validated}
+            onValidate={() => router.push(`/plan/validate?week=${selectedWeek}`)}
+            onGenerate={() => void generateMenu()}
+            filled={filled}
+            total={total}
+            servings={servings}
+            onServings={n => { void updateServings(n) }}
+            updatingServings={updatingServings}
+            sessionLabel={hasPlan ? `${formatTime(sessionTime)} · ${modCount} modif.` : null}
+            // Emplacement d'ancrage du FAB (cf. components/layout/fab.tsx) — un
+            // seul bouton « Générer ma semaine », pas un deuxième dupliqué ici.
+            // Posé seulement après le chargement : présent dans le HTML serveur,
+            // le FAB s'y insérerait avant l'hydratation (erreur d'hydratation).
+            generateSlot={<div id={viewState === 'loading' ? undefined : 'generate-slot'} className="min-h-[32px]" />}
+          />
+          {showStats && <ServiceProgressCard stats={serviceStats} className="hidden lg:col-span-4 lg:block" />}
         </div>
-      </div>
 
-      {/* Stepper — 2 étapes réelles */}
-      <div className="px-4 pt-1 pb-2">
-        <div className="flex items-center justify-center gap-2">
-          <div className="flex items-center gap-1.5 rounded-full bg-[var(--kkb-foret)] py-1 pl-1 pr-3">
-            <div className="w-6 h-6 rounded-full bg-[var(--kkb-creme)] flex items-center justify-center">
-              <span className="text-[var(--kkb-foret)] text-[11px] font-bold">1</span>
-            </div>
-            <span className="text-xs font-quicksand font-bold text-[var(--kkb-creme)]">
-              Planifier
-            </span>
-          </div>
+        {/* ── Chargement ── */}
+        {viewState === 'loading' && <PlanBodySkeleton />}
 
-          <span className="h-px w-5 bg-[var(--kkb-filet)]" aria-hidden="true" />
+        {/* ── Overlay génération ── */}
+        {viewState === 'generating' && <GeneratingOverlay genStep={genStep} />}
 
-          {plan && plan.meal_plan_items.length > 0 ? (
-            <button
-              type="button"
-              onClick={() => router.push(`/plan/validate?week=${selectedWeek}`)}
-              className="flex items-center gap-1.5 group rounded-full bg-white py-1 pl-1 pr-3"
-            >
-              <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${
-                plan.status === 'finalized' || plan.status === 'shared'
-                  ? 'bg-[var(--kkb-success)]'
-                  : 'bg-[var(--kkb-border)] group-hover:bg-[color-mix(in_srgb,var(--kkb-coral)_20%,transparent)]'
-              }`}>
-                <span className={`text-[10px] font-bold ${
-                  plan.status === 'finalized' || plan.status === 'shared'
-                    ? 'text-white'
-                    : 'text-[var(--kkb-text-tertiary)] group-hover:text-[var(--kkb-coral)]'
-                }`}>
-                  {plan.status === 'finalized' || plan.status === 'shared' ? <Check className="h-3 w-3" /> : '2'}
-                </span>
-              </div>
-              <span className="text-xs font-quicksand font-bold text-[var(--kkb-texte-2)] group-hover:text-[var(--kkb-foret)] transition-colors">
-                Valider
-              </span>
-            </button>
-          ) : (
-            <div className="flex items-center gap-1.5 rounded-full bg-white py-1 pl-1 pr-3 opacity-50">
-              <div className="w-6 h-6 rounded-full bg-[var(--kkb-lin)] flex items-center justify-center">
-                <span className="text-[var(--kkb-texte-2)] text-[11px] font-bold">2</span>
-              </div>
-              <span className="text-xs font-quicksand font-bold text-[var(--kkb-texte-2)]">
-                Valider
-              </span>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* ── Chargement ── */}
-      {viewState === 'loading' && (
-        <PlanBodySkeleton />
-      )}
-
-      {/* ── Overlay génération ── */}
-      {viewState === 'generating' && <GeneratingOverlay genStep={genStep} />}
-
-      {/* ── Grille de révision ── */}
-      {viewState === 'review' && (
-        <div className="space-y-5 py-4 pb-40">
-
-          {genError && (
-            <p className="mx-4 lg:mx-0 text-sm text-[var(--kkb-danger)] font-quicksand bg-[var(--kkb-danger-light)] px-4 py-3 rounded-[var(--kkb-r-lg)]">
-              {genError}
-            </p>
-          )}
-
-          {/* Barre : convives + stats de session */}
-          <div className="flex items-center justify-between gap-3 px-4 lg:px-0">
-            {plan && (
-              <div className="flex items-center gap-1.5 rounded-full bg-white p-1 pl-3">
-                <Users className="h-4 w-4 text-[var(--kkb-foret)]" />
-                <span className="mr-1 font-quicksand text-xs font-semibold text-[var(--kkb-texte-2)]">Convives</span>
-                <button type="button"
-                  onClick={() => { void updateServings(servings - 1) }}
-                  disabled={servings <= 1 || updatingServings}
-                  aria-label="Un convive de moins"
-                  className="w-9 h-9 rounded-full flex items-center justify-center bg-[var(--kkb-creme)] text-[var(--kkb-foret)] disabled:opacity-40">
-                  <Minus className="h-4 w-4" />
-                </button>
-                <span className="font-dosis text-base font-extrabold tabular-nums text-[var(--kkb-foret)] min-w-[2ch] text-center" aria-live="polite">
-                  {updatingServings ? '…' : servings}
-                </span>
-                <button type="button"
-                  onClick={() => { void updateServings(servings + 1) }}
-                  disabled={servings >= 20 || updatingServings}
-                  aria-label="Un convive de plus"
-                  className="w-9 h-9 rounded-full flex items-center justify-center bg-[var(--kkb-foret)] text-[var(--kkb-creme)] disabled:opacity-40">
-                  <Plus className="h-4 w-4" />
-                </button>
-              </div>
-            )}
-            <span className="flex items-center gap-1 text-xs font-quicksand tabular-nums text-[var(--kkb-texte-2)]">
-              <Timer className="h-3.5 w-3.5" />
-              {formatTime(sessionTime)} · {modCount} modif.
-            </span>
-          </div>
-
-          {/* Emplacement d'ancrage du FAB (cf. components/layout/fab.tsx) — un
-              seul bouton "Générer ma semaine", pas un deuxième dupliqué ici */}
-          <div id="generate-slot" className="mx-4 min-h-[40px] lg:hidden" />
-
-          {activeConfigs.length === 0 ? (
-            <div className="mx-4 lg:mx-0 flex flex-col items-center gap-3 py-8 text-center">
-              <p className="text-sm font-quicksand text-[var(--kkb-text-secondary)]">
-                Aucun type de repas actif.
+        {/* ── Révision ── */}
+        {viewState === 'review' && (
+          <div className="space-y-4 lg:space-y-5">
+            {genError && (
+              <p role="alert" className="rounded-[var(--kkb-r-lg)] bg-[var(--kkb-danger-light)] px-4 py-3 font-quicksand text-sm text-[var(--kkb-danger)]">
+                {genError}
               </p>
-              <button
-                type="button"
-                onClick={() => router.push('/settings/meal-config')}
-                className="text-sm text-[var(--kkb-coral)] underline font-quicksand"
-              >
-                Configurer les repas
-              </button>
-            </div>
-          ) : (
-            <>
-              {/* Barre de progression */}
-              {plan && (
-                <div className="px-4 lg:px-0 space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-quicksand text-[var(--kkb-texte-2)]">
-                      <span className="font-bold tabular-nums text-[var(--kkb-profond)]">{filled}/{total}</span> repas planifiés
-                    </span>
-                    <span className="text-xs font-quicksand tabular-nums text-[var(--kkb-texte-2)] lg:hidden">
-                      Jour {selectedDayIdx + 1} sur 7
-                    </span>
-                  </div>
-                  <div className="h-2 w-full rounded-full bg-[var(--kkb-sauge-50)] overflow-hidden">
-                    <div
-                      className="h-full rounded-full bg-[var(--kkb-sauge)] transition-all duration-300"
-                      style={{ width: total > 0 ? `${(filled / total) * 100}%` : '0%' }}
+            )}
+
+            {activeConfigs.length === 0 ? (
+              <div className="flex flex-col items-center gap-3 rounded-[var(--kkb-r-xl)] bg-white px-6 py-10 text-center">
+                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--kkb-foret-50)] text-[var(--kkb-foret)]"><CalendarDays className="h-6 w-6" /></span>
+                <p className="text-h3 text-[var(--kkb-profond)]">Aucun repas à planifier</p>
+                <p className="max-w-sm font-quicksand text-sm text-[var(--kkb-texte-2)]">Choisis d’abord les repas que tu prépares (petit-déjeuner, déjeuner, goûter, dîner).</p>
+                <button type="button" onClick={() => router.push('/settings/meal-config')}
+                  className="mt-1 h-11 rounded-full bg-[var(--kkb-foret)] px-5 font-quicksand text-sm font-bold text-[var(--kkb-creme)]">
+                  Régler le rythme des repas
+                </button>
+              </div>
+            ) : (
+              <>
+                {/* ── Mobile : jour par jour ── */}
+                <div className="-mx-4 space-y-4 lg:hidden">
+                  {plan && (
+                    <DayTabs
+                      weekStart={selectedWeek}
+                      selectedDay={selectedDay}
+                      onSelect={setSelectedDay}
+                      configs={activeConfigs}
+                      items={plan.meal_plan_items}
                     />
-                  </div>
-                </div>
-              )}
+                  )}
 
-              {/* ── Mobile : jour par jour, 4 repas empilés ── */}
-              <div className="lg:hidden space-y-4">
-                {plan && (
-                  <DayTabs
-                    weekStart={selectedWeek}
-                    selectedDay={selectedDay}
-                    onSelect={setSelectedDay}
-                    configs={activeConfigs}
-                    items={plan.meal_plan_items}
-                  />
-                )}
-
-                {completedDaysBefore.length > 0 && (
-                  <div className="mx-4 bg-white rounded-[var(--kkb-r-xl)] overflow-hidden">
-                    <button
-                      type="button"
-                      onClick={() => setShowCompletedSummary(s => !s)}
-                      aria-expanded={showCompletedSummary}
-                      className="w-full flex min-h-[52px] items-center justify-between px-4 py-3"
-                    >
-                      <span className="text-sm font-quicksand font-bold text-[var(--kkb-profond)]">
-                        Déjà prêt cette semaine
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-quicksand font-bold px-2.5 py-0.5 rounded-full bg-[var(--kkb-sauge-50)] text-[var(--kkb-foret)]">
-                          {completedDaysBefore.length} validé{completedDaysBefore.length > 1 ? 's' : ''}
+                  {completedDaysBefore.length > 0 && (
+                    <div className="mx-4 overflow-hidden rounded-[var(--kkb-r-xl)] bg-white">
+                      <button
+                        type="button"
+                        onClick={() => setShowCompletedSummary(s => !s)}
+                        aria-expanded={showCompletedSummary}
+                        className="flex min-h-[52px] w-full items-center justify-between px-4 py-3"
+                      >
+                        <span className="font-quicksand text-sm font-bold text-[var(--kkb-profond)]">Déjà prêt cette semaine</span>
+                        <span className="flex items-center gap-2">
+                          <span className="rounded-full bg-[var(--kkb-sauge-50)] px-2.5 py-0.5 font-quicksand text-xs font-bold text-[var(--kkb-foret)]">
+                            {completedDaysBefore.length} jour{completedDaysBefore.length > 1 ? 's' : ''}
+                          </span>
+                          <ChevronDown className={`h-4 w-4 text-[var(--kkb-texte-2)] transition-transform ${showCompletedSummary ? 'rotate-180' : ''}`} />
                         </span>
-                        {showCompletedSummary ? <ChevronUp className="h-4 w-4 text-[var(--kkb-text-tertiary)]" /> : <ChevronDown className="h-4 w-4 text-[var(--kkb-text-tertiary)]" />}
-                      </div>
-                    </button>
-                    {showCompletedSummary && (
-                      <div className="px-4 pb-3 space-y-1.5">
-                        {completedDaysBefore.map(d => (
-                          <button
-                            key={d.val}
-                            type="button"
-                            onClick={() => setSelectedDay(d.val)}
-                            className="w-full flex h-10 items-center justify-between text-sm font-quicksand text-[var(--kkb-texte-2)] hover:text-[var(--kkb-foret)]"
-                          >
-                            {d.full}
-                            <Check className="h-4 w-4 text-[var(--kkb-success)]" />
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                <div className="px-5 flex items-baseline justify-between">
-                  <h2 className="text-h2 text-[var(--kkb-profond)]">{dayOpt.full}</h2>
-                  <span className="text-sm font-quicksand text-[var(--kkb-texte-2)]">
-                    <span className="font-bold tabular-nums text-[var(--kkb-profond)]">{dayFilled}/{activeConfigs.length}</span> repas choisis
-                  </span>
-                </div>
-
-                <div className="space-y-3">
-                  {renderMealCards(false)}
-                </div>
-              </div>
-
-              {/* ── Desktop : vue d'ensemble / vue focus par jour ── */}
-              <div className="hidden lg:block space-y-5">
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setDesktopView('week')}
-                    className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-quicksand font-bold transition-colors ${
-                      desktopView === 'week' ? 'bg-[var(--kkb-foret)] text-[var(--kkb-creme)]' : 'bg-white text-[var(--kkb-texte-2)]'
-                    }`}
-                  >
-                    <LayoutGrid className="h-3.5 w-3.5" /> Vue d&apos;ensemble
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setDesktopView('day')}
-                    className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-quicksand font-bold transition-colors ${
-                      desktopView === 'day' ? 'bg-[var(--kkb-foret)] text-[var(--kkb-creme)]' : 'bg-white text-[var(--kkb-texte-2)]'
-                    }`}
-                  >
-                    <CalendarDays className="h-3.5 w-3.5" /> Vue focus par jour
-                  </button>
-                </div>
-
-                {plan && desktopView === 'week' && (
-                  <div className="flex gap-4">
-                    <div className="flex-1">
-                      <WeekGrid
-                        weekStart={selectedWeek}
-                        configs={activeConfigs}
-                        items={plan.meal_plan_items}
-                        onCellClick={(mealType, day, isTemplate) => {
-                          const item = isTemplate ? getTemplateItem(mealType) : getDailyItem(mealType, day)
-                          openEdit(item ?? null, mealType, day, isTemplate)
-                        }}
-                      />
+                      </button>
+                      {showCompletedSummary && (
+                        <div className="space-y-1 px-4 pb-3">
+                          {completedDaysBefore.map(d => (
+                            <button key={d.val} type="button" onClick={() => setSelectedDay(d.val)}
+                              className="flex h-10 w-full items-center justify-between font-quicksand text-sm text-[var(--kkb-texte-2)] hover:text-[var(--kkb-foret)]">
+                              {d.full}
+                              <Check className="h-4 w-4 text-[var(--kkb-foret-500)]" />
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                    {editTarget && (
-                      <div className="w-[380px] shrink-0 bg-white border border-[var(--kkb-lin)] rounded-[var(--kkb-radius-card)] max-h-[calc(100vh-200px)] sticky top-28">
-                        {renderPickerPanel()}
-                      </div>
-                    )}
-                  </div>
-                )}
+                  )}
 
-                {plan && desktopView === 'day' && (
-                  <DayFocusView
-                    weekStart={selectedWeek}
-                    selectedDay={selectedDay}
-                    onSelectDay={setSelectedDay}
-                    configs={activeConfigs}
-                    items={plan.meal_plan_items}
-                    cards={<div className="space-y-3">{renderMealCards(true)}</div>}
-                    weekFilled={filled}
-                    weekTotal={total}
-                    serviceStats={serviceStats}
-                  />
-                )}
-              </div>
-            </>
-          )}
-        </div>
-      )}
+                  <div className="flex items-baseline justify-between px-5">
+                    <h2 className="text-h2 text-[var(--kkb-foret)]">{dayOpt.full}</h2>
+                    <span className="font-quicksand text-sm text-[var(--kkb-texte-2)]">
+                      <span className="font-bold tabular-nums text-[var(--kkb-profond)]">{dayFilled}/{activeConfigs.length}</span> repas choisis
+                    </span>
+                  </div>
+
+                  <div className="space-y-3">{renderMealCards(false)}</div>
+                </div>
+
+                {/* ── Desktop : semaine entière ou jour par jour ── */}
+                <div className="hidden space-y-4 lg:block">
+                  <div className="flex items-center justify-between gap-4">
+                    <div role="radiogroup" aria-label="Affichage" className="relative grid grid-cols-2 rounded-full bg-white p-1">
+                      <span
+                        aria-hidden="true"
+                        className="pointer-events-none absolute bottom-1 left-1 top-1 w-[calc(50%-4px)] rounded-full bg-[var(--kkb-foret)] transition-transform duration-300 ease-[cubic-bezier(0.34,1.35,0.64,1)] motion-reduce:transition-none"
+                        style={{ transform: desktopView === 'day' ? 'translateX(100%)' : 'none' }}
+                      />
+                      {([['week', LayoutGrid, 'La semaine'], ['day', CalendarDays, 'Jour par jour']] as const).map(([v, Icon, label]) => (
+                        <button key={v} type="button" role="radio" aria-checked={desktopView === v} onClick={() => setDesktopView(v)}
+                          className={`relative z-10 flex h-9 items-center justify-center gap-1.5 rounded-full px-4 font-quicksand text-[13px] font-bold transition-colors duration-200 ${
+                            desktopView === v ? 'text-[var(--kkb-creme)]' : 'text-[var(--kkb-texte-2)] hover:text-[var(--kkb-foret)]'
+                          }`}>
+                          <Icon className="h-4 w-4" /> {label}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="font-quicksand text-sm text-[var(--kkb-texte-2)]">
+                      {desktopView === 'week' ? 'Clique sur une case pour choisir ou changer un repas.' : 'Tes choix sont enregistrés au fur et à mesure.'}
+                    </p>
+                  </div>
+
+                  {plan && desktopView === 'week' && (
+                    <div className="flex items-start gap-5">
+                      <div className="min-w-0 flex-1">
+                        <WeekGrid
+                          weekStart={selectedWeek}
+                          configs={activeConfigs}
+                          items={plan.meal_plan_items}
+                          activeCell={activeCell}
+                          onCellClick={(mealType, day, isTemplate) => {
+                            const item = isTemplate ? getTemplateItem(mealType) : getDailyItem(mealType, day)
+                            openEdit(item ?? null, mealType, day, isTemplate)
+                          }}
+                        />
+                      </div>
+                      {editTarget && (
+                        <div className="sticky top-24 flex max-h-[calc(100vh-120px)] w-[380px] shrink-0 flex-col overflow-hidden rounded-[var(--kkb-r-xl)] bg-[var(--kkb-creme)] shadow-[0_12px_32px_rgba(31,58,46,0.12)] ring-1 ring-[var(--kkb-filet)]">
+                          {renderPickerPanel()}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {plan && desktopView === 'day' && (
+                    <DayFocusView
+                      weekStart={selectedWeek}
+                      selectedDay={selectedDay}
+                      onSelectDay={setSelectedDay}
+                      configs={activeConfigs}
+                      items={plan.meal_plan_items}
+                      cards={renderMealCards(true)}
+                    />
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* ── Bouton de passage au jour suivant (sticky) ── imposant et seul
           tant que le FAB "Générer" reste ancré en haut de page ; dès qu'il
@@ -967,25 +848,20 @@ function PlanPageContent() {
                   : 'left-0 w-full h-[52px] text-base gap-2'
               }`}
             >
-              {isLastDay ? 'Terminer' : `Passer à ${DAY_OPTIONS[selectedDayIdx + 1].full}`}
+              {isLastDay ? 'Valider le menu' : `Passer à ${DAY_OPTIONS[selectedDayIdx + 1].full}`}
               <ArrowRight className={`shrink-0 transition-all duration-300 ${generatorFloating ? 'h-3.5 w-3.5' : 'h-4 w-4'}`} />
             </button>
           </div>
-          {!generatorFloating && (
-            <p className="text-center text-xs font-quicksand text-[var(--kkb-texte-2)] mt-1.5">
-              Tes choix sont enregistrés au fur et à mesure.
-            </p>
-          )}
         </div>
       )}
 
-      {/* ── Bottom sheet mobile : choisir une recette ── */}
+      {/* ── Feuille mobile : choisir une recette (au-dessus de la barre basse) ── */}
       {editTarget && (
         <div className="lg:hidden">
-          <div className="fixed inset-0 z-40 bg-[rgba(31,58,46,0.35)]" onClick={closeEdit} aria-hidden="true" />
-          <div className="fixed bottom-0 left-0 right-0 z-50 bg-[var(--kkb-creme)] rounded-t-[28px] shadow-[var(--kkb-shadow-sheet)] flex flex-col max-h-[88vh]" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
-            <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
-              <div className="w-10 h-1 rounded-full bg-[var(--kkb-filet)]" />
+          <div className="fixed inset-0 z-[75] bg-[rgba(31,58,46,0.35)]" onClick={closeEdit} aria-hidden="true" />
+          <div role="dialog" aria-modal="true" aria-label="Choisir une recette" className="fixed bottom-0 left-0 right-0 z-[80] flex max-h-[88vh] flex-col rounded-t-[28px] bg-[var(--kkb-creme)] shadow-[var(--kkb-shadow-sheet)]" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+            <div className="flex flex-shrink-0 justify-center pb-1 pt-3">
+              <div className="h-1 w-10 rounded-full bg-[var(--kkb-filet)]" />
             </div>
             {renderPickerPanel()}
           </div>

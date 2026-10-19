@@ -1,10 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { ChefHat, ChevronDown, Clock, Loader2, PlusCircle, Search, Utensils, UtensilsCrossed, Wine, X } from 'lucide-react'
-import type { MealType } from '@/lib/constants/meal-type'
+import { Check, ChefHat, ChevronDown, Clock, CupSoda, Loader2, PenLine, Salad, Search, UtensilsCrossed, X } from 'lucide-react'
+import { MEAL_COLOR, type MealType } from '@/lib/constants/meal-type'
 import { MealTypeIcon } from '@/components/ui/meal-type-icon'
 import { SCOPE_OPTIONS, type RecipeScope } from '@/lib/constants/recipe-scope'
+import { categoryIcon } from '@/lib/constants/category-icon'
 import { CompositionMultiSelect, type CompositionChip } from '@/components/plan/composition-multiselect'
 import { FramedPhoto } from '@/components/home/framed-photo'
 
@@ -18,9 +19,9 @@ interface PickerRecipe {
 }
 
 interface Category {
-  id:   string
-  name: string
-  icon: string | null
+  id:    string
+  name:  string
+  slug?: string
 }
 
 interface MultiSelectBundle {
@@ -68,33 +69,44 @@ interface RecipePickerPanelProps {
 
 type SectionKey = 'main' | 'side' | 'drink'
 
-function PickerSection({ icon, title, summary, disabled, open, onToggle, children }: {
+const VISIBILITY_TAG: Record<string, string> = { circle: 'Famille', community: 'Communauté' }
+
+const pill = (active: boolean) =>
+  `flex h-8 shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-3 font-quicksand text-xs font-bold transition-colors ${
+    active ? 'bg-[var(--kkb-foret)] text-[var(--kkb-creme)]' : 'bg-white text-[var(--kkb-texte-2)] hover:text-[var(--kkb-foret)]'
+  }`
+
+// Étape du choix : plat principal, accompagnements, boissons. L'en-tête
+// résume le choix fait, le contenu s'ouvre à la demande.
+function PickerSection({ icon, title, summary, done, disabled, open, onToggle, children }: {
   icon:     React.ReactNode
   title:    string
   summary:  string
+  done?:    boolean
   disabled?: boolean
   open:     boolean
   onToggle: () => void
   children: React.ReactNode
 }) {
   return (
-    <div className="border-b border-[color-mix(in_srgb,var(--kkb-border)_60%,transparent)]">
+    <div className={`rounded-[var(--kkb-r-lg)] transition-colors ${open ? 'bg-[var(--kkb-lin)]/50' : ''}`}>
       <button
         type="button"
         onClick={onToggle}
         disabled={disabled}
-        className="w-full flex items-center gap-2 px-4 py-3 text-left disabled:opacity-50"
+        aria-expanded={open}
+        className="flex w-full items-center gap-3 px-3 py-3 text-left disabled:opacity-50"
       >
-        <span className="text-[var(--kkb-coral)]">{icon}</span>
-        <span className="font-dosis font-semibold text-sm text-[var(--kkb-text-primary)]">{title}</span>
-        <span className="ml-auto text-xs font-quicksand text-[var(--kkb-text-tertiary)] truncate max-w-[45%]">{summary}</span>
-        {!disabled && (
-          <ChevronDown className={`h-4 w-4 text-[var(--kkb-text-tertiary)] shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} />
-        )}
+        <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${done ? 'bg-[var(--kkb-sauge)] text-[var(--kkb-profond)]' : 'bg-white text-[var(--kkb-foret)]'}`}>
+          {done ? <Check className="h-4 w-4" /> : icon}
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block font-quicksand text-sm font-bold text-[var(--kkb-profond)]">{title}</span>
+          <span className="block truncate font-quicksand text-xs text-[var(--kkb-texte-2)]">{summary}</span>
+        </span>
+        {!disabled && <ChevronDown className={`h-4 w-4 shrink-0 text-[var(--kkb-texte-2)] transition-transform ${open ? 'rotate-180' : ''}`} />}
       </button>
-      {open && !disabled && (
-        <div className="px-4 pb-4">{children}</div>
-      )}
+      {open && !disabled && <div className="px-3 pb-3">{children}</div>}
     </div>
   )
 }
@@ -116,55 +128,53 @@ export function RecipePickerPanel({
     setActiveSection('side')
   }
 
-  const sideSummary  = side  ? (side.chips.length  ? side.chips.map(c => c.name).join(', ')  : 'Aucun') : 'Choisir le plat principal d\'abord'
-  const drinkSummary = drink ? (drink.chips.length ? drink.chips.map(c => c.name).join(', ') : 'Aucune') : 'Choisir le plat principal d\'abord'
+  const needMain     = 'Choisis d’abord le plat principal'
+  const sideSummary  = side  ? (side.chips.length  ? side.chips.map(c => c.name).join(', ')  : 'Aucun pour l’instant') : needMain
+  const drinkSummary = drink ? (drink.chips.length ? drink.chips.map(c => c.name).join(', ') : 'Aucune pour l’instant') : needMain
+  const color = mealType ? MEAL_COLOR[mealType] : null
 
   return (
-    <div className="flex flex-col max-h-full">
-      <div className="flex items-start justify-between px-4 pt-4 pb-2 flex-shrink-0">
-        <div>
-          <p className="font-dosis font-bold text-base text-[var(--kkb-text-primary)]">{title}</p>
-          <p className="flex items-center gap-1 text-xs font-quicksand text-[var(--kkb-text-secondary)] mt-0.5">
-            {mealType && <MealTypeIcon type={mealType} className="h-3.5 w-3.5 text-[var(--kkb-coral)]" />}
-            {subtitle}
-          </p>
+    <div className="flex max-h-full min-h-0 flex-col">
+      <div className="flex flex-shrink-0 items-start gap-3 px-4 pb-3 pt-4">
+        {mealType && color && (
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: color.bg, color: color.text }}>
+            <MealTypeIcon type={mealType} className="h-5 w-5" />
+          </span>
+        )}
+        <div className="min-w-0 flex-1">
+          <p className="text-h3 text-[var(--kkb-profond)]">{title}</p>
+          <p className="mt-0.5 font-quicksand text-sm text-[var(--kkb-texte-2)]">{subtitle}</p>
         </div>
-        <button type="button" onClick={onClose} aria-label="Fermer le panneau" className="p-1.5 -mr-1 text-[var(--kkb-text-tertiary)] hover:text-[var(--kkb-text-primary)] transition-colors">
+        <button type="button" onClick={onClose} aria-label="Fermer le panneau" className="-mr-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[var(--kkb-texte-2)] transition-colors hover:bg-[var(--kkb-creme)] hover:text-[var(--kkb-profond)]">
           <X className="h-5 w-5" />
         </button>
       </div>
 
-      <div className="overflow-y-auto flex-1 border-t border-[var(--kkb-border)]">
+      <div className="min-h-0 flex-1 space-y-1 overflow-y-auto px-2 pb-2">
         <PickerSection
           icon={<ChefHat className="h-4 w-4" />}
           title="Plat principal"
           summary={currentRecipeName ?? 'À choisir'}
+          done={!!currentRecipeName}
           open={activeSection === 'main'}
           onToggle={() => toggle('main')}
         >
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 bg-[var(--kkb-coral-light)] border border-[var(--kkb-border)] rounded-xl px-3 py-2">
-              <Search className="h-4 w-4 text-[var(--kkb-text-tertiary)] flex-shrink-0" />
+          <div className="space-y-2.5">
+            <div className="flex h-10 items-center gap-2 rounded-full bg-white px-3.5 ring-[var(--kkb-foret-300)] focus-within:ring-2">
+              <Search className="h-4 w-4 flex-shrink-0 text-[var(--kkb-texte-2)]" />
               <input
                 type="search"
                 placeholder="Rechercher une recette…"
                 aria-label="Chercher une recette"
                 value={search}
                 onChange={e => onSearchChange(e.target.value)}
-                className="flex-1 bg-transparent text-sm font-quicksand text-[var(--kkb-text-primary)] placeholder:text-[var(--kkb-text-tertiary)] outline-none"
+                className="flex-1 bg-transparent font-quicksand text-sm text-[var(--kkb-profond)] outline-none placeholder:text-[var(--kkb-texte-2)]"
               />
             </div>
 
             <div className="flex gap-1.5 overflow-x-auto hide-scrollbar">
               {SCOPE_OPTIONS.map(opt => (
-                <button
-                  key={opt.val}
-                  type="button"
-                  onClick={() => onScopeChange(opt.val)}
-                  className={`flex-shrink-0 px-3 py-1 rounded-full text-[11px] font-quicksand font-bold transition-colors ${
-                    scope === opt.val ? 'bg-[var(--kkb-coral)] text-white' : 'bg-[var(--kkb-coral-light)] text-[var(--kkb-text-secondary)] border border-[var(--kkb-border)]'
-                  }`}
-                >
+                <button key={opt.val} type="button" onClick={() => onScopeChange(opt.val)} className={pill(scope === opt.val)}>
                   {opt.label}
                 </button>
               ))}
@@ -172,71 +182,55 @@ export function RecipePickerPanel({
 
             {categories.length > 0 && (
               <div className="flex gap-1.5 overflow-x-auto hide-scrollbar">
-                <button
-                  type="button"
-                  onClick={() => onCategoryChange(null)}
-                  className={`flex-shrink-0 px-3 py-1 rounded-full text-[11px] font-quicksand font-bold transition-colors ${
-                    categoryId === null ? 'bg-[var(--kkb-coral)] text-white' : 'bg-[var(--kkb-coral-light)] text-[var(--kkb-text-secondary)] border border-[var(--kkb-border)]'
-                  }`}
-                >
-                  Tous
-                </button>
-                {categories.map(cat => (
-                  <button
-                    key={cat.id}
-                    type="button"
-                    onClick={() => onCategoryChange(cat.id)}
-                    className={`flex-shrink-0 px-3 py-1 rounded-full text-[11px] font-quicksand font-bold transition-colors ${
-                      categoryId === cat.id ? 'bg-[var(--kkb-coral)] text-white' : 'bg-[var(--kkb-coral-light)] text-[var(--kkb-text-secondary)] border border-[var(--kkb-border)]'
-                    }`}
-                  >
-                    {cat.icon} {cat.name}
-                  </button>
-                ))}
+                <button type="button" onClick={() => onCategoryChange(null)} className={pill(categoryId === null)}>Toutes</button>
+                {categories.map(cat => {
+                  const Icon = categoryIcon(cat.slug)
+                  return (
+                    <button key={cat.id} type="button" onClick={() => onCategoryChange(cat.id)} className={pill(categoryId === cat.id)}>
+                      <Icon className="h-3.5 w-3.5" /> {cat.name}
+                    </button>
+                  )
+                })}
               </div>
             )}
 
-            <div className="max-h-64 overflow-y-auto">
+            <div className="max-h-72 space-y-0.5 overflow-y-auto rounded-[var(--kkb-r-lg)] bg-white p-1.5">
               {loading ? (
                 <div className="flex justify-center py-8">
-                  <Loader2 className="h-5 w-5 text-[var(--kkb-coral)] animate-spin" />
+                  <Loader2 className="h-5 w-5 animate-spin text-[var(--kkb-foret)]" />
                 </div>
               ) : recipes.length === 0 ? (
-                <p className="text-sm font-quicksand text-[var(--kkb-text-tertiary)] text-center py-8">
+                <p className="py-8 text-center font-quicksand text-sm text-[var(--kkb-texte-2)]">
                   {search ? 'Aucune recette trouvée' : 'Aucune recette disponible'}
                 </p>
               ) : (
-                recipes.map(recipe => (
-                  <button
-                    key={recipe.id}
-                    type="button"
-                    disabled={picking}
-                    onClick={() => handlePick(recipe)}
-                    className="w-full flex items-center gap-3 px-2 py-3 border-b border-[color-mix(in_srgb,var(--kkb-border)_40%,transparent)] last:border-0 hover:bg-[var(--kkb-coral-light)] transition-colors disabled:opacity-50"
-                  >
-                    <div className="relative h-10 w-10 rounded-lg overflow-hidden shrink-0 bg-[var(--kkb-coral-light)]">
-                      {recipe.photo_url
-                        ? <FramedPhoto src={recipe.photo_url} alt={recipe.name} />
-                        : <div className="h-full w-full flex items-center justify-center"><UtensilsCrossed className="h-5 w-5 text-[var(--kkb-coral)]" /></div>}
-                    </div>
-                    <div className="flex-1 min-w-0 text-left">
-                      <p className="text-sm font-quicksand font-medium text-[var(--kkb-text-primary)] truncate">{recipe.name}</p>
-                      {recipe.prep_time_min && (
-                        <div className="flex items-center gap-1 mt-0.5">
-                          <Clock className="h-3 w-3 text-[var(--kkb-text-tertiary)]" />
-                          <span className="text-[11px] font-quicksand text-[var(--kkb-text-secondary)]">{recipe.prep_time_min} min</span>
-                        </div>
-                      )}
-                    </div>
-                    {recipe.visibility !== 'private' && (
-                      <span className={`text-xs font-quicksand font-bold px-1.5 py-0.5 rounded-full flex-shrink-0 ${
-                        recipe.visibility === 'circle' ? 'bg-[var(--kkb-warning-light)] text-[var(--kkb-warning)]' : 'bg-emerald-50 text-emerald-600'
-                      }`}>
-                        {recipe.visibility === 'circle' ? 'Cercle' : 'Commun.'}
-                      </span>
-                    )}
-                  </button>
-                ))
+                recipes.map(recipe => {
+                  const current = recipe.name === currentRecipeName
+                  return (
+                    <button
+                      key={recipe.id}
+                      type="button"
+                      disabled={picking}
+                      onClick={() => handlePick(recipe)}
+                      aria-pressed={current}
+                      className={`flex w-full items-center gap-3 rounded-[var(--kkb-r-md)] px-2 py-2 text-left transition-colors disabled:opacity-50 ${current ? 'bg-[var(--kkb-foret-50)]' : 'hover:bg-[var(--kkb-creme)]'}`}
+                    >
+                      <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-[var(--kkb-r-md)] bg-[var(--kkb-creme)]">
+                        {recipe.photo_url
+                          ? <FramedPhoto src={recipe.photo_url} alt={recipe.name} />
+                          : <div className="flex h-full w-full items-center justify-center"><UtensilsCrossed className="h-5 w-5 text-[var(--kkb-foret-500)]" /></div>}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-quicksand text-sm font-bold text-[var(--kkb-profond)]">{recipe.name}</p>
+                        <p className="mt-0.5 flex items-center gap-2 font-quicksand text-xs text-[var(--kkb-texte-2)]">
+                          {recipe.prep_time_min && <span className="inline-flex items-center gap-1 tabular-nums"><Clock className="h-3 w-3" />{recipe.prep_time_min} min</span>}
+                          {VISIBILITY_TAG[recipe.visibility] && <span>{VISIBILITY_TAG[recipe.visibility]}</span>}
+                        </p>
+                      </div>
+                      {current && <Check className="h-4 w-4 shrink-0 text-[var(--kkb-foret-500)]" />}
+                    </button>
+                  )
+                })
               )}
             </div>
           </div>
@@ -244,9 +238,10 @@ export function RecipePickerPanel({
 
         {showCompositions && (
           <PickerSection
-            icon={<Utensils className="h-4 w-4" />}
-            title="Accompagnement(s)"
+            icon={<Salad className="h-4 w-4" />}
+            title="Accompagnements"
             summary={sideSummary}
+            done={!!side?.chips.length}
             disabled={!side}
             open={activeSection === 'side'}
             onToggle={() => toggle('side')}
@@ -257,9 +252,10 @@ export function RecipePickerPanel({
 
         {showCompositions && (
           <PickerSection
-            icon={<Wine className="h-4 w-4" />}
-            title="Boisson(s) maison"
+            icon={<CupSoda className="h-4 w-4" />}
+            title="Boissons maison"
             summary={drinkSummary}
+            done={!!drink?.chips.length}
             disabled={!drink}
             open={activeSection === 'drink'}
             onToggle={() => toggle('drink')}
@@ -268,26 +264,24 @@ export function RecipePickerPanel({
           </PickerSection>
         )}
 
-        <div className="px-4 py-3">
-          <button
-            type="button"
-            onClick={onCreateCustom}
-            className="w-full flex items-center gap-3 px-4 py-3 border-2 border-dashed border-[color-mix(in_srgb,var(--kkb-coral)_40%,transparent)] rounded-xl hover:bg-[var(--kkb-coral-light)] transition-colors group"
-          >
-            <PlusCircle className="h-5 w-5 text-[var(--kkb-text-tertiary)] group-hover:text-[var(--kkb-coral)] transition-colors" />
-            <span className="text-sm font-quicksand text-[var(--kkb-text-tertiary)] group-hover:text-[var(--kkb-coral)] transition-colors">
-              Créer un repas personnalisé…
-            </span>
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={onCreateCustom}
+          className="mx-1 mt-2 flex w-[calc(100%-8px)] items-center gap-3 rounded-[var(--kkb-r-lg)] border-[1.5px] border-dashed border-[var(--kkb-foret-300)] px-3 py-3 text-left transition-colors hover:bg-[var(--kkb-foret-50)]"
+        >
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--kkb-foret-50)] text-[var(--kkb-foret)]"><PenLine className="h-4 w-4" /></span>
+          <span>
+            <span className="block font-quicksand text-sm font-bold text-[var(--kkb-foret)]">Créer une nouvelle recette</span>
+            <span className="block font-quicksand text-xs text-[var(--kkb-texte-2)]">Elle prendra directement sa place ici</span>
+          </span>
+        </button>
       </div>
 
-      <div className="flex items-center gap-2 px-4 py-3 border-t border-[var(--kkb-border)] flex-shrink-0">
-        <button type="button" onClick={onClose} className="flex-1 rounded-xl border border-[var(--kkb-border)] text-[var(--kkb-text-secondary)] font-quicksand font-semibold text-sm py-2.5">
-          Annuler
-        </button>
-        <button type="button" onClick={onClose} className="flex-1 rounded-xl bg-[var(--kkb-coral)] text-white font-quicksand font-bold text-sm py-2.5">
-          Valider
+      {/* Chaque choix est enregistré aussitôt : un seul bouton pour refermer */}
+      <div className="flex flex-shrink-0 items-center gap-3 border-t border-[var(--kkb-lin)] px-4 py-3">
+        <p className="min-w-0 flex-1 font-quicksand text-xs text-[var(--kkb-texte-2)]">Tes choix sont enregistrés au fur et à mesure.</p>
+        <button type="button" onClick={onClose} className="h-11 shrink-0 rounded-full bg-[var(--kkb-foret)] px-6 font-quicksand text-sm font-bold text-[var(--kkb-creme)] transition-colors hover:bg-[var(--kkb-foret-900)]">
+          Terminé
         </button>
       </div>
     </div>

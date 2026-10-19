@@ -1,7 +1,7 @@
 'use client'
 
 import { Clock, Loader2, Lock, LockOpen, Pencil, Plus, UtensilsCrossed } from 'lucide-react'
-import type { MealType } from '@/lib/constants/meal-type'
+import { MEAL_COLOR, type MealType } from '@/lib/constants/meal-type'
 import { MealTypeIcon } from '@/components/ui/meal-type-icon'
 import { CompositionChipsRow } from '@/components/plan/composition-chips-row'
 
@@ -39,19 +39,22 @@ export function MealDetailCard({
   isLocked, locking, onToggleLock, onEdit, dimmed, expanded,
 }: MealDetailCardProps) {
   if (expanded) {
-    return <div className="mx-4">{expanded}</div>
+    return <div className="mx-4 flex max-h-[80vh] flex-col overflow-hidden rounded-[var(--kkb-r-xl)] bg-[var(--kkb-creme)] ring-1 ring-[var(--kkb-filet)]">{expanded}</div>
   }
 
   return (
     <div className={`mx-4 rounded-[var(--kkb-r-xl)] transition-opacity ${recipe ? 'bg-white p-2' : ''} ${dimmed ? 'opacity-40' : ''}`}>
       {recipe ? (
         <div className="flex items-stretch gap-3">
-          <div className="relative w-[96px] shrink-0 min-h-[112px] overflow-hidden rounded-[var(--kkb-r-lg)] bg-[var(--kkb-orange-50)]">
+          {/* Photo, ou aplat aux couleurs du type de repas */}
+          <div className="relative w-[96px] shrink-0 min-h-[112px] overflow-hidden rounded-[var(--kkb-r-lg)]" style={{ backgroundColor: mealType ? MEAL_COLOR[mealType].bg : 'var(--kkb-creme)' }}>
             {recipe.photo_url ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={recipe.photo_url} alt={recipe.name} className="absolute inset-0 h-full w-full object-cover" />
             ) : (
-              <div className="absolute inset-0 flex items-center justify-center"><UtensilsCrossed className="h-7 w-7 text-[var(--kkb-orange-300)]" /></div>
+              <div className="absolute inset-0 flex items-center justify-center" style={{ color: mealType ? MEAL_COLOR[mealType].text : 'var(--kkb-foret)' }}>
+                {mealType ? <MealTypeIcon type={mealType} className="h-7 w-7 opacity-70" /> : <UtensilsCrossed className="h-7 w-7 opacity-70" />}
+              </div>
             )}
           </div>
 
@@ -117,9 +120,9 @@ export function MealDetailCard({
         <button
           type="button"
           onClick={onEdit}
-          className="w-full flex items-center gap-3 p-2 text-left border-2 border-dashed border-[var(--kkb-filet)] rounded-[var(--kkb-r-xl)] active:scale-[0.99] transition-transform"
+          className="group w-full flex items-center gap-3 p-2 text-left border-[1.5px] border-dashed border-[var(--kkb-filet)] rounded-[var(--kkb-r-xl)] transition-colors hover:border-[var(--kkb-foret-300)] hover:bg-[var(--kkb-foret-50)] active:scale-[0.99]"
         >
-          <span className="flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-[var(--kkb-r-lg)] bg-white text-[var(--kkb-foret)]">
+          <span className="flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-[var(--kkb-r-lg)]" style={{ backgroundColor: mealType ? MEAL_COLOR[mealType].bg : 'white', color: mealType ? MEAL_COLOR[mealType].text : 'var(--kkb-foret)' }}>
             {mealType ? <MealTypeIcon type={mealType} className="h-6 w-6" /> : <UtensilsCrossed className="h-6 w-6" />}
           </span>
           <span className="min-w-0 flex-1">

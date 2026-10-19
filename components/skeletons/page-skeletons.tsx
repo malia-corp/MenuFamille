@@ -395,22 +395,14 @@ export function ResultsSkeleton() {
 
 // ─── Menu de la semaine (/plan) ──────────────────────────────────────────────
 
-// Corps de la page (sous la navigation de semaine et le stepper).
+// Corps de la page, sous le bandeau (posé dans le conteneur de la page).
 export function PlanBodySkeleton() {
   return (
     <div aria-busy="true" aria-label="Chargement du menu de la semaine">
-    <div aria-hidden="true" className="space-y-5 py-4">
-      <div className="flex items-center justify-between px-4 lg:px-0">
-        <Bone className="h-11 w-48 rounded-full" />
-        <Bone className="h-3.5 w-24 rounded" />
-      </div>
-      <div className="space-y-1.5 px-4 lg:px-0">
-        <Bone className="h-3.5 w-36 rounded" />
-        <Bone className="h-2 rounded-full" />
-      </div>
+    <div aria-hidden="true">
       {/* Mobile : jours puis repas du jour */}
-      <div className="space-y-4 lg:hidden">
-        <div className="mx-4 grid grid-cols-7 gap-1">
+      <div className="-mx-4 space-y-4 lg:hidden">
+        <div className="mx-4 grid grid-cols-7 gap-1 rounded-[var(--kkb-r-xl)] bg-white p-1.5">
           {range(7).map((i) => <Bone key={i} className="h-[60px] rounded-[var(--kkb-r-md)]" />)}
         </div>
         <div className="flex items-baseline justify-between px-5">
@@ -430,54 +422,75 @@ export function PlanBodySkeleton() {
           ))}
         </div>
       </div>
-      {/* Desktop : grille de la semaine */}
-      <div className="hidden space-y-5 lg:block">
-        <div className="flex gap-2">
-          <Bone className="h-8 w-36 rounded-full" />
-          <Bone className="h-8 w-40 rounded-full" />
-        </div>
-        <div className="grid grid-cols-[100px_repeat(7,1fr)] gap-2">
-          <span />
-          {range(7).map((i) => (
-            <div key={i} className="flex flex-col items-center gap-1.5">
-              <Bone className="h-3 w-14 rounded" />
-              <Bone className="h-3 w-8 rounded" />
-            </div>
-          ))}
-          {range(4).map((row) => (
-            <div key={row} className="contents">
-              <div className="flex items-center gap-1.5 pt-2">
-                <Bone className="h-4 w-4 rounded" />
-                <Bone className="h-3 w-16 rounded" />
+      {/* Desktop : bascule et grille de la semaine */}
+      <div className="hidden space-y-4 lg:block">
+        <Bone className="h-11 w-72 rounded-full" />
+        <BoneCard className="p-4 xl:p-5">
+          <div className="grid grid-cols-[112px_repeat(7,minmax(0,1fr))] gap-2 xl:grid-cols-[132px_repeat(7,minmax(0,1fr))]">
+            <span />
+            {range(7).map((i) => (
+              <div key={i} className="flex flex-col items-center gap-1.5 py-2">
+                <Bone className="h-3 w-8 rounded" />
+                <Bone className="h-5 w-6 rounded" />
+                <Bone className="h-3 w-7 rounded" />
               </div>
-              {range(7).map((i) => <Bone key={i} className="h-[100px] rounded-[var(--kkb-radius-sm)]" />)}
-            </div>
-          ))}
-        </div>
+            ))}
+            {range(4).map((row) => (
+              <div key={row} className="contents">
+                <div className="flex items-center gap-2">
+                  <Bone className="h-8 w-8 shrink-0 rounded-full" />
+                  <Bone className="h-3.5 w-16 rounded" />
+                </div>
+                {range(7).map((i) => <Bone key={i} className="h-[108px] rounded-[var(--kkb-r-lg)]" />)}
+              </div>
+            ))}
+          </div>
+        </BoneCard>
       </div>
     </div>
     </div>
   )
 }
 
-// Page entière : navigation de semaine, stepper, puis le corps.
+// Page entière : bandeau vert, carte « Par repas », puis le corps.
 export function PlanSkeleton() {
   return (
-    <SkeletonPage label="Chargement du menu de la semaine">
-      <div className="px-4 py-2 lg:px-0">
-        <div className="mx-auto flex max-w-sm items-center gap-2 lg:max-w-none">
-          <Bone className="h-10 w-10 shrink-0 rounded-full" />
-          <div className="flex flex-1 flex-col items-center gap-1.5">
-            <Bone className="h-3 w-16 rounded" />
-            <Bone className="h-4 w-28 rounded" />
+    <SkeletonPage label="Chargement du menu de la semaine" className="mx-auto max-w-lg space-y-4 px-4 pb-40 pt-2 lg:max-w-none lg:space-y-5 lg:px-0 lg:pb-8 lg:pt-0">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:gap-5">
+        <div className="flex flex-col rounded-[var(--kkb-r-xl)] bg-[var(--kkb-foret)] p-5 lg:col-span-8 lg:p-6">
+          <div className="flex items-center justify-between">
+            <Bone dark className="h-8 w-48 rounded-full" />
+            <Bone dark className="h-10 w-10 rounded-full" />
           </div>
-          <Bone className="h-10 w-10 shrink-0 rounded-full" />
-          <Bone className="h-10 w-10 shrink-0 rounded-full" />
+          <div className="mt-4 flex items-center gap-2">
+            <Bone dark className="h-10 w-10 shrink-0 rounded-full" />
+            <div className="flex flex-1 flex-col items-center gap-2 lg:flex-none lg:items-start">
+              <Bone dark className="h-3.5 w-40 rounded" />
+              <Bone dark className="h-8 w-52 rounded-lg" />
+            </div>
+            <Bone dark className="h-10 w-10 shrink-0 rounded-full" />
+          </div>
+          <div className="mt-4 grid grid-cols-[minmax(0,1fr)_auto] gap-2 lg:mt-auto lg:pt-5">
+            <Bone dark className="h-[60px] rounded-[var(--kkb-r-md)]" />
+            <Bone dark className="h-[60px] w-36 rounded-[var(--kkb-r-md)]" />
+          </div>
+          <div className="mt-4 flex gap-2">
+            <Bone dark className="h-11 w-48 rounded-full" />
+            <Bone dark className="hidden h-11 w-40 rounded-full lg:block" />
+          </div>
         </div>
-      </div>
-      <div className="flex justify-center gap-2 px-4 pb-2 pt-1">
-        <Bone className="h-8 w-28 rounded-full" />
-        <Bone className="h-8 w-24 rounded-full" />
+        <BoneCard className="hidden space-y-4 p-5 lg:col-span-4 lg:block">
+          <Bone className="h-5 w-24 rounded" />
+          {range(4).map((i) => (
+            <div key={i} className="flex items-center gap-3">
+              <Bone className="h-9 w-9 shrink-0 rounded-full" />
+              <div className="flex-1 space-y-2">
+                <Bone className="h-3.5 w-1/3 rounded" />
+                <Bone className="h-1.5 rounded-full" />
+              </div>
+            </div>
+          ))}
+        </BoneCard>
       </div>
       <PlanBodySkeleton />
     </SkeletonPage>
