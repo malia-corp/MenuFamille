@@ -1,0 +1,41 @@
+import { CakeSlice, ChefHat, Cookie, CupSoda, Salad, Soup, UtensilsCrossed, Wheat, type LucideIcon } from 'lucide-react-native'
+
+// Icône lucide par catégorie de recette (slug), à la place de l'emoji stocké
+// en base dans categories.icon (non affichable, cf. CLAUDE.md "Icônes").
+const CATEGORY_ICON: Record<string, LucideIcon> = {
+  'plat-principal':    UtensilsCrossed,
+  'entree':            Salad,
+  'dessert':           CakeSlice,
+  'sauce':             Soup,
+  'boisson':           CupSoda,
+  'bouillie-cereales': Wheat,
+  'beignets-snacks':   Cookie,
+  'soupe':             Soup,
+}
+
+export function categoryIcon(slug: string | null | undefined): LucideIcon {
+  return (slug && CATEGORY_ICON[slug]) || ChefHat
+}
+
+// Couleur de la catégorie (categories.color, hex) avec repli corail.
+export function categoryColor(color: string | null | undefined): string {
+  return color && /^#[0-9a-f]{6}$/i.test(color) ? color : '#E66B43'
+}
+
+// Mélange de deux couleurs hex (part de a entre 0 et 1).
+export function mixHex(a: string, b: string, part: number): string {
+  const pa = [1, 3, 5].map(i => parseInt(a.slice(i, i + 2), 16))
+  const pb = [1, 3, 5].map(i => parseInt(b.slice(i, i + 2), 16))
+  return '#' + pa.map((v, i) => Math.round(v * part + pb[i] * (1 - part)).toString(16).padStart(2, '0')).join('')
+}
+
+// Couleur de texte dérivée de la catégorie : assombrie vers le vert profond,
+// lisible sur sa propre teinte claire (le jaune #F5A623 seul ne l'est pas).
+export function categoryInk(color: string | null | undefined): string {
+  return mixHex(categoryColor(color), '#1F3A2E', 0.62)
+}
+
+// Teinte claire de la catégorie (fond des puces et des aplats sans photo).
+export function categoryTint(color: string | null | undefined, part = 0.1): string {
+  return mixHex(categoryColor(color), '#FFFFFF', part)
+}

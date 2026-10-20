@@ -5,6 +5,12 @@ import { publicOrigin } from '@/lib/utils/public-origin'
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request })
 
+  // Application mobile : les routes API reçoivent un jeton Bearer (pas de
+  // cookie de session) et le vérifient elles-mêmes (cf. lib/supabase/server.ts).
+  if (request.nextUrl.pathname.startsWith('/api/') && /^Bearer\s+/i.test(request.headers.get('authorization') ?? '')) {
+    return response
+  }
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
