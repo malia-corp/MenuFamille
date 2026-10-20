@@ -3,10 +3,12 @@ import { Pressable, ScrollView, View } from 'react-native'
 import { router, useLocalSearchParams } from 'expo-router'
 import { formatDistanceToNow } from 'date-fns'
 import { fr } from 'date-fns/locale'
-import { ArrowLeft, CalendarDays, CalendarPlus, ChevronRight, Heart, MailOpen, MessageCircleWarning, PartyPopper, Pencil, Share2, Users, UtensilsCrossed, WifiOff, type LucideIcon } from 'lucide-react-native'
+import { ArrowLeft, CalendarDays, CalendarPlus, ChevronRight, Heart, MailOpen, MessageCircleWarning, PartyPopper, Pencil, Printer, Share2, Users, UtensilsCrossed, WifiOff, type LucideIcon } from 'lucide-react-native'
 import { Bone, Button, Card, CardTitle, EmptyState, NameAvatar, Screen, Segmented, Select, ShareActions, Txt, useReloadOnFocus } from '@/components/ui'
 import { ConsensusGauge, ResultCard, TEMPLATE_KEY, agreementTone, chronoCompare, countsOf, dayLabelOf, harmonyOf, type ResultItem, type SurveyResultsData } from '@/components/votes/VoteBits'
 import { get, request } from '@/lib/api'
+import { printFridgeSheet } from '@/lib/print'
+import { toast } from '@/lib/toast'
 import { MEAL_LABEL, MEAL_TYPE_ORDER, type MealType } from '@/shared/meal-type'
 import { agreementPct, isRejected, totalReactions } from '@/shared/survey-score'
 import { surveyLinkPayload } from '@/shared/share'
@@ -190,6 +192,7 @@ export default function VotesResultsScreen() {
         <View style={{ marginTop: 20, gap: 8 }}>
           <Button label="Ajuster le menu" icon={Pencil} tone="orange" full onPress={() => router.navigate({ pathname: '/plan', params: { week: data.week_start } })} />
           <ShareActions getPayload={() => ({ title: 'Résultats du sondage — KeskonBouf', text: recapText })} onDark />
+          <Button label="Imprimer pour le frigo" icon={Printer} tone="onDark" full onPress={() => void printFridgeSheet(data, favorites.map(f => f.id)).catch(() => toast.error('Impression impossible'))} />
         </View>
       </View>
 

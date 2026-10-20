@@ -14,7 +14,7 @@ import { useSession } from '@/lib/session'
 import { get } from '@/lib/api'
 import { scheduleMealReminders, type ReminderPref } from '@/lib/reminders'
 import { Toaster } from '@/components/ui'
-import { LogoLoaderScreen } from '@/components/brand/Logo'
+import { LogoLoader } from '@/components/brand/Logo'
 import { C } from '@/theme'
 
 SplashScreen.preventAutoHideAsync().catch(() => {})
@@ -69,7 +69,8 @@ export default function RootLayout() {
     return () => sub.remove()
   }, [])
 
-  if (!fontsLoaded || !ready) return <View style={{ flex: 1, backgroundColor: C.creme }}><LogoLoaderScreen /></View>
+  // Polices pas encore chargées : le logo animé seul, sans texte.
+  if (!fontsLoaded || !ready) return <View style={{ flex: 1, backgroundColor: C.creme, alignItems: 'center', justifyContent: 'center' }}><LogoLoader size={96} /></View>
 
   return (
     <SafeAreaProvider>

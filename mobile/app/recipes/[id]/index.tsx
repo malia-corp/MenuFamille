@@ -2,13 +2,14 @@ import { useEffect, useRef, useState } from 'react'
 import { Alert, Animated, Pressable, ScrollView, Share, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { router, useLocalSearchParams } from 'expo-router'
-import { ArrowLeft, CalendarPlus, Check, ChefHat, Clock, CupSoda, Flame, Heart, Minus, MoreHorizontal, Pencil, Plus, Quote, Salad, Share2, Trash2, Users } from 'lucide-react-native'
+import { ArrowLeft, CalendarPlus, Check, ChefHat, Clock, CupSoda, Flame, Heart, Minus, MoreHorizontal, Pencil, Plus, Printer, Quote, Salad, Share2, Trash2, Users } from 'lucide-react-native'
 import { Bone, Button, IconButton, Segmented, Sheet, Txt } from '@/components/ui'
 import { CategoryChip, DIFFICULTY_LABEL, RecipeVisual, formatDuration, type Difficulty, type RecipeCategory } from '@/components/recipes/RecipeBits'
 import { AddToMenuSheet } from '@/components/recipes/AddToMenuSheet'
 import { get, request } from '@/lib/api'
 import { WEB_URL } from '@/lib/env'
 import { toast } from '@/lib/toast'
+import { printRecipe } from '@/lib/print'
 import { C, F, R, SHADOW } from '@/theme'
 
 interface Ingredient { id: string; name: string; quantity: number | null; unit: string | null; sort_order: number }
@@ -294,8 +295,16 @@ export default function RecipeDetailScreen() {
         <View style={{ paddingHorizontal: 12, paddingBottom: 12 }}>
           {recipe.is_owner && <MenuRow icon={Pencil} label="Modifier" onPress={() => { setMenuOpen(false); router.push(`/recipes/${recipe.id}/edit`) }} />}
           {recipe.visibility !== 'private' && <MenuRow icon={Share2} label="Partager" onPress={() => void share()} />}
+          <MenuRow icon={Printer} label="Imprimer la fiche" onPress={() => {
+            setMenuOpen(false)
+            void printRecipe({
+              name: recipe.name, categoryName: recipe.categories?.name ?? null, difficulty: recipe.difficulty, prepTime: recipe.prep_time_min,
+              cookTime: recipe.cook_time_min, servings, photoUrl: recipe.photo_url, description: recipe.description,
+              ingredients: ings.map(i => ({ id: i.id, name: i.name, qty: qtyOf(i) })), steps: recipe.recipe_steps,
+              sides: suggestions.filter(x => x.role === 'side').map(x => x.name), drinks: suggestions.filter(x => x.role === 'drink').map(x => x.name),
+            }).catch(() => toast.error('Impression impossible'))
+          }} />
           {recipe.is_owner && <MenuRow icon={Trash2} label="Supprimer" danger onPress={confirmDelete} />}
-          {!recipe.is_owner && recipe.visibility === 'private' && <Txt variant="small" style={{ padding: 12 }}>Aucune option pour cette recette.</Txt>}
         </View>
       </Sheet>
 
