@@ -36,3 +36,7 @@ yarn-error.*
 
 # Variables locales
 .env
+
+# Projets natifs générés par « expo prebuild » (reconstruits depuis app.json)
+/android
+/ios

@@ -26,7 +26,10 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFF7EE"
       },
-      "permissions": ["POST_NOTIFICATIONS"]
+      "permissions": [
+        "POST_NOTIFICATIONS"
+      ],
+      "versionCode": 1
     },
     "web": {
       "bundler": "metro",
@@ -38,11 +41,23 @@
       "expo-font",
       [
         "expo-notifications",
-        { "color": "#294E3B" }
+        {
+          "color": "#294E3B"
+        }
       ],
       [
         "expo-image-picker",
-        { "photosPermission": "Pour ajouter la photo de tes recettes." }
+        {
+          "photosPermission": "Pour ajouter la photo de tes recettes."
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
       ]
     ],
     "experiments": {
