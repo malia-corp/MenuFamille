@@ -30,4 +30,4 @@ npx expo export --platform web       # contrôle que tout se résout au bundling
 - `src/lib` : client API (jeton Bearer, cache hors connexion), session, Supabase, rappels locaux.
 - `src/shared` : utilitaires repris du web (`lib/utils`, `lib/constants`).
 
-Écarts avec le web (connexion par code seulement, rappels locaux au lieu du push, pas d'impression…) : voir `docs/ecarts-implementation.md`, section 4.
+Écarts avec le web (connexion par code seulement, rappels locaux au lieu du push…) : voir `docs/ecarts-implementation.md`, section 4.
