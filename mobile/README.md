@@ -23,6 +23,10 @@ npm run typecheck                    # tsc --noEmit
 npx expo export --platform web       # contrôle que tout se résout au bundling
 ```
 
+## Version Android à partager
+
+`EXPO_PUBLIC_API_URL=https://… npm run build:apk` construit l’APK signé et le dépose dans `release/` à la racine. Détails (adresse du serveur, clé de signature à sauvegarder) : `release/README.md`.
+
 ## Organisation
 
 - `app/` : écrans (expo-router). `(auth)` connexion et premier lancement ; `(tabs)` onglets (Accueil, Menu, Recettes, Ma table pour la planificatrice ; Accueil, Sondages, Avis, Ma table pour un membre) ; `s/[token]` sondage public sans compte.

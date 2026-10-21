@@ -40,3 +40,6 @@ yarn-error.*
 # Projets natifs générés par « expo prebuild » (reconstruits depuis app.json)
 /android
 /ios
+
+# Clé de signature Android et ses mots de passe (à sauvegarder hors du dépôt)
+/credentials

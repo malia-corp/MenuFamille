@@ -79,16 +79,19 @@ export default function LoginScreen() {
       const next = clean.slice(0, CODE_LENGTH).split('')
       const filled = [...next, ...EMPTY].slice(0, CODE_LENGTH)
       setDigits(filled)
-      if (next.length === CODE_LENGTH) void verify(next.join(''))
-      else inputs.current[next.length]?.focus()
+      if (next.length < CODE_LENGTH) inputs.current[next.length]?.focus()
       return
     }
-    const next = [...digits]
-    next[i] = clean
-    setDigits(next)
+    // Mise à jour depuis l'état courant : deux frappes rapprochées ne s'écrasent pas.
+    setDigits(prev => { const next = [...prev]; next[i] = clean; return next })
     if (clean && i < CODE_LENGTH - 1) inputs.current[i + 1]?.focus()
-    if (next.every(d => d)) void verify(next.join(''))
   }
+
+  // Les six chiffres saisis : vérification automatique, une seule fois par code.
+  const code = digits.join('')
+  useEffect(() => {
+    if (step === 'code' && !busy && code.length === CODE_LENGTH) void verify(code)
+  }, [code]) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function resend() {
     await request('/api/auth/send-otp', { method: 'POST', json: { email: email.trim() } }).catch(() => null)

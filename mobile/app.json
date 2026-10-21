@@ -50,14 +50,6 @@
         {
           "photosPermission": "Pour ajouter la photo de tes recettes."
         }
-      ],
-      [
-        "expo-build-properties",
-        {
-          "android": {
-            "usesCleartextTraffic": true
-          }
-        }
       ]
     ],
     "experiments": {
