@@ -51,3 +51,6 @@ fix-otp.md
 
 # images d inspiration tierces (non publiées)
 /design/
+
+# APK de test générés dans release/ (binaires, hors dépôt)
+/release/*.apk

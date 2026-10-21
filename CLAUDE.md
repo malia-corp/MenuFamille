@@ -151,6 +151,7 @@ Next.js 14 App Router + Supabase (Postgres, Auth OTP, Storage) + Zustand, déplo
 - **Sondage public** : tout accès par token passe par `resolveSurveyPlan()` (`lib/utils/survey-token.ts`) ; `token_expires_at` NULL = n'expire jamais. Ne pas refaire la requête dans une route.
 - **Tâches planifiées** : `app/api/jobs/*` (rappels, demandes de feedback, envoi push via `web-push`), appelées par un cron externe avec l'en-tête `x-cron-secret`.
 - **Hors connexion / push** : `public/sw.js` écrit à la main (pas de next-pwa), enregistré via `lib/utils/service-worker.ts` (`?dev=1` en dev désactive le cache). Incrémenter `VERSION` dans `sw.js` quand la stratégie de cache ou les ressources statiques changent. Les caches `kkb-user-*` sont vidés à la déconnexion (`lib/utils/logout.ts`).
+- **App mobile** : `mobile/` (Expo / React Native, expo-router) reprend les écrans et appelle les mêmes routes `/api/*` avec `Authorization: Bearer <jeton>` (reconnu par `createClient()` et le middleware). Exclue du lint et du `tsconfig` web ; vérification : `cd mobile && npm run typecheck`. Voir `mobile/README.md` et `docs/ecarts-implementation.md` §4.
 - **Types DB** : `lib/supabase/database.types.ts` est généré — le régénérer après chaque migration plutôt que l'éditer à la main.
 
 ### Documentation de référence (`docs/`)
