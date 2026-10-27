@@ -1,0 +1,31 @@
+{
+  "statut": "brouillon",
+  "page_type": "single_recipe",
+  "name": "Sauce d’arachide sénégalaise",
+  "servings": 4,
+  "prep_min": 15,
+  "cook_min": 35,
+  "difficulty": "facile",
+  "ingredients": [
+    { "quantity": 250, "unit": "g", "name": "pâte d’arachide naturelle", "optional": false },
+    { "quantity": 3, "unit": "c. à soupe", "name": "concentré de tomate", "optional": false },
+    { "quantity": 2, "unit": null, "name": "oignons jaunes", "optional": false },
+    { "quantity": 2, "unit": "gousse", "name": "ail", "optional": false },
+    { "quantity": 2, "unit": "cm", "name": "gingembre frais", "optional": false },
+    { "quantity": 600, "unit": "ml", "name": "bouillon de légumes ou de viande", "optional": false },
+    { "quantity": 2, "unit": "c. à soupe", "name": "huile d’arachide", "optional": false },
+    { "quantity": 1, "unit": "c. à café", "name": "sel fin", "optional": false },
+    { "quantity": null, "unit": null, "name": "piment ou poivre", "optional": false },
+    { "quantity": null, "unit": null, "name": "viande, poisson ou légumes", "optional": true }
+  ],
+  "steps": [
+    { "title": "Préparer la base aromatique", "starts_with": "Je commence toujours par émincer" },
+    { "title": "Faire revenir l’oignon", "starts_with": "Je chauffe 2-3 cuillères à soupe" },
+    { "title": "Ajouter la tomate et la cacahuète", "starts_with": "J’ajoute 3 cuillères à soupe" },
+    { "title": "Ajouter le bouillon et les protéines", "starts_with": "Je verse environ 600 ml" },
+    { "title": "Assaisonner et rectifier", "starts_with": "À mi-cuisson, je goûte" },
+    { "title": "Servir", "starts_with": "Je verse la sauce sur du riz" }
+  ],
+  "tip": "Utilise une pâte d’arachide naturelle sans sucre, ajoute la tomate en fin de cuisson pour préserver la couleur rouge, et monte la sauce avec du bouillon chaud pour la rendre onctueuse sans trop de matière grasse.",
+  "notes": "Titre « 14 recettes » mais une seule recette détaillée (la base) : classée single_recipe, nom pris dans la « Fiche recette ». Les quantités sont dans les étapes et dans la liste de courses en prose ; la liste d’ustensiles n’est PAS des ingrédients. Huile : « 2-3 c. à soupe », borne basse retenue. Difficulté « Très facile » ramenée à facile. Coût, calories, origine, FAQ, erreurs et variantes : rien de tout cela ne doit aller dans description."
+}

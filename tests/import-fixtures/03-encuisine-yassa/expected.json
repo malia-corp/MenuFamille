@@ -1,0 +1,29 @@
+{
+  "statut": "brouillon",
+  "page_type": "single_recipe",
+  "name": "Poulet yassa",
+  "servings": null,
+  "prep_min": 30,
+  "cook_min": 40,
+  "difficulty": "moyen",
+  "ingredients": [
+    { "quantity": null, "unit": null, "name": "cuisses de poulet", "optional": false },
+    { "quantity": null, "unit": null, "name": "oignon", "optional": false },
+    { "quantity": 4, "unit": "gousse", "name": "ail", "optional": false },
+    { "quantity": null, "unit": null, "name": "persil", "optional": false },
+    { "quantity": 3, "unit": "c. à soupe", "name": "moutarde", "optional": false },
+    { "quantity": 1, "unit": "poignée", "name": "olives", "optional": false },
+    { "quantity": null, "unit": null, "name": "sel", "optional": false },
+    { "quantity": null, "unit": null, "name": "poivre", "optional": false },
+    { "quantity": null, "unit": null, "name": "mélange 4 épices", "optional": false },
+    { "quantity": null, "unit": null, "name": "bouquet garni", "optional": false },
+    { "quantity": null, "unit": "cube", "name": "bouillon", "optional": false },
+    { "quantity": null, "unit": null, "name": "huile", "optional": false }
+  ],
+  "steps": [
+    { "title": "Marinade du poulet", "starts_with": "Une fois le poulet nettoyé" },
+    { "title": "La cuisson", "starts_with": "Dans une sauteuse faites dorer" }
+  ],
+  "tip": null,
+  "notes": "Aucune donnée structurée (ni JSON-LD, ni microdonnées) : cas typique du repli LLM. Page en anglais, recette en français. Portions vides sur la page. Plusieurs quantités absentes de la page elle-même. « 1h15 » sous la marinade = durée d’étape (repos compris). « Suggestion : accompagné d’un gratin de patates douces » est une suggestion de service : texte non classé (raw_notes), pas une astuce — à trancher."
+}

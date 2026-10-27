@@ -6,7 +6,9 @@
         "dev": "next dev",
         "build": "next build",
         "start": "next start",
-        "lint": "next lint"
+        "lint": "next lint",
+        "import:fetch": "tsx scripts/import-fixtures-fetch.ts",
+        "import:eval": "tsx scripts/import-eval.ts"
     },
     "dependencies": {
         "@radix-ui/react-label": "^2.1.11",
@@ -40,6 +42,7 @@
         "prettier-plugin-tailwindcss": "^0.8.0",
         "supabase": "^2.108.0",
         "tailwindcss": "^3.4.1",
+        "tsx": "^4.19.2",
         "typescript": "^5"
     }
 }

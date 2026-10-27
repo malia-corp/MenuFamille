@@ -1,0 +1,127 @@
+{
+  "name": "Pot-au-feu de boeuf : la meilleure recette",
+  "servings": 6,
+  "prep_min": 30,
+  "cook_min": 120,
+  "difficulty": null,
+  "ingredients": [
+    {
+      "quantity": null,
+      "unit": null,
+      "name": "1 kg de jarrets de boeuf",
+      "optional": false
+    },
+    {
+      "quantity": null,
+      "unit": null,
+      "name": "1 langues de veau",
+      "optional": false
+    },
+    {
+      "quantity": null,
+      "unit": null,
+      "name": "500 g de queues de boeuf en bouquet",
+      "optional": false
+    },
+    {
+      "quantity": null,
+      "unit": null,
+      "name": "3 l d'eau",
+      "optional": false
+    },
+    {
+      "quantity": null,
+      "unit": null,
+      "name": "1 os à moelle",
+      "optional": false
+    },
+    {
+      "quantity": null,
+      "unit": null,
+      "name": "1 oignons piqué d'1 clou de girofle",
+      "optional": false
+    },
+    {
+      "quantity": null,
+      "unit": null,
+      "name": "3 gousses d'ail",
+      "optional": false
+    },
+    {
+      "quantity": null,
+      "unit": null,
+      "name": "500 g de poireaux",
+      "optional": false
+    },
+    {
+      "quantity": null,
+      "unit": null,
+      "name": "500 g de navets",
+      "optional": false
+    },
+    {
+      "quantity": null,
+      "unit": null,
+      "name": "3 carottes",
+      "optional": false
+    },
+    {
+      "quantity": null,
+      "unit": null,
+      "name": "2 branches de céleri",
+      "optional": false
+    },
+    {
+      "quantity": null,
+      "unit": null,
+      "name": "1 choux vert",
+      "optional": false
+    },
+    {
+      "quantity": null,
+      "unit": null,
+      "name": "3 pommes de terre",
+      "optional": false
+    },
+    {
+      "quantity": null,
+      "unit": null,
+      "name": "1 bouquets garnis",
+      "optional": false
+    },
+    {
+      "quantity": null,
+      "unit": null,
+      "name": "1 cuillères à soupe de poivre en grains",
+      "optional": false
+    }
+  ],
+  "steps": [
+    {
+      "title": null,
+      "text": "Passez la langue de veau sous l'eau courante. Ôter la peau et les parties hérissées."
+    },
+    {
+      "title": null,
+      "text": "Déposez les viandes (jarret de boeuf et langue de veau) dans une grande cocotte. Couvrez de 3 litres d'eau et ajoutez le poivre, le bouquet garni, du sel, l'ail et l'oignon hachés."
+    },
+    {
+      "title": null,
+      "text": "Portez à ébullition, ôtez l'écume qui s'est formée à la surface puis laissez cuire à frémissement 2 heures. Blanchissez les feuilles de chou dans l'eau bouillante. Lavez et pelez les légumes : navets, carottes, céleri et poireaux."
+    },
+    {
+      "title": null,
+      "text": "Trente minutes avant la fin de la cuisson des viandes, ajoutez dans la cocotte les légumes et l'os à moelle. Laissez cuire 15-20 minutes."
+    },
+    {
+      "title": null,
+      "text": "Coupez les viandes en tranches. Disposez-les dans un plat avec les légumes et pour finir, arrosez de bouillon."
+    },
+    {
+      "title": null,
+      "text": "Servez brûlant."
+    }
+  ],
+  "tip": "Recette Pot-au-feu de boeuf : la meilleure recette rapide et facile : 6 personnes, 150 min de préparation. Notée 5/5 par 4 membres Marmiton.",
+  "description": "Recette Pot-au-feu de boeuf : la meilleure recette rapide et facile : 6 personnes, 150 min de préparation. Notée 5/5 par 4 membres Marmiton."
+}
