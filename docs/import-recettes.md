@@ -103,3 +103,10 @@ Règles proposées pour le jour 2 (`lib/import/normalize.ts`) :
 - **Pas de colonne « durée totale »** : l'app la calcule déjà (préparation + cuisson) pour le filtre « Moins de 30 min » et le tri « Plus rapides », qui comptent donc le repos.
 - **Fourchette de portions** (« 4 à 6 ») : borne basse, champ surligné « La page indique 4 à 6 personnes ».
 - **Portions introuvables ou en pièces** : champ vide, « à saisir » sur la relecture, enregistrement bloqué tant qu'il est vide (`servings` est obligatoire en base). Plus jamais de 4 par défaut.
+- **Photo** : on garde le comportement actuel. L'adresse de l'image du site (`og:image` ou `image` du JSON-LD) est reprise comme `photo_url`, sans téléchargement ni copie, avec la source conservée dans `recipe_imports`.
+- **Groupes d'ingrédients** (« Pour la vinaigrette », « Pour la panure ») : ignorés pour l'instant, pas de changement de base pendant la phase de test. Les ingrédients sont mis à plat, et les intitulés de groupe ne doivent jamais devenir des ingrédients.
+- **Étapes illustrées pas à pas** (cas 08, 106 étapes → 79) :
+  1. Les **légendes sans action** sont retirées (« Nous obtenons ce résultat-là », « Voici le résultat obtenu », « …comme ceci »), seulement si elles sont courtes : une étape comme « Nous obtenons notre charlotte, qu'il faudra placer au réfrigérateur » reste, elle contient une consigne.
+  2. Les **annonces** sont retirées (« Poires pochées : commencer par préparer tous les ingrédients »).
+  3. Les **phrases coupées** en « … » sur deux étapes sont fusionnées (virgule si la suite commence par un article), et un « … » restant en fin d'étape devient un point.
+  4. Le **nom de la sous-recette** (« Poires pochées ») passe en tête du texte de sa première étape, faute de colonne pour les titres d'étape. Même logique que pour les groupes d'ingrédients.
