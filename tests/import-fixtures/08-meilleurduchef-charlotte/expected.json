@@ -5,7 +5,7 @@
   "servings": 8,
   "prep_min": null,
   "cook_min": null,
-  "difficulty": null,
+  "difficulty": "moyen",
   "ingredients": [
     { "quantity": 120, "unit": "g", "name": "jaunes d’œufs", "optional": false },
     { "quantity": 150, "unit": "g", "name": "sucre en poudre", "optional": false },
@@ -34,5 +34,5 @@
     { "title": "Poires pochées", "starts_with": "Poires pochées : Commencer" }
   ],
   "tip": null,
-  "notes": "LE cas « tout dans la description » : la description du JSON-LD est le début de la préparation, elle ne doit pas arriver dans le formulaire. 106 micro-étapes illustrées (le `name` de chaque HowToStep est la légende de la photo, pas un titre) : je propose de les regrouper par sous-recette (marqueurs « Biscuit à la cuillère : », « Poires caramélisées : »…) → 4 étapes longues. À trancher : regrouper, ou garder 106 étapes. Ingrédients de 5 sous-recettes à la suite : « sucre en poudre », « poires », « eau » reviennent légitimement, NE PAS dédoublonner. « (75 g + 75 g) » = précision à garder en note, pas dans le nom. Seule la durée totale (2 h) est donnée : préparation et cuisson inconnues."
+  "notes": "LE cas « tout dans la description » : la description du JSON-LD est le début de la préparation, elle ne doit pas arriver dans le formulaire. 106 micro-étapes illustrées (le `name` de chaque HowToStep est la légende de la photo, pas un titre) : je propose de les regrouper par sous-recette (marqueurs « Biscuit à la cuillère : », « Poires caramélisées : »…) → 4 étapes longues. À trancher : regrouper, ou garder 106 étapes. Ingrédients de 5 sous-recettes à la suite : « sucre en poudre », « poires », « eau » reviennent légitimement, NE PAS dédoublonner. « (75 g + 75 g) » = précision à garder en note, pas dans le nom. Seule la durée totale est donnée (« 2 heures (+ 2 heures au frais) ») : préparation et cuisson inconnues, repos de 2 h. Difficulté donnée uniquement par une barre remplie à 66 % (2 crans sur 3 = moyen), sans texte : seule une règle propre au site peut la lire."
 }
