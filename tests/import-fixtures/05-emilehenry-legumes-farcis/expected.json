@@ -1,0 +1,41 @@
+{
+  "statut": "brouillon",
+  "page_type": "single_recipe",
+  "name": "Petits légumes farcis d’été",
+  "servings": 6,
+  "prep_min": 35,
+  "cook_min": 60,
+  "difficulty": null,
+  "ingredients": [
+    { "quantity": 4, "unit": null, "name": "tomates type Marmande ou Red Stuffer", "optional": false },
+    { "quantity": 4, "unit": null, "name": "courgettes rondes", "optional": false },
+    { "quantity": 4, "unit": null, "name": "oignons blancs", "optional": false },
+    { "quantity": 800, "unit": "g", "name": "agneau (type gigot ou épaule désossée)", "optional": false },
+    { "quantity": 80, "unit": "g", "name": "mie de pain rassi", "optional": false },
+    { "quantity": 50, "unit": "ml", "name": "lait", "optional": false },
+    { "quantity": 2, "unit": "c. à soupe", "name": "huile d’olive", "optional": false },
+    { "quantity": 1, "unit": null, "name": "oignon haché", "optional": false },
+    { "quantity": 2, "unit": "gousse", "name": "ail haché", "optional": false },
+    { "quantity": 1, "unit": "c. à soupe", "name": "Ras El Hanout", "optional": false },
+    { "quantity": 3, "unit": "cm", "name": "gingembre frais râpé", "optional": false },
+    { "quantity": 2, "unit": "c. à soupe", "name": "raisins secs", "optional": false },
+    { "quantity": 8, "unit": "branche", "name": "coriandre", "optional": false },
+    { "quantity": 3, "unit": "c. à soupe", "name": "huile d’olive", "optional": false },
+    { "quantity": 8, "unit": "c. à soupe", "name": "riz", "optional": false },
+    { "quantity": 8, "unit": "c. à soupe", "name": "chapelure", "optional": false },
+    { "quantity": null, "unit": null, "name": "sel, poivre", "optional": false }
+  ],
+  "steps": [
+    { "title": null, "starts_with": "Découpez un chapeau aux tomates" },
+    { "title": null, "starts_with": "Faites cuire les oignons et les courgettes" },
+    { "title": null, "starts_with": "Coupez l’agneau en gros cubes" },
+    { "title": null, "starts_with": "Dans la même poêle, ajoutez l’oignon" },
+    { "title": null, "starts_with": "Préchauffez le four à 180" },
+    { "title": null, "starts_with": "Hachez grossièrement la viande" },
+    { "title": null, "starts_with": "Dans un saladier, mélangez la viande" },
+    { "title": null, "starts_with": "Disposez les légumes dans un plat" },
+    { "title": null, "starts_with": "Mettez un peu de riz au fond" }
+  ],
+  "tip": "Servez-les farcis avec du riz ou une salade par exemple.",
+  "notes": "Aucune donnée structurée : HTML propre au site (classes ingredients__list, recipe-steps__item). Étapes numérotées « 1/ », « 2/ » : le numéro ne fait pas partie du texte. L’huile d’olive apparaît deux fois (2 puis 3 c. à soupe) : c’est voulu par la recette, ne pas dédoublonner. « Conseil : » = astuce explicite. Bruit à ignorer : panier, livraison."
+}

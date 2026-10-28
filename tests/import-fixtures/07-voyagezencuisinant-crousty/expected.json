@@ -1,0 +1,37 @@
+{
+  "statut": "brouillon",
+  "page_type": "single_recipe",
+  "name": "Crousty barbecue",
+  "servings": null,
+  "prep_min": 10,
+  "cook_min": 15,
+  "difficulty": "facile",
+  "ingredients": [
+    { "quantity": 100, "unit": "g", "name": "riz cru", "optional": false },
+    { "quantity": 3, "unit": "c. à soupe", "name": "crème fraîche", "optional": false },
+    { "quantity": 2, "unit": "c. à soupe", "name": "mayonnaise", "optional": false },
+    { "quantity": 1, "unit": "c. à soupe", "name": "sauce soja sucrée Kikkoman", "optional": false },
+    { "quantity": 1, "unit": "c. à soupe", "name": "sauce soja salée Kikkoman", "optional": false },
+    { "quantity": 3, "unit": "c. à soupe", "name": "sauce barbecue originale Sweet Baby Ray’s", "optional": false },
+    { "quantity": null, "unit": null, "name": "sel/poivre", "optional": false },
+    { "quantity": 1, "unit": null, "name": "blanc de poulet", "optional": false },
+    { "quantity": null, "unit": null, "name": "huile neutre", "optional": false },
+    { "quantity": null, "unit": null, "name": "paprika", "optional": false },
+    { "quantity": null, "unit": null, "name": "ail en poudre", "optional": false },
+    { "quantity": null, "unit": null, "name": "sel, poivre", "optional": false },
+    { "quantity": null, "unit": null, "name": "farine", "optional": false },
+    { "quantity": 1, "unit": null, "name": "œuf battu", "optional": false },
+    { "quantity": null, "unit": null, "name": "panko Kikkoman", "optional": false },
+    { "quantity": null, "unit": null, "name": "sauce barbecue originale Sweet Baby Ray’s", "optional": false },
+    { "quantity": null, "unit": null, "name": "oignons frits Go-Tan", "optional": false }
+  ],
+  "steps": [
+    { "title": null, "starts_with": "Rincez le riz à l’eau claire" },
+    { "title": null, "starts_with": "Coupez le blanc de poulet" },
+    { "title": null, "starts_with": "Chauffez l’huile dans une poêle" },
+    { "title": null, "starts_with": "Dans un bol, mélangez la crème" },
+    { "title": null, "starts_with": "Dans une assiette creuse, déposez le riz" }
+  ],
+  "tip": null,
+  "notes": "WordPress + Elementor, aucune donnée structurée. Ingrédients en trois groupes (« Pour le riz et la sauce du riz », « Pour le poulet frit », « En topping ») : le schéma actuel n’a pas de groupes, ils sont perdus — à trancher (migration ou préfixe). Portions absentes de la page. Site marchand : prix, « Ajouter au panier », « Autres idées de recettes » sont du bruit. Les marques font partie du nom de l’ingrédient tel qu’écrit par l’auteur."
+}

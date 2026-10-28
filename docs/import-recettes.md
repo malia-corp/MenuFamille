@@ -26,8 +26,14 @@ Jeu de test : [`tests/import-fixtures/`](../tests/import-fixtures/README.md).
 | 02 africa-cuisine (Dambou) | 200 | JSON-LD `Recipe` (sans temps, ingrédients « nom: quantité ») | — | **85 %** |
 | 03 encuisine (Poulet yassa) | 200 | Aucune donnée structurée (Next.js) | — | **23 %** |
 | 04 marmiton (Pot-au-feu) | 200 | JSON-LD `Recipe` complet (`HowToStep`) | — | **69 %** |
+| 05 emilehenry (Légumes farcis) | 200 | Aucune donnée de recette ; HTML propre au site | — | **27 %** |
+| 06 emilehenry (Ratatouille) | 200 | Idem 05, étapes non numérotées | — | **32 %** |
+| 07 voyagezencuisinant (Crousty) | 200 | Aucune donnée de recette (WordPress + Elementor) | — | **18 %** |
+| 08 meilleurduchef (Charlotte) | 200 | JSON-LD `Recipe` : 106 micro-étapes, description = préparation | — | **64 %** |
+| 09 regal (Œuf mollet) | 200 | JSON-LD `Recipe` vide (ni ingrédients ni étapes) | — | **9 %** |
 
-Score moyen de l'import actuel : **46 %** sur 4 cas (`expected.json` encore au statut de brouillon).
+Score moyen de l'import actuel : **36 %** sur 9 cas (`expected.json` encore au statut de brouillon).
+Sur 9 pages, 5 n'ont aucune donnée de recette exploitable : le repli (HTML propre au site ou LLM) concerne plus de la moitié des cas.
 Détail champ par champ : [`RESULTS-legacy.md`](../tests/import-fixtures/RESULTS-legacy.md).
 
 ### Diagnostic
@@ -35,12 +41,16 @@ Détail champ par champ : [`RESULTS-legacy.md`](../tests/import-fixtures/RESULTS
 - **Confirmé** : quantité, unité et nom mélangés. Sur les deux pages à JSON-LD, le nom de l'ingrédient n'est jamais isolé (qté et unités : 38 % et 7 %).
 - **Confirmé** : aucune structuration quand la page n'a pas de données schema.org (01 et 03 : ni ingrédient ni étape).
 - **Confirmé** : le résumé promotionnel arrive dans la case affichée comme astuce (04 : « Notée 5/5 par 4 membres Marmiton »).
-- **Non reproduit** : « tout le contenu dans la description ». Le code n'y verse jamais le texte de la page, et aucun des 4 cas ne le fait. Il faut l'URL qui l'a provoqué pour l'ajouter au jeu de test.
-- **Non reproduit** : « toutes les étapes dans l'étape 1 ». Même remarque.
+- **Confirmé (cas 07 et 08)** : des étapes arrivent dans la description. Ce n'est pas le parseur qui y verse la page : c'est le site lui-même qui met le début de sa préparation dans `og:description` (07) ou dans la `description` du JSON-LD (08). La description d'une page n'est donc jamais fiable telle quelle.
+- **Non reproduit** : « toutes les étapes dans l'étape 1 ». Il faut l'URL qui l'a provoqué.
+- **Nouveau (09)** : un JSON-LD `Recipe` peut être vide ou mal formé (durées « 30 », « P50M »). L'actuel ne le lit même pas (sa regex exige `type="application/ld+json"` en guillemets doubles), d'où un nom pris dans `og:title` avec son suffixe SEO. Le nouvel extracteur devra compléter un JSON-LD incomplet avec le HTML au lieu de s'arrêter au premier « succès ».
+- **Nouveau (08)** : des ingrédients reviennent légitimement (une recette en cinq sous-recettes) ; le dédoublonnage ne doit retirer qu'une liste affichée deux fois (02, 09), jamais un ingrédient répété.
+- **Nouveau (07, 09)** : ingrédients en groupes (« Pour la vinaigrette », « Pour la panure »), que le schéma actuel ne sait pas stocker.
 - **Infirmé** : blocages d'Encuisine et de Marmiton. Les deux pages répondent 200 au `fetch` du serveur avec l'User-Agent `KeskonBouf-Bot/1.0`. Le refus venait de l'outil de lecture utilisé pour l'observation, pas d'un blocage de l'import. À revérifier depuis le serveur de test (adresse IP différente).
 - `robots.txt` : aucun des quatre sites n'interdit ces pages aux robots génériques.
 
 ### Reste à faire pour clore le jour 1
 
-- [ ] Relire et valider les 4 `expected.json` (champ `statut` → `"valide"`).
-- [ ] Ajouter 10 à 15 URLs, dont celles qui ont produit « tout dans la description » et « toutes les étapes dans l'étape 1 ».
+- [ ] Relire et valider les 9 `expected.json` (champ `statut` → `"valide"`).
+- [ ] Trancher : groupes d'ingrédients (08, 07, 09) et micro-étapes de 08 (regrouper par sous-recette ou garder 106 étapes).
+- [ ] Ajouter quelques URLs, dont celle qui a produit « toutes les étapes dans l'étape 1 », et des blogs béninois / ouest-africains.

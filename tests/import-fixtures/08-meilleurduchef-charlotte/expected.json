@@ -1,0 +1,38 @@
+{
+  "statut": "brouillon",
+  "page_type": "single_recipe",
+  "name": "Charlotte poire/chocolat",
+  "servings": 8,
+  "prep_min": null,
+  "cook_min": null,
+  "difficulty": null,
+  "ingredients": [
+    { "quantity": 120, "unit": "g", "name": "jaunes d’œufs", "optional": false },
+    { "quantity": 150, "unit": "g", "name": "sucre en poudre", "optional": false },
+    { "quantity": 180, "unit": "g", "name": "blancs d’œufs", "optional": false },
+    { "quantity": 75, "unit": "g", "name": "farine type 55", "optional": false },
+    { "quantity": 75, "unit": "g", "name": "fécule de pomme de terre", "optional": false },
+    { "quantity": 4, "unit": null, "name": "poires", "optional": false },
+    { "quantity": 100, "unit": "g", "name": "sucre en poudre", "optional": false },
+    { "quantity": 300, "unit": "g", "name": "chocolat de couverture noir Ocoa™ à 70%", "optional": false },
+    { "quantity": 300, "unit": "g", "name": "crème entière liquide à 35% de matière grasse", "optional": false },
+    { "quantity": 100, "unit": "g", "name": "œufs entiers", "optional": false },
+    { "quantity": 150, "unit": "g", "name": "sucre en poudre", "optional": false },
+    { "quantity": 50, "unit": "g", "name": "eau", "optional": false },
+    { "quantity": 20, "unit": "cl", "name": "sirop à 30° baumé", "optional": false },
+    { "quantity": 3, "unit": "cl", "name": "eau de vie de poire", "optional": false },
+    { "quantity": 4, "unit": null, "name": "poires", "optional": false },
+    { "quantity": 1, "unit": "l", "name": "eau", "optional": false },
+    { "quantity": 250, "unit": "g", "name": "sucre en poudre", "optional": false },
+    { "quantity": 2, "unit": "gousse", "name": "vanille", "optional": false },
+    { "quantity": 100, "unit": "g", "name": "nappage miroir neutre", "optional": false }
+  ],
+  "steps": [
+    { "title": "Biscuit à la cuillère", "starts_with": "Pour réaliser cette recette de charlotte" },
+    { "title": "Poires caramélisées", "starts_with": "Poires caramélisées : Préparer" },
+    { "title": "Mousse au chocolat", "starts_with": "Mousse au chocolat : Commencer" },
+    { "title": "Poires pochées", "starts_with": "Poires pochées : Commencer" }
+  ],
+  "tip": null,
+  "notes": "LE cas « tout dans la description » : la description du JSON-LD est le début de la préparation, elle ne doit pas arriver dans le formulaire. 106 micro-étapes illustrées (le `name` de chaque HowToStep est la légende de la photo, pas un titre) : je propose de les regrouper par sous-recette (marqueurs « Biscuit à la cuillère : », « Poires caramélisées : »…) → 4 étapes longues. À trancher : regrouper, ou garder 106 étapes. Ingrédients de 5 sous-recettes à la suite : « sucre en poudre », « poires », « eau » reviennent légitimement, NE PAS dédoublonner. « (75 g + 75 g) » = précision à garder en note, pas dans le nom. Seule la durée totale (2 h) est donnée : préparation et cuisson inconnues."
+}
