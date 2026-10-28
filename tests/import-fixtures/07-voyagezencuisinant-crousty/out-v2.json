@@ -1,0 +1,135 @@
+{
+  "name": "Crousty Barbecue",
+  "servings": null,
+  "prep_min": 10,
+  "cook_min": 15,
+  "difficulty": "facile",
+  "ingredients": [
+    {
+      "quantity": 100,
+      "unit": "g",
+      "name": "riz cru",
+      "optional": false
+    },
+    {
+      "quantity": 3,
+      "unit": "c. à soupe",
+      "name": "crème fraiche",
+      "optional": false
+    },
+    {
+      "quantity": 2,
+      "unit": "c. à soupe",
+      "name": "mayonnaise",
+      "optional": false
+    },
+    {
+      "quantity": 1,
+      "unit": "c. à soupe",
+      "name": "sauce soja sucrée Kikkoman",
+      "optional": false
+    },
+    {
+      "quantity": 1,
+      "unit": "c. à soupe",
+      "name": "sauce soja salée Kikkoman",
+      "optional": false
+    },
+    {
+      "quantity": 3,
+      "unit": "c. à soupe",
+      "name": "sauce barbecue originale Sweet Baby Ray’s",
+      "optional": false
+    },
+    {
+      "quantity": null,
+      "unit": null,
+      "name": "Sel/poivre",
+      "optional": false
+    },
+    {
+      "quantity": 1,
+      "unit": null,
+      "name": "blanc de poulet",
+      "optional": false
+    },
+    {
+      "quantity": null,
+      "unit": null,
+      "name": "Huile neutre",
+      "optional": false
+    },
+    {
+      "quantity": null,
+      "unit": null,
+      "name": "Paprika",
+      "optional": false
+    },
+    {
+      "quantity": null,
+      "unit": null,
+      "name": "Ail en poudre",
+      "optional": false
+    },
+    {
+      "quantity": null,
+      "unit": null,
+      "name": "Sel, poivre",
+      "optional": false
+    },
+    {
+      "quantity": null,
+      "unit": null,
+      "name": "Farine",
+      "optional": false
+    },
+    {
+      "quantity": 1,
+      "unit": null,
+      "name": "œuf battu",
+      "optional": false
+    },
+    {
+      "quantity": null,
+      "unit": null,
+      "name": "Panko Kikkoman",
+      "optional": false
+    },
+    {
+      "quantity": null,
+      "unit": null,
+      "name": "Sauce barbecue originale Sweet Baby Ray’s",
+      "optional": false
+    },
+    {
+      "quantity": null,
+      "unit": null,
+      "name": "Oignons frits Go-Tan",
+      "optional": false
+    }
+  ],
+  "steps": [
+    {
+      "title": null,
+      "text": "Rincez le riz à l’eau claire, puis cuisez-le selon les indications du paquet."
+    },
+    {
+      "title": null,
+      "text": "Coupez le blanc de poulet en morceaux de taille moyenne. Assaisonnez avec sel, poivre, paprika et ail en poudre.Versez un filet d’huile et mélangez. Trempez successivement les morceaux de poulet dans la farine, l’œuf battu et le Panko Kikkoman ."
+    },
+    {
+      "title": null,
+      "text": "Chauffez l’huile dans une poêle, une friteuse (170-180°C) ou cuisez au Air Fryer. Faites frire les morceaux panés jusqu’à ce qu’ils soient bien dorés et croustillants (3 à 5 minutes). Égouttez sur du papier absorbant pour ôter l’excès d’huile si besoin."
+    },
+    {
+      "title": null,
+      "text": "Dans un bol, mélangez la crème frâiche, la mayonnaise, les sauces soja salée et sucrée Kikkoman et la sauce barbecue originale Sweet Baby Ray’s ."
+    },
+    {
+      "title": null,
+      "text": "Dans une assiette creuse, déposez le riz, nappez de sauce, ajoutez le poulet frit puis ajoutez un filet de sauce barbecue originale Sweet Baby Ray’s . Parsemez d’ oignons frits Go-Tan ."
+    }
+  ],
+  "tip": null,
+  "description": null
+}

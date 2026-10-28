@@ -1,0 +1,85 @@
+{
+  "name": "Dambou : Couscous aux épinards",
+  "servings": 5,
+  "prep_min": null,
+  "cook_min": null,
+  "difficulty": "facile",
+  "ingredients": [
+    {
+      "quantity": 500,
+      "unit": "g",
+      "name": "Semoule de blé dure fine",
+      "optional": false
+    },
+    {
+      "quantity": 300,
+      "unit": "g",
+      "name": "Epinards",
+      "optional": false
+    },
+    {
+      "quantity": null,
+      "unit": "feuille",
+      "name": "moringa",
+      "optional": false
+    },
+    {
+      "quantity": 2,
+      "unit": null,
+      "name": "Oignons",
+      "optional": false
+    },
+    {
+      "quantity": 1,
+      "unit": null,
+      "name": "Piment vert",
+      "optional": false
+    },
+    {
+      "quantity": 1,
+      "unit": null,
+      "name": "Bouillon cube",
+      "optional": false
+    },
+    {
+      "quantity": null,
+      "unit": null,
+      "name": "Huile d'olive",
+      "optional": false
+    },
+    {
+      "quantity": null,
+      "unit": null,
+      "name": "Sel",
+      "optional": false
+    }
+  ],
+  "steps": [
+    {
+      "title": null,
+      "text": "Si vous utilisez des épinards surgelés, faites les bouillir dans de l'eau pendant une dizaine de minutes. Egouttez et réservez-les."
+    },
+    {
+      "title": null,
+      "text": "Dans une casserole, faites bouillir de l'eau. Pendant ce temps, versez la semoule dans un grand plat et ajoutez-y 2 à 3 bonnes cuillères à soupe d'huile d'olive. Ajoutez un peu de sel puis mélangez bien à l'aide d'une fourchette afin de bien répartir l'huile sur tous les grains de semoule."
+    },
+    {
+      "title": null,
+      "text": "Une fois le couscous bien travaillé, ajoutez-y l'eau bouillante, mélangez un petit peu puis laissez reposer jusqu'à ce que la semoule ait absorbé l'eau."
+    },
+    {
+      "title": null,
+      "text": "Emincez et faites cuire vos oignons à feu moyen et écrasez votre bouillon cube. Versez la poudre du bouillon, le piment écrasé et les épinards égouttés sur l'oignon et mélangez bien. Retirer du feu."
+    },
+    {
+      "title": null,
+      "text": "Votre Dambou est presque prêt ! Vous n'avez plus qu'à mélangez votre mélange d'épinards, d'oignon et de piment sur votre couscous. Mélangez bien et salez. Goutez avant de servir et n'hésitez pas à ajuster l'assaisonnement."
+    },
+    {
+      "title": null,
+      "text": "Vous pouvez servir votre Dambou fait maison avec une bonne viande ou un poisson grillé. Bon appétit !"
+    }
+  ],
+  "tip": null,
+  "description": null
+}

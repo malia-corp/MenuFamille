@@ -34,6 +34,7 @@ export interface RecipeFormValues {
   photo_url?: string
   source_url?: string
   raw_html_hash?: string
+  parser_version?: string
 }
 
 export interface RecipeFormProps {
@@ -298,6 +299,7 @@ export function RecipeForm({
       photo_url:  photoUrl,
       source_url: defaultValues?.source_url,
       raw_html_hash: defaultValues?.raw_html_hash,
+      parser_version: defaultValues?.parser_version,
     })
   }
 

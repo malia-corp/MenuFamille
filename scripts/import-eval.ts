@@ -12,6 +12,7 @@
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { parseLegacy } from '../lib/import/legacy'
+import { importFromHtml } from '../lib/import/pipeline'
 import { pageSignals, type PageSignals } from '../lib/import/signals'
 
 const ROOT = 'tests/import-fixtures'
@@ -50,7 +51,7 @@ interface Expected {
 // réponse (ingrédient entier dans `name`, quantité et unité vides, une chaîne
 // par étape). Le formulaire n'a qu'un champ `description`, affiché comme
 // l'astuce de la recette : on le compte donc aussi comme astuce.
-const VERSIONS: Record<string, (html: string) => ImportOutput> = {
+const VERSIONS: Record<string, (html: string, url: string) => ImportOutput> = {
   legacy(html) {
     const p = parseLegacy(html).partial as Record<string, unknown>
     const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : null)
@@ -65,6 +66,22 @@ const VERSIONS: Record<string, (html: string) => ImportOutput> = {
       steps: ((p.steps as unknown[]) ?? []).map(s => ({ title: null, text: String(s) })),
       tip: description,
       description,
+    }
+  },
+  // v2 : pipeline lib/import (jour 2). Le champ description de l'app ne reçoit
+  // que l'astuce explicite de l'auteur.
+  v2(html, url) {
+    const r = importFromHtml(html, url).recipe
+    return {
+      name: r.name,
+      servings: r.servings,
+      prep_min: r.prep_min,
+      cook_min: r.cook_min,
+      difficulty: r.difficulty,
+      ingredients: r.ingredients,
+      steps: r.steps.map(s => ({ title: null, text: s.text })),
+      tip: r.tip,
+      description: r.tip,
     }
   },
 }
@@ -103,7 +120,8 @@ interface FieldScores {
 }
 
 function score(out: ImportOutput, exp: Expected): FieldScores {
-  const on = fold(out.name), en = fold(exp.name)
+  const bare = (s: string) => fold(s).replace(/[,;:!?.()]/g, ' ').replace(/\s+/g, ' ').trim()
+  const on = bare(out.name), en = bare(exp.name)
   const nom = on === en ? 1 : on && (on.includes(en) || en.includes(on)) ? 0.5 : 0
 
   const perIng = exp.ingredients.map(w => {
@@ -114,7 +132,8 @@ function score(out: ImportOutput, exp: Expected): FieldScores {
     return (cleanName + same(o.quantity, w.quantity) + same(o.unit ?? null, w.unit)) / 3
   })
 
-  const outSteps = out.steps.map(s => fold(s.text))
+  // Le nom d'une sous-recette peut précéder le texte (« Marinade du poulet : Une fois… »).
+  const outSteps = out.steps.flatMap(s => { const t = fold(s.text); const m = t.match(/^[^:]{2,45} : (.+)$/); return m ? [t, m[1]] : [t] })
   const perStep = exp.steps.map(w => (outSteps.some(t => t.startsWith(fold(w.starts_with))) ? 1 : 0))
 
   const tipOut = out.tip ? fold(out.tip) : ''
@@ -191,7 +210,8 @@ function main() {
 
     const html = readFileSync(pagePath, 'utf8')
     const signals = pageSignals(html)
-    const out = run(html)
+    const url = readFileSync(join(dir, 'url.txt'), 'utf8').trim()
+    const out = run(html, url)
     writeFileSync(join(dir, `out-${version}.json`), JSON.stringify(out, null, 2) + '\n')
 
     if (!existsSync(expPath)) {

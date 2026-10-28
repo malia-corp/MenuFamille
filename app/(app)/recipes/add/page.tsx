@@ -9,6 +9,7 @@ import type { SimilarRecipe } from '@/lib/utils/recipe-similarity'
 import { DuplicateDialog } from '@/components/recipes/duplicate-dialog'
 import { RecipeForm, clearRecipeDraft, emptyStep, uid, type IngredientRow, type RecipeFormValues, type StepRow } from '../_recipe-form'
 import { RecipeFormSkeleton } from '@/components/skeletons/page-skeletons'
+import type { ImportedRecipe, ImportWarning } from '@/lib/import/types'
 
 const DRAFT_KEY = 'kkb_recipe_draft_new'
 
@@ -60,21 +61,44 @@ function RecipeAddInner() {
       const data = await res.json()
       if (!res.ok) { setImportError(data.error ?? 'Import impossible'); return }
 
-      const ingredients: IngredientRow[] = ((data.partial.ingredients ?? []) as unknown[])
-        .map(ing => ({ _id: uid(), name: String(ing), quantity: '', unit: '' }))
-      const steps: StepRow[] = ((data.partial.steps ?? []) as unknown[])
-        .map(s => ({ ...emptyStep(), description: String(s) }))
+      // Réponse v2 (data.recipe) : quantité, unité et nom séparés, temps,
+      // difficulté et catégorie proposés. L'écran de relecture complet
+      // (champs douteux surlignés) arrive au jour 3.
+      const r = data.recipe as ImportedRecipe
+      const ingredients: IngredientRow[] = r.ingredients.map(ing => ({
+        _id: uid(),
+        name: ing.optional ? `${ing.name} (optionnel)` : ing.name,
+        quantity: ing.quantity === null ? '' : String(ing.quantity).replace('.', ','),
+        unit: ing.unit ?? '',
+      }))
+      const steps: StepRow[] = r.steps.map(s => ({ ...emptyStep(), description: s.text }))
+      let categoryId: string | undefined
+      if (r.category_hint) {
+        const cats = await fetch('/api/categories').then(c => c.json()).catch(() => []) as { id: string; slug: string }[]
+        categoryId = Array.isArray(cats) ? cats.find(c => c.slug === r.category_hint)?.id : undefined
+      }
 
       setImportedValues({
-        ...data.partial,
+        name:          r.name,
+        description:   r.tip ?? '',
+        categoryId,
+        prepTime:      r.prep_min === null ? '' : String(r.prep_min),
+        cookTime:      r.cook_min === null ? '' : String(r.cook_min),
+        ...(r.servings !== null ? { servings: r.servings } : {}),
+        difficulty:    r.difficulty ?? '',
+        photo_url:     r.photo_url ?? undefined,
         ingredients:   ingredients.length ? ingredients : undefined,
         steps:         steps.length ? steps : undefined,
         source_url:    data.source_url,
         raw_html_hash: data.raw_html_hash,
+        parser_version: data.parser_version,
       })
       setImportDomain(new URL(importUrl).hostname.replace('www.', ''))
       setFormKey(k => k + 1)
-      if (!data.success) setImportWarning('Ingrédients non détectés : vérifie et complète à la main.')
+      const warnings = (data.warnings ?? []) as ImportWarning[]
+      if (data.status !== 'complete' || warnings.length) {
+        setImportWarning(warnings.map(w => w.message).join(' ') || 'Vérifie et complète la fiche avant d’enregistrer.')
+      }
     } catch {
       setImportError('Erreur réseau')
     } finally {
@@ -102,6 +126,7 @@ function RecipeAddInner() {
       photo_url:     values.photo_url ?? null,
       source_url:    values.source_url ?? null,
       raw_html_hash: values.raw_html_hash ?? null,
+      parser_version: values.parser_version ?? null,
       force:         isPlanCtx || !!opts.force,
     }
     if (opts.parentId) {

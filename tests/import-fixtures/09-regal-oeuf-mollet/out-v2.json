@@ -1,0 +1,127 @@
+{
+  "name": "Oeuf mollet pané, et salade frisée aux lardons",
+  "servings": 4,
+  "prep_min": 30,
+  "cook_min": 20,
+  "difficulty": "facile",
+  "ingredients": [
+    {
+      "quantity": 4,
+      "unit": null,
+      "name": "oeuf",
+      "optional": false
+    },
+    {
+      "quantity": 250,
+      "unit": "g",
+      "name": "lardons",
+      "optional": false
+    },
+    {
+      "quantity": 1,
+      "unit": null,
+      "name": "chicorée frisée",
+      "optional": false
+    },
+    {
+      "quantity": 1,
+      "unit": "c. à soupe",
+      "name": "moutarde",
+      "optional": false
+    },
+    {
+      "quantity": 4,
+      "unit": "c. à soupe",
+      "name": "vinaigre",
+      "optional": false
+    },
+    {
+      "quantity": 1,
+      "unit": "c. à soupe",
+      "name": "huile d’olive",
+      "optional": false
+    },
+    {
+      "quantity": 2,
+      "unit": "c. à soupe",
+      "name": "huile de noix",
+      "optional": false
+    },
+    {
+      "quantity": 1,
+      "unit": "gousse",
+      "name": "ail hachée",
+      "optional": false
+    },
+    {
+      "quantity": null,
+      "unit": null,
+      "name": "ciboulette ciselée",
+      "optional": false
+    },
+    {
+      "quantity": null,
+      "unit": null,
+      "name": "sel",
+      "optional": false
+    },
+    {
+      "quantity": null,
+      "unit": null,
+      "name": "poivre",
+      "optional": false
+    },
+    {
+      "quantity": 2,
+      "unit": null,
+      "name": "oeuf battus",
+      "optional": false
+    },
+    {
+      "quantity": 100,
+      "unit": "g",
+      "name": "farine",
+      "optional": false
+    },
+    {
+      "quantity": 150,
+      "unit": "g",
+      "name": "chapelure panko ou chapelure classique",
+      "optional": false
+    },
+    {
+      "quantity": null,
+      "unit": null,
+      "name": "huile de friture",
+      "optional": false
+    }
+  ],
+  "steps": [
+    {
+      "title": null,
+      "text": "Lavez la frisée et essorez-la soigneusement. Dans un bol, mélangez tous les ingrédients de la vinaigrette et réservez-la."
+    },
+    {
+      "title": null,
+      "text": "Faites dorer les lardons dans une poêle sans ajout de matière grasse."
+    },
+    {
+      "title": null,
+      "text": "Portez une casserole d’eau à ébullition. Plongez-y les oeufs et faites-les cuire 5 min 30 pour obtenir un coeur coulant. Stoppez la cuisson dans un bain d’eau glacée. Tapotez les coquilles pour les fissurer, puis écalez délicatement les oeufs dans l’eau froide pour éviter de les abîmer."
+    },
+    {
+      "title": null,
+      "text": "Séchez soigneusement les oeufs. Passez-les successivement dans la farine salée et poivrée , les oeufs battus puis la chapelure . Recommencez une seconde fois dans l’oeuf et la chapelure pour une panure plus croustillante."
+    },
+    {
+      "title": null,
+      "text": "Faites chauffer l’huile à 180 °C dans une casserole pouvant contenir 2 oeufs. Plongez les oeufs panés deux par deux pendant environ 30 à 45 s juste le temps de dorer la panure. Égouttez-les sur du papier absorbant."
+    },
+    {
+      "title": null,
+      "text": "Assaisonnez la frisée avec la vinaigrette, ajoutez les lardons tièdes et mélangez. Répartissez la salade dans les assiettes, puis disposez un oeuf pané bien chaud au centre. Salez, poivrez et servez sans attendre."
+    }
+  ],
+  "tip": null,
+  "description": null
+}

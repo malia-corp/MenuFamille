@@ -116,3 +116,43 @@ Règles proposées pour le jour 2 (`lib/import/normalize.ts`) :
 - **Catégorie** : l'import propose la catégorie de l'app la plus proche de celle du site (`recipeCategory`, fil d'Ariane), à confirmer sur l'écran de relecture.
 - **`robots.txt`** : respecté. Une page interdite aux robots donne une erreur claire et propose « Colle le texte de la recette ».
 - **Application mobile** : la réponse de l'API garde le champ `partial` actuel tant que l'app mobile n'est pas mise à jour (jour 4) ; la nouvelle forme arrive à côté.
+
+## Jour 2 — Pipeline en couches (28 octobre 2026)
+
+`lib/import/` : une étape par fichier, chacune testable seule.
+
+| Fichier | Rôle |
+|---|---|
+| `url-safety.ts` | Adresses publiques uniquement (SSRF) ; `safePhotoUrl` / `acceptablePhotoUrl` pour les photos |
+| `fetch-page.ts` | Récupération : adresse IP vérifiée à la connexion (pas de DNS rebinding), 3 redirections revérifiées, 8 s, 2 Mo, HTML/texte, `robots.txt`, erreurs typées (`invalid_url`, `blocked`, `robots_disallowed`, `timeout`, `too_large`, `not_html`, `unreachable`, `http_error`) |
+| `extract-structured.ts` | JSON-LD (`@graph`, `mainEntity`, `HowToSection`, chaîne unique) et microdonnées ; la description de la page n'est jamais reprise |
+| `html.ts` | HTML → lignes (un élément de liste = une ligne, titres repérés, chiffres seuls gardés, restes de code écartés) |
+| `extract-html.ts` | Page affichée : blocs Ingrédients / Préparation, étiquettes de durée, portions, difficulté (y compris en barre), astuce, notes, fil d'Ariane |
+| `normalize.ts` | Ingrédient → quantité / unité / nom ; durées ; portions ; difficulté ; catégorie ; titre ; nettoyage des étapes ; dédoublonnage des listes affichées deux fois |
+| `pipeline.ts` | Assemblage : structuré d'abord, la page complète chaque champ manquant ; règles décidées (repos, portions, durée totale seule) ; statut et avertissements |
+| `types.ts` | Contrat de la réponse (`ImportResult`) |
+
+Route `POST /api/recipes/import-url` : nouvelle forme (`status`, `page_type`, `source_type`, `recipe`, `warnings`, `raw_notes`, `parser_version`) + champ historique `partial` inchangé pour l'application mobile.
+Formulaire web : quantité, unité et nom remplis séparément, temps, portions, difficulté et catégorie proposés, avertissements affichés. Défauts corrigés au passage : l'ancien import ne transmettait jamais les temps au formulaire (clés `prep_time_min` au lieu de `prepTime`), et la difficulté prenait « moyen » par défaut.
+Enregistrement (`POST /api/recipes`, `PATCH /api/recipes/[id]`) : `photo_url` limitée au stockage Supabase du projet ou à une adresse https publique ; `recipe_imports.parser_version` reçoit la version réellement utilisée.
+
+### Mesure
+
+| Cas | Avant (legacy) | Après (v2) |
+|---|---|---|
+| 01 ckremenbon (article en prose) | 9 % | 32 % |
+| 02 africa-cuisine | 85 % | 99 % |
+| 03 encuisine | 14 % | 99 % |
+| 04 marmiton | 69 % | 99 % |
+| 05 emilehenry farcis | 27 % | 100 % |
+| 06 emilehenry ratatouille | 32 % | 100 % |
+| 07 voyagezencuisinant | 18 % | 100 % |
+| 08 meilleurduchef | 64 % | 99 % |
+| 09 regal | 9 % | 99 % |
+| **Moyenne** | **36 %** | **92 %** |
+
+Précautions de lecture :
+- les `expected.json` sont encore des brouillons ;
+- les règles ont été mises au point sur ces 9 pages : le score sur des pages jamais vues sera plus bas. Il faut un second lot d'adresses, gardé à part, pour le mesurer honnêtement ;
+- les écarts restants à 99 % sont des accords (« oeuf battus », « ail hachée ») ;
+- le cas 01 (recette rédigée en prose dans un article) relève du repli LLM du jour 3.

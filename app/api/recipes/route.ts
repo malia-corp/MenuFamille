@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
 import { upsertSuggestedAssociations } from '@/lib/utils/recipe-associations'
 import { findSimilarRecipe } from '@/lib/utils/recipe-similarity'
+import { acceptablePhotoUrl } from '@/lib/import/url-safety'
 import { NextRequest } from 'next/server'
 
 const DIACRITICS_RE = /[̀-ͯ]/g
@@ -45,6 +46,7 @@ export async function POST(request: NextRequest) {
     photo_url,
     source_url,
     raw_html_hash,
+    parser_version,
     suggested_sides = [],
     suggested_drinks = [],
   } = body
@@ -91,7 +93,7 @@ export async function POST(request: NextRequest) {
       servings: Math.max(1, Number(servings) || 4),
       difficulty: difficulty || null,
       visibility,
-      photo_url: (photo_url as string | undefined) || null,
+      photo_url: acceptablePhotoUrl(photo_url),
     })
     .select('id')
     .single()
@@ -133,7 +135,7 @@ export async function POST(request: NextRequest) {
     await service.from('recipe_imports').insert({
       recipe_id: recipe.id,
       source_url,
-      parser_version: '1.0',
+      parser_version: typeof parser_version === 'string' ? parser_version.slice(0, 20) : '1.0',
       raw_html_hash: (raw_html_hash as string | undefined) ?? null,
     })
   }

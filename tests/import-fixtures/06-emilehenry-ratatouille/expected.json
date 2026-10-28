@@ -1,7 +1,7 @@
 {
   "statut": "brouillon",
   "page_type": "single_recipe",
-  "name": "Ratatouille niçoise au basilic frais",
+  "name": "La ratatouille niçoise au basilic frais",
   "servings": 6,
   "prep_min": 25,
   "cook_min": 45,
@@ -36,5 +36,5 @@
     { "title": null, "starts_with": "Je sers bien chaud" }
   ],
   "tip": null,
-  "notes": "Même gabarit que 05, mais étapes NON numérotées : une phrase par élément de liste. « ½ botte » → 0.5 (fraction unicode). « c à café » sans point → c. à café. Nom sans l’article « La » ? À trancher : je propose de garder le titre tel quel sauf suffixe SEO ; ici « La ratatouille… » serait aussi acceptable."
+  "notes": "Même gabarit que 05, mais étapes NON numérotées : une phrase par élément de liste. « ½ botte » → 0.5 (fraction unicode). « c à café » sans point → c. à café. Nom gardé tel quel, article compris (décision du 28/10)."
 }

@@ -1,0 +1,129 @@
+{
+  "name": "14 recettes ouest-africaines à base de cacahuète qui ravissent les plus difficiles",
+  "servings": 4,
+  "prep_min": null,
+  "cook_min": null,
+  "difficulty": "facile",
+  "ingredients": [
+    {
+      "quantity": null,
+      "unit": null,
+      "name": "Résultat",
+      "optional": false
+    },
+    {
+      "quantity": null,
+      "unit": null,
+      "name": "Pour qui",
+      "optional": false
+    },
+    {
+      "quantity": null,
+      "unit": null,
+      "name": "Arachide d’été légère",
+      "optional": false
+    },
+    {
+      "quantity": 200,
+      "unit": "g",
+      "name": "pâte arachide + 750 ml bouillon",
+      "optional": false
+    },
+    {
+      "quantity": null,
+      "unit": null,
+      "name": "Sauce plus liquide, moins riche",
+      "optional": false
+    },
+    {
+      "quantity": null,
+      "unit": null,
+      "name": "Ceux qui trouvent la sauce trop lourde",
+      "optional": false
+    },
+    {
+      "quantity": null,
+      "unit": null,
+      "name": "Arachide d’automne riche",
+      "optional": false
+    },
+    {
+      "quantity": 300,
+      "unit": "g",
+      "name": "pâte arachide + 500 ml bouillon",
+      "optional": false
+    },
+    {
+      "quantity": null,
+      "unit": null,
+      "name": "Sauce épaisse, très onctueuse",
+      "optional": false
+    },
+    {
+      "quantity": null,
+      "unit": null,
+      "name": "Ceux qui aiment les sauces généreuses",
+      "optional": false
+    },
+    {
+      "quantity": null,
+      "unit": null,
+      "name": "Arachide verte (printemps)",
+      "optional": false
+    },
+    {
+      "quantity": 250,
+      "unit": "g",
+      "name": "pâte arachide + 150 g épinards frais",
+      "optional": false
+    },
+    {
+      "quantity": null,
+      "unit": null,
+      "name": "Sauce vert foncé, plus légère",
+      "optional": false
+    },
+    {
+      "quantity": null,
+      "unit": null,
+      "name": "Les enfants difficiles (moins évident)",
+      "optional": false
+    },
+    {
+      "quantity": null,
+      "unit": null,
+      "name": "Arachide hivernale relevée",
+      "optional": false
+    },
+    {
+      "quantity": 250,
+      "unit": "g",
+      "name": "pâte arachide + 1 piment entier + poivre",
+      "optional": false
+    },
+    {
+      "quantity": null,
+      "unit": null,
+      "name": "Sauce chaude, piquante",
+      "optional": false
+    },
+    {
+      "quantity": null,
+      "unit": null,
+      "name": "Les adultes qui aiment le piquant",
+      "optional": false
+    }
+  ],
+  "steps": [
+    {
+      "title": null,
+      "text": "Une sauce d’arachide se conserve très bien. Je la mets au frigo dans un récipient hermétique, elle tient 4-5 jours sans problème. Je peux aussi la congeler 2-3 mois en portions individuelles. Quand je la réchauffe, je la fais à feu doux en ajoutant un peu d’eau ou de bouillon pour la délayer si elle a épaissi en refroidissant. Jamais au micro-ondes directement, ça peut la faire brûler sur les bords."
+    },
+    {
+      "title": null,
+      "text": "Pour le batch cooking, je prépare une grande quantité le dimanche : 1 kg de pâte d’arachide avec 2 litres de bouillon et 6 oignons. Je la divise en portions de 400 ml et je congèle. Pendant la semaine, je décongèle une portion le matin et je la réchauffe le soir avec la viande ou le poisson du jour. Ça me fait gagner 30 minutes chaque soir. Les enfants difficiles apprécient aussi cette régularité : ils savent que le jeudi soir, c’est arachide, donc ils s’y préparent mentalement."
+    }
+  ],
+  "tip": "clé : Faire la sauce une demi-heure avant de servir. Ça permet aux saveurs de bien se mélanger et à la sauce de prendre sa texture finale. Une sauce faite 30 minutes avant est toujours meilleure qu’une sauce faite 5 minutes avant.",
+  "description": "clé : Faire la sauce une demi-heure avant de servir. Ça permet aux saveurs de bien se mélanger et à la sauce de prendre sa texture finale. Une sauce faite 30 minutes avant est toujours meilleure qu’une sauce faite 5 minutes avant."
+}

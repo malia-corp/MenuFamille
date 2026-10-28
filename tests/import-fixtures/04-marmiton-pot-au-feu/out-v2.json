@@ -1,0 +1,127 @@
+{
+  "name": "Pot-au-feu de boeuf",
+  "servings": 6,
+  "prep_min": 30,
+  "cook_min": 120,
+  "difficulty": "facile",
+  "ingredients": [
+    {
+      "quantity": 1,
+      "unit": "kg",
+      "name": "jarret de boeuf",
+      "optional": false
+    },
+    {
+      "quantity": 1,
+      "unit": null,
+      "name": "langue de veau",
+      "optional": false
+    },
+    {
+      "quantity": 500,
+      "unit": "g",
+      "name": "queues de boeuf en bouquet",
+      "optional": false
+    },
+    {
+      "quantity": 3,
+      "unit": "l",
+      "name": "eau",
+      "optional": false
+    },
+    {
+      "quantity": 1,
+      "unit": null,
+      "name": "os à moelle",
+      "optional": false
+    },
+    {
+      "quantity": 1,
+      "unit": null,
+      "name": "oignon piqué d'1 clou de girofle",
+      "optional": false
+    },
+    {
+      "quantity": 3,
+      "unit": "gousse",
+      "name": "ail",
+      "optional": false
+    },
+    {
+      "quantity": 500,
+      "unit": "g",
+      "name": "poireaux",
+      "optional": false
+    },
+    {
+      "quantity": 500,
+      "unit": "g",
+      "name": "navets",
+      "optional": false
+    },
+    {
+      "quantity": 3,
+      "unit": null,
+      "name": "carottes",
+      "optional": false
+    },
+    {
+      "quantity": 2,
+      "unit": "branche",
+      "name": "céleri",
+      "optional": false
+    },
+    {
+      "quantity": 1,
+      "unit": null,
+      "name": "chou vert",
+      "optional": false
+    },
+    {
+      "quantity": 3,
+      "unit": null,
+      "name": "pommes de terre",
+      "optional": false
+    },
+    {
+      "quantity": 1,
+      "unit": null,
+      "name": "bouquet garni",
+      "optional": false
+    },
+    {
+      "quantity": 1,
+      "unit": "c. à soupe",
+      "name": "poivre en grains",
+      "optional": false
+    }
+  ],
+  "steps": [
+    {
+      "title": null,
+      "text": "Passez la langue de veau sous l'eau courante. Ôter la peau et les parties hérissées."
+    },
+    {
+      "title": null,
+      "text": "Déposez les viandes (jarret de boeuf et langue de veau) dans une grande cocotte. Couvrez de 3 litres d'eau et ajoutez le poivre, le bouquet garni, du sel, l'ail et l'oignon hachés."
+    },
+    {
+      "title": null,
+      "text": "Portez à ébullition, ôtez l'écume qui s'est formée à la surface puis laissez cuire à frémissement 2 heures. Blanchissez les feuilles de chou dans l'eau bouillante. Lavez et pelez les légumes : navets, carottes, céleri et poireaux."
+    },
+    {
+      "title": null,
+      "text": "Trente minutes avant la fin de la cuisson des viandes, ajoutez dans la cocotte les légumes et l'os à moelle. Laissez cuire 15-20 minutes."
+    },
+    {
+      "title": null,
+      "text": "Coupez les viandes en tranches. Disposez-les dans un plat avec les légumes et pour finir, arrosez de bouillon."
+    },
+    {
+      "title": null,
+      "text": "Servez brûlant."
+    }
+  ],
+  "tip": null,
+  "description": null
+}

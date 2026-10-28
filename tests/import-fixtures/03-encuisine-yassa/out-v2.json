@@ -1,0 +1,93 @@
+{
+  "name": "Poulet yassa",
+  "servings": 2,
+  "prep_min": 30,
+  "cook_min": 40,
+  "difficulty": "moyen",
+  "ingredients": [
+    {
+      "quantity": 2,
+      "unit": null,
+      "name": "Cuisses de poulet",
+      "optional": false
+    },
+    {
+      "quantity": 4,
+      "unit": null,
+      "name": "Oignon",
+      "optional": false
+    },
+    {
+      "quantity": 4,
+      "unit": "gousse",
+      "name": "Ail",
+      "optional": false
+    },
+    {
+      "quantity": null,
+      "unit": null,
+      "name": "Persil",
+      "optional": false
+    },
+    {
+      "quantity": 3,
+      "unit": "c. à soupe",
+      "name": "Moutarde",
+      "optional": false
+    },
+    {
+      "quantity": 1,
+      "unit": "poignée",
+      "name": "Olive",
+      "optional": false
+    },
+    {
+      "quantity": null,
+      "unit": null,
+      "name": "Sel",
+      "optional": false
+    },
+    {
+      "quantity": null,
+      "unit": null,
+      "name": "Poivre",
+      "optional": false
+    },
+    {
+      "quantity": null,
+      "unit": null,
+      "name": "Mélange 4 épices",
+      "optional": false
+    },
+    {
+      "quantity": null,
+      "unit": null,
+      "name": "Bouquet garni",
+      "optional": false
+    },
+    {
+      "quantity": null,
+      "unit": null,
+      "name": "Bouillon(s) de cube",
+      "optional": false
+    },
+    {
+      "quantity": null,
+      "unit": null,
+      "name": "Huile",
+      "optional": false
+    }
+  ],
+  "steps": [
+    {
+      "title": null,
+      "text": "Marinade du poulet : Une fois le poulet nettoyé et vos légumes lavés et parés, mixez ensemble l'ail, 1 boule d'oignon et le persil. Verser la marinade sur votre poulet et rajoutez 1 càs de moutarde, assaisonnez mélangez le tout et réservez au frais pendant au moins 1 heure (plus il macérera meilleur il sera ...)"
+    },
+    {
+      "title": null,
+      "text": "La cuisson : Dans une sauteuse faites dorer le poulet. Laissez cuire environ 5 min de chaque coté à feu moyen. Retirez le poulet et passez à la cuisson des oignons. Rajoutez un peu d'huile dans la sauteuse si besoin et faites y revenir les oignons émincés, assaisonnez à convenance et rajoutez 2 càs de moutarde. Laissez griller quelques secondes et rajoutez les olives puis un demi verre d'eau et laissez mijoter 5 min. Réintégez le poulet dans la sauteuse, couvrez et laissez cuire encore quelques min afin de finir la cuisson d poulet et d'obtenir des oignons fondants Suggestion: accompagné d'un gratin de patates douces c'est juste une tuerie :-D"
+    }
+  ],
+  "tip": null,
+  "description": null
+}
