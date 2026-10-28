@@ -110,3 +110,9 @@ Règles proposées pour le jour 2 (`lib/import/normalize.ts`) :
   2. Les **annonces** sont retirées (« Poires pochées : commencer par préparer tous les ingrédients »).
   3. Les **phrases coupées** en « … » sur deux étapes sont fusionnées (virgule si la suite commence par un article), et un « … » restant en fin d'étape devient un point.
   4. Le **nom de la sous-recette** (« Poires pochées ») passe en tête du texte de sa première étape, faute de colonne pour les titres d'étape. Même logique que pour les groupes d'ingrédients.
+- **Sécurité de la photo** : seule une adresse `https://` publique est acceptée comme `photo_url`, à l'import comme à l'enregistrement (aujourd'hui n'importe quelle chaîne passe).
+- **Droit d'auteur** : la fiche affiche toujours la source d'une recette importée (« Recette importée de meilleurduchef.com », lien vers l'original, à partir de `recipes.source_url`). Le passage d'une recette importée en visibilité « communauté » retire la photo du site source (l'utilisatrice ajoute la sienne) et invite à reformuler les étapes. Une ligne des conditions d'utilisation engage chacun à ne publier que ce qu'il a le droit de partager. À faire valider par un juriste avant l'ouverture au public.
+- **Précisions d'ingrédient** (« (75 g + 75 g) », « hachée ») : gardées dans le nom, faute de colonne « note ».
+- **Catégorie** : l'import propose la catégorie de l'app la plus proche de celle du site (`recipeCategory`, fil d'Ariane), à confirmer sur l'écran de relecture.
+- **`robots.txt`** : respecté. Une page interdite aux robots donne une erreur claire et propose « Colle le texte de la recette ».
+- **Application mobile** : la réponse de l'API garde le champ `partial` actuel tant que l'app mobile n'est pas mise à jour (jour 4) ; la nouvelle forme arrive à côté.
