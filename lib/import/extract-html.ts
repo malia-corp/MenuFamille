@@ -22,7 +22,9 @@ export interface HtmlExtraction {
 }
 
 const SHORT = 70
-const INGR_HEAD = /^(?:liste des |les )?ingr[ée]dients?\b|^ingredients\b/i
+// Un vrai titre de section : « Ingrédients », « Ingrédients pour 8 personnes : »,
+// « Liste des ingrédients : » — pas « Ingrédient clé + quantité » (en-tête de tableau, cas 01).
+const INGR_HEAD = /^(?:liste des |les )?ingr[ée]dients?(?:\s+(?:pour|for)\b[^:]{0,30})?\s*:?\s*$|^ingredients(?:\s+for\b[^:]{0,30})?\s*:?\s*$/i
 const STEPS_HEAD = /^(?:la )?(?:pr[ée]paration(?: de la recette)?|instructions|directions|[ée]tapes?|steps|m[ée]thode|method|r[ée]alisation|d[ée]roul[ée]|la recette pas à pas|pas à pas)\b/i
 const END_HEAD = /^(?:tags|mots-cl[ée]s|commentaires?|avis|partager|share|nos recettes similaires|recettes similaires|vous aimerez aussi|autres id[ée]es|pour aller plus loin|sujets associ[ée]s|produits? utilis[ée]s?|plus d['’]infos|faq|questions fr[ée]quentes|ce que j['’]ai appris|les erreurs|variantes?|conservation|ustensiles?|mat[ée]riel)/i
 const NOISE = /^(?:done|imprimer(?: la recette)?|print|partager(?: cette recette)?(?: :)?|share|adjust servings:?|ajouter (?:au panier|nos produits au panier)|seuls les produits.*|voir la recette|passer la publicit[ée]|lancer la recette|précédent|suivant|finir|recette terminée.*|check_circle|votes?: ?\d+)$/i
@@ -89,7 +91,10 @@ export function extractFromHtml(html: string): HtmlExtraction {
     if (!out.servingsText) {
       const sv = t.match(/^(?:pour\s*:?\s*)?(\d+(?:\s*(?:à|-)\s*\d+)?)\s*(?:personnes?|portions?|parts?|pers\.?)\b/i)
         ?? t.match(/^(?:portions?|servings?|serves|pour|nombre de personnes)\s*:?\s*(\d+(?:\s*(?:à|-)\s*\d+)?)\b/i)
+      // « Attiéké poisson braisé (4 pers.) » : portions entre parenthèses, n'importe où.
+      const inTitle = t.match(/\(\s*(\d+(?:\s*(?:à|-)\s*\d+)?)\s*(?:pers\.?|personnes?|portions?)\s*\)/i)
       if (sv) out.servingsText = sv[1]
+      else if (inTitle) out.servingsText = inTitle[1]
       else if (/^(?:portions?|servings?|serves|parts?)\s*:?$/i.test(t) && /^\d+(?:\s*(?:personnes?|portions?|parts?))?$/i.test(lines[i + 1]?.text ?? '')) out.servingsText = lines[i + 1].text
     }
     if (!out.difficulty) {

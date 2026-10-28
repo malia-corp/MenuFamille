@@ -132,7 +132,7 @@ supabase gen types typescript --linked > lib/supabase/database.types.ts
 
 Pas de framework de tests : la vérification passe par `npm run lint` et `npm run build` (le build fait le contrôle de types TypeScript). La CLI `supabase` est une devDependency : `npx supabase ...` si elle n'est pas installée globalement.
 
-Variables d'environnement (`.env.local.example` ne liste que les trois premières) : `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_EMAIL` (push), `CRON_SECRET` (tâches planifiées), `APP_URL` (origine publique, optionnelle).
+Variables d'environnement (`.env.local.example` ne liste que les trois premières) : `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_EMAIL` (push), `CRON_SECRET` (tâches planifiées), `APP_URL` (origine publique, optionnelle). Import de recettes (repli IA, optionnel : sans clé, l'import fonctionne sans IA) : `ANTHROPIC_API_KEY`, `IMPORT_LLM_MODEL` (défaut `claude-haiku-5-5`), `IMPORT_LLM_DAILY_QUOTA` (défaut 20 par utilisatrice), `IMPORT_LLM_MONTHLY_BUDGET_USD` (défaut 5), `IMPORT_LLM_DISABLED=1` pour couper.
 
 ---
 
@@ -175,4 +175,4 @@ Les migrations sont dans `supabase/migrations/`, nommées `<horodatage>_<lettre>
 - `*_e_shopping_pantry.sql` — courses, garde-manger
 - `*_f_rls_policies.sql` — politiques RLS
 
-Chaque évolution suivante est une migration courte et ciblée qui prend la lettre suivante (`g`, `h`… jusqu'à `x` actuellement ; la prochaine est `y`). Ne jamais modifier une migration déjà appliquée ni créer une migration monolithique. Seed : `supabase/seed/`.
+Chaque évolution suivante est une migration courte et ciblée qui prend la lettre suivante (`g`, `h`… jusqu'à `y` actuellement ; la prochaine est `z`). Ne jamais modifier une migration déjà appliquée ni créer une migration monolithique. Seed : `supabase/seed/`.

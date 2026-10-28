@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
-  BookHeart, Camera, Check, ChefHat, ChevronDown, Clock, CloudCheck, CupSoda, Eye, Flame, Globe, History, ImagePlus,
+  AlertTriangle, BookHeart, Camera, Check, ChefHat, ChevronDown, Clock, CloudCheck, CupSoda, Eye, Flame, Globe, History, ImagePlus,
   ListOrdered, Loader2, Lock, Minus, Plus, Salad, Search, ShoppingBasket, Trash2, Users, UtensilsCrossed, X,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
@@ -37,8 +37,14 @@ export interface RecipeFormValues {
   parser_version?: string
 }
 
+// Relecture d'un import : champs à vérifier (surlignés) et portions à
+// confirmer quand la page ne les donnait pas (cf. docs/import-recettes.md).
+export type ReviewField = 'name' | 'category' | 'times' | 'servings' | 'difficulty' | 'ingredients' | 'steps'
+export interface ImportReview { fields: ReviewField[]; servingsMissing: boolean }
+
 export interface RecipeFormProps {
   defaultValues?: Partial<RecipeFormValues>
+  review?: ImportReview
   onSubmit: (values: RecipeFormValues) => Promise<void>
   loading: boolean
   apiError: string | null
@@ -122,7 +128,7 @@ function MinuteStepper({ id, label, icon: Icon, value, onChange }: {
 }
 
 export function RecipeForm({
-  defaultValues, onSubmit, loading, apiError, submitLabel = 'Enregistrer la recette', hideVisibility = false, draftKey,
+  defaultValues, review, onSubmit, loading, apiError, submitLabel = 'Enregistrer la recette', hideVisibility = false, draftKey,
 }: RecipeFormProps) {
   const router = useRouter()
 
@@ -141,6 +147,9 @@ export function RecipeForm({
   const [sideItems,   setSideItems]   = useState<AssocItem[]>(defaultValues?.sideItems ?? [])
   const [drinkItems,  setDrinkItems]  = useState<AssocItem[]>(defaultValues?.drinkItems ?? [])
 
+  const flagged = (f: ReviewField) => !!review?.fields.includes(f)
+  const [servingsConfirmed, setServingsConfirmed] = useState(!review?.servingsMissing)
+  const [servingsError,     setServingsError]     = useState<string | null>(null)
   const [nameError,    setNameError]    = useState<string | null>(null)
   const [circleError,  setCircleError]  = useState<string | null>(null)
   const [photoFile,    setPhotoFile]    = useState<File | null>(null)
@@ -276,6 +285,11 @@ export function RecipeForm({
     setCircleError(null)
     if (name.trim().length < 2) { setNameError('Minimum 2 caractères'); document.getElementById('recipe-name')?.focus(); return }
     if (visibility === 'circle' && !circleId) { setCircleError('Sélectionne un cercle familial'); return }
+    if (!servingsConfirmed) {
+      setServingsError('Indique le nombre de portions : la page ne le donnait pas.')
+      document.getElementById('recipe-servings')?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+      return
+    }
 
     let photoUrl = defaultValues?.photo_url ?? undefined
     if (photoFile) {
@@ -329,6 +343,7 @@ export function RecipeForm({
     { label: 'Ingrédients', done: ingredients.some(i => i.name.trim()) },
     { label: 'Étapes',      done: steps.some(s => s.description.trim()) },
     { label: 'Photo',       done: !!photoPreview },
+    ...(review?.servingsMissing ? [{ label: 'Portions', done: servingsConfirmed }] : []),
   ]
 
   function addIngredientAfter(id?: string) {
@@ -387,14 +402,14 @@ export function RecipeForm({
             {photoError && <p className="font-quicksand text-xs text-[var(--kkb-danger)]">{photoError}</p>}
 
             <div>
-              <label htmlFor="recipe-name" className={LABEL}>Nom de la recette <span className="text-[var(--kkb-orange-text)]">*</span></label>
+              <label htmlFor="recipe-name" className={LABEL}>Nom de la recette <span className="text-[var(--kkb-orange-text)]">*</span>{flagged('name') && <ReviewTag>À vérifier</ReviewTag>}</label>
               <input id="recipe-name" type="text" value={name} onChange={e => { setName(e.target.value); setNameError(null) }}
                 placeholder="Ex. Alloco croustillant et poisson braisé" aria-invalid={!!nameError} aria-describedby={nameError ? 'recipe-name-error' : undefined}
                 className={`${INPUT} h-12 text-base font-bold ${nameError ? '!border-[var(--kkb-danger)]' : ''}`} />
               {nameError && <p id="recipe-name-error" className="mt-1 font-quicksand text-xs text-[var(--kkb-danger)]">{nameError}</p>}
             </div>
             <div>
-              <label htmlFor="recipe-category" className={LABEL}>Catégorie</label>
+              <label htmlFor="recipe-category" className={LABEL}>Catégorie{flagged('category') && <ReviewTag>Proposée</ReviewTag>}</label>
               <Select
                 id="recipe-category"
                 value={categoryId}
@@ -414,25 +429,28 @@ export function RecipeForm({
           {/* ── En cuisine : temps, portions, niveau ───────────────────── */}
           <section className={`order-4 ${CARD}`} aria-labelledby="sec-cuisine">
             <CardTitle id="sec-cuisine" icon={ChefHat}>En cuisine</CardTitle>
-            <div className="grid grid-cols-2 gap-3">
+            {flagged('times') && <p className="-mb-1"><ReviewTag>Temps à vérifier</ReviewTag></p>}
+            <div className={`grid grid-cols-2 gap-3 ${flagged('times') ? REVIEW_BOX : ''}`}>
               <MinuteStepper id="recipe-prep" label="Préparation" icon={Clock} value={prepTime} onChange={setPrepTime} />
               <MinuteStepper id="recipe-cook" label="Cuisson" icon={Flame} value={cookTime} onChange={setCookTime} />
             </div>
-            <div className="flex items-center justify-between gap-3 rounded-[var(--kkb-r-lg)] bg-[var(--kkb-creme)] p-3">
+            <div id="recipe-servings" className={`flex flex-wrap items-center justify-between gap-3 rounded-[var(--kkb-r-lg)] p-3 ${!servingsConfirmed || flagged('servings') ? REVIEW_BOX : 'bg-[var(--kkb-creme)]'}`}>
               <span className="flex items-center gap-2 font-quicksand text-sm font-bold text-[var(--kkb-profond)]">
                 <Users className="h-4 w-4 text-[var(--kkb-foret-500)]" /> Portions
+                {!servingsConfirmed ? <ReviewTag>À saisir</ReviewTag> : flagged('servings') && <ReviewTag>À vérifier</ReviewTag>}
               </span>
               <div className="flex items-center gap-2">
-                <button type="button" onClick={() => setServings(s => Math.max(1, s - 1))} disabled={servings <= 1} aria-label="Moins de portions"
+                <button type="button" onClick={() => { setServings(s => Math.max(1, s - 1)); setServingsConfirmed(true); setServingsError(null) }} disabled={servings <= 1} aria-label="Moins de portions"
                   className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-[var(--kkb-foret)] disabled:opacity-40"><Minus className="h-4 w-4" /></button>
-                <span className="min-w-[2ch] text-center font-dosis text-xl font-extrabold tabular-nums text-[var(--kkb-foret)]" aria-live="polite">{servings}</span>
-                <button type="button" onClick={() => setServings(s => s + 1)} aria-label="Plus de portions"
+                <span className="min-w-[2ch] text-center font-dosis text-xl font-extrabold tabular-nums text-[var(--kkb-foret)]" aria-live="polite">{servingsConfirmed ? servings : '?'}</span>
+                <button type="button" onClick={() => { setServings(s => (servingsConfirmed ? s + 1 : s)); setServingsConfirmed(true); setServingsError(null) }} aria-label="Plus de portions"
                   className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--kkb-foret)] text-[var(--kkb-creme)]"><Plus className="h-4 w-4" /></button>
               </div>
+              {servingsError && <p role="alert" className="w-full font-quicksand text-xs font-bold text-[var(--kkb-danger)]">{servingsError}</p>}
             </div>
             <div>
-              <span className={LABEL} id="difficulty-label">Niveau</span>
-              <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-labelledby="difficulty-label">
+              <span className={LABEL} id="difficulty-label">Niveau{flagged('difficulty') && <ReviewTag>À choisir</ReviewTag>}</span>
+              <div className={`grid grid-cols-3 gap-2 ${flagged('difficulty') && !difficulty ? REVIEW_BOX : ''}`} role="radiogroup" aria-labelledby="difficulty-label">
                 {DIFFICULTY_OPTIONS.map((o, i) => {
                   const selected = difficulty === o.value
                   return (
@@ -501,7 +519,7 @@ export function RecipeForm({
           {/* ── Ingrédients ─────────────────────────────────────────────── */}
           <section className={`order-2 ${CARD}`} aria-labelledby="sec-ingredients">
             <div className="flex items-center justify-between gap-3">
-              <CardTitle id="sec-ingredients" icon={ShoppingBasket}>Ingrédients</CardTitle>
+              <CardTitle id="sec-ingredients" icon={ShoppingBasket}>Ingrédients{flagged('ingredients') && <ReviewTag>À vérifier</ReviewTag>}</CardTitle>
               <span className="hidden font-quicksand text-xs text-[var(--kkb-texte-2)] sm:block">Entrée pour passer à la ligne suivante</span>
             </div>
             <ul className="space-y-2">
@@ -528,7 +546,7 @@ export function RecipeForm({
           {/* ── Préparation ─────────────────────────────────────────────── */}
           <section className={`order-3 ${CARD}`} aria-labelledby="sec-steps">
             <div className="flex items-center justify-between gap-3">
-              <CardTitle id="sec-steps" icon={ListOrdered}>Préparation</CardTitle>
+              <CardTitle id="sec-steps" icon={ListOrdered}>Préparation{flagged('steps') && <ReviewTag>À vérifier</ReviewTag>}</CardTitle>
               <span className="rounded-full bg-[var(--kkb-foret-50)] px-2.5 py-0.5 font-quicksand text-xs font-bold text-[var(--kkb-foret)]">
                 {steps.length} étape{steps.length > 1 ? 's' : ''}
               </span>
@@ -690,6 +708,17 @@ export function RecipeForm({
         </div>
       )}
     </>
+  )
+}
+
+// Relecture d'un import : fond jaune clair et étiquette (couleur + icône + texte, C-14).
+const REVIEW_BOX = 'rounded-[var(--kkb-r-lg)] bg-[var(--kkb-warning-light)] p-2 ring-1 ring-[var(--kkb-jaune)]'
+
+function ReviewTag({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-[var(--kkb-warning-light)] px-2 py-0.5 align-middle font-quicksand text-xs font-bold text-[var(--kkb-jaune-text)]">
+      <AlertTriangle className="h-3 w-3" aria-hidden="true" /> {children}
+    </span>
   )
 }
 

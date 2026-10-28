@@ -1,21 +1,16 @@
 import { createHash } from 'crypto'
 import { createClient } from '@/lib/supabase/server'
 import { fetchPage } from '@/lib/import/fetch-page'
-import { importFromHtml } from '@/lib/import/pipeline'
-import type { ImportedIngredient } from '@/lib/import/types'
+import { runImport } from '@/lib/import/run'
+import { importResponse } from '@/lib/import/response'
 
-// Import d'une recette depuis un lien (pipeline v2, cf. docs/import-recettes.md).
+// Import d'une recette depuis un lien (cf. docs/import-recettes.md).
 // Ne crée rien : renvoie une fiche proposée, relue par l'utilisatrice.
-//
-// Réponse : la forme v2 (status, page_type, source_type, recipe, warnings,
-// raw_notes) + le champ historique `partial`, gardé à l'identique pour
-// l'application mobile tant qu'elle n'est pas mise à jour (décision du 28/10).
+// Une page illisible renvoie un message humain (code typé) et la proposition
+// de coller le texte de la recette.
 
-const PARSER_VERSION = 'v2'
-
-function ingredientLine(i: ImportedIngredient): string {
-  return [i.quantity, i.unit, i.name].filter(v => v !== null && v !== '').join(' ')
-}
+// Récupération (8 s) + repli IA éventuel.
+export const maxDuration = 30
 
 export async function POST(request: Request) {
   const supabase = await createClient()
@@ -24,35 +19,17 @@ export async function POST(request: Request) {
 
   const body = await request.json().catch(() => null) as { url?: unknown } | null
   const url = typeof body?.url === 'string' ? body.url.trim() : ''
-  if (!url) return Response.json({ error: 'URL invalide', code: 'invalid_url' }, { status: 400 })
+  if (!url) return Response.json({ error: 'Adresse manquante.', code: 'invalid_url' }, { status: 400 })
 
   const page = await fetchPage(url)
   if (!page.ok) {
-    return Response.json({ error: page.message, code: page.error }, { status: page.error === 'invalid_url' ? 400 : 422 })
+    return Response.json(
+      { error: page.message, code: page.error, paste_suggested: page.error !== 'invalid_url' },
+      { status: page.error === 'invalid_url' ? 400 : 422 },
+    )
   }
 
-  const result = importFromHtml(page.html, page.finalUrl)
+  const outcome = await runImport({ kind: 'url', content: page.html, sourceUrl: page.finalUrl, userId: user.id })
   const raw_html_hash = createHash('sha256').update(page.html).digest('hex').slice(0, 16)
-  const r = result.recipe
-
-  // Forme historique (application mobile) : chaînes, comme la v1.
-  const partial = {
-    name: r.name,
-    description: r.tip ?? '',
-    prep_time_min: r.prep_min,
-    cook_time_min: r.cook_min,
-    servings: r.servings ?? 4,
-    ingredients: r.ingredients.map(ingredientLine),
-    steps: r.steps.map(s => s.text),
-    photo_url: r.photo_url,
-  }
-
-  return Response.json({
-    success: result.status !== 'failed',
-    partial,
-    raw_html_hash,
-    source_url: url,
-    parser_version: PARSER_VERSION,
-    ...result,
-  })
+  return Response.json(importResponse(outcome, { source_url: url, raw_html_hash }))
 }

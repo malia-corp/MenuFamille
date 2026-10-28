@@ -43,6 +43,8 @@ export type WarningCode =
   | 'ingredients_missing' | 'steps_missing'
   | 'roundup_main_recipe'
   | 'name_from_title'
+  | 'llm_used' | 'llm_low_confidence'
+  | 'paste_suggested'
 
 export interface ImportWarning {
   code: WarningCode

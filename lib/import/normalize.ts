@@ -90,6 +90,14 @@ function matchUnit(s: string): { unit: string; rest: string } | null {
   return null
 }
 
+// Unité donnée seule (réponse de l'IA) → forme canonique, ou telle quelle.
+export function canonicalUnit(raw: string | null | undefined): string | null {
+  const s = raw ? cleanText(raw) : ''
+  if (!s) return null
+  const u = matchUnit(s)
+  return u && !u.rest ? u.unit : s.toLowerCase()
+}
+
 // « de », « d' » entre l'unité (ou la quantité) et le nom.
 const stripPreposition = (s: string) => s.replace(/^(?:de\s+|d['’]\s*|of\s+)/i, '').trim()
 
@@ -113,7 +121,8 @@ const TO_TASTE_RE = /\s*[,(]?\s*\b(?:q\.?\s?s\.?|au go[uû]t|selon (?:votre |le 
 
 // Une ligne d'ingrédient → quantité, unité, nom.
 export function parseIngredient(raw: string): ImportedIngredient | null {
-  let s = cleanText(raw).replace(/^[-•*–·▪◦]\s*/, '')
+  // Puces, y compris en émoji (« 👉 », « ✅ »).
+  let s = cleanText(raw).replace(/^[^A-Za-zÀ-ÿœŒ\d½¼¾⅓⅔⅛(]+/, '')
   if (!s) return null
   let optional = false
   if (OPTIONAL_RE.test(s)) { optional = true; s = s.replace(OPTIONAL_RE, ' ').trim() }
@@ -258,13 +267,19 @@ export function cleanTitle(raw: string, hostname?: string): string {
   s = parts.join(' - ')
   s = s.replace(/\s*:\s*(?:la |notre |une )?(?:meilleure recette|recette\b.*|d[ée]couvrez\b.*|.*\b(?:facile et rapide|rapide et facile)\b.*|.*!)\s*$/i, '')
   s = s.replace(/^recette\s+(?:de\s+|du\s+|des\s+)?/i, '')
+  // Portions dans le titre (« (4 pers.) ») et émojis autour : retirés du nom.
+  s = s.replace(/\s*\(\s*\d+(?:\s*(?:à|-)\s*\d+)?\s*(?:pers\.?|personnes?|portions?|parts?)\s*\)/i, '')
+  s = s.replace(/^[^A-Za-zÀ-ÿœŒ\d«"]+/, '').replace(/[^A-Za-zÀ-ÿœŒ\d)»".!?]+$/, '').trim()
+  // Titre tout en capitales (messages WhatsApp) : casse de phrase.
+  if (/[A-ZÀ-Ý]{3}/.test(s) && !/[a-zà-ÿ]/.test(s)) s = s.toLowerCase()
   return s.charAt(0).toUpperCase() + s.slice(1)
 }
 
 // ── Étapes ───────────────────────────────────────────────────
 
 const STEP_NOISE = /^(done|terminé|fait|print|imprimer|partager|share|adjust servings|étape suivante|next)$/i
-const STEP_NUMBER = /^(?:(?:étape|step)\s*\d+\s*[:.\-–]?\s*|\d+\s*[/.)\-–]\s+)/i
+// « Étape 1 : », « 1/ », « 2. », « 3) », et les chiffres en émoji (« 1️⃣ »).
+const STEP_NUMBER = /^(?:(?:étape|step)\s*\d+\s*[:.\-–]?\s*|\d+\s*[/.)\-–]\s+|\d️?⃣\s*|[^A-Za-zÀ-ÿœŒ\d«"(.…]+\s*)/i
 const FILLER = /^(?:\.\.\.|…)?\s*(?:nous obtenons|vous obtenez|on obtient|voici le résultat|voici ce que|comme ceci|comme cela|et voilà)\b/i
 const ANNOUNCE = /(?:commencer par |commencez par )?pr[ée]parer tous les ingr[ée]dients/i
 const SECTION = /^([A-ZÀ-Ý][^:.]{2,40})\s*:\s+(.+)$/

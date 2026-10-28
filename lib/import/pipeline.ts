@@ -34,8 +34,11 @@ export function importFromHtml(html: string, sourceUrl: string): ImportResult {
   // ── Ingrédients ──
   const fromStructured = structured?.ingredients ?? []
   const rawIngredients = fromStructured.length ? fromStructured : page.ingredients
+  // « 1 oignon, 2 tomates » : deux ingrédients sur une ligne (la virgule doit
+  // être suivie d'une quantité, « Sel, poivre » reste entier).
+  const splitLines = rawIngredients.flatMap(l => l.split(/\s*,\s+(?=\d+[.,]?\d*\s+\S)|\s+et\s+(?=\d+\s+\S)/))
   const ingredients = dedupeRepeatedList(
-    rawIngredients.map(parseIngredient).filter((i): i is ImportedIngredient => !!i),
+    splitLines.map(parseIngredient).filter((i): i is ImportedIngredient => !!i),
     i => `${i.quantity}|${i.unit}|${i.name.toLowerCase()}`,
   )
   if (structured && fromStructured.length) sources.push(structured.source)

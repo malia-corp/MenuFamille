@@ -156,3 +156,37 @@ Précautions de lecture :
 - les règles ont été mises au point sur ces 9 pages : le score sur des pages jamais vues sera plus bas. Il faut un second lot d'adresses, gardé à part, pour le mesurer honnêtement ;
 - les écarts restants à 99 % sont des accords (« oeuf battus », « ail hachée ») ;
 - le cas 01 (recette rédigée en prose dans un article) relève du repli LLM du jour 3.
+
+## Jour 3 — Texte collé, relecture, repli IA (28 octobre 2026)
+
+**Migration `y`** (`20261028120000_y_recipe_import_attempts.sql`) :
+- `recipe_import_attempts` : une ligne par import (réussi ou non) ; cache (même contenu, même version), quota IA par utilisatrice (imports avec IA du jour), plafond global (coût du mois), journal des tokens et du coût. RLS : chacune ne lit que ses lignes ; écriture côté serveur.
+- `recipe_imports` : `source_type`, `status`, `rest_min` de l'import retenu.
+- À appliquer (`supabase db push`) puis régénérer les types : ils ont été mis à jour à la main. Sans la migration, l'import fonctionne mais sans cache, sans IA ni journal.
+
+**Texte collé** (`POST /api/recipes/import-text`, `lib/import/text.ts`) : le texte (message WhatsApp, légende, notes) est remis en forme de page (titre, blocs Ingrédients / Préparation repérés ou déduits) et lu par la même chaîne, sans IA. Gère puces et chiffres en émoji (« 👉 », « 1️⃣ »), portions dans le titre (« (4 pers.) »), titres en capitales, deux ingrédients sur une ligne (« 1 oignon, 2 tomates »).
+
+**Repli IA** (`lib/import/llm.ts`, prompt versionné `lib/import/llm-prompt.ts`) :
+- désactivé tant qu'`ANTHROPIC_API_KEY` n'est pas configurée (coût nul par défaut) ;
+- modèle `claude-haiku-5-5` par défaut, sortie contrainte par un schéma zod (`messages.parse`), effort `low`, pas de `temperature` (refusée par l'API depuis le 21/10) ;
+- le contenu de la page est une donnée non fiable : le prompt dit d'ignorer toute instruction qu'elle contient ; la sortie est validée, normalisée et relue ;
+- appelé seulement si l'essentiel manque, ou si la lecture de la page affichée est douteuse (ingrédients presque tous sans quantité, moins de deux étapes) : une fiche fausse est pire qu'une fiche vide (cas 01) ;
+- il ne remplit que les champs vides ; quota de 20 imports avec IA par utilisatrice et par jour (`quotaFor`, prêt pour des formules différentes), plafond global de 5 $ par mois ; refus, dépassement ou indisponibilité → « Colle le texte de la recette ».
+
+**Écran de relecture** (page d'ajout) :
+- choix « Un lien » / « Un texte » ;
+- bandeau « Importée depuis … : vérifie avant d'enregistrer », liste des avertissements, « Texte non classé » replié ;
+- champs à vérifier surlignés en jaune clair avec l'étiquette « À vérifier » (nom, temps, niveau, ingrédients, étapes ; catégorie « Proposée ») ;
+- portions introuvables : « ? » et « À saisir », enregistrement bloqué tant qu'elles ne sont pas indiquées ;
+- erreur de récupération (site bloqué, délai…) : message humain et bouton « Coller le texte de la recette ».
+
+**Fiche recette** : « Recette importée de meilleurduchef.com », lien vers l'original (`recipes.source_url`).
+
+**Mesure** : 92 % sur les 9 cas, inchangé. Le cas 01 passe de « complet mais faux » à « échoué » sans IA, ce qui déclenche le repli quand il est activé. Avec une réponse d'IA simulée, la fusion remplit correctement la fiche. Aucun appel réel à l'IA n'a été fait (pas de clé).
+
+### Reste à faire (jour 4)
+
+- Application mobile : nouvelle réponse (`recipe`), relecture, texte collé.
+- Passage d'une recette importée en « communauté » : retirer la photo du site source, inviter à reformuler les étapes.
+- Second lot d'adresses, jamais vues, pour une mesure honnête.
+- Validation des `expected.json`.

@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useRef, useState } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import {
-  ArrowLeft, CalendarPlus, Check, ChefHat, ChevronRight, Clock, CupSoda, Flame, Heart,
+  ArrowLeft, CalendarPlus, Check, ChefHat, ChevronRight, Clock, CupSoda, ExternalLink, Flame, Heart,
   Loader2, MoreHorizontal, Pencil, Printer, Quote, Salad, Trash2, Users,
 } from 'lucide-react'
 import { CategoryBadge } from '@/components/recipes/category-badge'
@@ -30,6 +30,7 @@ interface Recipe {
   difficulty: 'facile' | 'moyen' | 'difficile' | null
   photo_url: string | null
   visibility: 'private' | 'circle' | 'community'
+  source_url: string | null
   is_owner: boolean
   is_favorited: boolean
   foyer_favorites: number
@@ -191,6 +192,11 @@ function RecipeDetail() {
     </button>
   )
 
+  const sourceHost = (() => {
+    if (!recipe.source_url) return null
+    try { return new URL(recipe.source_url).hostname.replace(/^www\./, '') } catch { return null }
+  })()
+
   // Titre et repères (catégorie, mot de la cuisine, temps, niveau, favoris).
   const heading = (
     <div className="space-y-2">
@@ -204,6 +210,14 @@ function RecipeDetail() {
         <p className="flex gap-2 pt-1 font-quicksand text-[15px] leading-relaxed text-[var(--kkb-texte-2)]">
           <Quote className="mt-1 h-4 w-4 shrink-0 text-[var(--kkb-jaune-700)]" aria-hidden="true" />
           {recipe.description}
+        </p>
+      )}
+      {/* Recette importée : la source reste citée, avec un lien vers l'original. */}
+      {sourceHost && (
+        <p className="flex items-center gap-1.5 pt-1 font-quicksand text-sm text-[var(--kkb-texte-2)]">
+          <ExternalLink className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+          Recette importée de{' '}
+          <a href={recipe.source_url!} target="_blank" rel="noopener noreferrer nofollow" className="font-bold text-[var(--kkb-foret)] underline">{sourceHost}</a>
         </p>
       )}
     </div>

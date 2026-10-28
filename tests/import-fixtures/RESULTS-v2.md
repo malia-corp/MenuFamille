@@ -4,7 +4,7 @@ Généré par `npm run import:eval -- --version v2` le 2026-10-28.
 
 | Cas | HTTP | Données de la page | Score | Champs en défaut |
 |---|---|---|---|---|
-| 01-ckremenbon-arachide | 200 | JSON-LD (BlogPosting, BreadcrumbList, FAQPage) | **32 %** | nom 0 %, preparation 0 %, cuisson 0 %, nb_ingredients 20 %, qte_unites 0 %, nb_etapes 33 %, etapes 0 %, astuce 0 % |
+| 01-ckremenbon-arachide | 200 | JSON-LD (BlogPosting, BreadcrumbList, FAQPage) | **36 %** | nom 0 %, preparation 0 %, cuisson 0 %, nb_ingredients 0 %, qte_unites 0 %, nb_etapes 0 %, etapes 0 % |
 | 02-africa-cuisine-dambou | 200 | JSON-LD Recipe | **99 %** | qte_unites 92 % |
 | 03-encuisine-yassa | 200 | aucun JSON-LD | **99 %** | qte_unites 92 % |
 | 04-marmiton-pot-au-feu | 200 | JSON-LD Recipe | **99 %** | qte_unites 87 % |
