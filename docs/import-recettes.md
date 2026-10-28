@@ -95,3 +95,11 @@ Règles proposées pour le jour 2 (`lib/import/normalize.ts`) :
 
    « Bon marché », « Moyen » placés après la difficulté = coût, ignorés. Barres ou étoiles sans texte (08) : règle propre au site, sinon `null`.
 4. Un champ non trouvé reste `null` et devient un champ « à vérifier » sur l'écran de relecture.
+
+### Décisions prises (28 octobre 2026)
+
+- **Temps de repos** (marinade, frigo, pousse) : ajouté au temps de **préparation**, sans nouvelle colonne. L'import le garde aussi à part dans sa sortie (`rest_min`, conservé dans `recipe_imports`) pour les futurs rappels « à préparer la veille » (backlog). L'écran de relecture affiche « dont N de repos » à côté du champ.
+- **Durée totale seule** (cas 08) : préparation et cuisson laissées vides, avertissement « La page indique N au total, à répartir » sur l'écran de relecture. Le repos éventuel s'ajoute à la préparation saisie.
+- **Pas de colonne « durée totale »** : l'app la calcule déjà (préparation + cuisson) pour le filtre « Moins de 30 min » et le tri « Plus rapides », qui comptent donc le repos.
+- **Fourchette de portions** (« 4 à 6 ») : borne basse, champ surligné « La page indique 4 à 6 personnes ».
+- **Portions introuvables ou en pièces** : champ vide, « à saisir » sur la relecture, enregistrement bloqué tant qu'il est vide (`servings` est obligatoire en base). Plus jamais de 4 par défaut.

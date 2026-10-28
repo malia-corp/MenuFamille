@@ -24,3 +24,4 @@ Fonctionnalités identifiées comme utiles mais hors scope du MVP (CDC section 5
 | Heure de service sur l'avis post-repas (« Servi à 12h30 ») | Maquette /feedback (sprint 4). L'heure n'est pas chargée avec le plan. |
 | Dictée vocale du commentaire d'avis | Icône micro de la maquette /feedback (sprint 4), en « Bientôt disponible ». |
 | Aide & astuces familiales (guide d'utilisation, conseils) | Page Profil, ligne « Bientôt ». Aucun contenu ni page d'aide prévus au MVP. |
+| Rappel « à préparer la veille » (marinade, repos au frais) | Import v2 (octobre 2026) : le repos est ajouté au temps de préparation, mais conservé à part dans la sortie de l'import (`rest_min`). Le rappel demandera une colonne dédiée sur `recipes`. |
