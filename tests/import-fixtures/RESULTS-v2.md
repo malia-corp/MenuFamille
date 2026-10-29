@@ -13,5 +13,6 @@ Généré par `npm run import:eval -- --version v2` le 2026-10-29.
 | 07-voyagezencuisinant-crousty | 200 | JSON-LD (WebPage, ImageObject, BreadcrumbList) | **100 %** | qte_unites 96 % |
 | 08-meilleurduchef-charlotte | 200 | JSON-LD Recipe | **99 %** | qte_unites 93 % |
 | 09-regal-oeuf-mollet | 200 | JSON-LD Recipe | **99 %** | qte_unites 91 % |
+| 10-passeportcuisine-pepe-chicken | 200 | JSON-LD (Article, WebPage, ImageObject) | **100 %** | — |
 
-**Score moyen : 92 %** sur 9 cas notés.
+**Score moyen : 93 %** sur 10 cas notés.

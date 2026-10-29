@@ -42,7 +42,7 @@ export type WarningCode =
   | 'difficulty_missing'
   | 'ingredients_missing' | 'steps_missing'
   | 'roundup_main_recipe'
-  | 'name_from_title'
+  | 'name_from_title' | 'name_missing'
   | 'llm_used' | 'llm_low_confidence'
   | 'paste_suggested'
 

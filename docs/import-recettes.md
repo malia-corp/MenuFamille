@@ -199,3 +199,14 @@ Retour de test sur la charlotte (« Durée : 2 heures (+ 2 heures au frais) ») 
 - **Alerte sous le champ** : le message de l'import s'affiche aussi sous les temps et sous les portions, pas seulement dans le bandeau.
 - **Bandeau** : bouton « Voir les N points à vérifier » qui fait défiler jusqu'au premier champ concerné.
 - **Saisie des minutes** : au-delà de deux chiffres, le nombre était coupé sur mobile (« 218 » affiché « 21 ») ; il tient désormais, avec la conversion en heures dessous dès 60 min (« 218 min, 3 h 38 »).
+
+## Cas 10 — Pepe chicken (29 octobre 2026)
+
+Signalé : ni le lien ni le texte collé n'importaient rien (hors photo et titre). Cause : le titre « Ingrédients, pour 2 personnes ». La règle de titre, resserrée au jour 3 pour écarter « Ingrédient clé + quantité » (cas 01), refusait la virgule. Corrections :
+- titre du bloc ingrédients : « Ingrédients, pour 2 personnes », « Ingrédients (pour 4) », « Ingrédients – pour 6 » acceptés ;
+- portions lues dans ce titre ;
+- « La recette du … » annonce les étapes (et ferme la liste des ingrédients) ;
+- fin des étapes à « Bon appétit ! », « Un peu d'histoire », « Origines », « Le saviez-vous » ;
+- texte collé : mêmes règles de titres que les pages (une seule définition) ; sans titre en tête, nom repris de « La recette du … », sinon « Nom de la recette introuvable : à saisir ».
+
+Cas 10 : 32 % → 100 %. Moyenne v2 : 93 % sur 10 cas (legacy 34 %). Ce cas a servi à corriger les règles : ce n'est pas une mesure sur page inconnue.

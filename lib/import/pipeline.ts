@@ -31,6 +31,7 @@ export function importFromHtml(html: string, sourceUrl: string): ImportResult {
     const og = metaContent(html, 'og:title') ?? titleTag(html)
     if (og) { name = cleanTitle(og, host); warnings.push({ code: 'name_from_title', message: 'Nom repris du titre de la page : vérifie-le.' }) }
   }
+  if (!name) warnings.push({ code: 'name_missing', message: 'Nom de la recette introuvable : à saisir.' })
 
   // ── Ingrédients ──
   const fromStructured = structured?.ingredients ?? []
@@ -86,7 +87,7 @@ export function importFromHtml(html: string, sourceUrl: string): ImportResult {
       code: 'times_estimated',
       message: total !== null
         ? `Temps estimés : la page indique ${fmt(total)} au total${rest ? ` (+ ${fmt(rest)} de repos, ajoutés à la préparation)` : ''}, la cuisson (${fmt(cook!)}) est lue dans les étapes. Vérifie-les.`
-        : `Cuisson estimée d'après les étapes (${fmt(cook!)}). Vérifie-la et indique la préparation.`,
+        : `Cuisson estimée d'après les étapes (${fmt(cook!)}). Vérifie-la et indique la préparation${rest ? `, en comptant ${fmt(rest)} de repos (marinade, frais)` : ''}.`,
     })
   }
   const totalOnly = prep === null && cook === null && total !== null

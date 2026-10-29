@@ -2,8 +2,13 @@
 // même chaîne que les pages web le lise sans IA : la première ligne devient
 // le titre, et les blocs Ingrédients / Préparation sont repérés ou déduits.
 
-const INGR_HEAD = /^[^A-Za-zÀ-ÿœŒ\d]*(?:liste des |les )?ingr[ée]dients?\b|^[^A-Za-zÀ-ÿœŒ\d]*ingredients\b/i
-const STEPS_HEAD = /^[^A-Za-zÀ-ÿœŒ\d]*(?:la )?(?:pr[ée]paration|instructions|[ée]tapes?|steps|m[ée]thode|r[ée]alisation)\b/i
+import { INGR_HEAD as PAGE_INGR_HEAD, STEPS_HEAD as PAGE_STEPS_HEAD } from './extract-html'
+
+// Même règle que pour les pages (une seule définition), après les émojis de tête.
+const INGR_HEAD = { test: (l: string) => PAGE_INGR_HEAD.test(l.replace(/^[^A-Za-zÀ-ÿœŒ\d]+/, '').trim()) }
+// Texte sans titre : « La recette du pepe chicken » donne le nom.
+const RECIPE_OF = /^la recette (?:du |de la |des |de l['’]|de |d['’])(.{3,60})$/i
+const STEPS_HEAD = { test: (l: string) => PAGE_STEPS_HEAD.test(l.replace(/^[^A-Za-zÀ-ÿœŒ\d]+/, '').trim()) }
 const QTY_START = /^[-•*–·]\s*\S|^(?:\d+[.,/]?\d*|[½¼¾⅓⅔]|une?|deux|trois|quatre|cinq|quelques|un peu)\s+\S/i
 
 const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -18,7 +23,14 @@ export function textToHtml(text: string): string {
   const hasIngr = lines.some(l => l.length < 50 && INGR_HEAD.test(l))
   const hasSteps = lines.some(l => l.length < 50 && STEPS_HEAD.test(l))
   const out: string[] = []
+  // Pas de titre en tête (le texte commence par les ingrédients) : nom cherché
+  // dans une ligne « La recette du … ».
   let titleDone = false
+  if (INGR_HEAD.test(lines[0]) || isIngredientLike(lines[0])) {
+    const named = lines.map(l => l.match(RECIPE_OF)?.[1]).find(Boolean)
+    if (named) out.push(`<h1>${esc(named.charAt(0).toUpperCase() + named.slice(1))}</h1>`)
+    titleDone = true
+  }
   let ingrStarted = hasIngr
   let stepsStarted = hasSteps
   lines.forEach((l, i) => {

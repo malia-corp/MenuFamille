@@ -1,0 +1,37 @@
+{
+  "statut": "brouillon",
+  "page_type": "single_recipe",
+  "name": "Pepe chicken (Sierra Leone)",
+  "servings": 2,
+  "prep_min": null,
+  "cook_min": 20,
+  "difficulty": null,
+  "ingredients": [
+    { "quantity": 2, "unit": null, "name": "filets de poulet", "optional": false },
+    { "quantity": 2, "unit": "c. à soupe", "name": "beurre de cacahuète", "optional": false },
+    { "quantity": 1, "unit": null, "name": "oignon", "optional": false },
+    { "quantity": 2, "unit": "gousse", "name": "ail", "optional": false },
+    { "quantity": 0.5, "unit": null, "name": "citron", "optional": false },
+    { "quantity": 1, "unit": "c. à café", "name": "curry en poudre", "optional": false },
+    { "quantity": 1, "unit": "c. à café", "name": "paprika", "optional": false },
+    { "quantity": 1, "unit": "c. à café", "name": "cumin", "optional": false },
+    { "quantity": 1, "unit": "c. à soupe", "name": "concentré de tomate", "optional": false },
+    { "quantity": 1, "unit": "c. à café", "name": "poivre moulu", "optional": false },
+    { "quantity": 1, "unit": null, "name": "piment ou une cuillère à soupe de piment en poudre", "optional": false },
+    { "quantity": null, "unit": null, "name": "bouillon de poulet", "optional": false },
+    { "quantity": null, "unit": null, "name": "huile d’olive", "optional": false }
+  ],
+  "steps": [
+    { "title": "Préparer la marinade", "starts_with": "Eplucher l’oignon et les gousses" },
+    { "title": null, "starts_with": "Mélanger les épices, le concentré" },
+    { "title": null, "starts_with": "Couper les filets de poulet" },
+    { "title": null, "starts_with": "Enduire les filets de poulet" },
+    { "title": null, "starts_with": "Préchauffer le four à 200" },
+    { "title": null, "starts_with": "Piquer les morceaux de poulet" },
+    { "title": null, "starts_with": "Enfourner pendant 20 minutes" },
+    { "title": null, "starts_with": "Si il reste de la sauce" },
+    { "title": null, "starts_with": "Servir avec du riz" }
+  ],
+  "tip": null,
+  "notes": "Signalé par la développeuse le 29/10 : rien d’importé ni par le lien ni par le texte collé. Cause : titre « Ingrédients, pour 2 personnes » (la virgule faisait échouer la règle de titre, trop stricte depuis le cas 01). Aucune donnée structurée (blog WordPress, JSON-LD Article seulement). « La recette du pepe chicken » annonce les étapes ; « Préparer la marinade » est un sous-titre d’étape. Fin des étapes à « Bon appétit ! » : la partie « Un peu d’histoire », « Origines et influences », « Caractéristiques du plat » n’est pas une préparation. Cuisson : 20 min, lue dans « Enfourner pendant 20 minutes » (estimation) ; préparation non donnée ; 2 h de marinade au frais. Pas de difficulté sur la page."
+}

@@ -14,6 +14,7 @@ import type { ImportedRecipe, ImportWarning, WarningCode } from '@/lib/import/ty
 // Avertissement de l'import → champ à vérifier sur l'écran de relecture.
 const WARNING_FIELDS: Partial<Record<WarningCode, ReviewField[]>> = {
   name_from_title: ['name'],
+  name_missing: ['name'],
   times_total_only: ['times'],
   times_estimated: ['times'],
   rest_added_to_prep: ['times'],

@@ -24,9 +24,11 @@ export interface HtmlExtraction {
 const SHORT = 70
 // Un vrai titre de section : « Ingrédients », « Ingrédients pour 8 personnes : »,
 // « Liste des ingrédients : » — pas « Ingrédient clé + quantité » (en-tête de tableau, cas 01).
-const INGR_HEAD = /^(?:liste des |les )?ingr[ée]dients?(?:\s+(?:pour|for)\b[^:]{0,30})?\s*:?\s*$|^ingredients(?:\s+for\b[^:]{0,30})?\s*:?\s*$/i
-const STEPS_HEAD = /^(?:la )?(?:pr[ée]paration(?: de la recette)?|instructions|directions|[ée]tapes?|steps|m[ée]thode|method|r[ée]alisation|d[ée]roul[ée]|la recette pas à pas|pas à pas)\b/i
-const END_HEAD = /^(?:tags|mots-cl[ée]s|commentaires?|avis|partager|share|nos recettes similaires|recettes similaires|vous aimerez aussi|autres id[ée]es|pour aller plus loin|sujets associ[ée]s|produits? utilis[ée]s?|plus d['’]infos|faq|questions fr[ée]quentes|ce que j['’]ai appris|les erreurs|variantes?|conservation|ustensiles?|mat[ée]riel)/i
+// Accepte « Ingrédients, pour 2 personnes », « Ingrédients (pour 4) », « Ingrédients – pour 6 » (cas 10).
+export const INGR_HEAD = /^(?:liste des |les )?ingr[ée]dients?(?:\s*[,(\-–—]?\s*(?:pour|for)\b[^:]{0,30})?\s*\)?\s*:?\s*$|^ingredients(?:\s*[,(\-–—]?\s*for\b[^:]{0,30})?\s*\)?\s*:?\s*$/i
+// « La recette du pepe chicken » (cas 10) annonce aussi les étapes.
+export const STEPS_HEAD = /^(?:la )?(?:pr[ée]paration(?: de la recette)?|instructions|directions|[ée]tapes?|steps|m[ée]thode|method|r[ée]alisation|d[ée]roul[ée]|la recette pas à pas|pas à pas)\b|^la recette (?:du|de la|des|de|d['’])/i
+const END_HEAD = /^(?:un peu d['’]histoire|histoire|origines?|le saviez-vous|anecdote|caract[ée]ristiques|bon app[ée]tit|tags|mots-cl[ée]s|commentaires?|avis|partager|share|nos recettes similaires|recettes similaires|vous aimerez aussi|autres id[ée]es|pour aller plus loin|sujets associ[ée]s|produits? utilis[ée]s?|plus d['’]infos|faq|questions fr[ée]quentes|ce que j['’]ai appris|les erreurs|variantes?|conservation|ustensiles?|mat[ée]riel)/i
 const NOISE = /^(?:done|imprimer(?: la recette)?|print|partager(?: cette recette)?(?: :)?|share|adjust servings:?|ajouter (?:au panier|nos produits au panier)|seuls les produits.*|voir la recette|passer la publicit[ée]|lancer la recette|précédent|suivant|finir|recette terminée.*|check_circle|votes?: ?\d+)$/i
 const QTY_ONLY = /^(?:\d+[.,]?\d*|\d+\/\d+|[½¼¾⅓⅔]|\d+\s*[½¼¾])(?:\s*(?:g|kg|mg|ml|cl|dl|l|c\. ?à ?(?:s|c)\.?|c\. ?à (?:soupe|café)|càs|càc|cs|cc|gousses?|branches?|bottes?|tranches?|pinc[ée]es?|poign[ée]es?|feuilles?|cubes?|morceaux?|verres?|sachets?|bo[iî]tes?|cm))?$/i
 const DURATION_ONLY = /^(?:\d+\s*(?:h|hr|hrs|heures?|hours?|min|mins|minutes?|mn)\s*)+\d*\s*(?:min|mn)?$/i
@@ -90,6 +92,8 @@ export function extractFromHtml(html: string): HtmlExtraction {
     if (frais && !out.restText) out.restText = frais[1]
     if (!out.servingsText) {
       const sv = t.match(/^(?:pour\s*:?\s*)?(\d+(?:\s*(?:à|-)\s*\d+)?)\s*(?:personnes?|portions?|parts?|pers\.?)\b/i)
+        // « Ingrédients, pour 2 personnes » : dans une ligne courte, après « pour ».
+        ?? (t.length < 60 ? t.match(/\bpour\s*:?\s*(\d+(?:\s*(?:à|-)\s*\d+)?)\s*(?:personnes?|portions?|parts?|pers\.?)\b/i) : null)
         ?? t.match(/^(?:portions?|servings?|serves|pour|nombre de personnes)\s*:?\s*(\d+(?:\s*(?:à|-)\s*\d+)?)\b/i)
       // « Attiéké poisson braisé (4 pers.) » : portions entre parenthèses, n'importe où.
       const inTitle = t.match(/\(\s*(\d+(?:\s*(?:à|-)\s*\d+)?)\s*(?:pers\.?|personnes?|portions?)\s*\)/i)
