@@ -44,7 +44,7 @@ export type WarningCode =
   | 'roundup_main_recipe'
   | 'name_from_title' | 'name_missing'
   | 'llm_used' | 'llm_low_confidence'
-  | 'paste_suggested'
+  | 'paste_suggested' | 'transcript_detected' | 'text_unstructured'
 
 export interface ImportWarning {
   code: WarningCode

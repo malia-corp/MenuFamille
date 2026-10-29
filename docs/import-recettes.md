@@ -210,3 +210,15 @@ Signalé : ni le lien ni le texte collé n'importaient rien (hors photo et titre
 - texte collé : mêmes règles de titres que les pages (une seule définition) ; sans titre en tête, nom repris de « La recette du … », sinon « Nom de la recette introuvable : à saisir ».
 
 Cas 10 : 32 % → 100 %. Moyenne v2 : 93 % sur 10 cas (legacy 34 %). Ce cas a servi à corriger les règles : ce n'est pas une mesure sur page inconnue.
+
+## Transcriptions de vidéo (29 octobre 2026)
+
+Essai : transcription YouTube collée (pastels au poisson fumé). Sans IA, le résultat n'avait aucun sens (nom « Salut à tous et bienvenue dans cette », morceaux de phrases en ingrédients), et il était affiché avec le message « Colle le texte de la recette ».
+
+Une transcription orale n'a ni liste ni titre, ses phrases sont coupées en fin de ligne, les ingrédients sont cités dans les phrases, la recette a plusieurs parties (sauce, pâte, farce) et la transcription contient des erreurs (« lévue chimique », « face au poisson »). Les règles sans IA ne peuvent pas la ranger de façon fiable.
+
+- **Détection** (`isTranscript`, `lib/import/run.ts`) : formules de vidéo (« bienvenue », « cette vidéo », « abonnez-vous », « [Musique] »…) ou majorité de lignes coupées en pleine phrase.
+- **Rien de faux affiché** : une transcription, ou toute lecture jugée douteuse, est vidée (ingrédients et étapes vides, signalés à saisir) au lieu d'être montrée. C'est fait **avant** l'appel à l'IA, qui ne remplit que les champs vides.
+- **Messages adaptés** : transcription (« seul l'import assisté par IA sait la ranger », « l'import assisté n'est pas activé » le cas échéant), texte non structuré (« ajoute les titres Ingrédients et Préparation… »), page web (« colle le texte »).
+- **Prompt IA `llm-2`** : retrouver les ingrédients cités dans les phrases, corriger les erreurs de transcription évidentes, écrire des consignes courtes à l'infinitif, nom de la partie en tête de sa première étape. Coût estimé pour cette transcription : environ 0,001 $ avec Claude Haiku 5.5.
+- Récupérer la transcription directement depuis un lien YouTube : au backlog (hors MVP).

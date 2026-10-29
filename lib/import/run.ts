@@ -27,6 +27,33 @@ export function lowQuality(r: ImportResult): boolean {
 
 export const needsLlm = (r: ImportResult) => !r.recipe.ingredients.length || !r.recipe.steps.length || lowQuality(r)
 
+// Transcription orale (vidéo YouTube, message vocal) : pas de listes ni de
+// titres, phrases coupées en fin de ligne, formules de vidéo. Les règles sans
+// IA n'y trouvent que des morceaux de phrases : seule l'IA sait la ranger.
+const TALK_MARKERS = /\b(?:bienvenue|salut à tous|cette (?:nouvelle )?vidéo|abonne[rz]|liker|la cloche|en commentaire|les amis|prenez soin de vous|à bientôt)\b|\[(?:musique|music|applaudissements)\]/gi
+export function isTranscript(text: string): boolean {
+  const markers = new Set((text.match(TALK_MARKERS) ?? []).map(m => m.toLowerCase())).size
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean)
+  const cut = lines.filter((l, i) => i < lines.length - 1 && !/[.!?:;»)\]]$/.test(l) && /^[a-zà-ÿ]/.test(lines[i + 1])).length
+  return markers >= 2 || (lines.length >= 15 && cut / lines.length > 0.5)
+}
+
+// Une lecture douteuse est vidée plutôt qu'affichée : une fiche fausse est
+// pire qu'une fiche vide. Aussi avant l'IA, qui ne remplit que les champs vides.
+function discardUnreliable(r: ImportResult, dropName: boolean): ImportResult {
+  return {
+    ...r,
+    status: 'failed',
+    recipe: { ...r.recipe, ingredients: [], steps: [], name: dropName ? '' : r.recipe.name, servings: dropName ? null : r.recipe.servings },
+    warnings: [
+      ...r.warnings.filter(w => !['ingredients_missing', 'steps_missing', 'name_missing', 'servings_missing'].includes(w.code)),
+      ...(dropName ? [{ code: 'name_missing' as const, message: 'Nom de la recette introuvable : à saisir.' }, { code: 'servings_missing' as const, message: 'Nombre de portions introuvable : à saisir.' }] : []),
+      { code: 'ingredients_missing', message: 'Aucun ingrédient reconnu de façon fiable.' },
+      { code: 'steps_missing', message: 'Aucune étape reconnue de façon fiable.' },
+    ],
+  }
+}
+
 // Texte principal d'une page pour l'IA : lignes visibles, sans les
 // commentaires ni les recettes associées (le coût dépend de la longueur).
 function mainText(html: string): string {
@@ -113,6 +140,9 @@ export async function runImport(input: { kind: 'url' | 'text'; content: string; 
 
   let result = importFromHtml(html, input.sourceUrl ?? 'https://texte.local/')
   if (input.kind === 'text') result.warnings = result.warnings.filter(w => w.code !== 'name_from_title')
+  const transcript = input.kind === 'text' && isTranscript(input.content)
+  if (transcript) result = discardUnreliable(result, true)
+  else if (lowQuality(result)) result = discardUnreliable(result, false)
 
   let used = false
   let allowance: LlmAllowance | null = null
@@ -136,8 +166,15 @@ export async function runImport(input: { kind: 'url' | 'text'; content: string; 
     }
     if (needsLlm(result)) {
       const why = failure === 'quota' ? ` Tu as utilisé tes ${allowance?.quota} imports assistés du jour.`
-        : failure === 'budget' ? ' L’import assisté est en pause jusqu’au mois prochain.' : ''
-      result.warnings.push({ code: 'paste_suggested', message: `Cette page n’a pas pu être lue entièrement.${why} Colle le texte de la recette ou complète la fiche à la main.` })
+        : failure === 'budget' ? ' L’import assisté est en pause jusqu’au mois prochain.'
+        : failure === 'unavailable' ? ' L’import assisté par IA n’est pas activé.' : ''
+      if (transcript) {
+        result.warnings.push({ code: 'transcript_detected', message: `Ce texte ressemble à une transcription de vidéo : il est rédigé à l’oral, sans liste d’ingrédients ni étapes. Seul l’import assisté par IA sait le ranger.${why} Tu peux aussi remplir la fiche à la main.` })
+      } else if (input.kind === 'text') {
+        result.warnings.push({ code: 'text_unstructured', message: `Ce texte n’a pas pu être rangé.${why} Ajoute les titres « Ingrédients » et « Préparation », un ingrédient par ligne, ou remplis la fiche à la main.` })
+      } else {
+        result.warnings.push({ code: 'paste_suggested', message: `Cette page n’a pas pu être lue entièrement.${why} Colle le texte de la recette ou complète la fiche à la main.` })
+      }
     }
   }
 

@@ -4,7 +4,7 @@
 // instructions malveillantes) : le prompt le dit, la sortie est contrainte par
 // un schéma, puis normalisée et relue par l'utilisatrice. Rien n'est exécuté.
 
-export const LLM_PROMPT_VERSION = 'llm-1'
+export const LLM_PROMPT_VERSION = 'llm-2'
 
 export const LLM_SYSTEM_PROMPT = `Tu extrais UNE recette de cuisine depuis le texte d'une page web ou d'un message, pour une application familiale de planification des repas.
 
@@ -20,4 +20,5 @@ Règles :
 - difficulty : facile, moyen ou difficile, seulement si l'auteur l'indique.
 - tip : seulement un conseil explicite de l'auteur (« L'astuce de … », « Conseil : … »), sinon null. Pas de texte promotionnel, pas de résumé.
 - raw_notes : tout texte utile qui ne rentre dans aucun champ (suggestion de service, accord, variante), en phrases courtes. Jamais d'ingrédients ni d'étapes ici.
+- Transcription orale (vidéo, message vocal : phrases coupées, « on ajoute… », formules d'accueil et d'au revoir) : retrouve les ingrédients cités dans les phrases, corrige les erreurs de transcription évidentes (« lévue chimique » → « levure chimique », « face au poisson » → « farce au poisson »), écris chaque étape comme une consigne courte à l'infinitif, sans bavardage ni appel à s'abonner. Si la recette a plusieurs parties (sauce, pâte, farce…), mets le nom de la partie en tête de sa première étape (« Sauce : … »).
 - confidence : ta confiance pour chaque groupe de champs (high, medium, low).`

@@ -25,3 +25,4 @@ Fonctionnalités identifiées comme utiles mais hors scope du MVP (CDC section 5
 | Dictée vocale du commentaire d'avis | Icône micro de la maquette /feedback (sprint 4), en « Bientôt disponible ». |
 | Aide & astuces familiales (guide d'utilisation, conseils) | Page Profil, ligne « Bientôt ». Aucun contenu ni page d'aide prévus au MVP. |
 | Rappel « à préparer la veille » (marinade, repos au frais) | Import v2 (octobre 2026) : le repos est ajouté au temps de préparation, mais conservé à part dans la sortie de l'import (`rest_min`). Le rappel demandera une colonne dédiée sur `recipes`. |
+| Import d'une recette depuis une vidéo (YouTube…) : récupérer la transcription automatiquement | Import v2 (29/10/2026) : la transcription collée à la main est reconnue et confiée à l'IA ; la récupération directe depuis le lien de la vidéo n'est pas dans le MVP (conditions d'utilisation des plateformes, sous-titres pas toujours disponibles). |

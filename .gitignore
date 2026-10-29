@@ -57,3 +57,4 @@ fix-otp.md
 # HTML brut des sites tiers : contenu protégé, pas dans le dépôt.
 # Le régénérer avec npm run import:fetch.
 tests/import-fixtures/**/page.html
+tests/import-fixtures/texts/
