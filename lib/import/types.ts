@@ -38,7 +38,7 @@ export type PageType = 'single_recipe' | 'multi_recipe_roundup' | 'not_a_recipe'
 
 export type WarningCode =
   | 'servings_missing' | 'servings_range' | 'servings_pieces'
-  | 'times_total_only' | 'rest_added_to_prep'
+  | 'times_total_only' | 'times_estimated' | 'rest_added_to_prep'
   | 'difficulty_missing'
   | 'ingredients_missing' | 'steps_missing'
   | 'roundup_main_recipe'

@@ -40,7 +40,13 @@ export interface RecipeFormValues {
 // Relecture d'un import : champs à vérifier (surlignés) et portions à
 // confirmer quand la page ne les donnait pas (cf. docs/import-recettes.md).
 export type ReviewField = 'name' | 'category' | 'times' | 'servings' | 'difficulty' | 'ingredients' | 'steps'
-export interface ImportReview { fields: ReviewField[]; servingsMissing: boolean }
+export interface ImportReview {
+  fields: ReviewField[]
+  servingsMissing: boolean
+  timesEstimated?: boolean
+  // Message de l'import affiché sous le champ concerné (et pas seulement dans le bandeau).
+  hints?: Partial<Record<ReviewField, string>>
+}
 
 export interface RecipeFormProps {
   defaultValues?: Partial<RecipeFormValues>
@@ -117,12 +123,18 @@ function MinuteStepper({ id, label, icon: Icon, value, onChange }: {
       <div className="mt-2 flex items-center gap-1">
         <button type="button" onClick={() => step(-5)} disabled={n <= 0} aria-label={`Moins 5 minutes (${label.toLowerCase()})`} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-[var(--kkb-foret)] disabled:opacity-40"><Minus className="h-3.5 w-3.5" /></button>
         <span className="flex min-w-0 flex-1 items-baseline justify-center gap-1">
+          {/* Trois chiffres et plus (2 h et au-delà) : chiffre plus petit pour tenir dans la case. */}
           <input id={id} type="number" min={0} inputMode="numeric" value={value} placeholder="0" onChange={e => onChange(e.target.value)}
-            className="w-full min-w-0 bg-transparent text-right font-dosis text-xl font-extrabold tabular-nums text-[var(--kkb-profond)] outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none" />
-          <span className="shrink-0 font-quicksand text-xs text-[var(--kkb-texte-2)]">min</span>
+            className={`w-full min-w-0 bg-transparent px-0 font-dosis font-extrabold tabular-nums text-[var(--kkb-profond)] outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${value.length >= 3 ? 'text-center text-lg' : 'text-right text-xl'}`} />
+          {value.length < 3 && <span className="shrink-0 font-quicksand text-xs text-[var(--kkb-texte-2)]">min</span>}
         </span>
         <button type="button" onClick={() => step(5)} aria-label={`Plus 5 minutes (${label.toLowerCase()})`} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--kkb-foret)] text-[var(--kkb-creme)]"><Plus className="h-3.5 w-3.5" /></button>
       </div>
+      {n >= 60 && (
+        <p className="mt-1 text-center font-quicksand text-xs text-[var(--kkb-texte-2)]" aria-live="polite">
+          {value.length >= 3 ? `${n} min, ` : 'soit '}{Math.floor(n / 60)} h{n % 60 ? ` ${String(n % 60).padStart(2, '0')}` : ''}
+        </p>
+      )}
     </div>
   )
 }
@@ -429,10 +441,11 @@ export function RecipeForm({
           {/* ── En cuisine : temps, portions, niveau ───────────────────── */}
           <section className={`order-4 ${CARD}`} aria-labelledby="sec-cuisine">
             <CardTitle id="sec-cuisine" icon={ChefHat}>En cuisine</CardTitle>
-            {flagged('times') && <p className="-mb-1"><ReviewTag>Temps à vérifier</ReviewTag></p>}
-            <div className={`grid grid-cols-2 gap-3 ${flagged('times') ? REVIEW_BOX : ''}`}>
+            {flagged('times') && <p className="-mb-1"><ReviewTag>{review?.timesEstimated ? 'Temps estimés' : 'Temps à vérifier'}</ReviewTag></p>}
+            <div id="recipe-times" className={`grid grid-cols-2 gap-3 ${flagged('times') ? REVIEW_BOX : ''}`}>
               <MinuteStepper id="recipe-prep" label="Préparation" icon={Clock} value={prepTime} onChange={setPrepTime} />
               <MinuteStepper id="recipe-cook" label="Cuisson" icon={Flame} value={cookTime} onChange={setCookTime} />
+              {review?.hints?.times && <ReviewHint className="col-span-2">{review.hints.times}</ReviewHint>}
             </div>
             <div id="recipe-servings" className={`flex flex-wrap items-center justify-between gap-3 rounded-[var(--kkb-r-lg)] p-3 ${!servingsConfirmed || flagged('servings') ? REVIEW_BOX : 'bg-[var(--kkb-creme)]'}`}>
               <span className="flex items-center gap-2 font-quicksand text-sm font-bold text-[var(--kkb-profond)]">
@@ -446,6 +459,7 @@ export function RecipeForm({
                 <button type="button" onClick={() => { setServings(s => (servingsConfirmed ? s + 1 : s)); setServingsConfirmed(true); setServingsError(null) }} aria-label="Plus de portions"
                   className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--kkb-foret)] text-[var(--kkb-creme)]"><Plus className="h-4 w-4" /></button>
               </div>
+              {review?.hints?.servings && !servingsError && <ReviewHint className="w-full">{review.hints.servings}</ReviewHint>}
               {servingsError && <p role="alert" className="w-full font-quicksand text-xs font-bold text-[var(--kkb-danger)]">{servingsError}</p>}
             </div>
             <div>
@@ -713,6 +727,14 @@ export function RecipeForm({
 
 // Relecture d'un import : fond jaune clair et étiquette (couleur + icône + texte, C-14).
 const REVIEW_BOX = 'rounded-[var(--kkb-r-lg)] bg-[var(--kkb-warning-light)] p-2 ring-1 ring-[var(--kkb-jaune)]'
+
+function ReviewHint({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+  return (
+    <p className={`flex items-start gap-1.5 font-quicksand text-[13px] leading-snug text-[var(--kkb-jaune-text)] ${className}`}>
+      <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" /> {children}
+    </p>
+  )
+}
 
 function ReviewTag({ children }: { children: React.ReactNode }) {
   return (

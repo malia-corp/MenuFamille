@@ -1,8 +1,8 @@
 {
   "name": "Charlotte poire/chocolat",
   "servings": 8,
-  "prep_min": null,
-  "cook_min": null,
+  "prep_min": 218,
+  "cook_min": 22,
   "difficulty": "moyen",
   "ingredients": [
     {

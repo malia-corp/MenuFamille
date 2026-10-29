@@ -3,6 +3,7 @@
 // manquant (un JSON-LD peut être vide, cas 09). Le repli LLM viendra ensuite
 // (jour 3) pour les pages où rien n'est reconnu.
 
+import { estimateFromSteps } from './estimate-times'
 import { extractFromHtml } from './extract-html'
 import { extractJsonLd, extractMicrodata, type StructuredRecipe } from './extract-structured'
 import { metaContent, titleTag } from './html'
@@ -60,12 +61,33 @@ export function importFromHtml(html: string, sourceUrl: string): ImportResult {
 
   // ── Temps ── (JSON-LD d'abord, la page complète ; repos ajouté à la préparation)
   let prep = parseDuration(structured?.prepTime) ?? parseDuration(page.prepText)
-  const cook = parseDuration(structured?.cookTime) ?? parseDuration(page.cookText)
+  let cook = parseDuration(structured?.cookTime) ?? parseDuration(page.cookText)
   const total = parseDuration(structured?.totalTime) ?? parseDuration(page.totalText)
-  const rest = parseDuration(page.restText)
+  let rest = parseDuration(page.restText)
+  let estimated = false
+
+  // La page ne donne ni la préparation ni la cuisson : estimation d'après les
+  // étapes (cuisson lue dans les étapes, préparation = total − cuisson).
+  if (prep === null && cook === null) {
+    const est = estimateFromSteps(steps)
+    rest ??= est.rest_min
+    if (est.cook_min && (total === null || est.cook_min < total)) {
+      cook = est.cook_min
+      prep = total !== null ? total - est.cook_min : null
+      estimated = true
+    }
+  }
   if (rest && prep !== null) {
     prep += rest
-    warnings.push({ code: 'rest_added_to_prep', message: `Dont ${fmt(rest)} de repos, compris dans la préparation.` })
+    if (!estimated) warnings.push({ code: 'rest_added_to_prep', message: `Dont ${fmt(rest)} de repos, compris dans la préparation.` })
+  }
+  if (estimated) {
+    warnings.push({
+      code: 'times_estimated',
+      message: total !== null
+        ? `Temps estimés : la page indique ${fmt(total)} au total${rest ? ` (+ ${fmt(rest)} de repos, ajoutés à la préparation)` : ''}, la cuisson (${fmt(cook!)}) est lue dans les étapes. Vérifie-les.`
+        : `Cuisson estimée d'après les étapes (${fmt(cook!)}). Vérifie-la et indique la préparation.`,
+    })
   }
   const totalOnly = prep === null && cook === null && total !== null
   if (totalOnly) warnings.push({ code: 'times_total_only', message: `La page indique ${fmt(total!)} au total${rest ? ` (+ ${fmt(rest)} de repos)` : ''} : à répartir entre préparation et cuisson.` })
@@ -97,8 +119,8 @@ export function importFromHtml(html: string, sourceUrl: string): ImportResult {
     recipe: {
       name,
       servings,
-      prep_min: totalOnly ? null : prep,
-      cook_min: totalOnly ? null : cook,
+      prep_min: prep,
+      cook_min: cook,
       rest_min: rest,
       total_min: total,
       difficulty,

@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { AlertTriangle, CheckCircle2, ChevronDown, ClipboardPaste, Link2, Loader2, Sparkles, Wand2 } from 'lucide-react'
+import { AlertTriangle, ArrowDown, CheckCircle2, ChevronDown, ClipboardPaste, Link2, Loader2, Sparkles, Wand2 } from 'lucide-react'
 import { RecipeFormHero } from '@/components/recipes/recipe-form-hero'
 import { MEAL_LABEL, type MealType } from '@/lib/constants/meal-type'
 import type { SimilarRecipe } from '@/lib/utils/recipe-similarity'
@@ -15,6 +15,7 @@ import type { ImportedRecipe, ImportWarning, WarningCode } from '@/lib/import/ty
 const WARNING_FIELDS: Partial<Record<WarningCode, ReviewField[]>> = {
   name_from_title: ['name'],
   times_total_only: ['times'],
+  times_estimated: ['times'],
   rest_added_to_prep: ['times'],
   servings_missing: ['servings'],
   servings_range: ['servings'],
@@ -131,7 +132,16 @@ function RecipeAddInner() {
       const fields = new Set<ReviewField>(warnings.flatMap(w => WARNING_FIELDS[w.code] ?? []))
       if (categoryId) fields.add('category')
       if (r.prep_min === null && r.cook_min === null) fields.add('times')
-      setImportReview({ fields: Array.from(fields), servingsMissing: r.servings === null })
+      const hint = (...codes: WarningCode[]) => warnings.find(w => codes.includes(w.code))?.message
+      setImportReview({
+        fields: Array.from(fields),
+        servingsMissing: r.servings === null,
+        timesEstimated: warnings.some(w => w.code === 'times_estimated'),
+        hints: {
+          times: hint('times_estimated', 'times_total_only', 'rest_added_to_prep'),
+          servings: hint('servings_pieces', 'servings_range', 'servings_missing'),
+        },
+      })
       setImportMeta({ source_type: data.source_type ?? [], status: data.status, rest_min: r.rest_min })
       setImportInfo({
         source: byText ? 'ton texte' : new URL(importUrl).hostname.replace('www.', ''),
@@ -147,6 +157,16 @@ function RecipeAddInner() {
     } finally {
       setImporting(false)
     }
+  }
+
+  // Défile jusqu'au premier champ à vérifier (les temps sont tout en bas sur mobile).
+  function scrollToFirstFlag() {
+    const order: [ReviewField, string][] = [
+      ['name', 'recipe-name'], ['category', 'recipe-category'], ['ingredients', 'sec-ingredients'],
+      ['steps', 'sec-steps'], ['times', 'recipe-times'], ['servings', 'recipe-servings'], ['difficulty', 'difficulty-label'],
+    ]
+    const first = order.find(([f]) => importReview?.fields.includes(f))
+    if (first) document.getElementById(first[1])?.scrollIntoView({ block: 'center', behavior: 'smooth' })
   }
 
   async function save(values: RecipeFormValues, opts: SaveOpts) {
@@ -323,6 +343,12 @@ function RecipeAddInner() {
             <ul className="ml-6 list-disc space-y-0.5 font-quicksand text-sm text-[var(--kkb-profond)]">
               {importInfo.warnings.map((w, i) => <li key={i}>{w}</li>)}
             </ul>
+          )}
+          {!!importReview?.fields.length && (
+            <button type="button" onClick={scrollToFirstFlag}
+              className="ml-6 inline-flex h-10 items-center gap-1.5 rounded-full bg-[var(--kkb-foret)] px-4 font-quicksand text-sm font-bold text-[var(--kkb-creme)]">
+              <ArrowDown className="h-4 w-4" /> Voir {importReview.fields.length > 1 ? `les ${importReview.fields.length} points` : 'le point'} à vérifier
+            </button>
           )}
           {importInfo.notes.length > 0 && (
             <details className="ml-6 font-quicksand text-sm text-[var(--kkb-profond)]">

@@ -190,3 +190,12 @@ Précautions de lecture :
 - Passage d'une recette importée en « communauté » : retirer la photo du site source, inviter à reformuler les étapes.
 - Second lot d'adresses, jamais vues, pour une mesure honnête.
 - Validation des `expected.json`.
+
+## Temps estimés et alertes visibles (29 octobre 2026)
+
+Retour de test sur la charlotte (« Durée : 2 heures (+ 2 heures au frais) ») : aucun temps relevé, et l'alerte du bandeau passait inaperçue (les champs de temps sont tout en bas sur mobile).
+
+- **Estimation d'après les étapes** (`lib/import/estimate-times.ts`) quand la page ne donne ni préparation ni cuisson : les durées des phrases de cuisson (cuire, enfourner, mijoter, frémissement…) s'additionnent en cuisson, celles des phrases de repos (au frais, reposer, mariner…) en repos ; préparation = durée totale − cuisson, plus le repos. Charlotte : cuisson 22 min (12 + 10, borne basse), préparation 3 h 38 dont 2 h au frais. Avertissement `times_estimated`, étiquette « Temps estimés ».
+- **Alerte sous le champ** : le message de l'import s'affiche aussi sous les temps et sous les portions, pas seulement dans le bandeau.
+- **Bandeau** : bouton « Voir les N points à vérifier » qui fait défiler jusqu'au premier champ concerné.
+- **Saisie des minutes** : au-delà de deux chiffres, le nombre était coupé sur mobile (« 218 » affiché « 21 ») ; il tient désormais, avec la conversion en heures dessous dès 60 min (« 218 min, 3 h 38 »).
