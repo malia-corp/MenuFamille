@@ -37,6 +37,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# sauvegardes de la base (données personnelles)
+/backups/
+
 # supabase
 .supabase/
 supabase/.temp/

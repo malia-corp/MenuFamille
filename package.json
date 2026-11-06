@@ -8,7 +8,8 @@
         "start": "next start",
         "lint": "next lint",
         "import:fetch": "tsx scripts/import-fixtures-fetch.ts",
-        "import:eval": "tsx scripts/import-eval.ts"
+        "import:eval": "tsx scripts/import-eval.ts",
+        "db:backup-reset": "tsx scripts/supabase-backup-reset.ts"
     },
     "dependencies": {
         "@anthropic-ai/sdk": "^1.3.0",
