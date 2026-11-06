@@ -606,6 +606,71 @@ export type Database = {
           },
         ]
       }
+      recipe_import_attempts: {
+        Row: {
+          content_hash: string
+          cost_usd: number
+          created_at: string
+          error_code: string | null
+          id: string
+          input_kind: string
+          input_tokens: number
+          llm_model: string | null
+          output_tokens: number
+          parser_version: string
+          result: Json | null
+          source_type: string[]
+          source_url: string | null
+          status: string
+          used_llm: boolean
+          user_id: string
+        }
+        Insert: {
+          content_hash: string
+          cost_usd?: number
+          created_at?: string
+          error_code?: string | null
+          id?: string
+          input_kind: string
+          input_tokens?: number
+          llm_model?: string | null
+          output_tokens?: number
+          parser_version: string
+          result?: Json | null
+          source_type?: string[]
+          source_url?: string | null
+          status: string
+          used_llm?: boolean
+          user_id: string
+        }
+        Update: {
+          content_hash?: string
+          cost_usd?: number
+          created_at?: string
+          error_code?: string | null
+          id?: string
+          input_kind?: string
+          input_tokens?: number
+          llm_model?: string | null
+          output_tokens?: number
+          parser_version?: string
+          result?: Json | null
+          source_type?: string[]
+          source_url?: string | null
+          status?: string
+          used_llm?: boolean
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recipe_import_attempts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       recipe_imports: {
         Row: {
           id: string
@@ -613,7 +678,10 @@ export type Database = {
           parser_version: string
           raw_html_hash: string | null
           recipe_id: string
+          rest_min: number | null
+          source_type: string[]
           source_url: string
+          status: string | null
         }
         Insert: {
           id?: string
@@ -621,7 +689,10 @@ export type Database = {
           parser_version: string
           raw_html_hash?: string | null
           recipe_id: string
+          rest_min?: number | null
+          source_type?: string[]
           source_url: string
+          status?: string | null
         }
         Update: {
           id?: string
@@ -629,7 +700,10 @@ export type Database = {
           parser_version?: string
           raw_html_hash?: string | null
           recipe_id?: string
+          rest_min?: number | null
+          source_type?: string[]
           source_url?: string
+          status?: string | null
         }
         Relationships: [
           {

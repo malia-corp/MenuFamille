@@ -59,6 +59,11 @@
     /* Bas des éléments flottants : au-dessus de la barre basse (64 px à 16 px
        du bas) et de la zone sûre iOS. */
     --kkb-nav-offset: calc(88px + env(safe-area-inset-bottom));
+    /* Desktop : place occupée à gauche par le rail de navigation (12 + rail
+       + 12), réduit ou déplié (html[data-rail="expanded"], cf. Sidebar), et
+       marge latérale du contenu, partagée avec l'en-tête pour l'aligner. */
+    --kkb-rail-offset: 96px;
+    --kkb-gutter: 24px;
 
     /* ── Jetons historiques de l'app, réaffectés sur la palette du guide ── */
     --kkb-coral:          var(--kkb-orange);
@@ -98,6 +103,15 @@
     --kkb-shadow-fab:   0 4px 20px rgba(230, 107, 67, 0.35);
   }
 
+  :root[data-rail='expanded'] {
+    --kkb-rail-offset: 256px;
+  }
+  @media (min-width: 1280px) {
+    :root {
+      --kkb-gutter: 40px;
+    }
+  }
+
   .dark {
     --background: 195 8% 9%;
     --foreground: 36 18% 95%;
@@ -126,7 +140,10 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground;
+    /* Crème exacte du guide (la conversion HSL de --background s'en écarte
+       d'un cheveu, visible à côté des zones en var(--kkb-bg)). */
+    background-color: var(--kkb-creme);
     font-feature-settings: 'rlig' 1, 'calt' 1;
   }
 }
@@ -180,6 +197,64 @@
     display: none;
   }
 
+  /* Squelettes de chargement : reflet qui balaie le bloc de gauche à droite
+     (kkb-bone sur fond clair, kkb-bone-dark sur vert forêt). Fixe si
+     l'appareil demande moins d'animations. */
+  .kkb-bone,
+  .kkb-bone-dark {
+    background-size: 220% 100%;
+    animation: kkb-shimmer 1.5s linear infinite;
+  }
+  .kkb-bone {
+    background-image: linear-gradient(
+      100deg,
+      var(--kkb-filet) 40%,
+      color-mix(in srgb, var(--kkb-filet) 35%, white) 50%,
+      var(--kkb-filet) 60%
+    );
+  }
+  .kkb-bone-dark {
+    background-image: linear-gradient(
+      100deg,
+      rgb(255 255 255 / 0.12) 40%,
+      rgb(255 255 255 / 0.26) 50%,
+      rgb(255 255 255 / 0.12) 60%
+    );
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .kkb-bone,
+    .kkb-bone-dark {
+      animation: none;
+    }
+  }
+
+  /* Chargement « Les convives s'installent » (components/brand/logo-loader) */
+  /* Origine au centre de chaque élément animé, et seulement eux : appliquée
+     au groupe qui place le contenu de l'assiette (attribut transform), elle
+     décalerait le visage et les convives. */
+  .kkb-loader-guest,
+  .kkb-loader-face,
+  .kkb-loader-rays {
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  .kkb-loader-guest {
+    animation: kkb-loader-guest 2.6s cubic-bezier(0.34, 1.56, 0.64, 1) infinite both;
+  }
+  .kkb-loader-face {
+    animation: kkb-loader-face 2.6s ease-in-out infinite;
+  }
+  .kkb-loader-rays {
+    animation: kkb-loader-rays 2.6s ease-in-out infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .kkb-loader-guest,
+    .kkb-loader-face,
+    .kkb-loader-rays {
+      animation: none;
+    }
+  }
+
   .animate-shake {
     animation: kkb-shake 0.4s ease-in-out;
   }
@@ -187,6 +262,37 @@
   .animate-kkb-pulse {
     animation: kkb-pulse 1.5s ease-in-out infinite;
   }
+}
+
+@keyframes kkb-loader-guest {
+  0%, 4%   { transform: scale(0); }
+  16%      { transform: scale(1.18); }
+  22%, 76% { transform: scale(1); }
+  88%, 100% { transform: scale(0); }
+}
+
+@keyframes kkb-loader-face {
+  0%, 34%   { transform: scale(1); }
+  42%       { transform: scale(1.1); }
+  50%, 100% { transform: scale(1); }
+}
+
+@keyframes kkb-loader-rays {
+  0%, 36%   { opacity: 0; }
+  46%, 70%  { opacity: 1; }
+  84%, 100% { opacity: 0; }
+}
+
+/* Temps restant d'un message (components/ui/toaster) : lancé en style inline,
+   donc déclaré ici (Tailwind n'émet que les keyframes de ses classes animate-*). */
+@keyframes kkb-toast-progress {
+  from { transform: scaleX(1); }
+  to   { transform: scaleX(0); }
+}
+
+@keyframes kkb-shimmer {
+  from { background-position: 130% 0; }
+  to   { background-position: -30% 0; }
 }
 
 @keyframes kkb-shake {

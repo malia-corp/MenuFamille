@@ -2,93 +2,45 @@
 
 import type { ReactNode } from 'react'
 import { DAY_OPTIONS, type DayOfWeek } from '@/lib/utils/week'
-import { MEAL_LABEL, type MealType } from '@/lib/constants/meal-type'
-import { MealTypeIcon } from '@/components/ui/meal-type-icon'
 import { DayTabs } from '@/components/plan/day-tabs'
-import type { ProgressConfig, ProgressItem } from '@/lib/utils/plan-progress'
-
-interface ServiceStat {
-  mealType: MealType
-  filled:   number
-  total:    number
-}
+import { dayFilledCount, type ProgressConfig, type ProgressItem } from '@/lib/utils/plan-progress'
 
 interface DayFocusViewProps {
-  weekStart:      string
-  selectedDay:    DayOfWeek
-  onSelectDay:    (day: DayOfWeek) => void
-  configs:        ProgressConfig[]
-  items:          ProgressItem[]
-  cards:          ReactNode
-  weekFilled:     number
-  weekTotal:      number
-  serviceStats:   ServiceStat[]
+  weekStart:   string
+  selectedDay: DayOfWeek
+  onSelectDay: (day: DayOfWeek) => void
+  configs:     ProgressConfig[]
+  items:       ProgressItem[]
+  cards:       ReactNode
 }
 
-export function DayFocusView({
-  weekStart, selectedDay, onSelectDay, configs, items, cards, weekFilled, weekTotal, serviceStats,
-}: DayFocusViewProps) {
-  const dayOpt = DAY_OPTIONS.find(d => d.val === selectedDay)
-  const percent = weekTotal > 0 ? Math.round((weekFilled / weekTotal) * 100) : 0
+// Desktop, jour par jour : la liste des jours à gauche, les repas du jour à droite.
+export function DayFocusView({ weekStart, selectedDay, onSelectDay, configs, items, cards }: DayFocusViewProps) {
+  const idx    = DAY_OPTIONS.findIndex(d => d.val === selectedDay)
+  const dayOpt = DAY_OPTIONS[idx]
+  const date   = new Date(weekStart + 'T00:00:00')
+  date.setDate(date.getDate() + Math.max(0, idx))
+  const filled = dayFilledCount(configs, items, selectedDay)
 
   return (
-    <div className="grid grid-cols-[200px_1fr_240px] gap-6 items-start">
-      <DayTabs
-        weekStart={weekStart}
-        selectedDay={selectedDay}
-        onSelect={onSelectDay}
-        configs={configs}
-        items={items}
-        orientation="vertical"
-      />
-
-      <div className="space-y-3">
-        <h2 className="text-h1 text-[var(--kkb-text-primary)]">Les repas du {dayOpt?.full}</h2>
-        {cards}
+    <div className="grid grid-cols-[260px_minmax(0,1fr)] items-start gap-5">
+      <div className="sticky top-24">
+        <DayTabs weekStart={weekStart} selectedDay={selectedDay} onSelect={onSelectDay} configs={configs} items={items} orientation="vertical" />
       </div>
 
-      <div className="bg-white border border-[var(--kkb-lin)] rounded-[var(--kkb-radius-card)] p-4 space-y-4 sticky top-28">
-        <div className="space-y-1.5">
-          <p className="text-xs font-quicksand font-bold text-[var(--kkb-text-tertiary)]">
-            Progression semaine
-          </p>
-          <div className="flex items-baseline justify-between">
-            <span className="font-dosis font-bold text-2xl text-[var(--kkb-coral)]">{percent}%</span>
-            <span className="text-xs font-quicksand text-[var(--kkb-text-tertiary)]">{weekFilled}/{weekTotal}</span>
-          </div>
-          <div className="h-1.5 w-full rounded-full bg-[var(--kkb-border)] overflow-hidden">
-            <div className="h-full rounded-full bg-[var(--kkb-coral)] transition-all duration-300" style={{ width: `${percent}%` }} />
-          </div>
+      {/* Pas de carte autour : les repas sont eux-mêmes des cartes blanches */}
+      <section className="space-y-3" aria-labelledby="focus-day-title">
+        <div className="flex items-baseline justify-between gap-3 px-1 pt-1">
+          <h2 id="focus-day-title" className="text-h2 text-[var(--kkb-foret)]">
+            {dayOpt?.full} {date.getDate()}
+          </h2>
+          <span className="font-quicksand text-sm text-[var(--kkb-texte-2)]">
+            <span className="font-bold tabular-nums text-[var(--kkb-profond)]">{filled}/{configs.length}</span> repas choisis
+          </span>
         </div>
-
-        <div className="space-y-2">
-          <p className="text-xs font-quicksand font-bold text-[var(--kkb-text-tertiary)]">
-            Statut par service
-          </p>
-          {serviceStats.map(stat => {
-            const statPercent = stat.total > 0 ? Math.round((stat.filled / stat.total) * 100) : 0
-            const complete = stat.filled === stat.total
-            return (
-              <div key={stat.mealType} className="space-y-0.5">
-                <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-1 text-[11px] font-quicksand font-medium text-[var(--kkb-text-secondary)]">
-                    <MealTypeIcon type={stat.mealType} className="h-3 w-3 text-[var(--kkb-coral)]" /> {MEAL_LABEL[stat.mealType]}
-                  </span>
-                  <span className="text-[11px] font-quicksand font-bold text-[var(--kkb-text-tertiary)]">
-                    {stat.filled}/{stat.total}
-                  </span>
-                </div>
-                <div className="h-1 w-full rounded-full bg-[var(--kkb-border)] overflow-hidden">
-                  <div
-                    className={`h-full rounded-full transition-all duration-300 ${complete ? 'bg-[var(--kkb-teal)]' : 'bg-[var(--kkb-warning)]'}`}
-                    style={{ width: `${statPercent}%` }}
-                  />
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      </div>
+        {/* Les cartes portent une marge latérale mobile : neutralisée ici */}
+        <div className="-mx-4 space-y-3">{cards}</div>
+      </section>
     </div>
   )
 }

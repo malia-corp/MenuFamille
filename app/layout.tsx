@@ -72,7 +72,16 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="fr">
+    // data-rail est posé avant le premier rendu (préférence du rail de
+    // navigation), d'où suppressHydrationWarning sur <html>.
+    <html lang="fr" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{if(localStorage.getItem('kkb-rail')==='expanded')document.documentElement.dataset.rail='expanded'}catch(e){}`,
+          }}
+        />
+      </head>
       <body className={`${montserrat.variable} ${quicksand.variable} ${bricolage.variable} font-quicksand antialiased`}>
         {children}
         <Toaster />

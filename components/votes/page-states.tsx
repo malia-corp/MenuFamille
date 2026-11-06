@@ -1,22 +1,10 @@
 import { Inbox, type LucideIcon } from 'lucide-react'
 import { EmptyState as BaseEmptyState } from '@/components/ui/empty-state'
-import { SkeletonCard } from '@/components/ui/skeleton-card'
+import { ResultsSkeleton } from '@/components/skeletons/page-skeletons'
 
-// Chargement des résultats : squelettes aux proportions de la page.
+// Chargement des résultats : squelette aux proportions de la page.
 export function PageLoader() {
-  return (
-    <div className="mx-auto max-w-lg space-y-4 px-4 pt-4 lg:max-w-[1400px] lg:px-8 lg:py-8" aria-busy="true" aria-label="Chargement des résultats">
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
-        <SkeletonCard variant="stat" />
-        <SkeletonCard variant="stat" />
-        <SkeletonCard variant="stat" className="hidden lg:flex" />
-      </div>
-      <div className="space-y-4 lg:grid lg:grid-cols-2 lg:gap-5 lg:space-y-0">
-        <SkeletonCard variant="meal" />
-        <SkeletonCard variant="meal" />
-      </div>
-    </div>
-  )
+  return <ResultsSkeleton />
 }
 
 // État vide des pages de résultats, dans une carte centrée.

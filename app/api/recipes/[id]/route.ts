@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
 import { upsertSuggestedAssociations } from '@/lib/utils/recipe-associations'
+import { acceptablePhotoUrl } from '@/lib/import/url-safety'
 import { NextRequest } from 'next/server'
 
 const DIACRITICS_RE = /[̀-ͯ]/g
@@ -134,7 +135,7 @@ export async function PATCH(
     updates.visibility = visibility
     updates.circle_id  = visibility === 'circle' ? (circle_id || null) : null
   }
-  if (photo_url !== undefined) updates.photo_url = photo_url ?? null
+  if (photo_url !== undefined) updates.photo_url = acceptablePhotoUrl(photo_url)
 
   if (Object.keys(updates).length > 0) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

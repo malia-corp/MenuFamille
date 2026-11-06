@@ -2,12 +2,38 @@
 
 import { Suspense, useEffect, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { AlertTriangle, ArrowLeft, BookOpen, Link2, Loader2, ScanLine, Sparkles, Wand2 } from 'lucide-react'
+import { AlertTriangle, ArrowDown, CheckCircle2, ChevronDown, ClipboardPaste, Link2, Loader2, Sparkles, Wand2 } from 'lucide-react'
+import { RecipeFormHero } from '@/components/recipes/recipe-form-hero'
 import { MEAL_LABEL, type MealType } from '@/lib/constants/meal-type'
 import type { SimilarRecipe } from '@/lib/utils/recipe-similarity'
 import { DuplicateDialog } from '@/components/recipes/duplicate-dialog'
-import { toast } from '@/lib/stores/toast-store'
-import { RecipeForm, clearRecipeDraft, emptyStep, uid, type IngredientRow, type RecipeFormValues, type StepRow } from '../_recipe-form'
+import { RecipeForm, clearRecipeDraft, emptyStep, uid, type ImportReview, type IngredientRow, type RecipeFormValues, type ReviewField, type StepRow } from '../_recipe-form'
+import { RecipeFormSkeleton } from '@/components/skeletons/page-skeletons'
+import type { ImportedRecipe, ImportWarning, WarningCode } from '@/lib/import/types'
+
+// Avertissement de l'import → champ à vérifier sur l'écran de relecture.
+const WARNING_FIELDS: Partial<Record<WarningCode, ReviewField[]>> = {
+  name_from_title: ['name'],
+  name_missing: ['name'],
+  times_total_only: ['times'],
+  times_estimated: ['times'],
+  rest_added_to_prep: ['times'],
+  servings_missing: ['servings'],
+  servings_range: ['servings'],
+  servings_pieces: ['servings'],
+  difficulty_missing: ['difficulty'],
+  ingredients_missing: ['ingredients'],
+  steps_missing: ['steps'],
+  llm_used: ['ingredients', 'steps'],
+}
+
+interface ImportInfo {
+  source: string            // domaine, ou « ton texte »
+  status: 'complete' | 'partial' | 'failed'
+  warnings: string[]
+  notes: string[]
+  llmUsed: boolean
+}
 
 const DRAFT_KEY = 'kkb_recipe_draft_new'
 
@@ -32,11 +58,17 @@ function RecipeAddInner() {
   const [lastValues, setLastValues] = useState<RecipeFormValues | null>(null)
   const [duplicate,  setDuplicate]  = useState<SimilarRecipe | null>(null)
 
+  const [importMode,     setImportMode]     = useState<'url' | 'text'>('url')
+  const [importText,     setImportText]     = useState('')
+  const [importInfo,     setImportInfo]     = useState<ImportInfo | null>(null)
+  const [importReview,   setImportReview]   = useState<ImportReview | undefined>(undefined)
+  const [pasteSuggested, setPasteSuggested] = useState(false)
+  // Traçabilité de l'import retenu (recipe_imports, migration y).
+  const [importMeta, setImportMeta] = useState<{ source_type: string[]; status: string; rest_min: number | null } | null>(null)
   const [importUrl,      setImportUrl]      = useState('')
   const [importing,      setImporting]      = useState(false)
   const [importError,    setImportError]    = useState<string | null>(null)
   const [importWarning,  setImportWarning]  = useState<string | null>(null)
-  const [importDomain,   setImportDomain]   = useState<string | null>(null)
   const [formKey,        setFormKey]        = useState(0)
   const [importedValues, setImportedValues] = useState<Partial<RecipeFormValues>>({})
   const urlInputRef = useRef<HTMLInputElement>(null)
@@ -52,33 +84,90 @@ function RecipeAddInner() {
     setImporting(true)
     setImportError(null)
     setImportWarning(null)
+    setPasteSuggested(false)
     try {
-      const res = await fetch('/api/recipes/import-url', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: importUrl }),
+      const byText = importMode === 'text'
+      const res = await fetch(byText ? '/api/recipes/import-text' : '/api/recipes/import-url', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(byText ? { text: importText } : { url: importUrl }),
       })
       const data = await res.json()
-      if (!res.ok) { setImportError(data.error ?? 'Import impossible'); return }
+      if (!res.ok) {
+        // Message humain (site bloqué, délai…) et proposition de coller le texte.
+        setImportError(data.error ?? 'Import impossible')
+        setPasteSuggested(!byText && !!data.paste_suggested)
+        return
+      }
 
-      const ingredients: IngredientRow[] = ((data.partial.ingredients ?? []) as unknown[])
-        .map(ing => ({ _id: uid(), name: String(ing), quantity: '', unit: '' }))
-      const steps: StepRow[] = ((data.partial.steps ?? []) as unknown[])
-        .map(s => ({ ...emptyStep(), description: String(s) }))
+      // Réponse v2 (data.recipe) : la fiche proposée, relue avant enregistrement.
+      const r = data.recipe as ImportedRecipe
+      const ingredients: IngredientRow[] = r.ingredients.map(ing => ({
+        _id: uid(),
+        name: ing.optional ? `${ing.name} (optionnel)` : ing.name,
+        quantity: ing.quantity === null ? '' : String(ing.quantity).replace('.', ','),
+        unit: ing.unit ?? '',
+      }))
+      const steps: StepRow[] = r.steps.map(s => ({ ...emptyStep(), description: s.text }))
+      let categoryId: string | undefined
+      if (r.category_hint) {
+        const cats = await fetch('/api/categories').then(c => c.json()).catch(() => []) as { id: string; slug: string }[]
+        categoryId = Array.isArray(cats) ? cats.find(c => c.slug === r.category_hint)?.id : undefined
+      }
 
       setImportedValues({
-        ...data.partial,
+        name:          r.name,
+        description:   r.tip ?? '',
+        categoryId,
+        prepTime:      r.prep_min === null ? '' : String(r.prep_min),
+        cookTime:      r.cook_min === null ? '' : String(r.cook_min),
+        ...(r.servings !== null ? { servings: r.servings } : {}),
+        difficulty:    r.difficulty ?? '',
+        photo_url:     r.photo_url ?? undefined,
         ingredients:   ingredients.length ? ingredients : undefined,
         steps:         steps.length ? steps : undefined,
         source_url:    data.source_url,
         raw_html_hash: data.raw_html_hash,
+        parser_version: data.parser_version,
       })
-      setImportDomain(new URL(importUrl).hostname.replace('www.', ''))
+      const warnings = (data.warnings ?? []) as ImportWarning[]
+      const fields = new Set<ReviewField>(warnings.flatMap(w => WARNING_FIELDS[w.code] ?? []))
+      if (categoryId) fields.add('category')
+      if (r.prep_min === null && r.cook_min === null) fields.add('times')
+      const hint = (...codes: WarningCode[]) => warnings.find(w => codes.includes(w.code))?.message
+      setImportReview({
+        fields: Array.from(fields),
+        servingsMissing: r.servings === null,
+        timesEstimated: warnings.some(w => w.code === 'times_estimated'),
+        hints: {
+          times: hint('times_estimated', 'times_total_only', 'rest_added_to_prep'),
+          servings: hint('servings_pieces', 'servings_range', 'servings_missing'),
+        },
+      })
+      setImportMeta({ source_type: data.source_type ?? [], status: data.status, rest_min: r.rest_min })
+      setImportInfo({
+        source: byText ? 'ton texte' : new URL(importUrl).hostname.replace('www.', ''),
+        status: data.status,
+        warnings: warnings.filter(w => w.code !== 'paste_suggested').map(w => w.message),
+        notes: (data.raw_notes ?? []) as string[],
+        llmUsed: !!data.llm_used,
+      })
+      setPasteSuggested(!byText && warnings.some(w => w.code === 'paste_suggested'))
       setFormKey(k => k + 1)
-      if (!data.success) setImportWarning('Ingrédients non détectés : vérifie et complète à la main.')
     } catch {
       setImportError('Erreur réseau')
     } finally {
       setImporting(false)
     }
+  }
+
+  // Défile jusqu'au premier champ à vérifier (les temps sont tout en bas sur mobile).
+  function scrollToFirstFlag() {
+    const order: [ReviewField, string][] = [
+      ['name', 'recipe-name'], ['category', 'recipe-category'], ['ingredients', 'sec-ingredients'],
+      ['steps', 'sec-steps'], ['times', 'recipe-times'], ['servings', 'recipe-servings'], ['difficulty', 'difficulty-label'],
+    ]
+    const first = order.find(([f]) => importReview?.fields.includes(f))
+    if (first) document.getElementById(first[1])?.scrollIntoView({ block: 'center', behavior: 'smooth' })
   }
 
   async function save(values: RecipeFormValues, opts: SaveOpts) {
@@ -101,6 +190,8 @@ function RecipeAddInner() {
       photo_url:     values.photo_url ?? null,
       source_url:    values.source_url ?? null,
       raw_html_hash: values.raw_html_hash ?? null,
+      parser_version: values.parser_version ?? null,
+      import_meta:   values.source_url ? importMeta : null,
       force:         isPlanCtx || !!opts.force,
     }
     if (opts.parentId) {
@@ -166,63 +257,116 @@ function RecipeAddInner() {
   const planHeader = isPlanCtx && mealType ? `${MEAL_LABEL[mealType] ?? mealType}${dayLabel ? ` · ${dayLabel}` : ''}` : null
 
   return (
-    <div className="mx-auto max-w-[1300px] px-4 pb-44 pt-3 lg:px-8 lg:pb-28 lg:pt-6">
-      <div className="mb-5 flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-        <div className="space-y-1">
-          <button type="button" onClick={() => router.push(isPlanCtx ? '/plan' : '/recipes')}
-            className="hidden items-center gap-1.5 text-sm font-quicksand text-[var(--kkb-text-tertiary)] hover:text-[var(--kkb-coral)] lg:flex">
-            <ArrowLeft className="h-4 w-4" /> {isPlanCtx ? 'Menu' : 'Carnet'} <span className="text-[var(--kkb-text-tertiary)]">/</span>
-            <span className="font-bold text-[var(--kkb-coral)]">Nouvelle recette</span>
-          </button>
-          <p className="flex items-center gap-1.5 text-xs font-quicksand font-bold text-[var(--kkb-coral)] lg:hidden">
-            <BookOpen className="h-3.5 w-3.5" /> {planHeader ? `Nouveau repas · ${planHeader}` : 'Transmission culinaire'}
-          </p>
-          <h1 className="font-dosis font-extrabold text-[22px] leading-tight text-[var(--kkb-text-primary)] lg:text-[28px]">
-            <span className="lg:hidden">Nouvelle création culinaire</span>
-            <span className="hidden lg:inline">{planHeader ? `Nouveau repas — ${planHeader}` : 'Nouvelle recette'}</span>
-          </h1>
-          <p className="text-sm font-quicksand text-[var(--kkb-text-secondary)]">
-            Enregistre tes secrets de cuisine pas à pas, avec douceur et à ton rythme.
-          </p>
-        </div>
+    <div className="mx-auto max-w-lg px-4 pb-44 pt-2 lg:max-w-none lg:px-0 lg:pb-32 lg:pt-0">
+      <div className="mb-4 grid grid-cols-1 gap-4 lg:mb-5 lg:grid-cols-12 lg:gap-5">
+        <RecipeFormHero
+          className={isPlanCtx ? 'lg:col-span-12' : 'lg:col-span-7 xl:col-span-8'}
+          onBack={() => router.push(isPlanCtx ? '/plan' : '/recipes')}
+          backLabel={isPlanCtx ? 'Retour au menu' : 'Retour au carnet'}
+          eyebrow={isPlanCtx ? 'Menu de la semaine' : 'Carnet de recettes'}
+          title={planHeader ? `Nouveau repas · ${planHeader}` : 'Nouvelle recette'}
+          subtitle={isPlanCtx
+            ? 'Elle rejoint ton carnet et prend sa place dans le menu dès que tu l’enregistres.'
+            : 'Note tes secrets de cuisine pas à pas, à ton rythme : le brouillon se garde tout seul.'}
+        />
 
+        {/* Import : par lien ou par texte collé. Rien n'est enregistré sans relecture. */}
         {!isPlanCtx && (
-          <section className="space-y-3 rounded-[var(--kkb-radius-sm)] border border-[var(--kkb-warning)] bg-[var(--kkb-warning-light)] p-3.5 lg:w-[440px] lg:shrink-0">
-            <div className="flex items-center gap-2">
-              <Wand2 className="h-4 w-4 text-[var(--kkb-jaune-text)]" />
-              <p className="flex-1 text-sm font-quicksand font-bold text-[var(--kkb-text-primary)]">Magie Express</p>
-              <span className="rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-success-light)] px-2 py-0.5 text-xs font-quicksand font-bold text-[var(--kkb-success)]">Gain de temps</span>
+          <section className="flex flex-col rounded-[var(--kkb-r-xl)] bg-white p-5 lg:col-span-5 lg:p-6 xl:col-span-4" aria-labelledby="import-title">
+            <h2 id="import-title" className="flex items-center gap-2.5 text-h3 text-[var(--kkb-profond)]">
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--kkb-jaune-50)] text-[var(--kkb-jaune-text)]"><Wand2 className="h-4 w-4" /></span>
+              Importer une recette
+            </h2>
+            <div className="mt-3 grid grid-cols-2 rounded-full bg-[var(--kkb-creme)] p-1" role="tablist" aria-label="Source de la recette">
+              {([['url', 'Un lien', Link2], ['text', 'Un texte', ClipboardPaste]] as const).map(([mode, label, Icon]) => (
+                <button key={mode} type="button" role="tab" aria-selected={importMode === mode}
+                  onClick={() => { setImportMode(mode); setImportError(null); setPasteSuggested(false) }}
+                  className={`flex h-10 items-center justify-center gap-1.5 rounded-full font-quicksand text-sm font-bold transition-colors ${importMode === mode ? 'bg-[var(--kkb-foret)] text-[var(--kkb-creme)]' : 'text-[var(--kkb-texte-2)]'}`}>
+                  <Icon className="h-4 w-4" /> {label}
+                </button>
+              ))}
             </div>
-            <p className="text-[13px] font-quicksand text-[var(--kkb-text-secondary)]">
-              Importe automatiquement une recette depuis un lien web, ou numérise une page de ton carnet manuscrit.
+            <p className="mt-3 font-quicksand text-sm text-[var(--kkb-texte-2)]">
+              {importMode === 'url'
+                ? 'Colle l’adresse d’une recette trouvée sur le web : on remplit la fiche, tu vérifies.'
+                : 'Colle le texte d’une recette (message WhatsApp, légende, notes) : on le range dans la fiche.'}
             </p>
-            <div className="flex gap-2">
-              <div className="flex min-w-0 flex-1 items-center gap-2 rounded-[var(--kkb-radius-sm)] border border-[var(--kkb-border)] bg-white px-3 focus-within:border-[var(--kkb-coral)]">
-                <Link2 className="h-4 w-4 shrink-0 text-[var(--kkb-text-tertiary)]" />
-                <input ref={urlInputRef} type="url" value={importUrl} placeholder="Lien Instagram, TikTok, Marmiton..." aria-label="Lien de la recette à importer"
-                  onChange={e => { setImportUrl(e.target.value); setImportError(null); setImportWarning(null) }}
-                  onKeyDown={e => { if (e.key === 'Enter' && importUrl.trim()) void handleImport() }}
-                  className="min-w-0 flex-1 bg-transparent py-2.5 text-sm font-quicksand outline-none placeholder:text-[var(--kkb-text-tertiary)]" />
+            <div className="mt-auto pt-4">
+              {importMode === 'url' ? (
+                <div className={`flex h-12 items-center gap-2 rounded-full border-[1.5px] bg-[var(--kkb-creme)] pl-4 pr-1.5 transition-colors focus-within:border-[var(--kkb-foret-500)] ${importError ? 'border-[var(--kkb-danger)]' : 'border-transparent'}`}>
+                  <Link2 className="h-4 w-4 shrink-0 text-[var(--kkb-texte-2)]" />
+                  <input ref={urlInputRef} type="url" value={importUrl} placeholder="https://…" aria-label="Lien de la recette à importer"
+                    onChange={e => { setImportUrl(e.target.value); setImportError(null); setImportWarning(null) }}
+                    onKeyDown={e => { if (e.key === 'Enter' && importUrl.trim()) void handleImport() }}
+                    className="min-w-0 flex-1 bg-transparent font-quicksand text-sm text-[var(--kkb-profond)] outline-none placeholder:text-[var(--kkb-texte-2)]" />
+                  <button type="button" onClick={() => void handleImport()} disabled={!importUrl.trim() || importing}
+                    className="flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-[var(--kkb-foret)] px-4 font-quicksand text-[13px] font-bold text-[var(--kkb-creme)] transition-colors hover:bg-[var(--kkb-foret-900)] disabled:opacity-50">
+                    {importing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Importer
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <textarea value={importText} onChange={e => { setImportText(e.target.value); setImportError(null) }} rows={6}
+                    aria-label="Texte de la recette à importer"
+                    placeholder={'Sauce graine de maman\nPour 6 personnes\nIngrédients\n- 1 kg de noix de palme\n…'}
+                    className={`w-full resize-y rounded-[var(--kkb-r-lg)] border-[1.5px] bg-[var(--kkb-creme)] px-4 py-3 font-quicksand text-sm text-[var(--kkb-profond)] outline-none placeholder:text-[var(--kkb-texte-2)] focus:border-[var(--kkb-foret-500)] ${importError ? 'border-[var(--kkb-danger)]' : 'border-transparent'}`} />
+                  <button type="button" onClick={() => void handleImport()} disabled={importText.trim().length < 20 || importing}
+                    className="flex h-11 w-full items-center justify-center gap-1.5 rounded-full bg-[var(--kkb-foret)] font-quicksand text-sm font-bold text-[var(--kkb-creme)] transition-colors hover:bg-[var(--kkb-foret-900)] disabled:opacity-50">
+                    {importing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Ranger dans la fiche
+                  </button>
+                </div>
+              )}
+              <div aria-live="polite">
+                {importError && <p className="mt-2 font-quicksand text-xs text-[var(--kkb-danger)]">{importError}</p>}
+                {importWarning && <p className="mt-2 flex items-center gap-1.5 font-quicksand text-xs text-[var(--kkb-jaune-text)]"><AlertTriangle className="h-3.5 w-3.5 shrink-0" /> {importWarning}</p>}
+                {pasteSuggested && (
+                  <button type="button" onClick={() => { setImportMode('text'); setImportError(null) }}
+                    className="mt-2 inline-flex h-9 items-center gap-1.5 rounded-full bg-[var(--kkb-jaune-50)] px-3.5 font-quicksand text-xs font-bold text-[var(--kkb-jaune-text)]">
+                    <ClipboardPaste className="h-3.5 w-3.5" /> Coller le texte de la recette
+                  </button>
+                )}
               </div>
-              <button type="button" onClick={() => void handleImport()} disabled={!importUrl.trim() || importing}
-                className="flex shrink-0 items-center gap-1.5 rounded-[var(--kkb-radius-sm)] bg-[var(--kkb-coral)] px-3.5 text-[13px] font-quicksand font-bold text-white disabled:opacity-50">
-                {importing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Importer
-              </button>
             </div>
-            {importDomain && <p className="text-[11px] font-quicksand text-[var(--kkb-text-tertiary)]">Importée depuis {importDomain} : vérifie et complète si nécessaire.</p>}
-            {importWarning && <p className="flex items-center gap-1 text-[11px] font-quicksand text-[var(--kkb-jaune-text)]"><AlertTriangle className="h-3.5 w-3.5" /> {importWarning}</p>}
-            {importError && <p className="text-xs font-quicksand text-[var(--kkb-danger)]">{importError}</p>}
-            <p className="text-center text-xs font-quicksand font-boldst text-[var(--kkb-text-tertiary)]">Ou bien</p>
-            <button type="button" onClick={() => toast.info('Bientôt disponible')}
-              className="flex w-full items-center justify-center gap-2 rounded-[var(--kkb-radius-sm)] border border-[var(--kkb-border)] bg-white py-2.5 text-sm font-quicksand font-semibold text-[var(--kkb-text-secondary)]">
-              <ScanLine className="h-4 w-4" /> Numériser un carnet de notes ou une photo
-            </button>
           </section>
         )}
       </div>
 
+      {/* Bandeau de relecture : d'où vient la fiche, ce qu'il faut vérifier, le texte non classé. */}
+      {importInfo && (
+        <section className="mb-4 space-y-2 rounded-[var(--kkb-r-xl)] bg-[var(--kkb-warning-light)] p-4 lg:mb-5" aria-live="polite">
+          <p className="flex items-start gap-2 font-quicksand text-sm font-bold text-[var(--kkb-profond)]">
+            {importInfo.status === 'complete' && !importInfo.warnings.length
+              ? <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[var(--kkb-foret-500)]" />
+              : <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-[var(--kkb-jaune-text)]" />}
+            Importée depuis {importInfo.source} : vérifie avant d’enregistrer.
+          </p>
+          {importInfo.warnings.length > 0 && (
+            <ul className="ml-6 list-disc space-y-0.5 font-quicksand text-sm text-[var(--kkb-profond)]">
+              {importInfo.warnings.map((w, i) => <li key={i}>{w}</li>)}
+            </ul>
+          )}
+          {!!importReview?.fields.length && (
+            <button type="button" onClick={scrollToFirstFlag}
+              className="ml-6 inline-flex h-10 items-center gap-1.5 rounded-full bg-[var(--kkb-foret)] px-4 font-quicksand text-sm font-bold text-[var(--kkb-creme)]">
+              <ArrowDown className="h-4 w-4" /> Voir {importReview.fields.length > 1 ? `les ${importReview.fields.length} points` : 'le point'} à vérifier
+            </button>
+          )}
+          {importInfo.notes.length > 0 && (
+            <details className="ml-6 font-quicksand text-sm text-[var(--kkb-profond)]">
+              <summary className="flex cursor-pointer list-none items-center gap-1 font-bold text-[var(--kkb-jaune-text)]">
+                <ChevronDown className="h-4 w-4" /> Texte non classé ({importInfo.notes.length})
+              </summary>
+              <ul className="mt-1 space-y-1">
+                {importInfo.notes.map((n, i) => <li key={i} className="rounded-[var(--kkb-r-md)] bg-white/70 px-3 py-2">{n}</li>)}
+              </ul>
+            </details>
+          )}
+        </section>
+      )}
+
       <RecipeForm
         key={formKey}
+        review={importReview}
         defaultValues={isPlanCtx ? { ...importedValues, visibility: 'private' } : importedValues}
         onSubmit={handleFormSubmit}
         loading={loading}
@@ -250,7 +394,7 @@ function RecipeAddInner() {
 
 export default function RecipeAddPage() {
   return (
-    <Suspense fallback={<div className="flex min-h-[60vh] items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-[var(--kkb-coral)]" /></div>}>
+    <Suspense fallback={<RecipeFormSkeleton />}>
       <RecipeAddInner />
     </Suspense>
   )

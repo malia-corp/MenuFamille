@@ -119,7 +119,7 @@ function MemberResultsContent() {
   }
 
   return (
-    <div className="mx-auto max-w-lg space-y-5 px-4 pb-24 pt-2 lg:max-w-3xl lg:py-8">
+    <div className="mx-auto max-w-lg space-y-5 px-4 pb-24 pt-2 lg:max-w-none lg:px-0 lg:pt-0 lg:pb-12">
       <div className="space-y-2 text-center">
         <span className="inline-flex items-center gap-1.5 rounded-[var(--kkb-radius-pill)] bg-[var(--kkb-teal-light)] px-3 py-1 text-xs font-quicksand font-bold text-[var(--kkb-teal)]">
           <Shield className="h-3.5 w-3.5" /> Votes anonymisés &amp; bienveillants
@@ -174,7 +174,7 @@ function MemberResultsContent() {
               <span className="rounded-[var(--kkb-radius-sm)] bg-[var(--kkb-coral-light)] px-2.5 py-1 font-dosis font-bold text-base text-[var(--kkb-coral)]">{g.label}</span>
               <span className="text-xs font-quicksand text-[var(--kkb-text-tertiary)]">{voted} {voted > 1 ? 'repas votés' : 'repas voté'}</span>
             </p>
-            <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
+            <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0 2xl:grid-cols-3">
               {g.items.map(item => (
                 <ResultCard key={item.id} item={item} dayLabel={g.label} myReaction={myReactionOf.get(item.id) ?? null} />
               ))}

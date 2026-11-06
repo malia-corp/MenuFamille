@@ -1,0 +1,137 @@
+{
+  "name": "La ratatouille niçoise au basilic frais",
+  "servings": 6,
+  "prep_min": 25,
+  "cook_min": 45,
+  "difficulty": null,
+  "ingredients": [
+    {
+      "quantity": 2,
+      "unit": null,
+      "name": "oignons",
+      "optional": false
+    },
+    {
+      "quantity": 2,
+      "unit": null,
+      "name": "courgettes moyennes",
+      "optional": false
+    },
+    {
+      "quantity": 1,
+      "unit": null,
+      "name": "poivron jaune",
+      "optional": false
+    },
+    {
+      "quantity": 1,
+      "unit": null,
+      "name": "poivron rouge",
+      "optional": false
+    },
+    {
+      "quantity": 1,
+      "unit": null,
+      "name": "aubergine",
+      "optional": false
+    },
+    {
+      "quantity": 3,
+      "unit": null,
+      "name": "tomates moyennes",
+      "optional": false
+    },
+    {
+      "quantity": 3,
+      "unit": "gousse",
+      "name": "ail",
+      "optional": false
+    },
+    {
+      "quantity": 10,
+      "unit": "cl",
+      "name": "huile d’olive",
+      "optional": false
+    },
+    {
+      "quantity": 0.5,
+      "unit": "botte",
+      "name": "basilic frais",
+      "optional": false
+    },
+    {
+      "quantity": 1,
+      "unit": "branche",
+      "name": "thym frais",
+      "optional": false
+    },
+    {
+      "quantity": 1,
+      "unit": "c. à café",
+      "name": "sucre en poudre",
+      "optional": false
+    },
+    {
+      "quantity": null,
+      "unit": null,
+      "name": "Sel fin et poivre du moulin",
+      "optional": false
+    }
+  ],
+  "steps": [
+    {
+      "title": null,
+      "text": "Je fais chauffer l’huile d’olive dans la cocotte à feu moyen (puissance moyenne sur induction)."
+    },
+    {
+      "title": null,
+      "text": "J’émince finement les oignons."
+    },
+    {
+      "title": null,
+      "text": "Je les verse dans la cocotte et je les fais suer 5 à 6 minutes."
+    },
+    {
+      "title": null,
+      "text": "J’épépine les poivrons et je les taille en dés."
+    },
+    {
+      "title": null,
+      "text": "Je coupe les courgettes et l’aubergine en cubes."
+    },
+    {
+      "title": null,
+      "text": "J’incorpore ces légumes aux oignons dans l’ordre suivant tout en restant sur puissance moyenne : poivrons, aubergine et courgettes."
+    },
+    {
+      "title": null,
+      "text": "J’écrase l’ail et je rajoute le thym."
+    },
+    {
+      "title": null,
+      "text": "Je cisèle la moitié du basilic que je parsème."
+    },
+    {
+      "title": null,
+      "text": "Je taille les tomates en petits quartiers et je les mélange."
+    },
+    {
+      "title": null,
+      "text": "Je sale, je poivre et je verse le sucre en poudre."
+    },
+    {
+      "title": null,
+      "text": "Je laisse mijoter le tout à découvert en remuant souvent pendant 10 minutes."
+    },
+    {
+      "title": null,
+      "text": "Je couvre et j’enfourne à four préchauffé à 200°C pendant 30 minutes."
+    },
+    {
+      "title": null,
+      "text": "Je sers bien chaud avec le reste du basilic ciselé au moment de la dégustation."
+    }
+  ],
+  "tip": null,
+  "description": null
+}

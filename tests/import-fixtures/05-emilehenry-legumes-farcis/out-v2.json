@@ -1,0 +1,151 @@
+{
+  "name": "Petits légumes farcis d'été",
+  "servings": 6,
+  "prep_min": 35,
+  "cook_min": 60,
+  "difficulty": null,
+  "ingredients": [
+    {
+      "quantity": 4,
+      "unit": null,
+      "name": "tomates type Marmande ou Red Stuffer",
+      "optional": false
+    },
+    {
+      "quantity": 4,
+      "unit": null,
+      "name": "courgettes rondes",
+      "optional": false
+    },
+    {
+      "quantity": 4,
+      "unit": null,
+      "name": "oignons blancs",
+      "optional": false
+    },
+    {
+      "quantity": 800,
+      "unit": "g",
+      "name": "agneau (type gigot ou épaule désossée)",
+      "optional": false
+    },
+    {
+      "quantity": 80,
+      "unit": "g",
+      "name": "mie de pain rassi",
+      "optional": false
+    },
+    {
+      "quantity": 50,
+      "unit": "ml",
+      "name": "lait",
+      "optional": false
+    },
+    {
+      "quantity": 2,
+      "unit": "c. à soupe",
+      "name": "huile d’olive",
+      "optional": false
+    },
+    {
+      "quantity": 1,
+      "unit": null,
+      "name": "oignon haché",
+      "optional": false
+    },
+    {
+      "quantity": 2,
+      "unit": "gousse",
+      "name": "ail hachées",
+      "optional": false
+    },
+    {
+      "quantity": 1,
+      "unit": "c. à soupe",
+      "name": "Ras El Hanout",
+      "optional": false
+    },
+    {
+      "quantity": 3,
+      "unit": "cm",
+      "name": "gingembre frais râpé",
+      "optional": false
+    },
+    {
+      "quantity": 2,
+      "unit": "c. à soupe",
+      "name": "raisins secs",
+      "optional": false
+    },
+    {
+      "quantity": 8,
+      "unit": "branche",
+      "name": "coriandre",
+      "optional": false
+    },
+    {
+      "quantity": 3,
+      "unit": "c. à soupe",
+      "name": "huile d’olive",
+      "optional": false
+    },
+    {
+      "quantity": 8,
+      "unit": "c. à soupe",
+      "name": "riz",
+      "optional": false
+    },
+    {
+      "quantity": 8,
+      "unit": "c. à soupe",
+      "name": "chapelure",
+      "optional": false
+    },
+    {
+      "quantity": null,
+      "unit": null,
+      "name": "Sel, poivre",
+      "optional": false
+    }
+  ],
+  "steps": [
+    {
+      "title": null,
+      "text": "Découpez un chapeau aux tomates et aux courgettes, videz-les sans les percer à l’aide d’une cuillère parisienne (réservez l’intérieur). Salez les tomates et retournez-les sur une grille pour les faire dégorger."
+    },
+    {
+      "title": null,
+      "text": "Faites cuire les oignons et les courgettes 20 min à la vapeur. Une fois tièdes, pelez les oignons. Découpez une calotte, videz-les soigneusement à l’aide d’une cuillère sans les percer. Hachez la pulpe d’oignon ainsi que celle des courgettes. Faites tremper la mie de pain dans le lait."
+    },
+    {
+      "title": null,
+      "text": "Coupez l’agneau en gros cubes. Dans une poêle, faites chauffer l’huile, ajoutez les cubes d’agneau et faites-les dorer durant 5 min. Retirez-les et réservez."
+    },
+    {
+      "title": null,
+      "text": "Dans la même poêle, ajoutez l’oignon, l’ail et le gingembre. Laissez-les dorer 5 min. Ajoutez la pulpe des courgettes et des oignons."
+    },
+    {
+      "title": null,
+      "text": "Préchauffez le four à 180°C."
+    },
+    {
+      "title": null,
+      "text": "Hachez grossièrement la viande d’agneau au robot. Ciselez la coriandre."
+    },
+    {
+      "title": null,
+      "text": "Dans un saladier, mélangez la viande d’agneau, le mélange d’oignon, la mie de pain essorée, le Ras-El Hanout, les raisins secs et la coriandre. Salez et poivrez."
+    },
+    {
+      "title": null,
+      "text": "Disposez les légumes dans un plat huilé."
+    },
+    {
+      "title": null,
+      "text": "Mettez un peu de riz au fond des tomates et des courgettes (afin d’absorber l’eau des légumes durant la cuisson). Remplissez les légumes de farce en tassant un peu. Saupoudrez chaque farci d’une cuillère à soupe de chapelure. Enfournez pour 45 min, en arrosant régulièrement avec le jus de cuisson. Remettez les chapeaux 15 min avant la fin de cuisson."
+    }
+  ],
+  "tip": "Servez-les farcis avec du riz ou une salade par exemple.",
+  "description": "Servez-les farcis avec du riz ou une salade par exemple."
+}

@@ -1,0 +1,36 @@
+{
+  "statut": "brouillon",
+  "page_type": "single_recipe",
+  "name": "Œuf mollet pané et salade frisée aux lardons",
+  "servings": 4,
+  "prep_min": 30,
+  "cook_min": 20,
+  "difficulty": "facile",
+  "ingredients": [
+    { "quantity": 4, "unit": null, "name": "œufs", "optional": false },
+    { "quantity": 250, "unit": "g", "name": "lardons", "optional": false },
+    { "quantity": 1, "unit": null, "name": "chicorée frisée", "optional": false },
+    { "quantity": 1, "unit": "c. à soupe", "name": "moutarde", "optional": false },
+    { "quantity": 4, "unit": "c. à soupe", "name": "vinaigre", "optional": false },
+    { "quantity": 1, "unit": "c. à soupe", "name": "huile d’olive", "optional": false },
+    { "quantity": 2, "unit": "c. à soupe", "name": "huile de noix", "optional": false },
+    { "quantity": 1, "unit": "gousse", "name": "ail haché", "optional": false },
+    { "quantity": null, "unit": null, "name": "ciboulette ciselée", "optional": false },
+    { "quantity": null, "unit": null, "name": "sel", "optional": false },
+    { "quantity": null, "unit": null, "name": "poivre", "optional": false },
+    { "quantity": 2, "unit": null, "name": "œufs battus", "optional": false },
+    { "quantity": 100, "unit": "g", "name": "farine", "optional": false },
+    { "quantity": 150, "unit": "g", "name": "chapelure panko ou chapelure classique", "optional": false },
+    { "quantity": null, "unit": null, "name": "huile de friture", "optional": false }
+  ],
+  "steps": [
+    { "title": null, "starts_with": "Lavez la frisée et essorez-la" },
+    { "title": null, "starts_with": "Faites dorer les lardons" },
+    { "title": null, "starts_with": "Portez une casserole d’eau" },
+    { "title": null, "starts_with": "Séchez soigneusement les oeufs" },
+    { "title": null, "starts_with": "Faites chauffer l’huile à 180" },
+    { "title": null, "starts_with": "Assaisonnez la frisée avec la vinaigrette" }
+  ],
+  "tip": null,
+  "notes": "Piège : le JSON-LD Recipe existe mais n’a NI ingrédients NI étapes, et ses durées sont mal formées (« 30 », « 20 », « P50M ») : un extracteur JSON-LD ne doit pas s’arrêter là, mais compléter avec le HTML. Quantité, nom et précision (« hachée », « battus ») dans trois éléments séparés. Ingrédients et étapes affichés deux fois (page + mode « pas à pas ») : dédoublonner. Groupes « Pour la vinaigrette », « Pour la panure » (cf. 07). « Notre suggestion d’accord : un beaujolais » = suggestion de vin, texte non classé. Nom : suffixe SEO de la balise title (« : découvrez notre recette croustillante ! ») à retirer."
+}

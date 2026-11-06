@@ -1,0 +1,127 @@
+{
+  "name": "Pepe chicken (Sierra Leone)",
+  "servings": 2,
+  "prep_min": null,
+  "cook_min": 20,
+  "difficulty": null,
+  "ingredients": [
+    {
+      "quantity": 2,
+      "unit": null,
+      "name": "filets de poulet",
+      "optional": false
+    },
+    {
+      "quantity": 2,
+      "unit": "c. à soupe",
+      "name": "beurre de cacahuète",
+      "optional": false
+    },
+    {
+      "quantity": 1,
+      "unit": null,
+      "name": "oignon",
+      "optional": false
+    },
+    {
+      "quantity": 2,
+      "unit": "gousse",
+      "name": "ail",
+      "optional": false
+    },
+    {
+      "quantity": 0.5,
+      "unit": null,
+      "name": "citron",
+      "optional": false
+    },
+    {
+      "quantity": 1,
+      "unit": "c. à café",
+      "name": "curry en poudre",
+      "optional": false
+    },
+    {
+      "quantity": 1,
+      "unit": "c. à café",
+      "name": "paprika",
+      "optional": false
+    },
+    {
+      "quantity": 1,
+      "unit": "c. à café",
+      "name": "cumin",
+      "optional": false
+    },
+    {
+      "quantity": 1,
+      "unit": "c. à soupe",
+      "name": "concentré de tomate",
+      "optional": false
+    },
+    {
+      "quantity": 1,
+      "unit": "c. à café",
+      "name": "poivre moulu",
+      "optional": false
+    },
+    {
+      "quantity": 1,
+      "unit": null,
+      "name": "piment ou une cuillère à soupe de piment en poudre",
+      "optional": false
+    },
+    {
+      "quantity": null,
+      "unit": null,
+      "name": "Bouillon de poulet",
+      "optional": false
+    },
+    {
+      "quantity": null,
+      "unit": null,
+      "name": "Huile d’olive",
+      "optional": false
+    }
+  ],
+  "steps": [
+    {
+      "title": null,
+      "text": "Préparer la marinade : Eplucher l’oignon et les gousses d’ail et les émincer."
+    },
+    {
+      "title": null,
+      "text": "Mélanger les épices, le concentré de tomate, l’oignon ciselé, les gousses d’ail émincées, le piment en poudre (si vous choisissez un piment, le couper en 2, enlever les pépins et l’émincer avant de l’ajouter à la marinade)."
+    },
+    {
+      "title": null,
+      "text": "Couper les filets de poulet en morceaux."
+    },
+    {
+      "title": null,
+      "text": "Enduire les filets de poulet avec la marinade et laisser reposer au frais pendant 2 heures."
+    },
+    {
+      "title": null,
+      "text": "Préchauffer le four à 200°C."
+    },
+    {
+      "title": null,
+      "text": "Piquer les morceaux de poulet sur des pics à brochettes et les placer dans un plat allant au four."
+    },
+    {
+      "title": null,
+      "text": "Enfourner pendant 20 minutes."
+    },
+    {
+      "title": null,
+      "text": "Si il reste de la sauce de marinade, la faire cuire avec un peu de bouillon de poulet."
+    },
+    {
+      "title": null,
+      "text": "Servir avec du riz et la sauce."
+    }
+  ],
+  "tip": null,
+  "description": null
+}

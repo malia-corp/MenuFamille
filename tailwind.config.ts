@@ -72,8 +72,12 @@ const config: Config = {
         },
         // Toasts : glisse depuis le haut en apparaissant
         'kkb-toast-in': {
-          from: { opacity: '0', transform: 'translateY(-12px)' },
-          to:   { opacity: '1', transform: 'translateY(0)' },
+          from: { opacity: '0', transform: 'translateY(-12px) scale(0.96)' },
+          to:   { opacity: '1', transform: 'translateY(0) scale(1)' },
+        },
+        'kkb-toast-out': {
+          from: { opacity: '1', transform: 'translateY(0) scale(1)' },
+          to:   { opacity: '0', transform: 'translateY(-8px) scale(0.96)' },
         },
         'accordion-down': {
           from: { height: '0' },
@@ -94,7 +98,8 @@ const config: Config = {
       },
       animation: {
         'kkb-skeleton': 'kkb-skeleton 1.5s ease-in-out infinite',
-        'kkb-toast-in': 'kkb-toast-in 0.25s ease-out',
+        'kkb-toast-in': 'kkb-toast-in 0.28s cubic-bezier(0.34, 1.35, 0.64, 1)',
+        'kkb-toast-out': 'kkb-toast-out 0.18s ease-in forwards',
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
         'kkb-react-pop': 'kkb-react-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)',

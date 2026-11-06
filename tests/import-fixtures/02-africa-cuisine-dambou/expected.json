@@ -1,0 +1,29 @@
+{
+  "statut": "brouillon",
+  "page_type": "single_recipe",
+  "name": "Dambou : couscous aux épinards",
+  "servings": 5,
+  "prep_min": null,
+  "cook_min": null,
+  "difficulty": "facile",
+  "ingredients": [
+    { "quantity": 500, "unit": "g", "name": "semoule de blé dure fine", "optional": false },
+    { "quantity": 300, "unit": "g", "name": "épinards", "optional": false },
+    { "quantity": null, "unit": "feuille", "name": "moringa", "optional": true },
+    { "quantity": 2, "unit": null, "name": "oignons", "optional": false },
+    { "quantity": 1, "unit": null, "name": "piment vert", "optional": true },
+    { "quantity": 1, "unit": "cube", "name": "bouillon", "optional": false },
+    { "quantity": null, "unit": null, "name": "huile d’olive", "optional": false },
+    { "quantity": null, "unit": null, "name": "sel", "optional": false }
+  ],
+  "steps": [
+    { "title": "Préparation des épinards", "starts_with": "Si vous utilisez des épinards surgelés" },
+    { "title": "Préparation du couscous", "starts_with": "Dans une casserole, faites bouillir" },
+    { "title": "Cuisson du couscous", "starts_with": "Une fois le couscous bien travaillé" },
+    { "title": null, "starts_with": "Emincez et faites cuire vos oignons" },
+    { "title": "Mélangez le riz et les épinards", "starts_with": "Votre Dambou est presque prêt" },
+    { "title": "Votre Dambou maison est prêt", "starts_with": "Vous pouvez servir votre Dambou" }
+  ],
+  "tip": null,
+  "notes": "Ingrédients affichés deux fois dans la page : 8 attendus, pas 16. « Optionnel » est un drapeau (moringa, piment vert), pas une partie du nom. Le JSON-LD écrit « nom: quantité » et n’a pas les titres d’étape, que seule la page affiche. Bruit à ignorer : Done, Adjust Servings, Serves 5, Easy, Votes: 9, Partager. Le texte d’intro (variantes du Dambou) n’est pas une astuce."
+}

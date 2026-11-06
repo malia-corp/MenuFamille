@@ -1,0 +1,40 @@
+{
+  "statut": "brouillon",
+  "page_type": "single_recipe",
+  "name": "La ratatouille niçoise au basilic frais",
+  "servings": 6,
+  "prep_min": 25,
+  "cook_min": 45,
+  "difficulty": null,
+  "ingredients": [
+    { "quantity": 2, "unit": null, "name": "oignons", "optional": false },
+    { "quantity": 2, "unit": null, "name": "courgettes moyennes", "optional": false },
+    { "quantity": 1, "unit": null, "name": "poivron jaune", "optional": false },
+    { "quantity": 1, "unit": null, "name": "poivron rouge", "optional": false },
+    { "quantity": 1, "unit": null, "name": "aubergine", "optional": false },
+    { "quantity": 3, "unit": null, "name": "tomates moyennes", "optional": false },
+    { "quantity": 3, "unit": "gousse", "name": "ail", "optional": false },
+    { "quantity": 10, "unit": "cl", "name": "huile d’olive", "optional": false },
+    { "quantity": 0.5, "unit": "botte", "name": "basilic frais", "optional": false },
+    { "quantity": 1, "unit": "branche", "name": "thym frais", "optional": false },
+    { "quantity": 1, "unit": "c. à café", "name": "sucre en poudre", "optional": false },
+    { "quantity": null, "unit": null, "name": "sel fin et poivre du moulin", "optional": false }
+  ],
+  "steps": [
+    { "title": null, "starts_with": "Je fais chauffer l’huile d’olive" },
+    { "title": null, "starts_with": "J’émince finement les oignons" },
+    { "title": null, "starts_with": "Je les verse dans la cocotte" },
+    { "title": null, "starts_with": "J’épépine les poivrons" },
+    { "title": null, "starts_with": "Je coupe les courgettes" },
+    { "title": null, "starts_with": "J’incorpore ces légumes" },
+    { "title": null, "starts_with": "J’écrase l’ail" },
+    { "title": null, "starts_with": "Je cisèle la moitié du basilic" },
+    { "title": null, "starts_with": "Je taille les tomates" },
+    { "title": null, "starts_with": "Je sale, je poivre" },
+    { "title": null, "starts_with": "Je laisse mijoter le tout" },
+    { "title": null, "starts_with": "Je couvre et j’enfourne" },
+    { "title": null, "starts_with": "Je sers bien chaud" }
+  ],
+  "tip": null,
+  "notes": "Même gabarit que 05, mais étapes NON numérotées : une phrase par élément de liste. « ½ botte » → 0.5 (fraction unicode). « c à café » sans point → c. à café. Nom gardé tel quel, article compris (décision du 28/10)."
+}

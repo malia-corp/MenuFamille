@@ -84,9 +84,11 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-lg space-y-6 px-4 pb-10 pt-5 lg:pt-2">
-      <h1 className="hidden font-dosis text-xl font-bold text-[var(--kkb-text-primary)] lg:block">Paramètres</h1>
+    <div className="mx-auto max-w-lg space-y-6 px-4 pb-10 pt-5 lg:max-w-none lg:px-0 lg:pt-0">
+      <h1 className="hidden text-h1 text-[var(--kkb-foret)] lg:block">Paramètres</h1>
 
+      {/* Desktop : les sections se répartissent en colonnes */}
+      <div className="space-y-6 lg:grid lg:grid-cols-2 lg:items-start lg:gap-6 lg:space-y-0 2xl:grid-cols-3">
       <Section label="Planification">
         <Link href="/settings/meal-config" className={ROW}>
           <RowContent icon={CalendarDays} label="Rythme des repas" sub="Repas actifs et fréquence" />
@@ -139,6 +141,7 @@ export default function SettingsPage() {
           <span className="flex-1 font-quicksand text-[15px] font-semibold text-[var(--kkb-coral)]">Se déconnecter</span>
         </button>
       </Section>
+      </div>
 
       {prefsOpen && (
         <DietaryPrefsSheet prefs={prefs} onChange={setPrefs} onClose={() => setPrefsOpen(false)} />

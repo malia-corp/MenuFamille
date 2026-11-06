@@ -1,0 +1,36 @@
+{
+  "statut": "brouillon",
+  "page_type": "single_recipe",
+  "name": "Pot-au-feu de bœuf",
+  "servings": 6,
+  "prep_min": 30,
+  "cook_min": 120,
+  "difficulty": "facile",
+  "ingredients": [
+    { "quantity": 1, "unit": "kg", "name": "jarrets de bœuf", "optional": false },
+    { "quantity": 1, "unit": null, "name": "langue de veau", "optional": false },
+    { "quantity": 500, "unit": "g", "name": "queues de bœuf en bouquet", "optional": false },
+    { "quantity": 3, "unit": "l", "name": "eau", "optional": false },
+    { "quantity": 1, "unit": null, "name": "os à moelle", "optional": false },
+    { "quantity": 1, "unit": null, "name": "oignon piqué d’un clou de girofle", "optional": false },
+    { "quantity": 3, "unit": "gousse", "name": "ail", "optional": false },
+    { "quantity": 500, "unit": "g", "name": "poireaux", "optional": false },
+    { "quantity": 500, "unit": "g", "name": "navets", "optional": false },
+    { "quantity": 3, "unit": null, "name": "carottes", "optional": false },
+    { "quantity": 2, "unit": "branche", "name": "céleri", "optional": false },
+    { "quantity": 1, "unit": null, "name": "chou vert", "optional": false },
+    { "quantity": 3, "unit": null, "name": "pommes de terre", "optional": false },
+    { "quantity": 1, "unit": null, "name": "bouquet garni", "optional": false },
+    { "quantity": 1, "unit": "c. à soupe", "name": "poivre en grains", "optional": false }
+  ],
+  "steps": [
+    { "title": null, "starts_with": "Passez la langue de veau" },
+    { "title": null, "starts_with": "Déposez les viandes" },
+    { "title": null, "starts_with": "Portez à ébullition" },
+    { "title": null, "starts_with": "Trente minutes avant la fin" },
+    { "title": null, "starts_with": "Coupez les viandes en tranches" },
+    { "title": null, "starts_with": "Servez brûlant" }
+  ],
+  "tip": null,
+  "notes": "JSON-LD complet : le cas « facile », il sert de témoin. Nom débarrassé du suffixe SEO « : la meilleure recette ». La description du JSON-LD (« Notée 5/5 par 4 membres Marmiton ») est du texte promotionnel : ni astuce, ni description de la recette. « Moyen » sur la page est le coût, pas la difficulté. Pluriels du JSON-LD à corriger (« 1 langues », « 1 choux », « 1 bouquets garnis »)."
+}

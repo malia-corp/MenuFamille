@@ -25,3 +25,12 @@ export function harmonyOf(score: number | null): { label: string; color: string 
   if (score >= 60)    return { label: 'Bonne entente', color: 'var(--kkb-teal)' }
   return { label: 'Avis partagés', color: 'var(--kkb-warning)' }
 }
+
+// Pastille d'accord d'un repas : vert au-delà de 80 %, jaune au-delà de 50 %,
+// orange en dessous (couleurs de texte de la matrice WCAG).
+export function agreementTone(pct: number | null): { bg: string; text: string } {
+  if (pct === null) return { bg: 'var(--kkb-lin)', text: 'var(--kkb-texte-2)' }
+  if (pct >= 80)    return { bg: 'var(--kkb-sauge-50)', text: 'var(--kkb-foret-500)' }
+  if (pct >= 50)    return { bg: 'var(--kkb-jaune-50)', text: 'var(--kkb-jaune-text)' }
+  return { bg: 'var(--kkb-orange-50)', text: 'var(--kkb-orange-text)' }
+}

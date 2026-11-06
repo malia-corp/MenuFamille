@@ -1,0 +1,443 @@
+{
+  "name": "Charlotte poire/chocolat",
+  "servings": 8,
+  "prep_min": 218,
+  "cook_min": 22,
+  "difficulty": "moyen",
+  "ingredients": [
+    {
+      "quantity": 120,
+      "unit": "g",
+      "name": "jaunes d'œufs",
+      "optional": false
+    },
+    {
+      "quantity": 150,
+      "unit": "g",
+      "name": "sucre en poudre (75 g + 75 g)",
+      "optional": false
+    },
+    {
+      "quantity": 180,
+      "unit": "g",
+      "name": "blancs d'œufs",
+      "optional": false
+    },
+    {
+      "quantity": 75,
+      "unit": "g",
+      "name": "farine type 55",
+      "optional": false
+    },
+    {
+      "quantity": 75,
+      "unit": "g",
+      "name": "fécule de pomme de terre",
+      "optional": false
+    },
+    {
+      "quantity": 4,
+      "unit": null,
+      "name": "poires",
+      "optional": false
+    },
+    {
+      "quantity": 100,
+      "unit": "g",
+      "name": "sucre en poudre",
+      "optional": false
+    },
+    {
+      "quantity": 300,
+      "unit": "g",
+      "name": "chocolat de couverture noir Ocoa™ à 70%",
+      "optional": false
+    },
+    {
+      "quantity": 300,
+      "unit": "g",
+      "name": "crème entière liquide à 35% de matière grasse",
+      "optional": false
+    },
+    {
+      "quantity": 100,
+      "unit": "g",
+      "name": "œufs entiers",
+      "optional": false
+    },
+    {
+      "quantity": 150,
+      "unit": "g",
+      "name": "sucre en poudre",
+      "optional": false
+    },
+    {
+      "quantity": 50,
+      "unit": "g",
+      "name": "eau",
+      "optional": false
+    },
+    {
+      "quantity": 20,
+      "unit": "cl",
+      "name": "sirop à 30° baumé",
+      "optional": false
+    },
+    {
+      "quantity": 3,
+      "unit": "cl",
+      "name": "eau de vie de poire",
+      "optional": false
+    },
+    {
+      "quantity": 4,
+      "unit": null,
+      "name": "poires",
+      "optional": false
+    },
+    {
+      "quantity": 1,
+      "unit": "l",
+      "name": "eau",
+      "optional": false
+    },
+    {
+      "quantity": 250,
+      "unit": "g",
+      "name": "sucre en poudre",
+      "optional": false
+    },
+    {
+      "quantity": 2,
+      "unit": "gousse",
+      "name": "vanille",
+      "optional": false
+    },
+    {
+      "quantity": 100,
+      "unit": "g",
+      "name": "nappage miroir neutre",
+      "optional": false
+    }
+  ],
+  "steps": [
+    {
+      "title": null,
+      "text": "Biscuit à la cuillère : Verser les jaunes d'œufs dans la cuve du batteur."
+    },
+    {
+      "title": null,
+      "text": "Ajouter le sucre en poudre."
+    },
+    {
+      "title": null,
+      "text": "Monter la préparation au ruban. Les jaunes doivent être très mousseux. Ils vont doubler de volume et s'éclaircir. Réserver de côté."
+    },
+    {
+      "title": null,
+      "text": "Verser les blancs d'oeufs dans une seconde cuve et les battre à petite vitesse. Lorsque les blancs commencent à être mousseux, verser petit à petit le sucre en poudre en 3 ou 4 fois."
+    },
+    {
+      "title": null,
+      "text": "Battre encore quelques secondes puis incorporer le restant du sucre en 2 ou 3 fois."
+    },
+    {
+      "title": null,
+      "text": "Mettre le batteur à vitesse maximum et ajouter le reste de sucre en poudre, afin de serrer les blancs."
+    },
+    {
+      "title": null,
+      "text": "Lorsque les blancs sont bien serrés, verser la farine et la fécule de pomme de terre dans une passoire tamis et tamiser ensemble ces deux éléments."
+    },
+    {
+      "title": null,
+      "text": "Verser les farines tamisées sur les jaunes d'oeufs montés au ruban et mélanger délicatement avec une spatule type maryse, sans faire retomber la préparation. Pour cela, il faut aller chercher la préparation au fond avec la spatule maryse et la faire remonter sur le dessus. Avec l'autre main il faut faire tourner le bol du batteur dans le sens inverse des aiguilles d'une montre."
+    },
+    {
+      "title": null,
+      "text": "Ajouter 1/4 de la meringue."
+    },
+    {
+      "title": null,
+      "text": "Mélanger doucement, la préparation doit être homogène."
+    },
+    {
+      "title": null,
+      "text": "Ajouter le restant de la meringue et mélanger délicatement à la maryse."
+    },
+    {
+      "title": null,
+      "text": "Cette pâte à biscuit à la cuillère ne peut pas attendre, elle doit être pochée et cuite immédiatement."
+    },
+    {
+      "title": null,
+      "text": "Verser la pâte obtenue dans une poche à douille, munie d'une douille unie de Ø 12 mm."
+    },
+    {
+      "title": null,
+      "text": "Prendre un cercle à vacherin de Ø 18 cm."
+    },
+    {
+      "title": null,
+      "text": "À l'aide d'un crayon à papier, tracer l'intérieur du cercle sur une feuille de papier sulfurisé."
+    },
+    {
+      "title": null,
+      "text": "Retourner la feuille de papier sulfurisé et la déposer sur une plaque de cuisson perforée."
+    },
+    {
+      "title": null,
+      "text": "Tracer deux bandes de 5 cm de largeur au crayon à papier, sur une seconde feuille de papier sulfurisé. Ces bandes doivent être légèrement inférieures à la hauteur du cercle à vacherin qui est de 6 cm. Pour cela, utiliser une règle graduée."
+    },
+    {
+      "title": null,
+      "text": "Retourner cette feuille de papier sulfurisé sur une seconde plaque de cuisson. Réserver de côté."
+    },
+    {
+      "title": null,
+      "text": "Pocher l'appareil à biscuit à la cuillère en formant une spirale en partant du centre vers l'extérieur, jusqu'à atteindre le trait au crayon à papier."
+    },
+    {
+      "title": null,
+      "text": "Pocher la pâte en cartouchière dans les deux bandes précédemment dessinées, en déposant délicatement des bâtonnets de préparation parallèlement en respectant le tracé sur le papier."
+    },
+    {
+      "title": null,
+      "text": "Saupoudrer les bandes de pâte de sucre glace."
+    },
+    {
+      "title": null,
+      "text": "Faire de même sur le disque de pâte."
+    },
+    {
+      "title": null,
+      "text": "Enfourner dans un four ventilé, préchauffé à 180°C, et cuire pendant 12 minutes."
+    },
+    {
+      "title": null,
+      "text": "Au terme de la cuisson, retirer les bandes de biscuit du four et les déposer sur le plan de travail. Laisser refroidir à température ambiante."
+    },
+    {
+      "title": null,
+      "text": "Faire de même avec le disque de biscuit à la cuillère."
+    },
+    {
+      "title": null,
+      "text": "Poires caramélisées : Peler les poires délicatement à l'aide d'un éplucheur."
+    },
+    {
+      "title": null,
+      "text": "Couper les poires en deux et retirer le trognon."
+    },
+    {
+      "title": null,
+      "text": "Puis les détailler en cubes d'environ 1 cm de côté."
+    },
+    {
+      "title": null,
+      "text": "Verser le sucre en poudre dans une poêle chaude, en le parsemant sur toute sa surface."
+    },
+    {
+      "title": null,
+      "text": "Laisser le sucre fondre et caraméliser. Cette fonte se fera progressivement."
+    },
+    {
+      "title": null,
+      "text": "Lorsque le sucre est entièrement caramélisé, ajouter les morceaux de poires crues et les faire cuire pendant quelques minutes tout en mélangeant, de façon à bien les enrober de caramel. Attention à ne pas obtenir une purée, les morceaux de poires doivent rester entiers."
+    },
+    {
+      "title": null,
+      "text": "Lorsque les poires sont cuites, les débarrasser dans un bac alimentaire en les étalant bien afin qu'elles refroidissent rapidement."
+    },
+    {
+      "title": null,
+      "text": "Pendant ce temps, détailler les bandes de biscuit à la cuillère froides. Pour cela, commencer par parer un des côtés à l'aide d'un couteau-scie à génoise, de manière à retirer le minimum de biscuit."
+    },
+    {
+      "title": null,
+      "text": "Mesurer le cercle à vacherin. Celui-ci a une hauteur de 6 cm."
+    },
+    {
+      "title": null,
+      "text": "Faire une marque avec le couteau sur la bande de biscuit à 5 cm, comme ceci (1 cm de moins que la hauteur du cercle)."
+    },
+    {
+      "title": null,
+      "text": "Puis couper le biscuit sur tout le long, afin d'obtenir une bande de 5 cm."
+    },
+    {
+      "title": null,
+      "text": "À l'aide d'un cercle à mousse de Ø 16 cm, découper le disque de biscuit à la cuillère."
+    },
+    {
+      "title": null,
+      "text": "Déposer le cercle à vacherin de Ø 18 cm sur une plaque à pâtisserie recouverte d'une feuille de papier sulfurisé. Placer un support à gâteau rond de Ø 18 cm dans le fond de ce cercle inox. Puis appliquer un ruban rhodoïde de hauteur 6 cm sur tout le pourtour intérieur du cercle."
+    },
+    {
+      "title": null,
+      "text": "Positionner une bande de biscuit à la cuillère sur la paroi interne du cercle à vacherin (la partie saupoudrée de sucre glace vers l'extérieur)."
+    },
+    {
+      "title": null,
+      "text": "Placer la seconde bande de biscuit de façon à faire le tour du cercle. Découper le biscuit à la bonne longueur avec une paire de ciseaux."
+    },
+    {
+      "title": null,
+      "text": "Déposer dans le fond du cercle à vacherin le disque de biscuit à la cuillère et bien l'enfoncer."
+    },
+    {
+      "title": null,
+      "text": "Mousse au chocolat : Verser le sucre en poudre avec 5 à 10 cl d'eau dans une casserole, et porter à ébullition."
+    },
+    {
+      "title": null,
+      "text": "Pendant ce temps, casser les oeufs entiers dans la cuve du batteur."
+    },
+    {
+      "title": null,
+      "text": "Lorsque le sucre commence à avoir une ébullition qui se ralentit légèrement, contrôler la cuisson avec un thermomètre à visée laser. Il faut atteindre la température de 121°C. Retirer alors le sucre du feu pour stopper l'ébullition."
+    },
+    {
+      "title": null,
+      "text": "Puis fouetter les oeufs entiers au batteur électrique et incorporer à petite vitesse le sucre cuit bouillant, en le faisant couler le long de la paroi interne de la cuve (surtout pas sur les branches du fouet, le sucre serait projeté)."
+    },
+    {
+      "title": null,
+      "text": "Augmenter la vitesse du batteur au maximum, et fouetter jusqu'à complet refroidissement."
+    },
+    {
+      "title": null,
+      "text": "On obtient une préparation appelée pâte à bombe qui aura blanchi et doublé, voire triplé de volume. Réserver de côté."
+    },
+    {
+      "title": null,
+      "text": "En parallèle : Faire fondre au bain-marie les pistoles de chocolat noir."
+    },
+    {
+      "title": null,
+      "text": "Une fois fondues (il ne faut plus qu'il reste de morceaux) les retirer du bain-marie et les réserver de côté."
+    },
+    {
+      "title": null,
+      "text": "Monter la crème fleurette bien froide en crème fouettée. Réserver de côté."
+    },
+    {
+      "title": null,
+      "text": "Verser le chocolat fondu dans la pâte à bombe."
+    },
+    {
+      "title": null,
+      "text": "Mélanger délicatement avec la spatule maryse de façon à obtenir une préparation chocolatée."
+    },
+    {
+      "title": null,
+      "text": "La préparation doit être homogène, il ne doit pas subsister de morceaux de chocolat ni de résidus de pâte à bombe nature."
+    },
+    {
+      "title": null,
+      "text": "Verser la préparation chocolatée obtenue dans la crème fouettée froide."
+    },
+    {
+      "title": null,
+      "text": "Mélanger délicatement tous les éléments jusqu'à l'obtention d'une mousse homogène. Cette mousse au chocolat a la particularité d'être suffisamment solide pour avoir la tenue nécessaire lors de la découpe d'un entremets."
+    },
+    {
+      "title": null,
+      "text": "Verser la mousse au chocolat dans une poche à douille. Ici l'utilisation d'une douille ne sera pas nécessaire."
+    },
+    {
+      "title": null,
+      "text": "À l'aide d'un pinceau pâtissier, puncher le biscuit avec du sirop de punchage (refroidi) préalablement réalisé à partir de 20 cl de sirop à 30° baumé et de 3 cl d'eau de vie de poire. Il faudra puncher le biscuit du fond ainsi que la partie intérieure des bandes de biscuit qui se trouvent sur le côté."
+    },
+    {
+      "title": null,
+      "text": "Pocher la mousse au chocolat sur le fond de la charlotte."
+    },
+    {
+      "title": null,
+      "text": "Faire remonter la mousse sur les bords avec une mini spatule coudée afin de faire épouser la mousse dans les angles."
+    },
+    {
+      "title": null,
+      "text": "Mettre la moitié des poires caramélisées (sans le jus) sur la mousse au chocolat, comme ceci."
+    },
+    {
+      "title": null,
+      "text": "Pocher de la mousse au chocolat sur les poires et lisser la surface avec la petite spatule coudée, de façon à bien envelopper toutes les poires de cette mousse."
+    },
+    {
+      "title": null,
+      "text": "Ajouter le restant des poires caramélisées, toujours sans le jus et combler l'entremets avec le restant de mousse au chocolat."
+    },
+    {
+      "title": null,
+      "text": "Faire pénétrer la mousse sur les bords pour que celle-ci recouvre bien le dessus du biscuit et épouse l'angle entre le biscuit et le cercle inox."
+    },
+    {
+      "title": null,
+      "text": "Lisser la surface de la mousse au chocolat à l'aide d'une grande spatule métallique coudée, en la passant en une seule fois d'un côté vers l'autre."
+    },
+    {
+      "title": null,
+      "text": "Filmer au contact avec une feuille de papier film et placer au frais pendant 2 à 3 heures minimum, le temps que la mousse se fige. Cette recette peut être réalisée jusqu'à cette étape la veille, et conservée ainsi protégée dans le réfrigérateur."
+    },
+    {
+      "title": null,
+      "text": "Poires pochées : Verser l'eau et le sucre en poudre dans une casserole."
+    },
+    {
+      "title": null,
+      "text": "Ajouter les gousses de vanille coupées en deux dans le sens de la longueur et porter à ébullition."
+    },
+    {
+      "title": null,
+      "text": "À l'aide d'un éplucheur, peler les poires."
+    },
+    {
+      "title": null,
+      "text": "Les couper en deux et retirer le trognon."
+    },
+    {
+      "title": null,
+      "text": "Disposer délicatement les fruits dans le sirop bouillant et laisser cuire à frémissement 10 à 15 minutes selon la fermeté d'origine des poires. Au terme de la cuisson, couper le feu et laisser refroidir les fruits dans le sirop."
+    },
+    {
+      "title": null,
+      "text": "Lorsque les poires sont pochées et refroidies, sortir la charlotte du réfrigérateur et retirer la feuille de papier film."
+    },
+    {
+      "title": null,
+      "text": "Puis ôter le cercle à vacherin en le faisant glisser vers le haut. Le fait d'avoir placé un ruban rhodoïde entre le cercle et la charlotte permettra un démoulage très facile."
+    },
+    {
+      "title": null,
+      "text": "Retirer le ruban qui adhère uniquement sur la mousse au chocolat."
+    },
+    {
+      "title": null,
+      "text": "Éponger les poires pochées avec du papier absorbant. Veiller à retirer le maximum de sirop."
+    },
+    {
+      "title": null,
+      "text": "Émincer les poires en fines tranches avec un couteau."
+    },
+    {
+      "title": null,
+      "text": "Placer ces tranches de poires pochées en rosace sur la charlotte, de façon harmonieuse."
+    },
+    {
+      "title": null,
+      "text": "Caraméliser les arêtes des poires avec un chalumeau de cuisine, en passant rapidement la flamme dessus. Attention tout de même à ne pas réchauffer la charlotte, il ne faut pas faire fondre la mousse au chocolat."
+    },
+    {
+      "title": null,
+      "text": "Lustrer les poires avec du nappage miroir neutre réchauffé légèrement au préalable, dans le four à micro-ondes, ceci afin de le liquéfier. Celui-ci sera appliqué au pinceau pâtissier, sur toute la surface des poires."
+    },
+    {
+      "title": null,
+      "text": "Nous obtenons notre charlotte poire/chocolat noir qu'il faudra placer dans le réfrigérateur jusqu'au moment de la dégustation. Bon appétit !"
+    }
+  ],
+  "tip": null,
+  "description": null
+}

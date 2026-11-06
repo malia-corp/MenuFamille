@@ -58,3 +58,18 @@ Ce fichier trace les cas où le code réel diverge de ce qu'un prompt de sprint 
 Trouvé en améliorant l'affichage des photos sur l'écran Accueil (`components/home/framed-photo.tsx`) : côté affichage, le rendu compense déjà (fond flouté/saturé + image complète jamais rognée), mais rien ne compense une photo très lourde (temps de chargement) ou de mauvaise qualité (le flou n'arrange pas une photo réellement floue/sombre à la source).
 
 **Décision** : reporté. Construire ce pipeline (redimensionnement + compression + formats modernes à l'upload, éventuellement BlurHash pour un placeholder instantané, recadrage avec point focal) est un chantier à part — touche le flux d'upload existant et possiblement de nouvelles colonnes (couleur dominante, hash de prévisualisation), pas un ajustement d'écran.
+
+---
+
+## 4. Application mobile (`mobile/`, React Native / Expo) — écarts avec la version web
+
+**Constat** : l'app mobile reprend tous les écrans du web en appelant les mêmes routes `/api/*` du serveur Next.js. Ce qui diffère, par nécessité de la plateforme :
+
+- **Authentification** : connexion par code à 6 chiffres uniquement (pas de lien magique, qui ouvrirait le navigateur). `POST /api/auth/verify-otp` renvoie la session quand le corps contient `client: 'mobile'` ; l'app envoie ensuite `Authorization: Bearer <access_token>`. `createClient()` (`lib/supabase/server.ts`) reconnaît ce jeton, et le middleware laisse passer les requêtes `/api/` qui en portent un.
+- **Rappels** : pas de push web (VAPID / service worker). Les rappels de repas sont des notifications **locales** planifiées sur l'appareil (`mobile/src/lib/reminders.ts`) à partir des mêmes préférences (`/api/users/me/notification-prefs`), reprogrammées à l'enregistrement et au démarrage. Les demandes d'avis envoyées par les tâches planifiées (`/api/jobs/*`) n'atteignent pas l'app mobile.
+- **Hors connexion** : pas de service worker ; les réponses GET de l'API sont gardées dans AsyncStorage et resservies sans réseau (`mobile/src/lib/api.ts`). Les écritures demandent le réseau.
+- **Impression** : « Imprimer la fiche » (recette) et « Imprimer pour le frigo » (résultats du sondage) passent par expo-print (`mobile/src/lib/print.ts`) : même contenu que les fiches du web, envoyé à la boîte d’impression du système (imprimante ou PDF).
+- **Liens partagés** : sondage et invitation pointent toujours vers la version web (`EXPO_PUBLIC_API_URL`), utilisable sans l'app ; pas de liens universels (app links) vers l'app.
+- **Bureau** : seules les mises en page mobiles du web sont reprises (pas de grille semaine, pas de vue liste des recettes, pagination remplacée par « Voir plus »).
+
+**Pour les prompts futurs** : toute nouvelle route API consommée par l'app doit accepter le jeton Bearer (patron habituel `createClient()` → `auth.getUser()` suffit). Toute nouvelle route publique doit rester joignable sans session, comme pour le web.

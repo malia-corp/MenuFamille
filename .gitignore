@@ -48,3 +48,13 @@ supabase/functions/.env
 
 # notes locales hors périmètre repo
 fix-otp.md
+
+# images d inspiration tierces (non publiées)
+/design/
+
+# APK de test générés dans release/ (binaires, hors dépôt)
+/release/*.apk
+# HTML brut des sites tiers : contenu protégé, pas dans le dépôt.
+# Le régénérer avec npm run import:fetch.
+tests/import-fixtures/**/page.html
+tests/import-fixtures/texts/

@@ -4,7 +4,7 @@ import { DEFAULT_MEAL_CONFIGS } from '@/lib/constants/meal-type'
 import { NextRequest } from 'next/server'
 
 export async function POST(request: NextRequest) {
-  const { email, token, authMode } = await request.json()
+  const { email, token, authMode, client } = await request.json()
 
   if (!email || !token) {
     return Response.json({ error: 'Email et code requis' }, { status: 400 })
@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
 
   const supabase = await createClient()
 
-  const { data: { user }, error } = await supabase.auth.verifyOtp({
+  const { data: { user, session }, error } = await supabase.auth.verifyOtp({
     email,
     token,
     type: 'email',
@@ -21,6 +21,11 @@ export async function POST(request: NextRequest) {
   if (error || !user) {
     return Response.json({ error: error?.message ?? 'Code invalide' }, { status: 400 })
   }
+
+  // Application mobile : elle conserve elle-même la session (pas de cookie).
+  const mobileSession = client === 'mobile' && session
+    ? { session: { access_token: session.access_token, refresh_token: session.refresh_token } }
+    : {}
 
   // SELECT via client anon (session établie après verifyOtp)
   const { data: existing } = await supabase
@@ -47,7 +52,7 @@ export async function POST(request: NextRequest) {
       DEFAULT_MEAL_CONFIGS.map((c) => ({ ...c, user_id: user.id }))
     )
 
-    return Response.json({ redirect: '/onboarding' })
+    return Response.json({ redirect: '/onboarding', ...mobileSession })
   }
 
   if (authMode) {
@@ -56,5 +61,5 @@ export async function POST(request: NextRequest) {
       .eq('id', user.id)
   }
 
-  return Response.json({ redirect: '/' })
+  return Response.json({ redirect: '/', ...mobileSession })
 }

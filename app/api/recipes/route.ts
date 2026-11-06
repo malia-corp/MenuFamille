@@ -2,6 +2,19 @@ import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
 import { upsertSuggestedAssociations } from '@/lib/utils/recipe-associations'
 import { findSimilarRecipe } from '@/lib/utils/recipe-similarity'
+import { acceptablePhotoUrl } from '@/lib/import/url-safety'
+
+// Colonnes de traçabilité de l'import (migration y), validées avant écriture.
+function importMetaColumns(raw: unknown): { source_type?: string[]; status?: string; rest_min?: number | null } {
+  if (!raw || typeof raw !== 'object') return {}
+  const m = raw as Record<string, unknown>
+  const SOURCES = ['json_ld', 'microdata', 'html', 'llm', 'text']
+  const out: { source_type?: string[]; status?: string; rest_min?: number | null } = {}
+  if (Array.isArray(m.source_type)) out.source_type = m.source_type.filter((s): s is string => typeof s === 'string' && SOURCES.includes(s))
+  if (m.status === 'complete' || m.status === 'partial' || m.status === 'failed') out.status = m.status
+  if (typeof m.rest_min === 'number' && m.rest_min > 0 && m.rest_min < 10_000) out.rest_min = Math.round(m.rest_min)
+  return out
+}
 import { NextRequest } from 'next/server'
 
 const DIACRITICS_RE = /[̀-ͯ]/g
@@ -45,6 +58,8 @@ export async function POST(request: NextRequest) {
     photo_url,
     source_url,
     raw_html_hash,
+    parser_version,
+    import_meta,
     suggested_sides = [],
     suggested_drinks = [],
   } = body
@@ -91,7 +106,7 @@ export async function POST(request: NextRequest) {
       servings: Math.max(1, Number(servings) || 4),
       difficulty: difficulty || null,
       visibility,
-      photo_url: (photo_url as string | undefined) || null,
+      photo_url: acceptablePhotoUrl(photo_url),
     })
     .select('id')
     .single()
@@ -133,8 +148,9 @@ export async function POST(request: NextRequest) {
     await service.from('recipe_imports').insert({
       recipe_id: recipe.id,
       source_url,
-      parser_version: '1.0',
+      parser_version: typeof parser_version === 'string' ? parser_version.slice(0, 20) : '1.0',
       raw_html_hash: (raw_html_hash as string | undefined) ?? null,
+      ...importMetaColumns(import_meta),
     })
   }
 
