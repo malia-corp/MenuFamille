@@ -1,6 +1,8 @@
 // Sauvegarde complète de la base Supabase puis remise à zéro, en gardant
-// seulement les tables de paramètres (categories, pantry_categories,
-// feedback_templates).
+// les tables de paramètres (categories, pantry_categories, feedback_templates)
+// et le catalogue KeskonBouf : recettes officielles (avec ingrédients, étapes,
+// photos) et comptes admin (leur connexion et leur rôle ; leurs cercles et
+// menus partent comme les autres).
 //
 //   npm run db:backup-reset                  → sauvegarde + simulation (rien n'est supprimé)
 //   npm run db:backup-reset -- --confirm     → sauvegarde puis suppression réelle
@@ -9,6 +11,8 @@
 //                                              le profil est recréé à la prochaine connexion
 //   npm run db:backup-reset -- --confirm --keep-photos
 //                                            → ne vide pas le bucket recipe-photos
+//   npm run db:backup-reset -- --confirm --with-catalog
+//                                            → vide aussi le catalogue et les comptes admin
 //
 // Sauvegarde : backups/<horodatage>/ (ignoré par Git), un JSON par table,
 // auth-users.json, les photos du bucket et un manifest.json.
@@ -38,6 +42,9 @@ const args = new Set(process.argv.slice(2))
 const CONFIRM = args.has('--confirm')
 const KEEP_AUTH = args.has('--keep-auth')
 const KEEP_PHOTOS = args.has('--keep-photos')
+const WITH_CATALOG = args.has('--with-catalog')
+
+type Row = Record<string, unknown>
 
 function loadEnv(file = '.env.local'): void {
   if (!existsSync(file)) return
@@ -118,6 +125,7 @@ async function main() {
   // 1. Sauvegarde : toutes les tables, y compris celles qu'on garde.
   const counts: Record<string, number> = {}
   const missing: string[] = []
+  const dumped: Record<string, Row[]> = {}
   for (const table of [...KEEP, ...PURGE]) {
     const rows = await dumpTable(db, table)
     if (!rows) {
@@ -126,6 +134,7 @@ async function main() {
       continue
     }
     counts[table] = rows.length
+    dumped[table] = rows as Row[]
     writeFileSync(join(dir, `${table}.json`), JSON.stringify(rows, null, 2))
     console.log(`  ${table.padEnd(24)} ${String(rows.length).padStart(6)} ligne(s)${KEEP.includes(table) ? '  (gardée)' : ''}`)
   }
@@ -149,6 +158,27 @@ async function main() {
     kept: KEEP, purged: PURGE.filter(t => !missing.includes(t)), missing, counts, auth_users: authUsers.length, storage_files: files.length,
   }, null, 2))
 
+  // Catalogue KeskonBouf (migration z) : recettes officielles et comptes admin
+  // gardés, sauf --with-catalog. Le reste de leurs données (cercles, menus…)
+  // part comme celui de tout le monde.
+  const catalogIds = WITH_CATALOG ? [] : (dumped.recipes ?? []).filter(r => r.is_official === true).map(r => String(r.id))
+  const adminIds = WITH_CATALOG ? [] : (dumped.users ?? []).filter(r => r.app_role === 'admin').map(r => String(r.id))
+  const catalogPhotos = new Set(
+    (dumped.recipes ?? [])
+      .filter(r => catalogIds.includes(String(r.id)) && typeof r.photo_url === 'string')
+      .map(r => String(r.photo_url).split(`/object/public/${BUCKET}/`)[1])
+      .filter(Boolean),
+  )
+  const KEEP_ROWS: Record<string, { column: string; ids: string[] }> = {
+    recipe_ingredients:  { column: 'recipe_id', ids: catalogIds },
+    recipe_steps:        { column: 'recipe_id', ids: catalogIds },
+    recipe_imports:      { column: 'recipe_id', ids: catalogIds },
+    recipes:             { column: 'id',        ids: catalogIds },
+    recipe_associations: { column: 'user_id',   ids: adminIds },
+    users:               { column: 'id',        ids: adminIds },
+  }
+  console.log(`\nGardés : ${catalogIds.length} recette(s) du catalogue, ${adminIds.length} compte(s) admin, ${catalogPhotos.size} photo(s) du catalogue.`)
+
   if (!CONFIRM) {
     console.log('\nSimulation : rien n\'a été supprimé. Relance avec --confirm pour vider la base.')
     return
@@ -157,28 +187,33 @@ async function main() {
   // 2. Suppression, tables filles d'abord. PostgREST exige un filtre : « id non nul » prend tout.
   console.log('\nSuppression…')
   for (const table of PURGE.filter(t => !missing.includes(t))) {
-    const { error, count } = await db.from(table).delete({ count: 'exact' }).not('id', 'is', null)
+    let query = db.from(table).delete({ count: 'exact' }).not('id', 'is', null)
+    const keep = KEEP_ROWS[table]
+    if (keep?.ids.length) query = query.not(keep.column, 'in', `(${keep.ids.join(',')})`)
+    const { error, count } = await query
     if (error) throw new Error(`Suppression dans ${table} : ${error.message} (sauvegarde intacte dans ${dir})`)
     console.log(`  ${table.padEnd(24)} ${String(count ?? 0).padStart(6)} supprimée(s)`)
   }
 
   if (!KEEP_AUTH) {
-    for (const u of authUsers) {
+    const doomed = authUsers.filter(u => !adminIds.includes(u.id))
+    for (const u of doomed) {
       const { error } = await db.auth.admin.deleteUser(u.id)
       if (error) throw new Error(`Suppression du compte ${u.id} : ${error.message}`)
     }
-    console.log(`  ${'auth.users'.padEnd(24)} ${String(authUsers.length).padStart(6)} supprimé(s)`)
+    console.log(`  ${'auth.users'.padEnd(24)} ${String(doomed.length).padStart(6)} supprimé(s)`)
   }
 
-  if (!KEEP_PHOTOS && files.length) {
-    for (let i = 0; i < files.length; i += 100) {
-      const { error } = await db.storage.from(BUCKET).remove(files.slice(i, i + 100))
+  const doomedFiles = files.filter(f => !catalogPhotos.has(f))
+  if (!KEEP_PHOTOS && doomedFiles.length) {
+    for (let i = 0; i < doomedFiles.length; i += 100) {
+      const { error } = await db.storage.from(BUCKET).remove(doomedFiles.slice(i, i + 100))
       if (error) throw new Error(`Suppression des photos : ${error.message}`)
     }
-    console.log(`  ${`storage/${BUCKET}`.padEnd(24)} ${String(files.length).padStart(6)} supprimé(s)`)
+    console.log(`  ${`storage/${BUCKET}`.padEnd(24)} ${String(doomedFiles.length).padStart(6)} supprimé(s)`)
   }
 
-  console.log(`\nTerminé. Tables gardées : ${KEEP.join(', ')}.`)
+  console.log(`\nTerminé. Tables gardées : ${KEEP.join(', ')}${WITH_CATALOG ? '' : ', et le catalogue KeskonBouf'}.`)
 }
 
 main().catch(e => {

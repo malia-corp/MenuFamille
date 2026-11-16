@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
-  AlertTriangle, BookHeart, Camera, Check, ChefHat, ChevronDown, Clock, CloudCheck, CupSoda, Eye, Flame, Globe, History, ImagePlus,
+  AlertTriangle, BadgeCheck, BookHeart, Camera, Copyright, Check, ChefHat, ChevronDown, Clock, CloudCheck, CupSoda, Eye, Flame, Globe, History, ImagePlus,
   ListOrdered, Loader2, Lock, Minus, Plus, Salad, Search, ShoppingBasket, Trash2, Users, UtensilsCrossed, X,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
@@ -35,7 +35,20 @@ export interface RecipeFormValues {
   source_url?: string
   raw_html_hash?: string
   parser_version?: string
+  // Catalogue KeskonBouf (comptes admin uniquement, revérifié par le serveur)
+  catalog?: boolean
+  rights?: RightsInput
 }
+
+export type RightsOrigin = 'maison' | 'licence_libre' | 'accord_auteur'
+export interface RightsInput {
+  origin: RightsOrigin | ''
+  author: string
+  license: string
+  inspired_by: string
+  photo_credit: string
+}
+export const emptyRights = (): RightsInput => ({ origin: '', author: '', license: '', inspired_by: '', photo_credit: '' })
 
 // Relecture d'un import : champs à vérifier (surlignés) et portions à
 // confirmer quand la page ne les donnait pas (cf. docs/import-recettes.md).
@@ -96,6 +109,12 @@ const VISIBILITY_OPTIONS: { value: VisibilityVal; label: string; sub: string; Ic
   { value: 'private',   label: 'Seulement moi', sub: 'Elle reste dans ton carnet.',                                  Icon: Lock  },
   { value: 'circle',    label: 'Ma famille',    sub: 'Partagée avec ton cercle, pour les menus et les sondages.',    Icon: Users },
   { value: 'community', label: 'Communauté',    sub: 'Elle inspire tous les foyers de KeskonBouf.',                  Icon: Globe },
+]
+
+const RIGHTS_ORIGIN_OPTIONS: { value: RightsOrigin; label: string; sub: string }[] = [
+  { value: 'maison',        label: 'Recette maison',       sub: 'Écrite par toi ou ton entourage.' },
+  { value: 'licence_libre', label: 'Licence libre',        sub: 'Ex. Wikibooks, en CC BY-SA : auteur et licence à citer.' },
+  { value: 'accord_auteur', label: 'Accord de l’auteur',   sub: 'Un auteur t’a autorisée par écrit à la reprendre.' },
 ]
 
 const DIFFICULTY_OPTIONS: { value: DifficultyVal; label: string }[] = [
@@ -172,6 +191,14 @@ export function RecipeForm({
   const [categories, setCategories] = useState<Category[]>([])
   const [circles,    setCircles]    = useState<Circle[]>([])
 
+  // Catalogue KeskonBouf : l'option n'apparaît qu'aux comptes admin.
+  const [isAdmin,   setIsAdmin]   = useState(false)
+  const [inCatalog, setInCatalog] = useState(!!defaultValues?.catalog)
+  const [rights,    setRights]    = useState<RightsInput>(defaultValues?.rights ?? emptyRights())
+  const [rightsError, setRightsError] = useState<string | null>(null)
+  const importedFromSite = !!defaultValues?.source_url
+  const setRight = (f: keyof RightsInput, v: string) => { setRights(p => ({ ...p, [f]: v })); setRightsError(null) }
+
   const [assocOpen,     setAssocOpen]     = useState(false)
   const [assocPicker,   setAssocPicker]   = useState<'side' | 'drink' | null>(null)
   const [assocSearch,   setAssocSearch]   = useState('')
@@ -194,6 +221,12 @@ export function RecipeForm({
     fetch('/api/circles').then(r => r.json()).then(d => {
       const list = Array.isArray(d?.data) ? d.data : []
       setCircles(list.map((c: Circle) => ({ id: c.id, name: c.name })))
+    }).catch(() => {})
+    fetch('/api/users/me').then(r => r.json()).then(d => {
+      if (d?.app_role !== 'admin') return
+      setIsAdmin(true)
+      // Auteur proposé par défaut : le nom du compte admin.
+      setRights(p => p.author ? p : { ...p, author: d.display_name ?? '' })
     }).catch(() => {})
   }, [])
 
@@ -302,6 +335,22 @@ export function RecipeForm({
       document.getElementById('recipe-servings')?.scrollIntoView({ block: 'center', behavior: 'smooth' })
       return
     }
+    // Mêmes règles que le serveur (lib/utils/catalog.ts), pour prévenir tout de suite.
+    // Recette déjà au catalogue : elle y reste même si le rôle n'est pas encore chargé.
+    const catalog = inCatalog && !hideVisibility && (isAdmin || !!defaultValues?.catalog)
+    if (catalog) {
+      const missing = !rights.origin ? 'Indique la provenance de la recette.'
+        : rights.author.trim().length < 2 ? 'Indique l’auteur de la recette.'
+        : rights.origin === 'licence_libre' && !rights.license.trim() ? 'Indique la licence (ex. CC BY-SA 4.0).'
+        : rights.origin === 'accord_auteur' && !rights.inspired_by.trim() ? 'Indique le lien vers l’auteur qui a donné son accord.'
+        : photoPreview && !rights.photo_credit.trim() ? 'Indique le crédit de la photo, ou retire-la.'
+        : null
+      if (missing) {
+        setRightsError(missing)
+        document.getElementById('sec-provenance')?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+        return
+      }
+    }
 
     let photoUrl = defaultValues?.photo_url ?? undefined
     if (photoFile) {
@@ -326,6 +375,7 @@ export function RecipeForm({
       source_url: defaultValues?.source_url,
       raw_html_hash: defaultValues?.raw_html_hash,
       parser_version: defaultValues?.parser_version,
+      ...(catalog ? { visibility: 'community' as const, catalog: true, rights } : { catalog: false }),
     })
   }
 
@@ -488,11 +538,18 @@ export function RecipeForm({
             <section className={`order-6 ${CARD}`} aria-labelledby="sec-visibilite">
               <CardTitle id="sec-visibilite" icon={Eye}>Qui la voit ?</CardTitle>
               <div className="space-y-2" role="radiogroup" aria-labelledby="sec-visibilite">
-                {VISIBILITY_OPTIONS.map(o => {
-                  const selected = visibility === o.value
+                {[
+                  ...VISIBILITY_OPTIONS.map(o => ({ ...o, key: o.value as string, disabled: false, selected: !inCatalog && visibility === o.value, pick: () => { setInCatalog(false); setVisibility(o.value) } })),
+                  ...(isAdmin ? [{
+                    key: 'catalog', label: 'Catalogue KeskonBouf', Icon: BadgeCheck, disabled: importedFromSite, selected: inCatalog,
+                    sub: importedFromSite ? 'Recette importée d’un site : réécris-la avec tes mots pour la publier.' : 'Recette officielle, proposée à tous les foyers.',
+                    pick: () => { setInCatalog(true); setVisibility('community') },
+                  }] : []),
+                ].map(o => {
+                  const selected = o.selected
                   return (
-                    <button key={o.value} type="button" role="radio" aria-checked={selected} onClick={() => setVisibility(o.value)}
-                      className={`flex w-full items-center gap-3 rounded-[var(--kkb-r-lg)] border-[1.5px] px-3 py-3 text-left transition-colors ${selected ? 'border-[var(--kkb-foret)] bg-[var(--kkb-foret-50)]' : 'border-[var(--kkb-filet)] bg-white hover:border-[var(--kkb-foret-300)]'}`}>
+                    <button key={o.key} type="button" role="radio" aria-checked={selected} disabled={o.disabled} onClick={o.pick}
+                      className={`flex w-full items-center gap-3 rounded-[var(--kkb-r-lg)] border-[1.5px] px-3 py-3 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${selected ? 'border-[var(--kkb-foret)] bg-[var(--kkb-foret-50)]' : 'border-[var(--kkb-filet)] bg-white hover:border-[var(--kkb-foret-300)]'}`}>
                       <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${selected ? 'bg-[var(--kkb-foret)] text-[var(--kkb-creme)]' : 'bg-[var(--kkb-creme)] text-[var(--kkb-foret)]'}`}>
                         <o.Icon className="h-[18px] w-[18px]" />
                       </span>
@@ -525,6 +582,56 @@ export function RecipeForm({
                   {circleError && <p className="mt-1 font-quicksand text-xs text-[var(--kkb-danger)]">{circleError}</p>}
                 </div>
               ))}
+
+              {/* Provenance : obligatoire pour publier au catalogue (droit d'auteur). */}
+              {isAdmin && inCatalog && (
+                <div id="sec-provenance" className="space-y-3 rounded-[var(--kkb-r-lg)] bg-[var(--kkb-creme)] p-4">
+                  <p className="flex items-center gap-2 font-quicksand text-sm font-bold text-[var(--kkb-profond)]">
+                    <Copyright className="h-4 w-4 text-[var(--kkb-foret)]" /> Provenance
+                  </p>
+                  <p className="font-quicksand text-xs leading-relaxed text-[var(--kkb-texte-2)]">
+                    Pas de texte copié d’un site : la recette est écrite avec tes mots. La photo vient de ton appareil.
+                  </p>
+                  <div className="space-y-1.5" role="radiogroup" aria-label="Origine de la recette">
+                    {RIGHTS_ORIGIN_OPTIONS.map(o => {
+                      const selected = rights.origin === o.value
+                      return (
+                        <button key={o.value} type="button" role="radio" aria-checked={selected} onClick={() => setRight('origin', o.value)}
+                          className={`flex w-full items-start gap-2.5 rounded-[var(--kkb-r-md)] border-[1.5px] bg-white px-3 py-2.5 text-left transition-colors ${selected ? 'border-[var(--kkb-foret)]' : 'border-transparent hover:border-[var(--kkb-foret-300)]'}`}>
+                          <span className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 ${selected ? 'border-[var(--kkb-foret)]' : 'border-[var(--kkb-filet)]'}`}>
+                            {selected && <span className="h-2 w-2 rounded-full bg-[var(--kkb-foret)]" />}
+                          </span>
+                          <span>
+                            <span className="block font-quicksand text-sm font-bold text-[var(--kkb-profond)]">{o.label}</span>
+                            <span className="block font-quicksand text-xs text-[var(--kkb-texte-2)]">{o.sub}</span>
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                  <div>
+                    <label htmlFor="rights-author" className={LABEL}>Auteur affiché *</label>
+                    <input id="rights-author" value={rights.author} onChange={e => setRight('author', e.target.value)} maxLength={80} className={INPUT} placeholder="Ex. Lucitha, Mamie Awa…" />
+                  </div>
+                  {rights.origin === 'licence_libre' && (
+                    <div>
+                      <label htmlFor="rights-license" className={LABEL}>Licence *</label>
+                      <input id="rights-license" value={rights.license} onChange={e => setRight('license', e.target.value)} maxLength={80} className={INPUT} placeholder="Ex. CC BY-SA 4.0" />
+                    </div>
+                  )}
+                  <div>
+                    <label htmlFor="rights-link" className={LABEL}>{rights.origin === 'accord_auteur' ? 'Lien vers l’auteur *' : 'Inspirée de (lien, facultatif)'}</label>
+                    <input id="rights-link" type="url" value={rights.inspired_by} onChange={e => setRight('inspired_by', e.target.value)} maxLength={500} className={INPUT} placeholder="https://…" />
+                  </div>
+                  {photoPreview && (
+                    <div>
+                      <label htmlFor="rights-photo" className={LABEL}>Crédit photo *</label>
+                      <input id="rights-photo" value={rights.photo_credit} onChange={e => setRight('photo_credit', e.target.value)} maxLength={120} className={INPUT} placeholder="Ex. Photo : Lucitha" />
+                    </div>
+                  )}
+                  {rightsError && <p className="font-quicksand text-xs font-bold text-[var(--kkb-danger)]">{rightsError}</p>}
+                </div>
+              )}
             </section>
           )}
         </div>

@@ -157,6 +157,7 @@ Next.js 14 App Router + Supabase (Postgres, Auth OTP, Storage) + Zustand, déplo
 ### Documentation de référence (`docs/`)
 
 - `decisions.md` — décisions de cadrage (résumées plus bas)
+- `catalogue-recettes.md` — catalogue KeskonBouf : rôle admin, règles de droit d'auteur, attribution du rôle
 - `ecarts-implementation.md` — écarts connus entre CDC/prompts et code réel, lacunes reportées. À lire avant de chercher une structure « attendue » ; y ajouter tout nouvel écart.
 - `api_et_vues_menufamille.md` — inventaire vues front / API back par domaine
 - `design_menufamille.md` — brief de design (palette et typographie implémentées dans `app/globals.css`)
@@ -175,4 +176,4 @@ Les migrations sont dans `supabase/migrations/`, nommées `<horodatage>_<lettre>
 - `*_e_shopping_pantry.sql` — courses, garde-manger
 - `*_f_rls_policies.sql` — politiques RLS
 
-Chaque évolution suivante est une migration courte et ciblée qui prend la lettre suivante (`g`, `h`… jusqu'à `y` actuellement ; la prochaine est `z`). Ne jamais modifier une migration déjà appliquée ni créer une migration monolithique. Seed : `supabase/seed/`.
+Chaque évolution suivante est une migration courte et ciblée qui prend la lettre suivante (`g`, `h`… jusqu'à `z` actuellement ; ensuite `za`, `zb`…, l'ordre réel étant donné par l'horodatage). Ne jamais modifier une migration déjà appliquée ni créer une migration monolithique. Seed : `supabase/seed/`.

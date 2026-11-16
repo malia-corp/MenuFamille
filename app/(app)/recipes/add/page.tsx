@@ -193,6 +193,7 @@ function RecipeAddInner() {
       parser_version: values.parser_version ?? null,
       import_meta:   values.source_url ? importMeta : null,
       force:         isPlanCtx || !!opts.force,
+      ...(values.catalog && !isPlanCtx ? { catalog: true, rights: values.rights } : {}),
     }
     if (opts.parentId) {
       body.parent_recipe_id = opts.parentId
