@@ -36,6 +36,9 @@ yarn-error.log*
 # déploiement local (PM2, propre à chaque machine)
 ecosystem.config.js
 
+# maquettes et archives de design (références locales)
+/template/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
