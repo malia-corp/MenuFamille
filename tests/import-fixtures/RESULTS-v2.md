@@ -1,6 +1,6 @@
 # Résultats de l'import — version `v2`
 
-Généré par `npm run import:eval -- --version v2` le 2026-11-06.
+Généré par `npm run import:eval -- --version v2` le 2026-11-17.
 
 | Cas | HTTP | Données de la page | Score | Champs en défaut |
 |---|---|---|---|---|
