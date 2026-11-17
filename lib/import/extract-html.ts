@@ -37,6 +37,11 @@ const NOTE_HEAD = /^(?:notre )?suggestion(?: d['’]accord)?s?\s*:?\s*(.+)$/i
 
 const isHeadingLike = (l: Line) => l.kind === 'heading' || (l.text.length < 40 && /:\s*$/.test(l.text))
 const looksLikeSentence = (t: string) => t.length > SHORT || (/[.!]$/.test(t) && t.split(' ').length >= 3)
+// Ligne courte qui commence par une quantité (« 1 kg Pommes de terre. ») :
+// un ingrédient, même terminé par un point. « 1-Éplucher… » n'en est pas un.
+const QTY_LEAD = /^(?:\d+(?:[.,]\d+)?|\d+\/\d+|[½¼¾⅓⅔])\s*(?:[A-Za-zÀ-ÿ]{1,10}\.?)?\s+\S/
+const ingredientLine = (t: string) => t.length < 60 && QTY_LEAD.test(t)
+const looksLikeStep = (t: string) => looksLikeSentence(t) && !ingredientLine(t)
 
 function labelValue(lines: Line[], i: number, label: RegExp): string | null {
   const t = lines[i].text
@@ -62,7 +67,7 @@ function findIngredientsHead(lines: Line[]): number {
     for (let k = i + 1; k < Math.min(lines.length, i + 25); k++) {
       const t = lines[k].text
       if (STEPS_HEAD.test(t) && t.length < 50) break
-      if (t.length < SHORT && !looksLikeSentence(t)) score++
+      if (t.length < SHORT && !looksLikeStep(t)) score++
     }
     if (score > bestScore) { best = i; bestScore = score }
   }
@@ -84,6 +89,15 @@ export function extractFromHtml(html: string): HtmlExtraction {
     // « 10 minutes de préparation - 15 minutes de cuisson » (une seule ligne)
     const inline = t.match(/(\d[^-–|]*?)\s*de\s*pr[ée]paration.*?(\d[^-–|]*?)\s*de\s*cuisson/i)
     if (inline) { out.prepText ??= inline[1]; out.cookText ??= inline[2]; continue }
+    // Durée avant le libellé, seule sur sa ligne : « 35 min de préparation ».
+    const before = t.match(/^(\d.{0,20}?)\s+(?:de\s+|d['’])?(pr[ée]paration|cuisson|repos)$/i)
+    if (before && parseDuration(before[1]) !== null) {
+      const kind = before[2].toLowerCase()
+      if (kind === 'cuisson') out.cookText ??= before[1]
+      else if (kind === 'repos') out.restText ??= before[1]
+      else out.prepText ??= before[1]
+      continue
+    }
     out.prepText ??= labelValue(lines, i, /^(?:temps de )?pr[ée]paration\b|^prep(?:aration)?(?: time)?\b/i)
     out.cookText ??= labelValue(lines, i, /^(?:temps de )?cuisson\b|^cook(?:ing)?(?: time)?\b/i)
     out.totalText ??= labelValue(lines, i, /^(?:temps total|dur[ée]e(?: totale)?|total time|total)\b/i)
@@ -102,7 +116,9 @@ export function extractFromHtml(html: string): HtmlExtraction {
       else if (/^(?:portions?|servings?|serves|parts?)\s*:?$/i.test(t) && /^\d+(?:\s*(?:personnes?|portions?|parts?))?$/i.test(lines[i + 1]?.text ?? '')) out.servingsText = lines[i + 1].text
     }
     if (!out.difficulty) {
+      // « Difficulté : facile », « Niveau moyen », « Recette facile »
       const lab = t.match(/^(?:difficult[ée]|niveau|difficulty)\s*:?\s*(.*)$/i)
+        ?? t.match(/^recette\s+(tr[eè]s facile|facile|moyenne?|difficile)$/i)
       if (lab) {
         const v = lab[1] || lines[i + 1]?.text || ''
         if (parseDifficulty(v)) out.difficulty = v
@@ -146,7 +162,7 @@ export function extractFromHtml(html: string): HtmlExtraction {
     const t = l.text
     if ((STEPS_HEAD.test(t) && t.length < 50) || (END_HEAD.test(t) && t.length < 60)) break
     if (NOISE.test(t) || /^ajouter nos produits/i.test(t)) { if (out.ingredients.length) break; continue }
-    if (looksLikeSentence(t) || /^\d+\s*[/.)]\s+\S/.test(t)) break   // première étape sans titre (05, 06)
+    if (looksLikeStep(t) || /^\d+\s*[/.)]\s+\S/.test(t)) break       // première étape sans titre (05, 06)
     if (isHeadingLike(l)) continue                                      // groupe (« Pour la panure : ») ignoré
     if (/^(?:cuisine|origine|cat[ée]gorie|serves?|servings?|portions?|easy|medium|hard)\s*:?\s*\S*$/i.test(t)) continue
     if (QTY_ONLY.test(t) && out.ingredients.length) {
@@ -161,7 +177,7 @@ export function extractFromHtml(html: string): HtmlExtraction {
       continue
     }
     if (/^(?:optionnel|facultatif)$/i.test(t) && out.ingredients.length) { out.ingredients[out.ingredients.length - 1] += ' (optionnel)'; continue }
-    out.ingredients.push(t)
+    out.ingredients.push(t.replace(/\.$/, ''))
   }
 
   // ── Étapes : phrases après les ingrédients (titre « Préparation » facultatif) ──
@@ -173,7 +189,10 @@ export function extractFromHtml(html: string): HtmlExtraction {
     if (STEPS_HEAD.test(t) && t.length < 50) { if (out.steps.length) break; continue }
     if (NOISE.test(t) || /^\d+\.?$/.test(t) || DURATION_ONLY.test(t)) continue
     if (/^(?:temps total|pr[ée]paration|cuisson|repos)\s*:/i.test(t)) continue
-    if (TIP_HEAD.test(t) || NOTE_HEAD.test(t)) continue
+    // Titre « Astuces : » seul : fin des étapes (son contenu va dans l'astuce).
+    const tipHead = t.match(TIP_HEAD)
+    if (tipHead && !tipHead[1] && out.steps.length) break
+    if (tipHead || NOTE_HEAD.test(t)) continue
     if (l.kind === 'heading' || (t.length < 50 && !/[.!]$/.test(t) && lines[i + 1] && looksLikeSentence(lines[i + 1].text))) {
       // Titre d'étape (« Marinade du poulet », « Étape 1 : Préparer la base ») ou de sous-recette.
       if (out.steps.length && l.kind === 'heading' && (l.level ?? 6) <= 2) break
@@ -204,8 +223,21 @@ function findTipAndNotes(lines: Line[], from: number, to: number, out: HtmlExtra
   for (let i = from; i < to; i++) {
     const tm = lines[i].text.match(TIP_HEAD)
     if (tm && !out.tip) {
-      const body = tm[1] || (lines[i + 1] && looksLikeSentence(lines[i + 1].text) ? lines[i + 1].text : '')
-      if (body && body.length > 15) out.tip = cleanText(body)
+      let body = tm[1]
+      if (!body) {
+        // Titre « Astuces : » seul : les paragraphes qui suivent, jusqu'au titre suivant.
+        const parts: string[] = []
+        for (let k = i + 1; k < to && parts.length < 5; k++) {
+          const t = lines[k].text
+          if (lines[k].kind === 'heading' || END_HEAD.test(t) || TIP_HEAD.test(t) || NOTE_HEAD.test(t) || !looksLikeSentence(t)) break
+          parts.push(t)
+        }
+        body = parts.join(' ')
+        // Coupe propre (fin de phrase) si l'astuce est très longue.
+        if (body.length > 1200) body = body.slice(0, 1200).replace(/[^.!]*$/, '')
+      }
+      // Espace oublié après un point (« uniforme.Ne jamais »).
+      if (body && body.length > 15) out.tip = cleanText(body.replace(/([a-zà-ÿ]{2})\.([A-ZÀ-Ý])/g, '$1. $2'))
     }
     if (NOTE_HEAD.test(lines[i].text)) out.notes.push(cleanText(lines[i].text))
   }

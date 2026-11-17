@@ -279,7 +279,8 @@ export function cleanTitle(raw: string, hostname?: string): string {
 
 const STEP_NOISE = /^(done|terminé|fait|print|imprimer|partager|share|adjust servings|étape suivante|next)$/i
 // « Étape 1 : », « 1/ », « 2. », « 3) », et les chiffres en émoji (« 1️⃣ »).
-const STEP_NUMBER = /^(?:(?:étape|step)\s*\d+\s*[:.\-–]?\s*|\d+\s*[/.)\-–]\s+|\d️?⃣\s*|[^A-Za-zÀ-ÿœŒ\d«"(.…]+\s*)/i
+// « 1- Éplucher » et « 1-Éplucher » (sans espace), mais pas « 2-3 minutes ».
+const STEP_NUMBER = /^(?:(?:étape|step)\s*\d+\s*[:.\-–]?\s*|\d+\s*[/.)]\s+|\d+\s*[\-–](?!\s*\d)\s*|\d️?⃣\s*|[^A-Za-zÀ-ÿœŒ\d«"(.…]+\s*)/i
 const FILLER = /^(?:\.\.\.|…)?\s*(?:nous obtenons|vous obtenez|on obtient|voici le résultat|voici ce que|comme ceci|comme cela|et voilà)\b/i
 const ANNOUNCE = /(?:commencer par |commencez par )?pr[ée]parer tous les ingr[ée]dients/i
 const SECTION = /^([A-ZÀ-Ý][^:.]{2,40})\s*:\s+(.+)$/
@@ -294,7 +295,8 @@ export function cleanSteps(texts: string[]): string[] {
   const out: string[] = []
   let section: string | null = null
   for (const raw of texts) {
-    let t = cleanText(raw).replace(STEP_NUMBER, '').trim()
+    // Espace oublié après un point (« de la friteuse.Le maintenir »).
+    let t = cleanText(raw).replace(STEP_NUMBER, '').replace(/([a-zà-ÿ]{2})\.([A-ZÀ-Ý])/g, '$1. $2').trim()
     if (!t || STEP_NOISE.test(t)) continue
     const sec = t.match(SECTION)
     if (sec && !/^(en parallèle|astuce|conseil|attention|remarque|note)$/i.test(sec[1].trim())) { section = sec[1].trim(); t = sec[2] }
