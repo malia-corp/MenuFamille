@@ -33,6 +33,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# déploiement local (PM2, propre à chaque machine)
+ecosystem.config.js
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
