@@ -3,6 +3,7 @@ import { createServiceClient } from '@/lib/supabase/service'
 import { upsertSuggestedAssociations } from '@/lib/utils/recipe-associations'
 import { findSimilarRecipe } from '@/lib/utils/recipe-similarity'
 import { acceptablePhotoUrl } from '@/lib/import/url-safety'
+import { catalogEntry } from '@/lib/utils/catalog'
 
 // Colonnes de traçabilité de l'import (migration y), validées avant écriture.
 function importMetaColumns(raw: unknown): { source_type?: string[]; status?: string; rest_min?: number | null } {
@@ -16,6 +17,7 @@ function importMetaColumns(raw: unknown): { source_type?: string[]; status?: str
   return out
 }
 import { NextRequest } from 'next/server'
+import type { Json } from '@/lib/supabase/database.types'
 
 const DIACRITICS_RE = /[̀-ͯ]/g
 
@@ -62,6 +64,8 @@ export async function POST(request: NextRequest) {
     import_meta,
     suggested_sides = [],
     suggested_drinks = [],
+    catalog = false,
+    rights,
   } = body
 
   if (!name || typeof name !== 'string' || name.trim().length < 2) {
@@ -72,15 +76,26 @@ export async function POST(request: NextRequest) {
   }
 
   const service = createServiceClient()
+  const photo = acceptablePhotoUrl(photo_url)
+
+  // Catalogue KeskonBouf : réservé aux admins, provenance obligatoire.
+  let official: { rights: unknown } | null = null
+  if (catalog === true) {
+    const entry = await catalogEntry(service, { userId: user.id, rights, photoUrl: photo, sourceUrl: source_url ?? null })
+    if ('error' in entry) return Response.json({ error: entry.error }, { status: entry.status })
+    official = entry
+  }
+  const finalVisibility = official ? 'community' : visibility
+
   const fingerprint = makeFingerprint(name)
 
   // Doublon : uniquement pour une recette partagée (cercle / communauté) — le
   // client fait normalement ce contrôle avant via /api/recipes/check-duplicate.
-  if (!force && !parent_recipe_id && visibility !== 'private') {
+  if (!force && !parent_recipe_id && finalVisibility !== 'private') {
     const similar = await findSimilarRecipe(service, {
       name: name.trim(),
       userId: user.id,
-      circleId: visibility === 'circle' ? circle_id : null,
+      circleId: finalVisibility === 'circle' ? circle_id : null,
     })
     if (similar) return Response.json({ conflict: true, existing: similar }, { status: 409 })
   }
@@ -94,7 +109,7 @@ export async function POST(request: NextRequest) {
     .insert({
       user_id: user.id,
       category_id: category_id || null,
-      circle_id: visibility === 'circle' ? circle_id : null,
+      circle_id: finalVisibility === 'circle' ? circle_id : null,
       parent_recipe_id: parent_recipe_id || null,
       variant_label: (variant_label as string | undefined)?.trim() || null,
       name: name.trim(),
@@ -105,8 +120,12 @@ export async function POST(request: NextRequest) {
       cook_time_min: cook_time_min ? Number(cook_time_min) : null,
       servings: Math.max(1, Number(servings) || 4),
       difficulty: difficulty || null,
-      visibility,
-      photo_url: acceptablePhotoUrl(photo_url),
+      visibility: finalVisibility,
+      photo_url: photo,
+      // Source citée sur la fiche (« Recette importée de … ») ; le détail de l'import est dans recipe_imports.
+      source_url: typeof source_url === 'string' && /^https?:\/\//.test(source_url) ? source_url.slice(0, 2000) : null,
+      is_official: !!official,
+      rights: (official?.rights ?? null) as Json,
     })
     .select('id')
     .single()
@@ -193,7 +212,7 @@ export async function GET(request: NextRequest) {
 
   let query = service
     .from('recipes')
-    .select('id, name, slug, description, prep_time_min, cook_time_min, servings, difficulty, photo_url, visibility, user_id, circle_id, categories(id, name, slug, icon, color)')
+    .select('id, name, slug, description, prep_time_min, cook_time_min, servings, difficulty, photo_url, visibility, is_official, user_id, circle_id, categories(id, name, slug, icon, color)')
 
   // Filtre de visibilité selon le scope
   if (scope === 'mes') {
@@ -246,6 +265,7 @@ interface ListRecipe {
   difficulty: string | null
   photo_url: string | null
   visibility: string
+  is_official: boolean
   user_id: string | null
   circle_id: string | null
   created_at: string
@@ -272,7 +292,7 @@ async function paginatedList(
     : ''
   const { data, error } = await service
     .from('recipes')
-    .select('id, name, description, prep_time_min, cook_time_min, servings, difficulty, photo_url, visibility, user_id, circle_id, created_at, categories(id, name, slug, icon, color)')
+    .select('id, name, description, prep_time_min, cook_time_min, servings, difficulty, photo_url, visibility, is_official, user_id, circle_id, created_at, categories(id, name, slug, icon, color)')
     .or(`visibility.eq.community,user_id.eq.${userId}${circleClause}`)
     .order('created_at', { ascending: false })
     .limit(MAX_RECIPES)

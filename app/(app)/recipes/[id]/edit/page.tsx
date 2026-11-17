@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { RecipeFormHero } from '@/components/recipes/recipe-form-hero'
-import { RecipeForm, emptyIngredient, emptyStep, uid, type RecipeFormValues } from '../../_recipe-form'
+import { RecipeForm, emptyIngredient, emptyStep, uid, type RecipeFormValues, type RightsOrigin } from '../../_recipe-form'
 import { RecipeFormSkeleton } from '@/components/skeletons/page-skeletons'
 
 interface ApiRecipe {
@@ -18,6 +18,9 @@ interface ApiRecipe {
   visibility: string
   circle_id: string | null
   photo_url: string | null
+  is_official: boolean
+  source_url: string | null
+  rights: { origin?: RightsOrigin; author?: string; license?: string | null; inspired_by?: string | null; photo_credit?: string | null } | null
   recipe_ingredients: { id: string; name: string; quantity: number | null; unit: string | null; sort_order: number }[]
   recipe_steps: { id: string; step_number: number; description: string }[]
 }
@@ -47,6 +50,15 @@ export default function RecipeEditPage() {
           visibility:  data.visibility as RecipeFormValues['visibility'],
           circleId:    data.circle_id ?? '',
           photo_url:   data.photo_url ?? undefined,
+          catalog:     data.is_official,
+          source_url:  data.source_url ?? undefined,
+          rights: data.rights ? {
+            origin:       data.rights.origin ?? '',
+            author:       data.rights.author ?? '',
+            license:      data.rights.license ?? '',
+            inspired_by:  data.rights.inspired_by ?? '',
+            photo_credit: data.rights.photo_credit ?? '',
+          } : undefined,
           ingredients: data.recipe_ingredients.length
             ? data.recipe_ingredients.map(i => ({ _id: uid(), name: i.name, quantity: i.quantity != null ? String(i.quantity) : '', unit: i.unit ?? '' }))
             : [emptyIngredient()],
@@ -74,6 +86,9 @@ export default function RecipeEditPage() {
       ingredients:   values.ingredients.filter(i => i.name.trim()),
       steps:         values.steps.filter(s => s.description.trim()),
       photo_url:     values.photo_url ?? null,
+      // Catalogue : true = y entre (ou y reste, provenance revue), false = en sort s'il y était.
+      catalog:       !!values.catalog,
+      ...(values.catalog ? { rights: values.rights } : {}),
       // N'écrase les associations existantes que si l'utilisateur en a choisi
       ...(values.sideItems.length || values.drinkItems.length
         ? { suggested_sides: values.sideItems.map(i => i.id), suggested_drinks: values.drinkItems.map(i => i.id) }

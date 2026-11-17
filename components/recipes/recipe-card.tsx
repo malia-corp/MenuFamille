@@ -1,6 +1,6 @@
 'use client'
 
-import { CalendarPlus, Clock, Globe, Heart, PenLine, Users, type LucideIcon } from 'lucide-react'
+import { BadgeCheck, CalendarPlus, Clock, Globe, Heart, PenLine, Users, type LucideIcon } from 'lucide-react'
 import { categoryColor, categoryIcon, categoryInk } from '@/lib/constants/category-icon'
 import { DifficultyMeter } from './difficulty'
 import { formatDuration, type RecipeListItem } from './types'
@@ -66,8 +66,9 @@ function FoyerFavorites({ count }: { count: number }) {
   )
 }
 
-function OriginTag({ origin }: { origin: RecipeListItem['origin'] }) {
-  const { label, icon: Icon } = ORIGIN_TAG[origin]
+function OriginTag({ origin, official }: { origin: RecipeListItem['origin']; official?: boolean }) {
+  // Recette du catalogue : le badge KeskonBouf prime sur l'origine.
+  const { label, icon: Icon } = official ? { label: 'KeskonBouf', icon: BadgeCheck } : ORIGIN_TAG[origin]
   return (
     <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-white/90 px-2 py-1 font-quicksand text-[11px] font-bold text-[var(--kkb-foret)] backdrop-blur-sm">
       <Icon className="h-3 w-3" /> {label}
@@ -145,7 +146,7 @@ export function RecipeCard({ recipe, variant, onOpen, onPlan, onToggleFavorite }
     <article {...open} className="group flex cursor-pointer flex-col rounded-[var(--kkb-r-xl)] bg-white p-1.5 outline-none transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(31,58,46,0.10)] focus-visible:ring-2 focus-visible:ring-[var(--kkb-foret-300)] active:scale-[0.98] motion-reduce:transition-none motion-reduce:hover:translate-y-0">
       <div className="relative">
         <RecipeVisual recipe={recipe} className={`w-full rounded-[var(--kkb-r-lg)] ${mobile ? 'aspect-square' : 'aspect-[4/3]'}`} />
-        {!mobile && <OriginTag origin={recipe.origin} />}
+        {!mobile && <OriginTag origin={recipe.origin} official={recipe.is_official} />}
         <FavoriteButton recipe={recipe} onToggle={onToggleFavorite} />
         <FoyerFavorites count={recipe.foyer_favorites} />
       </div>

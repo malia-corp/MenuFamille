@@ -16,6 +16,7 @@ export interface RecipeListItem {
   difficulty:      'facile' | 'moyen' | 'difficile' | null
   photo_url:       string | null
   visibility:      string
+  is_official?:    boolean
   is_favorited:    boolean
   foyer_favorites: number
   total_time_min:  number | null

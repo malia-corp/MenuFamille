@@ -194,6 +194,8 @@ function main() {
   const cases = readdirSync(ROOT, { withFileTypes: true })
     .filter(d => d.isDirectory() && (!only || d.name.startsWith(only)))
     .map(d => d.name)
+    // Un cas = un dossier avec url.txt (texts/ contient des textes collés, pas des cas)
+    .filter(name => existsSync(join(ROOT, name, 'url.txt')))
     .sort()
 
   for (const name of cases) {

@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
 import { upsertSuggestedAssociations } from '@/lib/utils/recipe-associations'
 import { acceptablePhotoUrl } from '@/lib/import/url-safety'
+import { catalogEntry, isAdmin } from '@/lib/utils/catalog'
 import { NextRequest } from 'next/server'
 
 const DIACRITICS_RE = /[̀-ͯ]/g
@@ -77,12 +78,16 @@ export async function GET(
     .eq('recipe_id', recipe.id)
     .in('user_id', foyerIds)
 
+  // Admin : gère toute recette du catalogue (modifier, retirer du catalogue).
+  const canManageCatalog = recipe.is_official && await isAdmin(service, user.id)
+
   return Response.json({
     ...recipe,
     recipe_ingredients: ingredients,
     recipe_steps: steps,
     is_favorited: (favRows ?? []).some(f => f.user_id === user.id),
     is_owner: recipe.user_id === user.id,
+    can_manage_catalog: canManageCatalog,
     foyer_favorites: favRows?.length ?? 0,
     foyer_size: foyerIds.length,
   })
@@ -99,18 +104,22 @@ export async function PATCH(
   const service = createServiceClient()
   const { data: existing } = await service
     .from('recipes')
-    .select('id, user_id, slug')
+    .select('id, user_id, slug, is_official, photo_url, source_url')
     .eq('id', params.id)
     .maybeSingle()
 
   if (!existing) return Response.json({ error: 'Recette introuvable' }, { status: 404 })
-  if (existing.user_id !== user.id) return Response.json({ error: 'Accès refusé' }, { status: 403 })
+  // Une recette du catalogue se gère par n'importe quel admin, pas seulement son auteur.
+  const admin = await isAdmin(service, user.id)
+  if (existing.user_id !== user.id && !(existing.is_official && admin)) {
+    return Response.json({ error: 'Accès refusé' }, { status: 403 })
+  }
 
   const body = await request.json()
   const {
     name, description, category_id, prep_time_min, cook_time_min,
     servings, difficulty, visibility, circle_id, ingredients, steps,
-    photo_url, suggested_sides, suggested_drinks,
+    photo_url, suggested_sides, suggested_drinks, catalog, rights,
   } = body
 
   const updates: Record<string, unknown> = {}
@@ -136,6 +145,26 @@ export async function PATCH(
     updates.circle_id  = visibility === 'circle' ? (circle_id || null) : null
   }
   if (photo_url !== undefined) updates.photo_url = acceptablePhotoUrl(photo_url)
+
+  // Catalogue : entrée (ou mise à jour de la provenance), sortie, ou rien.
+  if (catalog === true) {
+    const photo = photo_url !== undefined ? (updates.photo_url as string | null) : existing.photo_url
+    const entry = await catalogEntry(service, { userId: user.id, rights, photoUrl: photo, sourceUrl: existing.source_url })
+    if ('error' in entry) return Response.json({ error: entry.error }, { status: entry.status })
+    Object.assign(updates, { is_official: true, rights: entry.rights, visibility: 'community', circle_id: null })
+  } else if (catalog === false && existing.is_official) {
+    if (!admin) return Response.json({ error: 'Accès refusé' }, { status: 403 })
+    // Retirée du catalogue : redevient privée, sauf autre choix explicite.
+    Object.assign(updates, {
+      is_official: false, rights: null,
+      visibility: visibility ?? 'private',
+      circle_id: visibility === 'circle' ? (circle_id || null) : null,
+    })
+  } else if (existing.is_official) {
+    // Recette du catalogue modifiée sans toucher au catalogue : elle y reste.
+    delete updates.visibility
+    delete updates.circle_id
+  }
 
   if (Object.keys(updates).length > 0) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -179,12 +208,16 @@ export async function DELETE(
   const service = createServiceClient()
   const { data: recipe } = await service
     .from('recipes')
-    .select('id, user_id')
+    .select('id, user_id, is_official')
     .eq('id', params.id)
     .maybeSingle()
 
   if (!recipe) return Response.json({ error: 'Recette introuvable' }, { status: 404 })
   if (recipe.user_id !== user.id) return Response.json({ error: 'Accès refusé' }, { status: 403 })
+  // Des menus de familles s'appuient sur les recettes du catalogue : on les retire d'abord.
+  if (recipe.is_official) {
+    return Response.json({ error: 'Retire d’abord la recette du catalogue avant de la supprimer.' }, { status: 409 })
+  }
 
   await service.from('recipes').delete().eq('id', params.id)
   return new Response(null, { status: 204 })

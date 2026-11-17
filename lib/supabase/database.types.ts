@@ -803,11 +803,13 @@ export type Database = {
             | Database["public"]["Enums"]["recipe_difficulty_enum"]
             | null
           id: string
+          is_official: boolean
           name: string
           name_fingerprint: string
           parent_recipe_id: string | null
           photo_url: string | null
           prep_time_min: number | null
+          rights: Json | null
           servings: number
           slug: string
           source_url: string | null
@@ -825,11 +827,13 @@ export type Database = {
             | Database["public"]["Enums"]["recipe_difficulty_enum"]
             | null
           id?: string
+          is_official?: boolean
           name: string
           name_fingerprint: string
           parent_recipe_id?: string | null
           photo_url?: string | null
           prep_time_min?: number | null
+          rights?: Json | null
           servings?: number
           slug: string
           source_url?: string | null
@@ -847,11 +851,13 @@ export type Database = {
             | Database["public"]["Enums"]["recipe_difficulty_enum"]
             | null
           id?: string
+          is_official?: boolean
           name?: string
           name_fingerprint?: string
           parent_recipe_id?: string | null
           photo_url?: string | null
           prep_time_min?: number | null
+          rights?: Json | null
           servings?: number
           slug?: string
           source_url?: string | null
@@ -1102,6 +1108,7 @@ export type Database = {
       users: {
         Row: {
           active_circle_id: string | null
+          app_role: string
           created_at: string
           dietary_prefs: Json
           display_name: string
@@ -1112,6 +1119,7 @@ export type Database = {
         }
         Insert: {
           active_circle_id?: string | null
+          app_role?: string
           created_at?: string
           dietary_prefs?: Json
           display_name: string
@@ -1122,6 +1130,7 @@ export type Database = {
         }
         Update: {
           active_circle_id?: string | null
+          app_role?: string
           created_at?: string
           dietary_prefs?: Json
           display_name?: string

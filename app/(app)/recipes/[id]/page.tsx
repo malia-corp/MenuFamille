@@ -3,8 +3,8 @@
 import { Suspense, useEffect, useRef, useState } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import {
-  ArrowLeft, CalendarPlus, Check, ChefHat, ChevronRight, Clock, CupSoda, ExternalLink, Flame, Heart,
-  Loader2, MoreHorizontal, Pencil, Printer, Quote, Salad, Trash2, Users,
+  ArrowLeft, BadgeCheck, CalendarPlus, Camera, Check, ChefHat, ChevronRight, Clock, CupSoda, ExternalLink, Flame, Heart,
+  Loader2, MoreHorizontal, Pencil, Printer, Quote, Salad, Trash2, Undo2, Users,
 } from 'lucide-react'
 import { CategoryBadge } from '@/components/recipes/category-badge'
 import { RecipeVisual } from '@/components/recipes/recipe-card'
@@ -32,6 +32,9 @@ interface Recipe {
   visibility: 'private' | 'circle' | 'community'
   source_url: string | null
   is_owner: boolean
+  is_official: boolean
+  can_manage_catalog: boolean
+  rights: { author?: string; license?: string | null; inspired_by?: string | null; photo_credit?: string | null } | null
   is_favorited: boolean
   foyer_favorites: number
   foyer_size: number
@@ -123,8 +126,22 @@ function RecipeDetail() {
   async function deleteRecipe() {
     setDeleting(true)
     const res = await fetch(`/api/recipes/${id}`, { method: 'DELETE' })
-    if (res.ok || res.status === 204) router.push('/recipes')
-    else { setDeleting(false); setConfirmDelete(false) }
+    if (res.ok || res.status === 204) { router.push('/recipes'); return }
+    const data = await res.json().catch(() => null)
+    toast.error(data?.error ?? 'Suppression impossible')
+    setDeleting(false); setConfirmDelete(false)
+  }
+
+  // Admin : la recette quitte le catalogue et redevient privée (les menus qui l'utilisent restent intacts).
+  async function removeFromCatalog() {
+    setMenuOpen(false)
+    const res = await fetch(`/api/recipes/${id}`, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ catalog: false }),
+    }).catch(() => null)
+    const data = await res?.json().catch(() => null)
+    if (!res?.ok) { toast.error(data?.error ?? 'Erreur de connexion'); return }
+    toast.success('Recette retirée du catalogue')
+    setRecipe(prev => prev && { ...prev, is_official: false, can_manage_catalog: false, rights: null, visibility: 'private' })
   }
 
   function toggleIngredient(ingId: string) {
@@ -162,7 +179,7 @@ function RecipeDetail() {
 
   const optionsMenu = (
     <div className="absolute right-0 top-full z-30 mt-2 w-56 overflow-hidden rounded-[var(--kkb-r-lg)] border border-[var(--kkb-filet)] bg-white py-1.5 shadow-[0_12px_32px_rgba(31,58,46,0.14)]">
-      {recipe.is_owner && (
+      {(recipe.is_owner || recipe.can_manage_catalog) && (
         <button type="button" onClick={() => router.push(`/recipes/${id}/edit`)} className={MENU_ITEM}>
           <Pencil className="h-4 w-4 text-[var(--kkb-foret)]" /> Modifier
         </button>
@@ -177,7 +194,12 @@ function RecipeDetail() {
       <button type="button" onClick={() => { setMenuOpen(false); setTimeout(() => window.print(), 50) }} className={MENU_ITEM}>
         <Printer className="h-4 w-4 text-[var(--kkb-foret)]" /> Imprimer la fiche
       </button>
-      {recipe.is_owner && (
+      {recipe.can_manage_catalog && (
+        <button type="button" onClick={() => void removeFromCatalog()} className={MENU_ITEM}>
+          <Undo2 className="h-4 w-4 text-[var(--kkb-foret)]" /> Retirer du catalogue
+        </button>
+      )}
+      {recipe.is_owner && !recipe.is_official && (
         <button type="button" onClick={() => { setMenuOpen(false); setConfirmDelete(true) }} className={`${MENU_ITEM} text-[var(--kkb-danger)] hover:bg-[var(--kkb-danger-light)]`}>
           <Trash2 className="h-4 w-4" /> Supprimer
         </button>
@@ -196,13 +218,23 @@ function RecipeDetail() {
     if (!recipe.source_url) return null
     try { return new URL(recipe.source_url).hostname.replace(/^www\./, '') } catch { return null }
   })()
+  const inspiredHost = (() => {
+    if (!recipe.rights?.inspired_by) return null
+    try { return new URL(recipe.rights.inspired_by).hostname.replace(/^www\./, '') } catch { return null }
+  })()
 
   // Titre et repères (catégorie, mot de la cuisine, temps, niveau, favoris).
   const heading = (
     <div className="space-y-2">
       <div className="flex flex-wrap items-center gap-1.5">
         {recipe.categories && <CategoryBadge category={recipe.categories} />}
-        <span className="rounded-full bg-[var(--kkb-foret-50)] px-2 py-0.5 font-quicksand text-xs font-bold text-[var(--kkb-foret)]">{VISIBILITY_TAG[recipe.visibility]}</span>
+        {recipe.is_official ? (
+          <span className="inline-flex items-center gap-1 rounded-full bg-[var(--kkb-foret)] px-2 py-0.5 font-quicksand text-xs font-bold text-[var(--kkb-creme)]">
+            <BadgeCheck className="h-3.5 w-3.5" aria-hidden="true" /> Recette KeskonBouf
+          </span>
+        ) : (
+          <span className="rounded-full bg-[var(--kkb-foret-50)] px-2 py-0.5 font-quicksand text-xs font-bold text-[var(--kkb-foret)]">{VISIBILITY_TAG[recipe.visibility]}</span>
+        )}
       </div>
       {/* Nom de la recette : l'accent Bricolage de l'écran */}
       <h1 className="font-main text-[28px] font-semibold leading-[1.1] text-[var(--kkb-foret)] lg:text-[36px]">{recipe.name}</h1>
@@ -219,6 +251,27 @@ function RecipeDetail() {
           Recette importée de{' '}
           <a href={recipe.source_url!} target="_blank" rel="noopener noreferrer nofollow" className="font-bold text-[var(--kkb-foret)] underline">{sourceHost}</a>
         </p>
+      )}
+      {/* Catalogue : auteur, licence, inspiration et crédit photo toujours cités. */}
+      {recipe.is_official && recipe.rights && (
+        <div className="space-y-1 pt-1 font-quicksand text-sm text-[var(--kkb-texte-2)]">
+          <p>
+            Par <span className="font-bold text-[var(--kkb-profond)]">{recipe.rights.author}</span>
+            {recipe.rights.license && <> · {recipe.rights.license}</>}
+          </p>
+          {inspiredHost && (
+            <p className="flex items-center gap-1.5">
+              <ExternalLink className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              Inspirée de{' '}
+              <a href={recipe.rights.inspired_by!} target="_blank" rel="noopener noreferrer nofollow" className="font-bold text-[var(--kkb-foret)] underline">{inspiredHost}</a>
+            </p>
+          )}
+          {recipe.photo_url && recipe.rights.photo_credit && (
+            <p className="flex items-center gap-1.5">
+              <Camera className="h-3.5 w-3.5 shrink-0" aria-hidden="true" /> {recipe.rights.photo_credit}
+            </p>
+          )}
+        </div>
       )}
     </div>
   )
